@@ -336,25 +336,30 @@ void ADTimePix::report(FILE* fp, int details){
 //----------------------------------------------------------------------------
 
 
-ADTimePix::ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize )
+ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize )
     : ADDriver(portName, 1, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory, asynEnumMask, asynEnumMask, ASYN_CANBLOCK, 1, priority, stackSize){
     static const char* functionName = "ADTimePix";
 
     // Call createParam here
     // ex. createParam(ADUVC_UVCComplianceLevelString, asynParamInt32, &ADUVC_UVCComplianceLevel);
+    createParam(ADTimePixServerNameString, asynParamOctet, &ADTimePixServer);
+    
 
     //sets driver version
     char versionString[25];
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", ADTIMEPIX_VERSION, ADTIMEPIX_REVISION, ADTIMEPIX_MODIFICATION);
     setStringParam(NDDriverVersion, versionString);
+    setStringParam(ADTimePixServer, serverURL);
+
+//    callParamCallbacks();   // Apply to EPICS, at end of file
 
     printf("HERE!\n");
 
-    if(strlen(serial) < 0){
+    if(strlen(serverURL) < 0){
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Connection failed, abort\n", driverName, functionName);
     }
     else{
-        asynStatus connected = initialServerCheckConnection(serial);
+        asynStatus connected = initialServerCheckConnection(serverURL);
         if(connected){
             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Acquiring device information\n", driverName, functionName);
             getDashboard();
