@@ -1,0 +1,10 @@
+~*
+*~
+bin/
+O.*
+lib/
+db/
+dbd/
+include/
+.vscode/
+TemplateReadme.md

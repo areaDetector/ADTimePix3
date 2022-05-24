@@ -1,0 +1,10 @@
+#RELEASE Location of external products
+# Run "gnumake clean uninstall install" in the application
+# top directory each time this file is changed.
+
+ADTIMEPIX=$(AREA_DETECTOR)/ADTimePix
+
+-include $(TOP)/../configure/RELEASE_LIBS_INCLUDE
+-include $(TOP)/../../../configure/RELEASE_PRODS_INCLUDE
+-include $(TOP)/RELEASE.local
+-include $(TOP)/configure/RELEASE.local
