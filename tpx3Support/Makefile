@@ -5,13 +5,13 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-SRC_DIRS = ../frozen
+SRC_DIRS = ../frozenSrc
 
 
 LIBRARY=frozen
 
 
-INC += frozen/frozen.h
+INC += frozenSrc/frozen.h
 
 frozen_SRCS += frozen.c
 
