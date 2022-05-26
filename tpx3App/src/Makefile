@@ -16,6 +16,7 @@ INC += ADTimePix.h
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
+LIB_SRCS += restApi.cpp tpx3Param.cpp
 
 LIB_LIBS += frozen
 

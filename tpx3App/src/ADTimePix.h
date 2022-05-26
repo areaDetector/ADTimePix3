@@ -23,7 +23,7 @@
 // Place PV string definitions here
 #define ADTimePixServerNameString          "TPX3_SERVER_NAME"            //asynOctet
 #define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             //asynFloat64
-
+#define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            //asynFloat64
 
 // Place any required inclues here
 
@@ -65,6 +65,7 @@ class ADTimePix : ADDriver{
 
         int ADTimePixServer;
         #define ADTIMEPIX_FIRST_PARAM ADTimePixServer
+        int ADTimePixWriteSpeed;
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
