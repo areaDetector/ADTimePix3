@@ -14,6 +14,8 @@ USR_CPPFLAGS += -std=c++11
 
 INC += ADTimePix.h
 
+USR_INCLUDES += -I$(TOP)/tpx3Support/frozenSrc
+
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
 LIB_SRCS += restApi.cpp tpx3Param.cpp
