@@ -22,6 +22,8 @@ LIB_SRCS += restApi.cpp tpx3Param.cpp
 
 LIB_LIBS += frozen
 
+LIB_SYS_LIBS += cpr curl-d z
+
 DBD += tpx3Support.dbd
 
 
