@@ -18,6 +18,8 @@ typedef enum {
 // Subsystems
 typedef enum
 {
+    SSdashboard,
+
     SSAPIVersion,
     SSDetConfig,
     SSDetStatus,

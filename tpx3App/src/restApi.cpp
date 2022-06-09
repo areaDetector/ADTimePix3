@@ -253,20 +253,24 @@ RestAPI::RestAPI (std::string const & hostname, int port, size_t numSockets) :
         mSockets[i].retries = 0;
     }
 
-    // Define REST URIs based on API version
+    // Define REST URIs based on namespaces (dashboard, config, measurement, detector, server, root, welcome)
     std::string api;
-    mSysStr[SSAPIVersion] = "/detector/api/version";
+    std::string detType;
+ //   mSysStr[SSAPIVersion] = "/detector/api/version";
+    mSysStr[SSdashboard] = "/dashboard";
     string response;
-    this->get(SSAPIVersion, "", response, 10);
+    this->get(SSdashboard, "", response, 10);
     struct json_token tokens[MAX_JSON_TOKENS];
     int err = parse_json(response.c_str(), response.length(), tokens, MAX_JSON_TOKENS);
     if (err < 0) {
         throw std::runtime_error("unable to parse response json");
     }
-    struct json_token *token = find_json_token(tokens, "value");
+    struct json_token *token = find_json_token(tokens, "DetectorType");
     if (token == NULL)
         throw std::runtime_error("unable to find value token");
-    api = string(token->ptr, token->len);
+    detType = string(token->ptr, token->len);
+    printf("DetectorType=%s\n",detType.c_str());
+    //api = string(token->ptr, token->len);
     if (api == "1.6.0")
         mAPIVersion = API_1_6_0;
     else if (api == "1.8.0")
