@@ -112,7 +112,20 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
 
     // Implement connecting to the camera here
     // Usually the vendor provides examples of how to do this with the library/SDK
+    // call get function, and put function that will do get/put funciton to server. 
+    cpr::Response r = cpr::Get(cpr::Url{serverURL},
+                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    printf("Status code: %li\n", r.status_code);
+    printf("Header:\n");
+    for (const pair<string, string>& kv : r.header) {
+        printf("\t%s:%s\n",kv.first.c_str(),kv.second.c_str());
+    }
+    printf("Text: %s\n", r.text.c_str());
 
+    if(r.status_code == 200) {
+        connected = true;
+    }
 
     if(connected) return asynSuccess;
     else{
@@ -404,7 +417,7 @@ static void configADTimePixCallFunc(const iocshArgBuf *args){
 
 
 /* information about the configuration function */
-static const iocshFuncDef configADTimePix = { "ADTimePixConfig", 5, ADTimePixConfigArgs };
+static const iocshFuncDef configADTimePix = { "ADTimePixConfig", 6, ADTimePixConfigArgs };
 
 
 /* IOC register function */
