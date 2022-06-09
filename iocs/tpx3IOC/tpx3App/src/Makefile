@@ -16,7 +16,7 @@ $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp tpx3Main.cpp
 # Add locally compiled object code
 $(PROD_NAME)_LIBS += ADTimePix frozen
 
-$(PROD_NAME)_SYS_LIBS += 
+$(PROD_NAME)_SYS_LIBS += cpr curl-d z 
 
 #LIB_LIBS_Linux += boost_system-mt
 include $(ADCORE)/ADApp/commonDriverMakefile
