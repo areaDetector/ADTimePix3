@@ -16,14 +16,16 @@
 
 // version numbers
 #define ADTIMEPIX_VERSION      0
-#define ADTIMEPIX_REVISION     0
+#define ADTIMEPIX_REVISION     1
 #define ADTIMEPIX_MODIFICATION 0
 
 
-// Place PV string definitions here
-#define ADTimePixServerNameString          "TPX3_SERVER_NAME"            //asynOctet
-#define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             //asynFloat64
-#define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            //asynFloat64
+// Driver-specific PV string definitions here
+/*                                         String                        asyn interface         access  Description  */
+#define ADTimePixServerNameString          "TPX3_SERVER_NAME"            // (asynOctet,         r)      Server Name
+#define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             // (asynFloat64,       r)
+#define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)
+#define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
 
 // Place any required inclues here
 
@@ -67,6 +69,7 @@ class ADTimePix : ADDriver{
         int ADTimePixServer;
         #define ADTIMEPIX_FIRST_PARAM ADTimePixServer
         int ADTimePixWriteSpeed;
+        int ADTimePixHttpCode;
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace

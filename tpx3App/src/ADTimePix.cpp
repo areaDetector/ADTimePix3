@@ -112,7 +112,7 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
 
     // Implement connecting to the camera here
     // Usually the vendor provides examples of how to do this with the library/SDK
-    // call get function, and put function that will do get/put funciton to server. 
+    // Use GET request and compare if URI status response code is 200.
     cpr::Response r = cpr::Get(cpr::Url{serverURL},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
@@ -126,6 +126,12 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
     if(r.status_code == 200) {
         connected = true;
     }
+
+    //sets URI http code
+    createParam(ADTimePixHttpCodeString, asynParamInt32, &ADTimePixHttpCode);
+    setIntegerParam(ADTimePixHttpCode, (int)r.status_code);
+
+    callParamCallbacks();   // Apply to EPICS, at end of file
 
     if(connected) return asynSuccess;
     else{
@@ -378,6 +384,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             getDashboard();
         }
     }
+
+//    callParamCallbacks();   // Apply to EPICS, at end of file
 
      // when epics is exited, delete the instance of this class
     epicsAtExit(exitCallbackC, this);

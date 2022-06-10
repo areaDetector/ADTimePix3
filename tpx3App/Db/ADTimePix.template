@@ -39,3 +39,9 @@ record(ai, "$(P)$(R)WriteSpeed_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_WRITE_SPEED")
   field(SCAN, "I/O Intr")
 }
+
+record(ai, "$(P)$(R)HttpCode_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HTTP_CODE")
+  field(SCAN, "I/O Intr")
+}
