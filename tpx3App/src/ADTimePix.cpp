@@ -130,7 +130,6 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
     //sets URI http code
     createParam(ADTimePixHttpCodeString, asynParamInt32, &ADTimePixHttpCode);
     setIntegerParam(ADTimePixHttpCode, r.status_code);
-
     callParamCallbacks();   // Apply to EPICS, at end of file
 
     if(connected) return asynSuccess;
@@ -384,8 +383,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             getDashboard();
         }
     }
-
-//    callParamCallbacks();   // Apply to EPICS, at end of file
 
      // when epics is exited, delete the instance of this class
     epicsAtExit(exitCallbackC, this);
