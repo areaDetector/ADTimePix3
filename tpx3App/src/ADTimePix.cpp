@@ -129,7 +129,7 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
 
     //sets URI http code
     createParam(ADTimePixHttpCodeString, asynParamInt32, &ADTimePixHttpCode);
-    setIntegerParam(ADTimePixHttpCode, (int)r.status_code);
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
 
     callParamCallbacks();   // Apply to EPICS, at end of file
 
