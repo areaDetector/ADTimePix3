@@ -53,7 +53,7 @@ const char* driverName = "ADTimePix";
  * This is the function that initializes the driver, and is called in the IOC startup script
  * 
  * NOTE: When implementing a new driver with ADDriverTemplate, your camera may use a different connection method than
- * a const char* serialNumber. Just edit the param to fit your device, and make sure to make the same edit to the constructor below
+ * a const char* serverURL. Just edit the param to fit your device, and make sure to make the same edit to the constructor below
  *
  * @params[in]: all passed into constructor
  * @return:     status

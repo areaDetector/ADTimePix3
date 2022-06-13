@@ -99,9 +99,9 @@ class ADTimePix : ADDriver{
         // writes to ADStatus PV
         void updateStatus(const char* status);
 
-        //function used for connecting to a DRIVERNAMESTANDARD device
+        //function used for connecting to a TimePix3 serval URL device
         // NOTE - THIS MAY ALSO NEED TO CHANGE IF SERIAL # NOT USED
-        asynStatus initialServerCheckConnection(const char* serialNumber);
+        asynStatus initialServerCheckConnection(const char* serverURL);
 
         void printConnectedDeviceInfo();
 
