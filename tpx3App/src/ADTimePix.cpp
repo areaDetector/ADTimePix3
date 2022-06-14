@@ -125,6 +125,8 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
 
     if(r.status_code == 200) {
         connected = true;
+        printf("CONNECTED!, %li\n", r.status_code);
+        printf("asynSuccess! %d\n\n", asynSuccess);
     }
 
     //sets URI http code
@@ -145,10 +147,11 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
  * 
  * @return: status
  */
-asynStatus ADTimePix::getDashboard(){
+asynStatus ADTimePix::getDashboard(const char* serverURL){
     const char* functionName = "getDashboard";
     asynStatus status = asynSuccess;
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Collecting detector information\n", driverName, functionName);
+    std::string dashboard;
 
     // Use the vendor library to collect information about the connected camera here, and set the appropriate PVs
     // Make sure you check if camera is connected before calling on it for information
@@ -157,6 +160,15 @@ asynStatus ADTimePix::getDashboard(){
     //setStringParam(ADSerialNumber,        _____________);
     //setStringParam(ADFirmwareVersion,     _____________);
     //setStringParam(ADModel,               _____________);
+
+    dashboard = std::string("http://localhost:8080") + "/dashboard";
+    printf("ServerURL/dashboard=%s/n", dashboard.c_str());
+    cpr::Response r = cpr::Get(cpr::Url{dashboard},
+                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+
+    printf("Status code: %li\n", r.status_code);
+    printf("Text: %s\n", r.text.c_str());
 
     return status;
 }
@@ -376,11 +388,13 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     if(strlen(serverURL) < 0){
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Connection failed, abort\n", driverName, functionName);
     }
+// asynSuccess = 0, so use !0 for true/connected    
     else{
         asynStatus connected = initialServerCheckConnection(serverURL);
-        if(connected){
+        if(!connected){
             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Acquiring device information\n", driverName, functionName);
-            getDashboard();
+            getDashboard(serverURL); 
+            printf("HERE HERE!\n\n");
         }
     }
 

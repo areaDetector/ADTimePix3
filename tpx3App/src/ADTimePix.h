@@ -111,7 +111,7 @@ class ADTimePix : ADDriver{
         //function that stops aquisition
         asynStatus acquireStop();
 
-        asynStatus getDashboard();
+        asynStatus getDashboard(const char* serverURL);
 
 };
 
