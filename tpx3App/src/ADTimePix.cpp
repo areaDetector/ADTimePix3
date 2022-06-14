@@ -161,7 +161,9 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
     //setStringParam(ADFirmwareVersion,     _____________);
     //setStringParam(ADModel,               _____________);
 
-    dashboard = std::string("http://localhost:8080") + "/dashboard";
+//  Both work:
+//  dashboard = std::string("http://localhost:8080") + "/dashboard";
+    dashboard = std::string(serverURL) + std::string("/dashboard");
     printf("ServerURL/dashboard=%s/n", dashboard.c_str());
     cpr::Response r = cpr::Get(cpr::Url{dashboard},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
