@@ -33,6 +33,7 @@
 
 
 using namespace std;
+using json = nlohmann::json;
 
 // Add any additional namespaces here
 
@@ -171,6 +172,17 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
 
     printf("Status code: %li\n", r.status_code);
     printf("Text: %s\n", r.text.c_str());
+
+    json dashboard_j = json::parse(r.text.c_str());
+    dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
+    printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
+
+    cpr::Response r2 = cpr::Put(cpr::Url{dashboard},
+                           cpr::Body{dashboard_j.dump().c_str()},                      
+                           cpr::Header{{"Content-Type", "text/plain"}});
+
+    printf("Status code: %li\n", r2.status_code);
+    printf("Text: %s\n", r2.text.c_str());
 
     return status;
 }
