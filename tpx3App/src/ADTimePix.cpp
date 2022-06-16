@@ -393,7 +393,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 // asynSuccess = 0, so use !0 for true/connected    
     else{
         asynStatus connected = initialServerCheckConnection(serverURL);
-        if(!connected){
+ //       if(!connected){   // readability: in UNIX 0 is success for a command, but in C++ 0 is "false"
+        if(connected == asynSuccess) {
+
             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Acquiring device information\n", driverName, functionName);
             getDashboard(serverURL); 
             printf("HERE HERE!\n\n");
