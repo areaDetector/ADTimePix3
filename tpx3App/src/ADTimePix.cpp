@@ -177,12 +177,26 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
     dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
     printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
 
-    cpr::Response r2 = cpr::Put(cpr::Url{dashboard},
-                           cpr::Body{dashboard_j.dump().c_str()},                      
+
+    std::string server;
+    server = std::string(serverURL) + std::string("/server");
+    cpr::Response r2 = cpr::Get(cpr::Url{server},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    printf("Status code server: %li\n", r2.status_code);
+    printf("Text server: %s\n", r2.text.c_str()); 
+
+    json server_j = json::parse(r2.text.c_str());
+    server_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
+    printf("Text JSON server: %s\n", server_j.dump(3,' ', true).c_str());    
+
+
+    cpr::Response r3 = cpr::Put(cpr::Url{server},
+                           cpr::Body{server_j.dump().c_str()},                      
                            cpr::Header{{"Content-Type", "text/plain"}});
 
-    printf("Status code: %li\n", r2.status_code);
-    printf("Text: %s\n", r2.text.c_str());
+    printf("Status code: %li\n", r3.status_code);
+    printf("Text: %s\n", r3.text.c_str());
 
     return status;
 }
