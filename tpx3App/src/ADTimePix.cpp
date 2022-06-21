@@ -187,13 +187,18 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
     json dashboard_j = json::parse(r.text.c_str());
     // dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
     printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
-    std:string SwVer;
+    std::string SwVer;
     SwVer = dashboard_j["Server"]["SoftwareVersion"].dump().c_str();
-    printf("SwVer->=%s\n",SwVer);
-    printf("Server->SorfwareVersion: %s\n", dashboard_j["Server"]["SoftwareVersion"].dump().c_str());
+    printf("SwVer length->=%s\n",SwVer.substr(1,SwVer.length()-2).c_str());
+    printf("SwVer size->=%s\n",SwVer.substr(1,SwVer.size()-2).c_str());
+    if (!SwVer.empty()) {
+        SwVer.pop_back();
+    }
+    printf("SwVer end->=%s\n",SwVer.substr(1).c_str());
+    printf("Server->SorfwareVersion: %s\n", dashboard_j["Server"]["SoftwareVersion"].dump().substr(1).c_str());
 
-    //sets Serval Version
-    setStringParam(ADTimePixServalVer, dashboard_j["Server"]["SoftwareVersion"].dump().c_str());
+    //sets Serval Firmware Version
+    setStringParam(ADFirmwareVersion, dashboard_j["Server"]["SoftwareVersion"].dump().c_str());
     callParamCallbacks();   // Apply to EPICS, at end of file
 
     printf("After Serval Version!\n");

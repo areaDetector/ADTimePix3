@@ -28,7 +28,6 @@
 #define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
 
 // dashboard
-#define ADTimePixServalVerString           "TPX3_SERVAL_VER"             // (asynOctet,         r)      Serval Version
 
 // Place any required inclues here
 
@@ -73,9 +72,7 @@ class ADTimePix : ADDriver{
         int ADTimePixServer;
         #define ADTIMEPIX_FIRST_PARAM ADTimePixServer
         int ADTimePixWriteSpeed;
-
         int ADTimePixHttpCode;
-        int ADTimePixServalVer;
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
