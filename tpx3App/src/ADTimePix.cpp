@@ -144,7 +144,7 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
 
 
 /**
- * Function that updates PV values with camera information
+ * Function that updates PV values of dashboard with camera information
  * 
  * @return: status
  */
@@ -161,6 +161,17 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
     //setStringParam(ADSerialNumber,        _____________);
     //setStringParam(ADFirmwareVersion,     _____________);
     //setStringParam(ADModel,               _____________);
+    /*
+        "Server" : {
+           "SoftwareVersion" : "2.3.6",
+           "DiskSpace" : [ ],
+           "SoftwareTimestamp" : "2022/01/05 11:07",
+           "Notifications" : [ ]
+        },
+        "Measurement" : null,
+        "Detector" : null
+    */
+
 
 //  Both work:
 //  dashboard = std::string("http://localhost:8080") + "/dashboard";
@@ -176,6 +187,12 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
     json dashboard_j = json::parse(r.text.c_str());
     dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
     printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
+
+    //sets Serval Version
+    createParam(ADTimePixServalVerString, asynParamInt32, &ADTimePixServalVer);
+    setIntegerParam(ADTimePixServalVer, dashboard_j["Server"]["SoftwareVersion"].dump.c_str() );
+    callParamCallbacks();   // Apply to EPICS, at end of file
+
 
 
     std::string server;
@@ -200,6 +217,8 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
 
     return status;
 }
+
+
 
 
 
@@ -435,7 +454,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 ADTimePix::~ADTimePix(){
     const char* functionName = "~ADTimePix";
-    asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER,"%s::%s ADUVC driver exiting\n", driverName, functionName);
+    asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER,"%s::%s ADTimePix driver exiting\n", driverName, functionName);
     disconnect(this->pasynUserSelf);
 }
 
