@@ -233,7 +233,8 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
         DetType.pop_back();
         DetType.erase(DetType.begin());
         printf("Detector CONNECTED, Detector=%s, DetType=%s\n", Detector.c_str(), DetType.c_str());
-        setStringParam(ADTimePixDetType, DetType.c_str());
+    //    setStringParam(ADTimePixDetType, DetType.c_str());
+        setStringParam(ADModel, DetType.c_str());
     }
     else {
         printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
