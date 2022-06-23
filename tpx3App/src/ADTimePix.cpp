@@ -214,7 +214,8 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
         printf("SwTS->%s\n", SwTS.c_str());
     }
     //sets Serval Firmware Version, TimeStamp PV
-    setStringParam(ADFirmwareVersion, SwVer.c_str());
+    setStringParam(ADSDKVersion, SwVer.c_str());
+    setStringParam(ADManufacturer, "ASI");
     setStringParam(ADTimePixFWTimeStamp, SwTS.c_str());
     
     callParamCallbacks();   // Apply to EPICS, at end of file
