@@ -27,6 +27,18 @@ record(stringin, "$(P)$(R)ServerURL_RBV"){
   field(SCAN, "I/O Intr")
 }
 
+record(stringin, "$(P)$(R)DetType_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DETECTOR_TYPE")
+  field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)FwTS_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FW_TIMESTAMP")
+  field(SCAN, "I/O Intr")
+}
+
 record(ai, "$(P)$(R)FreeSpace_RBV"){
   field(DTYP, "asynFloat64")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FREE_SPACE")

@@ -23,9 +23,13 @@
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
 #define ADTimePixServerNameString          "TPX3_SERVER_NAME"            // (asynOctet,         r)      Server Name
+#define ADTimePixDetTypeString             "TPX3_DETECTOR_TYPE"          // (asynOctet,         r)      Detector Type
+#define ADTimePixFWTimeStampString         "TPX3_FW_TIMESTAMP"           // (asynOctet,         r)      Firmware TimeStamp
+//#define ADTimePixDetConnectedString       "TPX3_DETECTOR_CONNECTED"     // (asynOctet,         r)      Detector Connected, TODO
 #define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             // (asynFloat64,       r)
 #define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)
 #define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
+
 
 // dashboard
 
@@ -71,6 +75,9 @@ class ADTimePix : ADDriver{
 
         int ADTimePixServer;
         #define ADTIMEPIX_FIRST_PARAM ADTimePixServer
+        int ADTimePixDetType;
+        int ADTimePixFWTimeStamp;
+    //    int ADTimePixDetConnected;    // TODO
         int ADTimePixWriteSpeed;
         int ADTimePixHttpCode;
 
@@ -110,6 +117,7 @@ class ADTimePix : ADDriver{
         asynStatus acquireStop();
 
         asynStatus getDashboard(const char* serverURL);
+        asynStatus getServer(const char* serverURL);
 
 };
 

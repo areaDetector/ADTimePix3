@@ -91,6 +91,18 @@ void ADTimePix::printConnectedDeviceInfo(){
     printf("--------------------------------------\n");
 }
 
+// -----------------------------------------------------------------------
+// std strip quotes around string Functions
+// ../ADTimePix.cpp:97:6: error: specializing member ‘std::__cxx11::basic_string<char>::quotes’ requires ‘template<>’ syntax
+// -----------------------------------------------------------------------
+//auto std::string::quotes(std::string str) {
+//    if (str.length() > 2) {
+//        str.pop_back();
+//        str.erase(str.begin());
+//        return asynSuccess;        
+//    }
+//    return asynError;
+//}   
 
 // -----------------------------------------------------------------------
 // ADTimePix Connect/Disconnect Functions
@@ -126,8 +138,8 @@ asynStatus ADTimePix::initialServerCheckConnection(const char* serverURL){
 
     if(r.status_code == 200) {
         connected = true;
-        printf("CONNECTED!, %li\n", r.status_code);
-        printf("asynSuccess! %d\n\n", asynSuccess);
+        printf("CONNECTED to Welcom URI!, %li\n", r.status_code);
+    //    printf("asynSuccess! %d\n\n", asynSuccess);
     }
 
     //sets URI http code
@@ -159,7 +171,7 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
 
     //setStringParam(ADManufacturer,        _____________);
     //setStringParam(ADSerialNumber,        _____________);
-    //setStringParam(ADFirmwareVersion,     _____________);
+    //setStringParam(ADFirmwareVersion,     "Server"->"SoftwareVersion" : "2.3.6",);
     //setStringParam(ADModel,               _____________);
     /*
         "Server" : {
@@ -172,11 +184,9 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
         "Detector" : null
     */
 
-
-//  Both work:
 //  dashboard = std::string("http://localhost:8080") + "/dashboard";
     dashboard = std::string(serverURL) + std::string("/dashboard");
-    printf("ServerURL/dashboard=%s/n", dashboard.c_str());
+    printf("ServerURL/dashboard=%s\n", dashboard.c_str());
     cpr::Response r = cpr::Get(cpr::Url{dashboard},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
@@ -187,31 +197,95 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
     json dashboard_j = json::parse(r.text.c_str());
     // dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
     printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
-    std::string SwVer;
-    SwVer = dashboard_j["Server"]["SoftwareVersion"].dump().c_str();
-    printf("SwVer length->=%s\n",SwVer.substr(1,SwVer.length()-2).c_str());
-    printf("SwVer size->=%s\n",SwVer.substr(1,SwVer.size()-2).c_str());
-    if (!SwVer.empty()) {
-        SwVer.pop_back();
-    }
-    printf("SwVer end->=%s\n",SwVer.substr(1).c_str());
-    printf("Server->SorfwareVersion: %s\n", dashboard_j["Server"]["SoftwareVersion"].dump().substr(1).c_str());
 
-    //sets Serval Firmware Version
-    setStringParam(ADFirmwareVersion, dashboard_j["Server"]["SoftwareVersion"].dump().c_str());
+    // strip double quote from beginning and end of string
+    std::string SwVer, SwTS;
+    SwVer = dashboard_j["Server"]["SoftwareVersion"].dump().c_str();
+    if (SwVer.length() > 1) {
+        printf("SwVer=%s, SwVerlength=%ld\n", SwVer.c_str(), SwVer.length());
+        SwVer.pop_back();
+        SwVer.erase(SwVer.begin());
+    }
+    SwTS = dashboard_j["Server"]["SoftwareTimestamp"].dump().c_str();
+    if (SwTS.length() > 1) {
+        printf("SwTS=%s, SwTSlength=%ld\n", SwTS.c_str(), SwTS.length());
+        SwTS.pop_back();
+        SwTS.erase(SwTS.begin());
+        printf("SwTS->%s\n", SwTS.c_str());
+    }
+    //sets Serval Firmware Version, TimeStamp PV
+    setStringParam(ADFirmwareVersion, SwVer.c_str());
+    setStringParam(ADTimePixFWTimeStamp, SwTS.c_str());
+    
     callParamCallbacks();   // Apply to EPICS, at end of file
 
     printf("After Serval Version!\n");
 
+    // Is Detector connected?
+    std::string Detector, DetType;
+    Detector = dashboard_j["Detector"].dump().c_str();
+    printf("Detector=%s\n", Detector.c_str());
+    if (strcmp(Detector.c_str(), "null")) {
+        Detector.pop_back();
+        Detector.erase(Detector.begin());
+        DetType = dashboard_j["Detector"]["DetectorType"].dump().c_str();
+        DetType.pop_back();
+        DetType.erase(DetType.begin());
+        printf("Detector CONNECTED, Detector=%s, DetType=%s\n", Detector.c_str(), DetType.c_str());
+        setStringParam(ADTimePixDetType, DetType.c_str());
+    }
+    else {
+        printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
+        setStringParam(ADTimePixDetType, "null");
+    }
+
+    return status;
+}
+
+
+/**
+ * Function that updates PV values of server with camera information
+ * 
+ * @return: status
+ */
+asynStatus ADTimePix::getServer(const char* serverURL){
+    const char* functionName = "getServer";
+    asynStatus status = asynSuccess;
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Collecting detector information\n", driverName, functionName);
     std::string server;
+
+    // Use the vendor library to collect information about the camera format here, and set the appropriate PVs
+    /*
+        {
+          "Destination" : {
+            "Raw" : [ {
+              "Base" : "file:///home/kgofron/Downloads",
+              "FilePattern" : "raw%Hms_",
+              "SplitStrategy" : "SINGLE_FILE",
+              "QueueSize" : 16384
+            } ],
+            "Image" : [ {
+              "Base" : "file:///home/kgofron/Downloads/TimePix/20220105-asi-server-236-tpx3/examples/tpx3/data",
+              "FilePattern" : "f%Hms_",
+              "Format" : "tiff",
+              "Mode" : "tot",
+              "Thresholds" : [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+              "IntegrationSize" : 0,
+              "StopMeasurementOnDiskLimit" : true,
+              "QueueSize" : 1024
+            } ]
+          }
+        }
+    */
+
     server = std::string(serverURL) + std::string("/server");
-    cpr::Response r2 = cpr::Get(cpr::Url{server},
+    cpr::Response r = cpr::Get(cpr::Url{server},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
-    printf("Status code server: %li\n", r2.status_code);
-    printf("Text server: %s\n", r2.text.c_str()); 
+    printf("Status code server: %li\n", r.status_code);
+    printf("Text server: %s\n", r.text.c_str()); 
 
-    json server_j = json::parse(r2.text.c_str());
+    json server_j = json::parse(r.text.c_str());
     server_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
     printf("Text JSON server: %s\n", server_j.dump(3,' ', true).c_str());    
 
@@ -225,8 +299,6 @@ asynStatus ADTimePix::getDashboard(const char* serverURL){
 
     return status;
 }
-
-
 
 
 
@@ -438,8 +510,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
-    printf("HERE!\n");
-
     if(strlen(serverURL) < 0){
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Connection failed, abort\n", driverName, functionName);
     }
@@ -451,7 +521,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
             asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Acquiring device information\n", driverName, functionName);
             getDashboard(serverURL); 
-            printf("HERE HERE!\n\n");
+            printf("Dashboard done HERE!\n\n");
+            getServer(serverURL);
+            printf("Server done HERE!\n\n");
         }
     }
 
