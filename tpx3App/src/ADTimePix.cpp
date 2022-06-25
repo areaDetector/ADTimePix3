@@ -256,7 +256,7 @@ asynStatus ADTimePix::getHealth(){
     json health_j = json::parse(r.text.c_str());
     // printf("Text JSON: %s\n", health_j.dump(3,' ', true).c_str());
     // printf("%lf\n", health_j["ChipTemperatures"].get<double>());
-    //printf("Chip Temperatures %s, %s\n", health_j["ChipTemperatures"].dump().c_str(), health_j["VDD"][1].dump().c_str());
+    // printf("Chip Temperatures %s, %s\n", health_j["ChipTemperatures"].dump().c_str(), health_j["VDD"][1].dump().c_str());
     
     setDoubleParam(ADTimePixLocalTemp, health_j["LocalTemperature"].get<double>());
     setDoubleParam(ADTimePixFPGATemp, health_j["FPGATemperature"].get<double>());
@@ -264,13 +264,9 @@ asynStatus ADTimePix::getHealth(){
     setDoubleParam(ADTimePixFan2Speed, health_j["Fan2Speed"].get<double>());
     setDoubleParam(ADTimePixBiasVoltage, health_j["BiasVoltage"].get<double>());
 
-    //setStringParam(ADTimePixChipTemperature, health_j["ChipTemperatures"].dump().c_str());
-    //setStringParam(ADTimePixVDD, health_j["VDD"].dump().c_str());
-    //setStringParam(ADTimePixAVDD, health_j["AVDD"].dump().c_str());
-
-    setStringParam(ADTimePixChipTemperature, "50");
-    setStringParam(ADTimePixVDD, "40");
-    setStringParam(ADTimePixAVDD, "32");
+    setStringParam(ADTimePixChipTemperature, health_j["ChipTemperatures"].dump().c_str());
+    setStringParam(ADTimePixVDD, health_j["VDD"].dump().c_str());
+    setStringParam(ADTimePixAVDD, health_j["AVDD"].dump().c_str());
 
     callParamCallbacks();
 

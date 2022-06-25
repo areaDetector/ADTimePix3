@@ -87,12 +87,6 @@ record(ai, "$(P)$(R)BiasVoltage_RBV"){
   field(SCAN, "I/O Intr")
 }
 
-#record(stringin, "$(P)$(R)Chip1Temp_RBV"){
-#  field(DTYP, "asynFloat64")
-#  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP1_TEMP")
-#  field(SCAN, "I/O Intr")
-#}
-
 # Arrays of values
 record(stringin, "$(P)$(R)ChipTemps_RBV"){
   field(DTYP, "asynOctetRead")
