@@ -56,3 +56,65 @@ record(ai, "$(P)$(R)HttpCode_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HTTP_CODE")
   field(SCAN, "I/O Intr")
 }
+
+record(ai, "$(P)$(R)LocalTemp_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LOCAL_TEMP")
+  field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)FPGATemp_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FPGA_TEMP")
+  field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)Fan1Speed_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FAN1_SPEED")
+  field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)Fan2Speed_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FAN2_SPEED")
+  field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)BiasVoltage_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BIAS_VOLT")
+  field(SCAN, "I/O Intr")
+}
+
+#record(stringin, "$(P)$(R)Chip1Temp_RBV"){
+#  field(DTYP, "asynFloat64")
+#  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP1_TEMP")
+#  field(SCAN, "I/O Intr")
+#}
+
+# Arrays of values
+record(stringin, "$(P)$(R)ChipTemps_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP_TEMPS")
+  field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)VDD_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VDD")
+  field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)AVDD_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_AVDD")
+  field(SCAN, "I/O Intr")
+}
+
+# Health scanner
+record(bo, "$(P)$(R)Health"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HEALTH")
+  field(SCAN, "1 second")
+}

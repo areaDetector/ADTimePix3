@@ -30,6 +30,17 @@
 #define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)
 #define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
 
+// Health
+#define ADTimePixLocalTempString            "TPX3_LOCAL_TEMP"            // (asynFloat64,       r)      Local Temperature
+#define ADTimePixFPGATempString             "TPX3_FPGA_TEMP"             // (asynFloat64,       r)      FPGA Temperature
+#define ADTimePixFan1SpeedString            "TPX3_FAN1_SPEED"            // (asynFloat64,       r)      Fan1 Speed
+#define ADTimePixFan2SpeedString            "TPX3_FAN2_SPEED"            // (asynFloat64,       r)      Fan Speed
+#define ADTimePixBiasVoltageString          "TPX3_BIAS_VOLT"             // (asynFloat64,       r)      Bias Voltage
+#define ADTimePixChipTemperatureString      "TPX3_CHIP_TEMPS"            // (asynOctet,         r)      Chip temperature list
+#define ADTimePixVDDString                  "TPX3_VDD"                   // (asynOctet,         r)      VDD list
+#define ADTimePixAVDDString                 "TPX3_AVDD"                  // (asynOctet,         r)      AVDD list
+#define ADTimePixHealthString               "TPX3_HEALTH"                // (asynInt32,         r)      Scan detector/health
+
 
 // dashboard
 
@@ -81,6 +92,17 @@ class ADTimePix : ADDriver{
         int ADTimePixWriteSpeed;
         int ADTimePixHttpCode;
 
+    // Health
+        int ADTimePixLocalTemp;
+        int ADTimePixFPGATemp;
+        int ADTimePixFan1Speed;
+        int ADTimePixFan2Speed;
+        int ADTimePixBiasVoltage;
+        int ADTimePixChipTemperature;
+        int ADTimePixVDD;
+        int ADTimePixAVDD;
+        int ADTimePixHealth;
+
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
 
@@ -90,6 +112,8 @@ class ADTimePix : ADDriver{
         epicsEventId startEventId;
         epicsEventId endEventId;
         
+
+        std::string serverURL;
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
@@ -106,7 +130,7 @@ class ADTimePix : ADDriver{
 
         //function used for connecting to a TimePix3 serval URL device
         // NOTE - THIS MAY ALSO NEED TO CHANGE IF SERIAL # NOT USED
-        asynStatus initialServerCheckConnection(const char* serverURL);
+        asynStatus initialServerCheckConnection();
 
         void printConnectedDeviceInfo();
 
@@ -116,8 +140,9 @@ class ADTimePix : ADDriver{
         //function that stops aquisition
         asynStatus acquireStop();
 
-        asynStatus getDashboard(const char* serverURL);
-        asynStatus getServer(const char* serverURL);
+        asynStatus getDashboard();
+        asynStatus getServer();
+        asynStatus getHealth();
 
 };
 
