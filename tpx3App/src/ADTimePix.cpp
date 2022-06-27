@@ -536,28 +536,35 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     this->serverURL = string(serverURL);
 
     // Call createParam here
-    // ex. createParam(ADUVC_UVCComplianceLevelString, asynParamInt32, &ADUVC_UVCComplianceLevel);
-
+  
     // FW timestamp, Detector Type
-    createParam(ADTimePixFWTimeStampString,asynParamOctet,&ADTimePixFWTimeStamp);
-    createParam(ADTimePixDetTypeString,asynParamOctet,&ADTimePixDetType);
+    createParam(ADTimePixFWTimeStampString,     asynParamOctet,&ADTimePixFWTimeStamp);
+    createParam(ADTimePixDetTypeString,         asynParamOctet,&ADTimePixDetType);
     //sets URI http code PV
-    createParam(ADTimePixHttpCodeString, asynParamInt32, &ADTimePixHttpCode);
+    createParam(ADTimePixHttpCodeString,        asynParamInt32, &ADTimePixHttpCode);
 
     // API serval version
-    createParam(ADTimePixServerNameString, asynParamOctet, &ADTimePixServer);
+    createParam(ADTimePixServerNameString,      asynParamOctet, &ADTimePixServer);
 
-    // Health
-    createParam(ADTimePixLocalTempString, asynParamFloat64, &ADTimePixLocalTemp);
-    createParam(ADTimePixFPGATempString, asynParamFloat64, &ADTimePixFPGATemp);
-    createParam(ADTimePixFan1SpeedString, asynParamFloat64, &ADTimePixFan1Speed);
-    createParam(ADTimePixFan2SpeedString, asynParamFloat64, &ADTimePixFan2Speed);
-    createParam(ADTimePixBiasVoltageString, asynParamFloat64, &ADTimePixBiasVoltage);
+    // Detector Health
+    createParam(ADTimePixLocalTempString,       asynParamFloat64, &ADTimePixLocalTemp);
+    createParam(ADTimePixFPGATempString,        asynParamFloat64, &ADTimePixFPGATemp);
+    createParam(ADTimePixFan1SpeedString,       asynParamFloat64, &ADTimePixFan1Speed);
+    createParam(ADTimePixFan2SpeedString,       asynParamFloat64, &ADTimePixFan2Speed);
+    createParam(ADTimePixBiasVoltageString,     asynParamFloat64, &ADTimePixBiasVoltage);
     createParam(ADTimePixChipTemperatureString, asynParamOctet, &ADTimePixChipTemperature);
-    createParam(ADTimePixVDDString, asynParamOctet, &ADTimePixVDD);
-    createParam(ADTimePixAVDDString, asynParamOctet, &ADTimePixAVDD);
-    createParam(ADTimePixHealthString, asynParamInt32, &ADTimePixHealth);
+    createParam(ADTimePixVDDString,             asynParamOctet, &ADTimePixVDD);
+    createParam(ADTimePixAVDDString,            asynParamOctet, &ADTimePixAVDD);
+    createParam(ADTimePixHealthString,          asynParamInt32, &ADTimePixHealth);
     // 
+
+    // Detector Info
+
+    // Detector Config
+
+    // Detector Chips
+
+    // Detector Layout
     
 
     //sets driver version
