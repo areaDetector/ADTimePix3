@@ -238,139 +238,139 @@ class ADTimePix : ADDriver{
         int ADTimePixVDD;
         int ADTimePixAVDD;
         int ADTimePixHealth;
-/*
+
         // Detector Info
-ADTimePixIfaceNameString            
-ADTimePixChipboardIDString          
-ADTimePixSW_versionString           
-ADTimePixFW_versionString           
-ADTimePixPixCountString             
-ADTimePixRowLenString               
-ADTimePixNumberOfChipsString        
-ADTimePixNumberOfRowsString         
-ADTimePixMpxTypeString
-
-ADTimePixBoardsIDString             
-ADTimePixBoardsIPString             
-ADTimePixBoardsPortString           
-ADTimePixBoardsCh1String            
-ADTimePixBoardsCh2String            
-ADTimePixBoardsCh3String           
-ADTimePixBoardsCh4String            
-
-ADTimePixSuppAcqModesString         
-ADTimePixClockReadoutString         
-ADTimePixMaxPulseCountString        
-ADTimePixMaxPulseHeightString       
-ADTimePixMaxPulsePeriodString       
-ADTimePixTimerMaxValString          
-ADTimePixTimerMinValString          
-ADTimePixTimerStepString            
-ADTimePixClockTimepixString         
-
-    // Detector Config
-ADTimePixFan1PWMString                  
-ADTimePixFan2PWMString                  
-ADTimePixBiasVoltString                 
-ADTimePixBiasEnableString               
-ADTimePixChainModeString                
-ADTimePixTriggerInString                
-ADTimePixTriggerOutString               
-ADTimePixPolarityString                 
-ADTimePixTriggerModeString              
-ADTimePixExposureTimeString             
-ADTimePixTriggerPeriodString            
-ADTimePixnTriggersString                
-ADTimePixDetectorOrientationString      
-ADTimePixPeriphClk80String              
-ADTimePixTriggerDelayString             
-ADTimePixTdcString                      
-ADTimePixGlobalTimestampIntervalString  
-ADTimePixExternalReferenceClockString   
-ADTimePixLogLevelString                 
-
-    // Detector Chips: Chip1
-ADTimePixChip1CP_PLLString              
-ADTimePixChip1DiscS1OFFString           
-ADTimePixChip1DiscS1ONString            
-ADTimePixChip1DiscS2OFFString           
-ADTimePixChip1DiscS2ONString            
-ADTimePixChip1IkrumString               
-ADTimePixChip1PixelDACString            
-ADTimePixChip1PreampOFFString           
-ADTimePixChip1PreampONString            
-ADTimePixChip1TPbufferInString          
-ADTimePixChip1TPbufferOutString         
-ADTimePixChip1PLL_VcntrlString          
-ADTimePixChip1VPreampNCASString         
-ADTimePixChip1VTPcoarseString           
-ADTimePixChip1VTPfineString             
-ADTimePixChip1VfbkString                
-ADTimePixChip1VthresholdCoarseString    
-ADTimePixChip1VTthresholdFineString     
-ADTimePixChip1AdjustString              
-    // Detector Chips: Chip2
-ADTimePixChip2CP_PLLString              
-ADTimePixChip2DiscS1OFFString           
-ADTimePixChip2DiscS1ONString            
-ADTimePixChip2DiscS2OFFString           
-ADTimePixChip2DiscS2ONString            
-ADTimePixChip2IkrumString               
-ADTimePixChip2PixelDACString            
-ADTimePixChip2PreampOFFString           
-ADTimePixChip2PreampONString            
-ADTimePixChip2TPbufferInString          
-ADTimePixChip2TPbufferOutString         
-ADTimePixChip2PLL_VcntrlString          
-ADTimePixChip2VPreampNCASString         
-ADTimePixChip2VTPcoarseString           
-ADTimePixChip2VTPfineString             
-ADTimePixChip2VfbkString                
-ADTimePixChip2VthresholdCoarseString    
-ADTimePixChip2VTthresholdFineString     
-ADTimePixChip2AdjustString              
-    // Detector Chips: Chip3
-ADTimePixChip3CP_PLLString              
-ADTimePixChip3DiscS1OFFString           
-ADTimePixChip3DiscS1ONString            
-ADTimePixChip3DiscS2OFFString           
-ADTimePixChip3DiscS2ONString            
-ADTimePixChip3IkrumString               
-ADTimePixChip3PixelDACString            
-ADTimePixChip3PreampOFFString           
-ADTimePixChip3PreampONString            
-ADTimePixChip3TPbufferInString          
-ADTimePixChip3TPbufferOutString         
-ADTimePixChip3PLL_VcntrlString          
-ADTimePixChip3VPreampNCASString         
-ADTimePixChip3VTPcoarseString           
-ADTimePixChip3VTPfineString             
-ADTimePixChip3VfbkString                
-ADTimePixChip3VthresholdCoarseString    
-ADTimePixChip3VTthresholdFineString     
-ADTimePixChip3AdjustString              
-    // Detector Chips: Chip4
-ADTimePixChip4CP_PLLString              
-ADTimePixChip4DiscS1OFFString           
-ADTimePixChip4DiscS1ONString            
-ADTimePixChip4DiscS2OFFString           
-ADTimePixChip4DiscS2ONString            
-ADTimePixChip4IkrumString               
-ADTimePixChip4PixelDACString            
-ADTimePixChip4PreampOFFString           
-ADTimePixChip4PreampONString            
-ADTimePixChip4TPbufferInString          
-ADTimePixChip4TPbufferOutString         
-ADTimePixChip4PLL_VcntrlString          
-ADTimePixChip4VPreampNCASString         
-ADTimePixChip4VTPcoarseString           
-ADTimePixChip4VTPfineString             
-ADTimePixChip4VfbkString                
-ADTimePixChip4VthresholdCoarseString    
-ADTimePixChip4VTthresholdFineString     
-ADTimePixChip4AdjustString              
-*/    
-
+        int ADTimePixIfaceName;            
+        int ADTimePixChipboardID;          
+        int ADTimePixSW_version;           
+        int ADTimePixFW_version;           
+        int ADTimePixPixCount;             
+        int ADTimePixRowLen;               
+        int ADTimePixNumberOfChips;        
+        int ADTimePixNumberOfRows;         
+        int ADTimePixMpxType;
+        
+        int ADTimePixBoardsID;             
+        int ADTimePixBoardsIP;             
+        int ADTimePixBoardsPort;           
+        int ADTimePixBoardsCh1;            
+        int ADTimePixBoardsCh2;            
+        int ADTimePixBoardsCh3;           
+        int ADTimePixBoardsCh4;            
+         
+        int ADTimePixSuppAcqModes;         
+        int ADTimePixClockReadout;         
+        int ADTimePixMaxPulseCount;        
+        int ADTimePixMaxPulseHeight;       
+        int ADTimePixMaxPulsePeriod;       
+        int ADTimePixTimerMaxVal;          
+        int ADTimePixTimerMinVal;          
+        int ADTimePixTimerStep;            
+        int ADTimePixClockTimepix;         
+         
+             // Detector Config
+        int ADTimePixFan1PWM;                  
+        int ADTimePixFan2PWM;                  
+        int ADTimePixBiasVolt;                 
+        int ADTimePixBiasEnable;               
+        int ADTimePixChainMode;                
+        int ADTimePixTriggerIn;                
+        int ADTimePixTriggerOut;               
+        int ADTimePixPolarity;                 
+        int ADTimePixTriggerMode;              
+        int ADTimePixExposureTime;             
+        int ADTimePixTriggerPeriod;            
+        int ADTimePixnTriggers;                
+        int ADTimePixDetectorOrientation;      
+        int ADTimePixPeriphClk80;              
+        int ADTimePixTriggerDelay;             
+        int ADTimePixTdc;                      
+        int ADTimePixGlobalTimestampInterval;  
+        int ADTimePixExternalReferenceClock;   
+        int ADTimePixLogLevel;                 
+         
+             // Detector Chips: Chip1
+        int ADTimePixChip1CP_PLL;              
+        int ADTimePixChip1DiscS1OFF;           
+        int ADTimePixChip1DiscS1ON;            
+        int ADTimePixChip1DiscS2OFF;           
+        int ADTimePixChip1DiscS2ON;            
+        int ADTimePixChip1Ikrum;               
+        int ADTimePixChip1PixelDAC;            
+        int ADTimePixChip1PreampOFF;           
+        int ADTimePixChip1PreampON;            
+        int ADTimePixChip1TPbufferIn;          
+        int ADTimePixChip1TPbufferOut;         
+        int ADTimePixChip1PLL_Vcntrl;          
+        int ADTimePixChip1VPreampNCAS;         
+        int ADTimePixChip1VTPcoarse;           
+        int ADTimePixChip1VTPfine;             
+        int ADTimePixChip1Vfbk;                
+        int ADTimePixChip1VthresholdCoarse;    
+        int ADTimePixChip1VTthresholdFine;     
+        int ADTimePixChip1Adjust;              
+             // Detector Chips: Chip2
+        int ADTimePixChip2CP_PLL;              
+        int ADTimePixChip2DiscS1OFF;           
+        int ADTimePixChip2DiscS1ON;            
+        int ADTimePixChip2DiscS2OFF;           
+        int ADTimePixChip2DiscS2ON;            
+        int ADTimePixChip2Ikrum;               
+        int ADTimePixChip2PixelDAC;            
+        int ADTimePixChip2PreampOFF;           
+        int ADTimePixChip2PreampON;            
+        int ADTimePixChip2TPbufferIn;          
+        int ADTimePixChip2TPbufferOut;         
+        int ADTimePixChip2PLL_Vcntrl;          
+        int ADTimePixChip2VPreampNCAS;         
+        int ADTimePixChip2VTPcoarse;           
+        int ADTimePixChip2VTPfine;             
+        int ADTimePixChip2Vfbk;                
+        int ADTimePixChip2VthresholdCoarse;    
+        int ADTimePixChip2VTthresholdFine;     
+        int ADTimePixChip2Adjust;              
+             // Detector Chips: Chip3
+        int ADTimePixChip3CP_PLL;              
+        int ADTimePixChip3DiscS1OFF;           
+        int ADTimePixChip3DiscS1ON;            
+        int ADTimePixChip3DiscS2OFF;           
+        int ADTimePixChip3DiscS2ON;            
+        int ADTimePixChip3Ikrum;               
+        int ADTimePixChip3PixelDAC;           
+        int ADTimePixChip3PreampOFF;           
+        int ADTimePixChip3PreampON;            
+        int ADTimePixChip3TPbufferIn;          
+        int ADTimePixChip3TPbufferOut;         
+        int ADTimePixChip3PLL_Vcntrl;          
+        int ADTimePixChip3VPreampNCAS;         
+        int ADTimePixChip3VTPcoarse;           
+        int ADTimePixChip3VTPfine;             
+        int ADTimePixChip3Vfbk;                
+        int ADTimePixChip3VthresholdCoarse;    
+        int ADTimePixChip3VTthresholdFine;     
+        int ADTimePixChip3Adjust;              
+             // Detector Chips: Chip4
+        int ADTimePixChip4CP_PLL;
+        int ADTimePixChip4DiscS1OFF;
+        int ADTimePixChip4DiscS1ON;
+        int ADTimePixChip4DiscS2OFF;
+        int ADTimePixChip4DiscS2ON;
+        int ADTimePixChip4Ikrum;
+        int ADTimePixChip4PixelDAC;
+        int ADTimePixChip4PreampOFF;
+        int ADTimePixChip4PreampON;
+        int ADTimePixChip4TPbufferIn;
+        int ADTimePixChip4TPbufferOut;
+        int ADTimePixChip4PLL_Vcntrl;
+        int ADTimePixChip4VPreampNCAS;
+        int ADTimePixChip4VTPcoarse;
+        int ADTimePixChip4VTPfine;
+        int ADTimePixChip4Vfbk;
+        int ADTimePixChip4VthresholdCoarse;
+        int ADTimePixChip4VTthresholdFine;
+        int ADTimePixChip4Adjust;
+            
+        
     //  int Chip layout
         int ADTimeChip;    
 
