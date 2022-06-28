@@ -35,7 +35,7 @@
 #define ADTimePixFPGATempString             "TPX3_FPGA_TEMP"             // (asynFloat64,       r)      FPGA Temperature
 #define ADTimePixFan1SpeedString            "TPX3_FAN1_SPEED"            // (asynFloat64,       r)      Fan1 Speed
 #define ADTimePixFan2SpeedString            "TPX3_FAN2_SPEED"            // (asynFloat64,       r)      Fan Speed
-#define ADTimePixBiasVoltageString          "TPX3_BIAS_VOLT"             // (asynFloat64,       r)      Bias Voltage
+#define ADTimePixBiasVoltageString          "TPX3_BIAS_VOLT_H"           // (asynFloat64,       r)      Bias Voltage
 #define ADTimePixChipTemperatureString      "TPX3_CHIP_TEMPS"            // (asynOctet,         r)      Chip temperature list
 #define ADTimePixVDDString                  "TPX3_VDD"                   // (asynOctet,         r)      VDD list
 #define ADTimePixAVDDString                 "TPX3_AVDD"                  // (asynOctet,         r)      AVDD list
@@ -73,23 +73,23 @@
     // Detector Config
 #define ADTimePixFan1PWMString                  "TPX3_FAN1PWM"           // (asynInt32,         r)   Fan1PWM   
 #define ADTimePixFan2PWMString                  "TPX3_FAN2PWM"           // (asynInt32,         r)   Fan2PWM   
-#define ADTimePixBiasVoltString                 "TPX3_BIAS_VOLT"         // (asynInt32,         r)      BiasVoltage
-#define ADTimePixBiasEnableString               "TPX3_BIAS_ENBL"         // (asynInt32,         r)      BiasEnabled
-#define ADTimePixChainModeString                "TPX3_CHAIN_MODE"        // (asynOctet,         r)      ChainMode
-#define ADTimePixTriggerInString                "TPX3_TRIGGER_IN"        // (asynInt32,         r)      TriggerIn
-#define ADTimePixTriggerOutString               "TPX3_TRIGGER_OUT"       // (asynInt32,         r)      TriggerOut
-#define ADTimePixPolarityString                 "TPX3_POLARITY"          // (asynOctet,         r)      Polarity
-#define ADTimePixTriggerModeString              "TPX3_TRIGGER_MODE"      // (asynOctet,         r)      TriggerMode
-#define ADTimePixExposureTimeString             "TPX3_EXPOSURE_TIME"     // (asynFloat64,       r)      ExposureTime
-#define ADTimePixTriggerPeriodString            "TPX3_TRIGGER_PERIOD"    // (asynFloat64,       r)      TriggerPeriod
-#define ADTimePixnTriggersString                "TPX3_NTRIGGERS"         // (asynInt32,         r)      nTriggers
-#define ADTimePixDetectorOrientationString      "TPX3_DET_ORIENTATION"   // (asynOctet,         r)      DetectorOrientation
-#define ADTimePixPeriphClk80String              "TPX3_PERIOD_CLK80"      // (asynInt32,         r)      PeriphClk80
-#define ADTimePixTriggerDelayString             "TPX3_TRIG_DELAY"        // (asynFloat64,       r)      TriggerDelay
-#define ADTimePixTdcString                      "TPX3_TDC"               // (asynOctet,         r)      Tdc
-#define ADTimePixGlobalTimestampIntervalString  "TPX3_GL_TIMESTAMP_INT"  // (asynFloat64,       r)      GlobalTimestampInterval
-#define ADTimePixExternalReferenceClockString   "TPX3_EXT_REF_CLOCK"     // (asynInt32,         r)      ExternalReferenceClock
-#define ADTimePixLogLevelString                 "TPX3_LOG_LEVEL"         // (asynInt32,         r)      LogLevel
+#define ADTimePixBiasVoltString                 "TPX3_BIAS_VOLT_R"        // (asynInt32,         r)   BiasVoltage
+#define ADTimePixBiasEnableString               "TPX3_BIAS_ENBL"         // (asynInt32,         r)   BiasEnabled
+#define ADTimePixChainModeString                "TPX3_CHAIN_MODE"        // (asynOctet,         r)   ChainMode
+#define ADTimePixTriggerInString                "TPX3_TRIGGER_IN"        // (asynInt32,         r)   TriggerIn
+#define ADTimePixTriggerOutString               "TPX3_TRIGGER_OUT"       // (asynInt32,         r)   TriggerOut
+#define ADTimePixPolarityString                 "TPX3_POLARITY"          // (asynOctet,         r)   Polarity
+#define ADTimePixTriggerModeString              "TPX3_TRIGGER_MODE"      // (asynOctet,         r)   TriggerMode
+#define ADTimePixExposureTimeString             "TPX3_EXPOSURE_TIME"     // (asynFloat64,       r)   ExposureTime
+#define ADTimePixTriggerPeriodString            "TPX3_TRIGGER_PERIOD"    // (asynFloat64,       r)   TriggerPeriod
+#define ADTimePixnTriggersString                "TPX3_NTRIGGERS"         // (asynInt32,         r)   nTriggers
+#define ADTimePixDetectorOrientationString      "TPX3_DET_ORIENTATION"   // (asynOctet,         r)   DetectorOrientation
+#define ADTimePixPeriphClk80String              "TPX3_PERIPH_CLK80"      // (asynInt32,         r)   PeriphClk80
+#define ADTimePixTriggerDelayString             "TPX3_TRIG_DELAY"        // (asynFloat64,       r)   TriggerDelay
+#define ADTimePixTdcString                      "TPX3_TDC"               // (asynOctet,         r)   Tdc
+#define ADTimePixGlobalTimestampIntervalString  "TPX3_GL_TIMESTAMP_INT"  // (asynFloat64,       r)   GlobalTimestampInterval
+#define ADTimePixExternalReferenceClockString   "TPX3_EXT_REF_CLOCK"     // (asynInt32,         r)   ExternalReferenceClock
+#define ADTimePixLogLevelString                 "TPX3_LOG_LEVEL"         // (asynInt32,         r)   LogLevel
 
     // Detector Chips: Chip1
 #define ADTimePixChip1CP_PLLString              "TPX3_CHIP1_CP_PLL"           // (asynInt32,         r)      DACs->Ibias_CP_PLL
@@ -372,9 +372,10 @@ class ADTimePix : ADDriver{
             
         
     //  int Chip layout
-        int ADTimeChip;    
-
-        int ADTimePixDetector;
+        int ADTimePixChip1Layout;
+        int ADTimePixChip2Layout;
+        int ADTimePixChip3Layout;
+        int ADTimePixChip4Layout;    
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
@@ -416,6 +417,7 @@ class ADTimePix : ADDriver{
         asynStatus getDashboard();
         asynStatus getServer();
         asynStatus getHealth();
+        asynStatus getDetector();
 
 };
 
