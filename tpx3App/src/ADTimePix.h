@@ -91,6 +91,26 @@
 #define ADTimePixExternalReferenceClockString   "TPX3_EXT_REF_CLOCK"     // (asynInt32,         r)   ExternalReferenceClock
 #define ADTimePixLogLevelString                 "TPX3_LOG_LEVEL"         // (asynInt32,         r)   LogLevel
 
+    // Detector Chips: Chip0; Chips count from 0-3.
+#define ADTimePixChip0CP_PLLString              "TPX3_CHIP0_CP_PLL"           // (asynInt32,         r)      DACs->Ibias_CP_PLL
+#define ADTimePixChip0DiscS1OFFString           "TPX3_CHIP0_DISCS1OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS1_OFF
+#define ADTimePixChip0DiscS1ONString            "TPX3_CHIP0_DISCS1ON"         // (asynInt32,         r)      DACs->Ibias_DiscS1_ON
+#define ADTimePixChip0DiscS2OFFString           "TPX3_CHIP0_DISCS2OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS2_OFF
+#define ADTimePixChip0DiscS2ONString            "TPX3_CHIP0_DISCS2ON"         // (asynInt32,         r)      DACs->Ibias_DiscS2_ON
+#define ADTimePixChip0IkrumString               "TPX3_CHIP0_IKRUM"            // (asynInt32,         r)      DACs->Ibias_Ikrum
+#define ADTimePixChip0PixelDACString            "TPX3_CHIP0_PIXELDAC"         // (asynInt32,         r)      DACs->Ibias_PixelDAC
+#define ADTimePixChip0PreampOFFString           "TPX3_CHIP0_PREAMPOFF"        // (asynInt32,         r)      DACs->Ibias_Preamp_OFF
+#define ADTimePixChip0PreampONString            "TPX3_CHIP0_PREAMPON"         // (asynInt32,         r)      DACs->Ibias_Preamp_ON
+#define ADTimePixChip0TPbufferInString          "TPX3_CHIP0_TPBUFFERIN"       // (asynInt32,         r)      DACs->Ibias_TPbufferIn
+#define ADTimePixChip0TPbufferOutString         "TPX3_CHIP0_TPBUFFEROUT"      // (asynInt32,         r)      DACs->Ibias_TPbufferOut
+#define ADTimePixChip0PLL_VcntrlString          "TPX3_CHIP0_PLL_VCNTRL"       // (asynInt32,         r)      DACs->PLL_Vcntrl
+#define ADTimePixChip0VPreampNCASString         "TPX3_CHIP0_VPREAMPNCAS"      // (asynInt32,         r)      DACs->VPreamp_NCAS
+#define ADTimePixChip0VTPcoarseString           "TPX3_CHIP0_VTP_COARSE"       // (asynInt32,         r)      DACs->VTP_coarse
+#define ADTimePixChip0VTPfineString             "TPX3_CHIP0_VTP_FINE"         // (asynInt32,         r)      DACs->VTP_fine
+#define ADTimePixChip0VfbkString                "TPX3_CHIP0_VFBK"             // (asynInt32,         r)      DACs->Vfbk
+#define ADTimePixChip0VthresholdCoarseString    "TPX3_CHIP0_VTH_COARSE"       // (asynInt32,         r)      DACs->Vthreshold_coarse
+#define ADTimePixChip0VTthresholdFineString     "TPX3_CHIP0_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
+#define ADTimePixChip0AdjustString              "TPX3_CHIP0_ADJUST"           // (asynInt32,         r)      DACs->Adjust
     // Detector Chips: Chip1
 #define ADTimePixChip1CP_PLLString              "TPX3_CHIP1_CP_PLL"           // (asynInt32,         r)      DACs->Ibias_CP_PLL
 #define ADTimePixChip1DiscS1OFFString           "TPX3_CHIP1_DISCS1OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS1_OFF
@@ -110,7 +130,7 @@
 #define ADTimePixChip1VfbkString                "TPX3_CHIP1_VFBK"             // (asynInt32,         r)      DACs->Vfbk
 #define ADTimePixChip1VthresholdCoarseString    "TPX3_CHIP1_VTH_COARSE"       // (asynInt32,         r)      DACs->Vthreshold_coarse
 #define ADTimePixChip1VTthresholdFineString     "TPX3_CHIP1_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
-#define ADTimePixChip1AdjustString              "TPX3_CHIP1_ADJUST"           // (asynOctet,         r)      DACs->Adjust
+#define ADTimePixChip1AdjustString              "TPX3_CHIP1_ADJUST"           // (asynInt32,         r)      DACs->Adjust
     // Detector Chips: Chip2
 #define ADTimePixChip2CP_PLLString              "TPX3_CHIP2_CP_PLL"           // (asynInt32,         r)      DACs->Ibias_CP_PLL
 #define ADTimePixChip2DiscS1OFFString           "TPX3_CHIP2_DISCS1OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS1_OFF
@@ -130,7 +150,7 @@
 #define ADTimePixChip2VfbkString                "TPX3_CHIP2_VFBK"             // (asynInt32,         r)      DACs->Vfbk
 #define ADTimePixChip2VthresholdCoarseString    "TPX3_CHIP2_VTH_COARSE"       // (asynInt32,         r)      DACs->Vthreshold_coarse
 #define ADTimePixChip2VTthresholdFineString     "TPX3_CHIP2_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
-#define ADTimePixChip2AdjustString              "TPX3_CHIP2_ADJUST"           // (asynOctet,         r)      DACs->Adjust
+#define ADTimePixChip2AdjustString              "TPX3_CHIP2_ADJUST"           // (asynInt32,         r)      DACs->Adjust
     // Detector Chips: Chip3
 #define ADTimePixChip3CP_PLLString              "TPX3_CHIP3_CP_PLL"           // (asynInt32,         r)      DACs->Ibias_CP_PLL
 #define ADTimePixChip3DiscS1OFFString           "TPX3_CHIP3_DISCS1OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS1_OFF
@@ -150,34 +170,14 @@
 #define ADTimePixChip3VfbkString                "TPX3_CHIP3_VFBK"             // (asynInt32,         r)      DACs->Vfbk
 #define ADTimePixChip3VthresholdCoarseString    "TPX3_CHIP3_VTH_COARSE"       // (asynInt32,         r)      DACs->Vthreshold_coarse
 #define ADTimePixChip3VTthresholdFineString     "TPX3_CHIP3_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
-#define ADTimePixChip3AdjustString              "TPX3_CHIP3_ADJUST"           // (asynOctet,         r)      DACs->Adjust
-    // Detector Chips: Chip4
-#define ADTimePixChip4CP_PLLString              "TPX3_CHIP4_CP_PLL"           // (asynInt32,         r)      DACs->Ibias_CP_PLL
-#define ADTimePixChip4DiscS1OFFString           "TPX3_CHIP4_DISCS1OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS1_OFF
-#define ADTimePixChip4DiscS1ONString            "TPX3_CHIP4_DISCS1ON"         // (asynInt32,         r)      DACs->Ibias_DiscS1_ON
-#define ADTimePixChip4DiscS2OFFString           "TPX3_CHIP4_DISCS2OFF"        // (asynInt32,         r)      DACs->Ibias_DiscS2_OFF
-#define ADTimePixChip4DiscS2ONString            "TPX3_CHIP4_DISCS2ON"         // (asynInt32,         r)      DACs->Ibias_DiscS2_ON
-#define ADTimePixChip4IkrumString               "TPX3_CHIP4_IKRUM"            // (asynInt32,         r)      DACs->Ibias_Ikrum
-#define ADTimePixChip4PixelDACString            "TPX3_CHIP4_PIXELDAC"         // (asynInt32,         r)      DACs->Ibias_PixelDAC
-#define ADTimePixChip4PreampOFFString           "TPX3_CHIP4_PREAMPOFF"        // (asynInt32,         r)      DACs->Ibias_Preamp_OFF
-#define ADTimePixChip4PreampONString            "TPX3_CHIP4_PREAMPON"         // (asynInt32,         r)      DACs->Ibias_Preamp_ON
-#define ADTimePixChip4TPbufferInString          "TPX3_CHIP4_TPBUFFERIN"       // (asynInt32,         r)      DACs->Ibias_TPbufferIn
-#define ADTimePixChip4TPbufferOutString         "TPX3_CHIP4_TPBUFFEROUT"      // (asynInt32,         r)      DACs->Ibias_TPbufferOut
-#define ADTimePixChip4PLL_VcntrlString          "TPX3_CHIP4_PLL_VCNTRL"       // (asynInt32,         r)      DACs->PLL_Vcntrl
-#define ADTimePixChip4VPreampNCASString         "TPX3_CHIP4_VPREAMPNCAS"      // (asynInt32,         r)      DACs->VPreamp_NCAS
-#define ADTimePixChip4VTPcoarseString           "TPX3_CHIP4_VTP_COARSE"       // (asynInt32,         r)      DACs->VTP_coarse
-#define ADTimePixChip4VTPfineString             "TPX3_CHIP4_VTP_FINE"         // (asynInt32,         r)      DACs->VTP_fine
-#define ADTimePixChip4VfbkString                "TPX3_CHIP4_VFBK"             // (asynInt32,         r)      DACs->Vfbk
-#define ADTimePixChip4VthresholdCoarseString    "TPX3_CHIP4_VTH_COARSE"       // (asynInt32,         r)      DACs->Vthreshold_coarse
-#define ADTimePixChip4VTthresholdFineString     "TPX3_CHIP4_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
-#define ADTimePixChip4AdjustString              "TPX3_CHIP4_ADJUST"           // (asynOctet,         r)      DACs->Adjust
+#define ADTimePixChip3AdjustString              "TPX3_CHIP3_ADJUST"           // (asynInt32,         r)      DACs->Adjust
 
 
     // Chip Layout
+#define ADTimePixChip0LayoutString          "TPX3_CHIP0_LAYTOUT"                // (asynOctet,         r)      Chip 0 layout
 #define ADTimePixChip1LayoutString          "TPX3_CHIP1_LAYTOUT"                // (asynOctet,         r)      Chip 1 layout
-#define ADTimePixChip2LayoutString          "TPX3_CHIP2_LAYTOUT"                // (asynOctet,         r)      Chip 1 layout
-#define ADTimePixChip3LayoutString          "TPX3_CHIP3_LAYTOUT"                // (asynOctet,         r)      Chip 1 layout
-#define ADTimePixChip4LayoutString          "TPX3_CHIP4_LAYTOUT"                // (asynOctet,         r)      Chip 1 layout
+#define ADTimePixChip2LayoutString          "TPX3_CHIP2_LAYTOUT"                // (asynOctet,         r)      Chip 2 layout
+#define ADTimePixChip3LayoutString          "TPX3_CHIP3_LAYTOUT"                // (asynOctet,         r)      Chip 3 layout
 
 
 // Place any required inclues here
@@ -289,6 +289,26 @@ class ADTimePix : ADDriver{
         int ADTimePixExternalReferenceClock;   
         int ADTimePixLogLevel;                 
          
+             // Detector Chips: Chip0
+        int ADTimePixChip0CP_PLL;              
+        int ADTimePixChip0DiscS1OFF;           
+        int ADTimePixChip0DiscS1ON;            
+        int ADTimePixChip0DiscS2OFF;           
+        int ADTimePixChip0DiscS2ON;            
+        int ADTimePixChip0Ikrum;               
+        int ADTimePixChip0PixelDAC;            
+        int ADTimePixChip0PreampOFF;           
+        int ADTimePixChip0PreampON;            
+        int ADTimePixChip0TPbufferIn;          
+        int ADTimePixChip0TPbufferOut;         
+        int ADTimePixChip0PLL_Vcntrl;          
+        int ADTimePixChip0VPreampNCAS;         
+        int ADTimePixChip0VTPcoarse;           
+        int ADTimePixChip0VTPfine;             
+        int ADTimePixChip0Vfbk;                
+        int ADTimePixChip0VthresholdCoarse;    
+        int ADTimePixChip0VTthresholdFine;     
+        int ADTimePixChip0Adjust;              
              // Detector Chips: Chip1
         int ADTimePixChip1CP_PLL;              
         int ADTimePixChip1DiscS1OFF;           
@@ -316,7 +336,7 @@ class ADTimePix : ADDriver{
         int ADTimePixChip2DiscS2OFF;           
         int ADTimePixChip2DiscS2ON;            
         int ADTimePixChip2Ikrum;               
-        int ADTimePixChip2PixelDAC;            
+        int ADTimePixChip2PixelDAC;           
         int ADTimePixChip2PreampOFF;           
         int ADTimePixChip2PreampON;            
         int ADTimePixChip2TPbufferIn;          
@@ -330,52 +350,32 @@ class ADTimePix : ADDriver{
         int ADTimePixChip2VTthresholdFine;     
         int ADTimePixChip2Adjust;              
              // Detector Chips: Chip3
-        int ADTimePixChip3CP_PLL;              
-        int ADTimePixChip3DiscS1OFF;           
-        int ADTimePixChip3DiscS1ON;            
-        int ADTimePixChip3DiscS2OFF;           
-        int ADTimePixChip3DiscS2ON;            
-        int ADTimePixChip3Ikrum;               
-        int ADTimePixChip3PixelDAC;           
-        int ADTimePixChip3PreampOFF;           
-        int ADTimePixChip3PreampON;            
-        int ADTimePixChip3TPbufferIn;          
-        int ADTimePixChip3TPbufferOut;         
-        int ADTimePixChip3PLL_Vcntrl;          
-        int ADTimePixChip3VPreampNCAS;         
-        int ADTimePixChip3VTPcoarse;           
-        int ADTimePixChip3VTPfine;             
-        int ADTimePixChip3Vfbk;                
-        int ADTimePixChip3VthresholdCoarse;    
-        int ADTimePixChip3VTthresholdFine;     
-        int ADTimePixChip3Adjust;              
-             // Detector Chips: Chip4
-        int ADTimePixChip4CP_PLL;
-        int ADTimePixChip4DiscS1OFF;
-        int ADTimePixChip4DiscS1ON;
-        int ADTimePixChip4DiscS2OFF;
-        int ADTimePixChip4DiscS2ON;
-        int ADTimePixChip4Ikrum;
-        int ADTimePixChip4PixelDAC;
-        int ADTimePixChip4PreampOFF;
-        int ADTimePixChip4PreampON;
-        int ADTimePixChip4TPbufferIn;
-        int ADTimePixChip4TPbufferOut;
-        int ADTimePixChip4PLL_Vcntrl;
-        int ADTimePixChip4VPreampNCAS;
-        int ADTimePixChip4VTPcoarse;
-        int ADTimePixChip4VTPfine;
-        int ADTimePixChip4Vfbk;
-        int ADTimePixChip4VthresholdCoarse;
-        int ADTimePixChip4VTthresholdFine;
-        int ADTimePixChip4Adjust;
+        int ADTimePixChip3CP_PLL;
+        int ADTimePixChip3DiscS1OFF;
+        int ADTimePixChip3DiscS1ON;
+        int ADTimePixChip3DiscS2OFF;
+        int ADTimePixChip3DiscS2ON;
+        int ADTimePixChip3Ikrum;
+        int ADTimePixChip3PixelDAC;
+        int ADTimePixChip3PreampOFF;
+        int ADTimePixChip3PreampON;
+        int ADTimePixChip3TPbufferIn;
+        int ADTimePixChip3TPbufferOut;
+        int ADTimePixChip3PLL_Vcntrl;
+        int ADTimePixChip3VPreampNCAS;
+        int ADTimePixChip3VTPcoarse;
+        int ADTimePixChip3VTPfine;
+        int ADTimePixChip3Vfbk;
+        int ADTimePixChip3VthresholdCoarse;
+        int ADTimePixChip3VTthresholdFine;
+        int ADTimePixChip3Adjust;
             
         
     //  int Chip layout
+        int ADTimePixChip0Layout;
         int ADTimePixChip1Layout;
         int ADTimePixChip2Layout;
-        int ADTimePixChip3Layout;
-        int ADTimePixChip4Layout;    
+        int ADTimePixChip3Layout;    
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
