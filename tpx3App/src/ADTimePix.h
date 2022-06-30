@@ -414,10 +414,13 @@ class ADTimePix : ADDriver{
         //function that stops aquisition
         asynStatus acquireStop();
 
+        // TimePix3 specific functions
         asynStatus getDashboard();
         asynStatus getServer();
         asynStatus getHealth();
         asynStatus getDetector();
+        asynStatus initCamera();
+        asynStatus initAcquisition();
 
 };
 

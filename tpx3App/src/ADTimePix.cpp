@@ -507,7 +507,82 @@ asynStatus ADTimePix::getServer(){
     return status;
 }
 
+/**
+ * Initialize detector
+ * 
+ * serverURL:       the URL of the running SERVAL (string)
+ * bpc_file:        an absolute path to the binary pixel configuration file (string)
+ * dacs_file:       an absolute path to the text chips configuration file (string)
+ * 
+ * @return: status
+ */
+asynStatus ADTimePix::initCamera(){
+    const char* functionName = "initCamera";
+    asynStatus status = asynSuccess;
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
+    
+    std::string config;
 
+    config = this->serverURL + std::string("/detector/config");
+    cpr::Response r = cpr::Get(cpr::Url{config},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    printf("Status code server: %li\n", r.status_code);
+    printf("Text server: %s\n", r.text.c_str()); 
+
+    json config_j = json::parse(r.text.c_str());
+    config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
+    printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
+
+
+    cpr::Response r3 = cpr::Put(cpr::Url{config},
+                           cpr::Body{config_j.dump().c_str()},                      
+                           cpr::Header{{"Content-Type", "text/plain"}});
+
+    printf("Status code: %li\n", r3.status_code);
+    printf("Text: %s\n", r3.text.c_str());
+
+    return status;
+}
+
+/**
+ * Initialize acquisition
+ * 
+ * serverURL:       the URL of the running SERVAL (string)
+ * detectorConfig:  the Detector Config to upload (dictionary)
+ * bpc_file:        an absolute path to the binary pixel configuration file (string)
+ * dacs_file:       an absolute path to the text chips configuration file (string)
+ * 
+ * @return: status
+ */
+asynStatus ADTimePix::initAcquisition(){
+    const char* functionName = "initAcquisition";
+    asynStatus status = asynSuccess;
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
+    
+    std::string config;
+
+    config = this->serverURL + std::string("/detector/config");
+    cpr::Response r = cpr::Get(cpr::Url{config},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    printf("Status code server: %li\n", r.status_code);
+    printf("Text server: %s\n", r.text.c_str()); 
+
+    json config_j = json::parse(r.text.c_str());
+    config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
+    printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
+
+
+    cpr::Response r3 = cpr::Put(cpr::Url{config},
+                           cpr::Body{config_j.dump().c_str()},                      
+                           cpr::Header{{"Content-Type", "text/plain"}});
+
+    printf("Status code: %li\n", r3.status_code);
+    printf("Text: %s\n", r3.text.c_str());
+
+    return status;
+}
 
 // -----------------------------------------------------------------------
 // ADTimePix Acquisition Functions
