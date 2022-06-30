@@ -508,11 +508,11 @@ asynStatus ADTimePix::getServer(){
 }
 
 /**
- * Initialize detector
+ * Initialize detector - emulator
  * 
  * serverURL:       the URL of the running SERVAL (string)
- * bpc_file:        an absolute path to the binary pixel configuration file (string)
- * dacs_file:       an absolute path to the text chips configuration file (string)
+ * bpc_file:        an absolute path to the binary pixel configuration file (string), tpx3-demo.bpc
+ * dacs_file:       an absolute path to the text chips configuration file (string), tpx3-demo.dacs 
  * 
  * @return: status
  */
@@ -521,19 +521,32 @@ asynStatus ADTimePix::initCamera(){
     asynStatus status = asynSuccess;
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
     
-    std::string config;
+    std::string config, bpc_file, dacs_file;
 
     config = this->serverURL + std::string("/detector/config");
-    cpr::Response r = cpr::Get(cpr::Url{config},
+    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.bpc");
+    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.dacs");
+
+    cpr::Response r = cpr::Get(cpr::Url{bpc_file},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    printf("Status code bpc_file: %li\n", r.status_code);
+    printf("Text bpc_file: %s\n", r.text.c_str()); 
+
+    r = cpr::Get(cpr::Url{dacs_file},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    printf("Status code dacs_file: %li\n", r.status_code);
+    printf("Text dacs_file: %s\n", r.text.c_str());    
+
+    // Detector configuration file 
+    r = cpr::Get(cpr::Url{config},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
-    printf("Status code server: %li\n", r.status_code);
-    printf("Text server: %s\n", r.text.c_str()); 
-
     json config_j = json::parse(r.text.c_str());
-    config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
-    printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
+    config_j["BiasVoltage"] = 102;
+    config_j["BiasEnabled"] = true;
 
+    //config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
+    //printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
 
     cpr::Response r3 = cpr::Put(cpr::Url{config},
                            cpr::Body{config_j.dump().c_str()},                      
@@ -965,6 +978,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             printf("Dashboard done HERE!\n\n");
         //    getServer();
             printf("Server done HERE!\n\n");
+            initCamera();
+            printf("initCamera done HERE!\n\n");
         }
     }
 
