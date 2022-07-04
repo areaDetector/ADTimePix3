@@ -12,6 +12,7 @@ include $(TOP)/configure/CONFIG
 # databases, templates, subtitutions
 DB += ADTimePix.template
 DB += Chips.template
+DB += File.template
 
 #-------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

@@ -1,0 +1,151 @@
+#=================================================================#
+# Template file: File.template
+# Database for BPC and Chip/DACS files, which configure pixels and chips.
+# Kazimierz Gofron
+# July 1, 2022
+
+###################################################################
+#  These records control file I/O                                 # 
+###################################################################
+
+# File path.
+record(waveform, "$(P)$(R)BPCFilePath")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_PATH")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)BPCFilePath_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_PATH")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+record(bi, "$(P)$(R)BPCFilePathExists_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_PATH_EXISTS")
+    field(ZNAM, "No")
+    field(ZSV,  "MAJOR")
+    field(ONAM, "Yes")
+    field(OSV,  "NO_ALARM")
+    field(SCAN, "I/O Intr")
+}
+
+record(waveform, "$(P)$(R)DACSFilePath")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_PATH")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)DACSFilePath_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_PATH")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+record(bi, "$(P)$(R)DACSFilePathExists_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_PATH_EXISTS")
+    field(ZNAM, "No")
+    field(ZSV,  "MAJOR")
+    field(ONAM, "Yes")
+    field(OSV,  "NO_ALARM")
+    field(SCAN, "I/O Intr")
+}
+
+# Filename
+record(waveform, "$(P)$(R)BPCFileName")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_NAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+
+record(waveform, "$(P)$(R)BPCFileName_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_NAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+record(waveform, "$(P)$(R)DACSFileName")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_NAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+
+record(waveform, "$(P)$(R)DACSFileName_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_NAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+# Write BPC and Chips/DACS file
+record(busy, "$(P)$(R)WriteBPCFile")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_BPC_FILE")
+    field(ZNAM, "Done")
+    field(ONAM, "Write")
+}
+record(bi, "$(P)$(R)WriteBPCFile_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_BPC_FILE")
+    field(ZNAM, "Done")
+    field(ZSV,  "NO_ALARM")
+    field(ONAM, "Writing")
+    field(OSV,  "MINOR")
+    field(SCAN, "I/O Intr")
+}
+
+record(busy, "$(P)$(R)WriteDACSFile")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_DACS_FILE")
+    field(ZNAM, "Done")
+    field(ONAM, "Write")
+}
+record(bi, "$(P)$(R)WriteDACSFile_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_DACS_FILE")
+    field(ZNAM, "Done")
+    field(ZSV,  "NO_ALARM")
+    field(ONAM, "Writing")
+    field(OSV,  "MINOR")
+    field(SCAN, "I/O Intr")
+}
+
+record(waveform, "$(P)$(R)WriteFileMessage")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_FILE_MESSAGE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
