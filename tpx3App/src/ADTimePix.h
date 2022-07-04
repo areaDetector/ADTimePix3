@@ -186,6 +186,8 @@
 #define ADTimePixDACSFilePathExistsString   "DACS_FILE_PATH_EXISTS"     /**< (asynInt32,    r/w) File path exists? */
 #define ADTimePixDACSFileNameString         "DACS_FILE_NAME"            /**< (asynOctet,    r/w) The file name */    
 #define ADTimePixWriteFileMsgString         "WRITE_FILE_MESSAGE"        /**< (asynOctet,    r  ) Config File write message */
+#define ADTimePixWriteBPCFileString         "WRITE_BPC_FILE"            /**< (asynInt32,    r/w) Manually upload BPC file to detector when value=1 */
+#define ADTimePixWriteDACSFileString        "WRITE_DACS_FILE"           /**< (asynInt32,    r/w) Manually upload Chips/DACS file to detector when value=1 */
 
 // Place any required inclues here
 
@@ -391,7 +393,9 @@ class ADTimePix : ADDriver{
         int ADTimePixDACSFilePath;         
         int ADTimePixDACSFilePathExists;   
         int ADTimePixDACSFileName;
-        int ADTimePixWriteFileMsg;         
+        int ADTimePixWriteFileMsg; 
+        int ADTimePixWriteBPCFile;                
+        int ADTimePixWriteDACSFile;
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
@@ -440,7 +444,8 @@ class ADTimePix : ADDriver{
         asynStatus checkBPCPath();
         asynStatus checkDACSPath();
         bool checkPath(std::string &filePath);
-
+        asynStatus uploadBPC();
+        asynStatus uploadDACS();
 
 };
 

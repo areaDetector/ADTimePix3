@@ -112,16 +112,6 @@ record(busy, "$(P)$(R)WriteBPCFile")
     field(ZNAM, "Done")
     field(ONAM, "Write")
 }
-record(bi, "$(P)$(R)WriteBPCFile_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_BPC_FILE")
-    field(ZNAM, "Done")
-    field(ZSV,  "NO_ALARM")
-    field(ONAM, "Writing")
-    field(OSV,  "MINOR")
-    field(SCAN, "I/O Intr")
-}
 
 record(busy, "$(P)$(R)WriteDACSFile")
 {
@@ -129,16 +119,6 @@ record(busy, "$(P)$(R)WriteDACSFile")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_DACS_FILE")
     field(ZNAM, "Done")
     field(ONAM, "Write")
-}
-record(bi, "$(P)$(R)WriteDACSFile_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_DACS_FILE")
-    field(ZNAM, "Done")
-    field(ZSV,  "NO_ALARM")
-    field(ONAM, "Writing")
-    field(OSV,  "MINOR")
-    field(SCAN, "I/O Intr")
 }
 
 record(waveform, "$(P)$(R)WriteFileMessage")

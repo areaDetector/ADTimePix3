@@ -585,6 +585,66 @@ asynStatus ADTimePix::getServer(){
 }
 
 /**
+ * Initialize detector - uplaad Binary Pixel Configuration
+ * 
+ * serverURL:       the URL of the running SERVAL (string)
+ * bpc_file:        an absolute path to the binary pixel configuration file (string), tpx3-demo.bpc
+ * 
+ * @return: status
+ */
+asynStatus ADTimePix::uploadBPC(){
+    const char* functionName = "uploadBPC";
+    asynStatus status = asynSuccess;
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing BPC detector information\n", driverName, functionName);
+    std::string config, bpc_file, filePath, fileName;
+
+    config = this->serverURL + std::string("/detector/config");    
+//    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.bpc");
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    getStringParam(ADTimePixBPCFileName, fileName);
+    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string(filePath) + std::string(fileName);
+
+    cpr::Response r = cpr::Get(cpr::Url{bpc_file},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    printf("Status code bpc_file: %li\n", r.status_code);
+    printf("Text bpc_file: %s\n", r.text.c_str());
+    setIntegerParam(ADTimePixHttpCode, r.status_code); 
+    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());
+    
+    return status;
+}
+
+/**
+ * Initialize detector - uplaad Chips DACS
+ * 
+ * serverURL:       the URL of the running SERVAL (string)
+ * dacs_file:       an absolute path to the text chips configuration file (string), tpx3-demo.dacs 
+ * 
+ * @return: status
+ */
+asynStatus ADTimePix::uploadDACS(){
+    const char* functionName = "uploadDACS";
+    asynStatus status = asynSuccess;
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing Chips/DACS detector information\n", driverName, functionName);
+    std::string config, dacs_file, filePath, fileName;
+
+    config = this->serverURL + std::string("/detector/config");
+//    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.dacs");
+    getStringParam(ADTimePixDACSFilePath, filePath);
+    getStringParam(ADTimePixDACSFileName, fileName);
+    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(filePath) + std::string(fileName);
+
+    cpr::Response r = cpr::Get(cpr::Url{dacs_file},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    printf("Status code dacs_file: %li\n", r.status_code);
+    printf("Text dacs_file: %s\n", r.text.c_str()); 
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());   
+
+    return status;
+}
+
+/**
  * Initialize detector - emulator
  * 
  * serverURL:       the URL of the running SERVAL (string)
@@ -639,6 +699,8 @@ asynStatus ADTimePix::initCamera(){
 
     return status;
 }
+
+
 
 /**
  * Initialize acquisition
@@ -820,6 +882,13 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     else if(function == ADTimePixHealth) { 
         // status = getHealth();
         status = getDetector();
+    }
+    else if(function == ADTimePixWriteBPCFile) { 
+        status = uploadBPC();
+    }
+
+    else if(function == ADTimePixWriteDACSFile) { 
+        status = uploadDACS();
     }
 
     else{
@@ -1084,7 +1153,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixDACSFilePathExistsString,         asynParamInt32,  &ADTimePixDACSFilePathExists);             
     createParam(ADTimePixDACSFileNameString,               asynParamOctet,  &ADTimePixDACSFileName); 
     createParam(ADTimePixWriteFileMsgString,               asynParamOctet,  &ADTimePixWriteFileMsg); 
-
+    createParam(ADTimePixWriteBPCFileString,               asynParamInt32,  &ADTimePixWriteBPCFile);     
+    createParam(ADTimePixWriteDACSFileString,              asynParamInt32,  &ADTimePixWriteDACSFile); 
+    
     //sets driver version
     char versionString[25];
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", ADTIMEPIX_VERSION, ADTIMEPIX_REVISION, ADTIMEPIX_MODIFICATION);
@@ -1107,7 +1178,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             printf("Dashboard done HERE!\n\n");
         //    getServer();
             printf("Server done HERE!\n\n");
-            initCamera();
+        //    initCamera();
             printf("initCamera done HERE!\n\n");
         }
     }
