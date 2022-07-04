@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/stat.h>
 
 // EPICS includes
 #include <epicsTime.h>
@@ -31,6 +32,7 @@
 // Area Detector include
 #include "ADTimePix.h"
 
+#define delim "/"
 
 using namespace std;
 using json = nlohmann::json;
@@ -102,6 +104,81 @@ static string strip_quotes(string str) {
     else
     return str;
 }   
+
+
+
+/** Checks whether the directory specified exists.
+  *
+  * This is a convenience function that determines the directory specified exists.
+  * It adds a trailing '/' or '\' character to the path if one is not present.
+  * It returns true if the directory exists and false if it does not
+  */
+bool ADTimePix::checkPath(std::string &filePath)
+{
+    char lastChar;
+    struct stat buff;
+    int istat;
+    size_t len;
+    int isDir=0;
+    bool pathExists=false;
+
+    len = filePath.size();
+    if (len == 0) return false;
+    /* If the path contains a trailing '/' or '\' remove it, because Windows won't find
+     * the directory if it has that trailing character */
+    lastChar = filePath[len-1];
+
+    if (lastChar == '/') {
+        filePath.resize(len-1);
+    }
+    istat = stat(filePath.c_str(), &buff);
+    if (!istat) isDir = (S_IFDIR & buff.st_mode);
+    if (!istat && isDir) {
+        pathExists = true;
+    }
+    /* Add a terminator even if it did not have one originally */
+    filePath.append(delim);
+    return pathExists;
+}
+
+
+/** Checks whether the directory specified NDFilePath parameter exists.
+  *
+  * This is a convenience function that determines the directory specified NDFilePath parameter exists.
+  * It sets the value of NDFilePathExists to 0 (does not exist) or 1 (exists).
+  * It also adds a trailing '/' character to the path if one is not present.
+  * Returns a error status if the directory does not exist.
+  */
+asynStatus ADTimePix::checkBPCPath()
+{
+    asynStatus status;
+    std::string filePath;
+    int pathExists;
+
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+    pathExists = checkPath(filePath);
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixBPCFilePath, filePath);
+    setIntegerParam(ADTimePixBPCFilePathExists, pathExists);
+    return status;
+}
+
+asynStatus ADTimePix::checkDACSPath()
+{
+    asynStatus status;
+    std::string filePath;
+    int pathExists;
+
+    getStringParam(ADTimePixDACSFilePath, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+    pathExists = checkPath(filePath);
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixDACSFilePath, filePath);
+    setIntegerParam(ADTimePixDACSFilePathExists, pathExists);
+    return status;
+}
+
 
 // -----------------------------------------------------------------------
 // ADTimePix Connect/Disconnect Functions
@@ -530,30 +607,35 @@ asynStatus ADTimePix::initCamera(){
     cpr::Response r = cpr::Get(cpr::Url{bpc_file},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
     printf("Status code bpc_file: %li\n", r.status_code);
-    printf("Text bpc_file: %s\n", r.text.c_str()); 
+    printf("Text bpc_file: %s\n", r.text.c_str());
+    setIntegerParam(ADTimePixHttpCode, r.status_code); 
+    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());
+    
 
     r = cpr::Get(cpr::Url{dacs_file},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
     printf("Status code dacs_file: %li\n", r.status_code);
-    printf("Text dacs_file: %s\n", r.text.c_str());    
+    printf("Text dacs_file: %s\n", r.text.c_str()); 
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());   
 
     // Detector configuration file 
     r = cpr::Get(cpr::Url{config},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
     json config_j = json::parse(r.text.c_str());
-    config_j["BiasVoltage"] = 102;
+    config_j["BiasVoltage"] = 103;
     config_j["BiasEnabled"] = true;
 
     //config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
     //printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
 
-    cpr::Response r3 = cpr::Put(cpr::Url{config},
+    r = cpr::Put(cpr::Url{config},
                            cpr::Body{config_j.dump().c_str()},                      
                            cpr::Header{{"Content-Type", "text/plain"}});
 
-    printf("Status code: %li\n", r3.status_code);
-    printf("Text: %s\n", r3.text.c_str());
+    printf("Status code: %li\n", r.status_code);
+    printf("Text: %s\n", r.text.c_str());
 
     return status;
 }
@@ -651,8 +733,6 @@ asynStatus ADTimePix::acquireStop(){
 }
 
 
-
-
 // ADD ANY OTHER SETTER CAMERA FUNCTIONS HERE, ADD CALL THEM IN WRITE INT32/FLOAT64
 
 
@@ -660,7 +740,47 @@ asynStatus ADTimePix::acquireStop(){
 // ADDriver function overwrites
 //-------------------------------------------------------------------------
 
+/** Called when asyn clients call pasynOctet->write().
+  * This function performs actions for some parameters, including BPC, and Chips/DACS.
+  * For all parameters it sets the value in the parameter library and calls any registered callbacks..
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] value Address of the string to write.
+  * \param[in] nChars Number of characters to write.
+  * \param[out] nActual Number of characters actually written. */
+asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
+                                    size_t nChars, size_t *nActual)
+{
+    int addr;
+    int function;
+    const char *paramName;
+    asynStatus status = asynSuccess;
+    const char *functionName = "writeOctet";
 
+    status = parseAsynUser(pasynUser, &function, &addr, &paramName);
+    if (status != asynSuccess) return status;
+
+    /* Set the parameter in the parameter library. */
+    status = (asynStatus)setStringParam(addr, function, (char *)value);
+
+    if (function == ADTimePixBPCFilePath)  {
+        status = this->checkBPCPath();        
+    } else if (function == ADTimePixDACSFilePath) {
+        status = this->checkDACSPath();
+    }
+     /* Do callbacks so higher layers see any changes */
+    status = (asynStatus)callParamCallbacks(addr, addr);
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, paramName=%s, value=%s",
+                  driverName, functionName, status, function, paramName, value);
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, paramName=%s, value=%s\n",
+              driverName, functionName, function, paramName, value);
+    *nActual = nChars;
+    return status;
+}
 
 /*
  * Function overwriting ADDriver base function.
@@ -955,6 +1075,15 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixChip1LayoutString,               asynParamOctet, &ADTimePixChip1Layout);
     createParam(ADTimePixChip2LayoutString,               asynParamOctet, &ADTimePixChip2Layout);
     createParam(ADTimePixChip3LayoutString,               asynParamOctet, &ADTimePixChip3Layout);
+
+    // Files BPC, Chip/DACS
+    createParam(ADTimePixBPCFilePathString,                asynParamOctet,  &ADTimePixBPCFilePath);            
+    createParam(ADTimePixBPCFilePathExistsString,          asynParamInt32,  &ADTimePixBPCFilePathExists);          
+    createParam(ADTimePixBPCFileNameString,                asynParamOctet,  &ADTimePixBPCFileName);            
+    createParam(ADTimePixDACSFilePathString,               asynParamOctet,  &ADTimePixDACSFilePath);           
+    createParam(ADTimePixDACSFilePathExistsString,         asynParamInt32,  &ADTimePixDACSFilePathExists);             
+    createParam(ADTimePixDACSFileNameString,               asynParamOctet,  &ADTimePixDACSFileName); 
+    createParam(ADTimePixWriteFileMsgString,               asynParamOctet,  &ADTimePixWriteFileMsg); 
 
     //sets driver version
     char versionString[25];

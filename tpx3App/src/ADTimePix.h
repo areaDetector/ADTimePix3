@@ -172,13 +172,20 @@
 #define ADTimePixChip3VTthresholdFineString     "TPX3_CHIP3_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
 #define ADTimePixChip3AdjustString              "TPX3_CHIP3_ADJUST"           // (asynInt32,         r)      DACs->Adjust
 
-
     // Chip Layout
-#define ADTimePixChip0LayoutString          "TPX3_CHIP0_LAYTOUT"                // (asynOctet,         r)      Chip 0 layout
-#define ADTimePixChip1LayoutString          "TPX3_CHIP1_LAYTOUT"                // (asynOctet,         r)      Chip 1 layout
-#define ADTimePixChip2LayoutString          "TPX3_CHIP2_LAYTOUT"                // (asynOctet,         r)      Chip 2 layout
-#define ADTimePixChip3LayoutString          "TPX3_CHIP3_LAYTOUT"                // (asynOctet,         r)      Chip 3 layout
+#define ADTimePixChip0LayoutString          "TPX3_CHIP0_LAYTOUT"              // (asynOctet,         r)      Chip 0 layout
+#define ADTimePixChip1LayoutString          "TPX3_CHIP1_LAYTOUT"              // (asynOctet,         r)      Chip 1 layout
+#define ADTimePixChip2LayoutString          "TPX3_CHIP2_LAYTOUT"              // (asynOctet,         r)      Chip 2 layout
+#define ADTimePixChip3LayoutString          "TPX3_CHIP3_LAYTOUT"              // (asynOctet,         r)      Chip 3 layout
 
+    // Absolute path to the binary pixel configuration, absolute path to the text chips configuration
+#define ADTimePixBPCFilePathString          "BPC_FILE_PATH"             /**< (asynOctet,    r/w) The file path Binary Pixel Configuration */
+#define ADTimePixBPCFilePathExistsString    "BPC_FILE_PATH_EXISTS"      /**< (asynInt32,    r/w) File path exists? */
+#define ADTimePixBPCFileNameString          "BPC_FILE_NAME"             /**< (asynOctet,    r/w) The BPC file name */    
+#define ADTimePixDACSFilePathString         "DACS_FILE_PATH"            /**< (asynOctet,    r/w) The file path  Chip configuration*/
+#define ADTimePixDACSFilePathExistsString   "DACS_FILE_PATH_EXISTS"     /**< (asynInt32,    r/w) File path exists? */
+#define ADTimePixDACSFileNameString         "DACS_FILE_NAME"            /**< (asynOctet,    r/w) The file name */    
+#define ADTimePixWriteFileMsgString         "WRITE_FILE_MESSAGE"        /**< (asynOctet,    r  ) Config File write message */
 
 // Place any required inclues here
 
@@ -211,6 +218,7 @@ class ADTimePix : ADDriver{
 
 
         // ADDriver overrides
+        virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t nChars, size_t *nActual);
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
@@ -370,12 +378,20 @@ class ADTimePix : ADDriver{
         int ADTimePixChip3VTthresholdFine;
         int ADTimePixChip3Adjust;
             
-        
-    //  int Chip layout
+            //  Detector Chip layout
         int ADTimePixChip0Layout;
         int ADTimePixChip1Layout;
         int ADTimePixChip2Layout;
         int ADTimePixChip3Layout;    
+
+            // Files BPC, Chip/DACS
+        int ADTimePixBPCFilePath;          
+        int ADTimePixBPCFilePathExists;    
+        int ADTimePixBPCFileName;          
+        int ADTimePixDACSFilePath;         
+        int ADTimePixDACSFilePathExists;   
+        int ADTimePixDACSFileName;
+        int ADTimePixWriteFileMsg;         
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
@@ -421,6 +437,10 @@ class ADTimePix : ADDriver{
         asynStatus getDetector();
         asynStatus initCamera();
         asynStatus initAcquisition();
+        asynStatus checkBPCPath();
+        asynStatus checkDACSPath();
+        bool checkPath(std::string &filePath);
+
 
 };
 
