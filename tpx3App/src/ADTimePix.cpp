@@ -645,7 +645,7 @@ asynStatus ADTimePix::uploadDACS(){
 }
 
 /**
- * Initialize detector - emulator
+ * Initialize detector - used typically for emulator (uploadBPC/uploadDACS instead for real detector if needed)
  * 
  * serverURL:       the URL of the running SERVAL (string)
  * bpc_file:        an absolute path to the binary pixel configuration file (string), tpx3-demo.bpc
@@ -717,10 +717,10 @@ asynStatus ADTimePix::initAcquisition(){
     asynStatus status = asynSuccess;
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
     
-    std::string config;
+    std::string det_config;
 
-    config = this->serverURL + std::string("/detector/config");
-    cpr::Response r = cpr::Get(cpr::Url{config},
+    det_config = this->serverURL + std::string("/detector/config");
+    cpr::Response r = cpr::Get(cpr::Url{det_config},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
     printf("Status code server: %li\n", r.status_code);
@@ -731,7 +731,7 @@ asynStatus ADTimePix::initAcquisition(){
     printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
 
 
-    cpr::Response r3 = cpr::Put(cpr::Url{config},
+    cpr::Response r3 = cpr::Put(cpr::Url{det_config},
                            cpr::Body{config_j.dump().c_str()},                      
                            cpr::Header{{"Content-Type", "text/plain"}});
 

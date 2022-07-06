@@ -11,6 +11,7 @@ include $(TOP)/configure/CONFIG
 # Create and install (or just install) 
 # databases, templates, subtitutions
 DB += ADTimePix.template
+DB += TimePix3Base.template
 DB += Chips.template
 DB += File.template
 

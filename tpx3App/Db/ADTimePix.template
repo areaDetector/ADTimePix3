@@ -1,25 +1,6 @@
+# Database for the records specific to the TimePix3 driver
 # Author: K. Gofron
 # Date: 2022/6/4
-
-##################################################################
-# Define all of your PV records here in the following form:
-#
-# record(RECORD_TYPE, "$(P)$(R)PVName"){
-#   field(DTYP, "data type")
-#   field(INP/OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PV_NAME")
-#   field(VAL, "value")
-#   field(SCAN, "I/O Intr")
-# }
-#
-# Consult other .template files for guides on how to write specific PVs
-#
-# The PV_NAME at the end of the INP or OUT field of the record is the 
-# PVString defined in ADTimpPix.h.
-#
-# example: #define ADDRIVERNAMESTANDARD "PV_NAME"
-#
-##################################################################
-
 
 record(stringin, "$(P)$(R)ServerURL_RBV"){
   field(DTYP, "asynOctetRead")
