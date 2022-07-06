@@ -1,0 +1,57 @@
+# Database for the records specific to the TimePix3 driver
+# These record modify/overwrite ADBase.template
+# Author: K. Gofron
+# Date: 2022/7/5
+
+include "ADBase.template"
+
+###############################################################################
+#  Note: The following are records defined in ADBase.template.                #
+#        We are changing some of the fields here to reflect valid values for  #
+#        TimePix3                                                             #
+###############################################################################
+
+###############################################################################
+#  These records control the trigger mode.                                    # 
+###############################################################################
+
+record(mbbo, "$(P)$(R)TriggerMode")
+{
+   field(ZRST, "PEXSTART_NEXSTOP")
+   field(ZRVL, "0")
+   field(ONST, "NEXSTART_PEXSTOP")
+   field(ONVL, "1")
+   field(TWST, "PEXSTART_TIMERSTOP")
+   field(TWVL, "2")
+   field(THST, "NEXSTART_TIMERSTOP")
+   field(THVL, "3")
+   field(FRST, "AUTOTRIGSTART_TIMERSTOP")
+   field(FRVL, "4")
+   field(FVST, "CONTINUOUS")
+   field(FVVL, "5")
+   field(SXST, "SOFTWARESTART_TIMERSTOP")
+   field(SXVL, "6")
+   field(SVST, "SOFTWARESTART_TIMERSTOP")
+   field(SVVL, "7")
+}
+
+record(mbbi, "$(P)$(R)TriggerMode_RBV")
+{
+   field(ZRST, "PEXSTART_NEXSTOP")
+   field(ZRVL, "0")
+   field(ONST, "NEXSTART_PEXSTOP")
+   field(ONVL, "1")
+   field(TWST, "PEXSTART_TIMERSTOP")
+   field(TWVL, "2")
+   field(THST, "NEXSTART_TIMERSTOP")
+   field(THVL, "3")
+   field(FRST, "AUTOTRIGSTART_TIMERSTOP")
+   field(FRVL, "4")
+   field(FVST, "CONTINUOUS")
+   field(FVVL, "5")
+   field(SXST, "SOFTWARESTART_TIMERSTOP")
+   field(SXVL, "6")
+   field(SVST, "SOFTWARESTART_TIMERSTOP")
+   field(SVVL, "7")
+   field(SCAN, "I/O Intr")
+}
