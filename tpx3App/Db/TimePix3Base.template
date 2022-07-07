@@ -31,7 +31,7 @@ record(mbbo, "$(P)$(R)TriggerMode")
    field(FVVL, "5")
    field(SXST, "SOFTWARESTART_TIMERSTOP")
    field(SXVL, "6")
-   field(SVST, "SOFTWARESTART_TIMERSTOP")
+   field(SVST, "SOFTWARESTART_SOFTWARESTOP")
    field(SVVL, "7")
 }
 

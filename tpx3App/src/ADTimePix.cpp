@@ -418,6 +418,7 @@ asynStatus ADTimePix::getDetector(){
     setIntegerParam(ADTimePixTriggerOut,             detector_j["Config"]["TriggerOut"].get<int>());
     setStringParam(ADTimePixPolarity,                strip_quotes(detector_j["Config"]["Polarity"].dump().c_str()));
     setStringParam(ADTimePixTriggerMode,             strip_quotes(detector_j["Config"]["TriggerMode"].dump().c_str()));
+    //setStringParam(ADTriggerMode,             strip_quotes(detector_j["Config"]["TriggerMode"].dump().c_str()));
     setDoubleParam(ADTimePixExposureTime,            detector_j["Config"]["ExposureTime"].get<double>());
     setDoubleParam(ADAcquireTime,            detector_j["Config"]["ExposureTime"].get<double>());       // Exposure Time RBV
     setDoubleParam(ADTimePixTriggerPeriod,           detector_j["Config"]["TriggerPeriod"].get<double>());
@@ -609,8 +610,8 @@ asynStatus ADTimePix::uploadBPC(){
     printf("Status code bpc_file: %li\n", r.status_code);
     printf("Text bpc_file: %s\n", r.text.c_str());
     setIntegerParam(ADTimePixHttpCode, r.status_code); 
-    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());
-    
+    setStringParam(ADTimePixWriteMsg, r.text.c_str());
+
     return status;
 }
 
@@ -639,7 +640,7 @@ asynStatus ADTimePix::uploadDACS(){
     printf("Status code dacs_file: %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 
     setIntegerParam(ADTimePixHttpCode, r.status_code);
-    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());   
+    setStringParam(ADTimePixWriteMsg, r.text.c_str());   
 
     return status;
 }
@@ -669,7 +670,7 @@ asynStatus ADTimePix::initCamera(){
     printf("Status code bpc_file: %li\n", r.status_code);
     printf("Text bpc_file: %s\n", r.text.c_str());
     setIntegerParam(ADTimePixHttpCode, r.status_code); 
-    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());
+    setStringParam(ADTimePixWriteMsg, r.text.c_str());
     
 
     r = cpr::Get(cpr::Url{dacs_file},
@@ -677,7 +678,7 @@ asynStatus ADTimePix::initCamera(){
     printf("Status code dacs_file: %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 
     setIntegerParam(ADTimePixHttpCode, r.status_code);
-    setStringParam(ADTimePixWriteFileMsg, r.text.c_str());   
+    setStringParam(ADTimePixWriteMsg, r.text.c_str());   
 
     // Detector configuration file 
     r = cpr::Get(cpr::Url{config},
@@ -718,18 +719,42 @@ asynStatus ADTimePix::initAcquisition(){
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
     
     std::string det_config;
+    int intNum;
+    double doubleNum;
 
     det_config = this->serverURL + std::string("/detector/config");
     cpr::Response r = cpr::Get(cpr::Url{det_config},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
     printf("Status code server: %li\n", r.status_code);
-    printf("Text server: %s\n", r.text.c_str()); 
+    //printf("Text server: %s\n", r.text.c_str()); 
 
     json config_j = json::parse(r.text.c_str());
-    config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
-    printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
+    //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
+    getIntegerParam(ADNumExposures, &intNum);
+    config_j["nTriggers"] = intNum;
+    getDoubleParam(ADAcquireTime, &doubleNum);
+    config_j["ExposureTime"] = doubleNum;
+    getDoubleParam(ADAcquirePeriod, &doubleNum);
+    config_j["TriggerPeriod"] = doubleNum;
+    getIntegerParam(ADTriggerMode, &intNum);
+
+    json triggerMode; 
+    triggerMode[0] = "PEXSTART_NEXSTOP";
+    triggerMode[1] = "NEXSTART_PEXSTOP";
+    triggerMode[2] = "PEXSTART_TIMERSTOP";
+    triggerMode[3] = "NEXSTART_TIMERSTOP";
+    triggerMode[4] = "AUTOTRIGSTART_TIMERSTOP"; 
+    triggerMode[5] = "CONTINUOUS";
+    triggerMode[6] = "SOFTWARESTART_TIMERSTOP";
+    triggerMode[7] = "SOFTWARESTART_SOFTWARESTOP";
+
+    config_j["TriggerMode"] = triggerMode[intNum];
+
+    printf("triggerMode=%s\n",triggerMode.dump().c_str());
+    printf("triggerMode[intNum]=%s, triggMode_num=%d\n",triggerMode[intNum].dump().c_str(), intNum);
+    //config_j["TriggerMode"]="AUTOTRIGSTART_TIMERSTOP";
 
     cpr::Response r3 = cpr::Put(cpr::Url{det_config},
                            cpr::Body{config_j.dump().c_str()},                      
@@ -737,6 +762,8 @@ asynStatus ADTimePix::initAcquisition(){
 
     printf("Status code: %li\n", r3.status_code);
     printf("Text: %s\n", r3.text.c_str());
+
+    setStringParam(ADTimePixWriteMsg, r3.text.c_str()); 
 
     return status;
 }
@@ -927,6 +954,11 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
 
     if(function == ADAcquireTime){
         if(acquiring) acquireStop();
+
+        status = initAcquisition();
+    }
+    else if (function == ADAcquirePeriod) {
+        status = initAcquisition();
     }
     else{
         if(function < ADTIMEPIX_FIRST_PARAM){
@@ -1152,7 +1184,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixDACSFilePathString,               asynParamOctet,  &ADTimePixDACSFilePath);           
     createParam(ADTimePixDACSFilePathExistsString,         asynParamInt32,  &ADTimePixDACSFilePathExists);             
     createParam(ADTimePixDACSFileNameString,               asynParamOctet,  &ADTimePixDACSFileName); 
-    createParam(ADTimePixWriteFileMsgString,               asynParamOctet,  &ADTimePixWriteFileMsg); 
+    createParam(ADTimePixWriteMsgString,                   asynParamOctet,  &ADTimePixWriteMsg); 
     createParam(ADTimePixWriteBPCFileString,               asynParamInt32,  &ADTimePixWriteBPCFile);     
     createParam(ADTimePixWriteDACSFileString,              asynParamInt32,  &ADTimePixWriteDACSFile); 
     
