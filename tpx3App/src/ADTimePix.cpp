@@ -704,7 +704,7 @@ asynStatus ADTimePix::initCamera(){
 
 
 /**
- * Initialize acquisition
+ * Timing for acquisition
  * 
  * serverURL:       the URL of the running SERVAL (string)
  * detectorConfig:  the Detector Config to upload (dictionary)
@@ -732,7 +732,7 @@ asynStatus ADTimePix::initAcquisition(){
     json config_j = json::parse(r.text.c_str());
     //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
-    getIntegerParam(ADNumExposures, &intNum);
+    getIntegerParam(ADNumImages, &intNum);
     config_j["nTriggers"] = intNum;
     getDoubleParam(ADAcquireTime, &doubleNum);
     config_j["ExposureTime"] = doubleNum;
@@ -756,14 +756,15 @@ asynStatus ADTimePix::initAcquisition(){
     printf("triggerMode[intNum]=%s, triggMode_num=%d\n",triggerMode[intNum].dump().c_str(), intNum);
     //config_j["TriggerMode"]="AUTOTRIGSTART_TIMERSTOP";
 
-    cpr::Response r3 = cpr::Put(cpr::Url{det_config},
-                           cpr::Body{config_j.dump().c_str()},                      
-                           cpr::Header{{"Content-Type", "text/plain"}});
+    //cpr::Response r3 = cpr::Put(cpr::Url{det_config},
+    r = cpr::Put(cpr::Url{det_config},
+                cpr::Body{config_j.dump().c_str()},                      
+                cpr::Header{{"Content-Type", "text/plain"}});
 
-    printf("Status code: %li\n", r3.status_code);
-    printf("Text: %s\n", r3.text.c_str());
+    printf("Status code: %li\n", r.status_code);
+    printf("Text: %s\n", r.text.c_str());
 
-    setStringParam(ADTimePixWriteMsg, r3.text.c_str()); 
+    setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
 
     return status;
 }
@@ -918,6 +919,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = uploadDACS();
     }
 
+    else if(function == ADNumImages || function == ADTriggerMode) { 
+        status = initAcquisition();
+    }
+
     else{
         if (function < ADTIMEPIX_FIRST_PARAM) {
             status = ADDriver::writeInt32(pasynUser, value);
@@ -952,14 +957,11 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
 
     status = setDoubleParam(function, value);
 
-    if(function == ADAcquireTime){
+    if(function == ADAcquireTime || function == ADAcquirePeriod){
         if(acquiring) acquireStop();
+        status = initAcquisition();
+    }
 
-        status = initAcquisition();
-    }
-    else if (function == ADAcquirePeriod) {
-        status = initAcquisition();
-    }
     else{
         if(function < ADTIMEPIX_FIRST_PARAM){
             status = ADDriver::writeFloat64(pasynUser, value);
@@ -1210,7 +1212,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             printf("Dashboard done HERE!\n\n");
         //    getServer();
             printf("Server done HERE!\n\n");
-        //    initCamera();
+        //    initCamera(); /* Used for testing and emulator, replaced with loadFile for BPC and Chip/DACS */
             printf("initCamera done HERE!\n\n");
         }
     }
