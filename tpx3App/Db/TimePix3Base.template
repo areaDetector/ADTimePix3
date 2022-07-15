@@ -17,41 +17,41 @@ include "ADBase.template"
 
 record(mbbo, "$(P)$(R)TriggerMode")
 {
-   field(ZRST, "PEXSTART_NEXSTOP")
+   field(ZRST, "PexSt_NexSp")     #  PEXSTART_NEXSTOP
    field(ZRVL, "0")
-   field(ONST, "NEXSTART_PEXSTOP")
+   field(ONST, "NexSt_PexSp")     #  NEXSTART_PEXSTOP
    field(ONVL, "1")
-   field(TWST, "PEXSTART_TIMERSTOP")
+   field(TWST, "PexSt_TmrSp")     #  PEXSTART_TIMERSTOP
    field(TWVL, "2")
-   field(THST, "NEXSTART_TIMERSTOP")
+   field(THST, "NexSt_TmrRSp")    #  NEXSTART_TIMERSTOP
    field(THVL, "3")
-   field(FRST, "AUTOTRIGSTART_TIMERSTOP")
+   field(FRST, "AutoTrgSt_TmrSp") #  AUTOTRIGSTART_TIMERSTOP
    field(FRVL, "4")
-   field(FVST, "CONTINUOUS")
+   field(FVST, "Continuous")      #  CONTINUOUS
    field(FVVL, "5")
-   field(SXST, "SOFTWARESTART_TIMERSTOP")
+   field(SXST, "SwReSt_TmrSp")    #  SOFTWARESTART_TIMERSTOP
    field(SXVL, "6")
-   field(SVST, "SOFTWARESTART_SOFTWARESTP")  # "SOFTWARESTART_SOFTWARESTOP"
+   field(SVST, "SwReSt_SwReSp")   # "SOFTWARESTART_SOFTWARESTOP"
    field(SVVL, "7")
 }
 
 record(mbbi, "$(P)$(R)TriggerMode_RBV")
 {
-   field(ZRST, "PEXSTART_NEXSTOP")
-   field(ZRVL, "0")
-   field(ONST, "NEXSTART_PEXSTOP")
+   field(ZRST, "PexSt_NexSp")           #  PEXSTART_NEXSTOP
+   field(ZRVL, "0")  
+   field(ONST, "NexSt_PexSp")           #  NEXSTART_PEXSTOP
    field(ONVL, "1")
-   field(TWST, "PEXSTART_TIMERSTOP")
+   field(TWST, "PexSt_TmrSp")           #  PEXSTART_TIMERSTOP
    field(TWVL, "2")
-   field(THST, "NEXSTART_TIMERSTOP")
+   field(THST, "NexSt_TmrRSp")          #  NEXSTART_TIMERSTOP
    field(THVL, "3")
-   field(FRST, "AUTOTRIGSTART_TIMERSTOP")
+   field(FRST, "AutoTrgSt_TmrSp")       #  AUTOTRIGSTART_TIMERSTOP
    field(FRVL, "4")
-   field(FVST, "CONTINUOUS")
+   field(FVST, "Continuous")            #  CONTINUOUS
    field(FVVL, "5")
-   field(SXST, "SOFTWARESTART_TIMERSTOP")
+   field(SXST, "SwReSt_TmrSp")          #  SOFTWARESTART_TIMERSTOP
    field(SXVL, "6")
-   field(SVST, "SOFTWARESTART_SOFTWARESTP")  # "SOFTWARESTART_SOFTWARESTOP"
+   field(SVST, "SwReSt_SwReSp")         # "SOFTWARESTART_SOFTWARESTOP"
    field(SVVL, "7")
    field(SCAN, "I/O Intr")
 }
