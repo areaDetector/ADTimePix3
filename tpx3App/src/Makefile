@@ -9,12 +9,15 @@ endif
 
 USR_CPPFLAGS += -std=c++11
 
+USR_CXXFLAGS += -DPREFIX_MAGICK_SYMBOLS
+
 #UVC_HOME = /epics/support/areaDetector-3-2/ADUVC
 #USR_INCLUDES += -I$(UVC_HOME)/include/libuvc
 
 INC += ADTimePix.h
 
 USR_INCLUDES += -I$(TOP)/tpx3Support/frozenSrc
+USR_INCLUDES += $(addprefix -I, $(GRAPHICSMAGICK_INCLUDE))
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
