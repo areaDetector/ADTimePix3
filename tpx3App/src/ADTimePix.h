@@ -222,6 +222,9 @@
 #include "frozen.h"
 #include "cpr/cpr.h"
 #include "nlohmann/json.hpp"
+#include <Magick++.h>
+using namespace Magick;
+
 
 
 // ----------------------------------------
@@ -251,6 +254,8 @@ class ADTimePix : ADDriver{
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
+
+        void timePixCallback();
 
         // destructor. Disconnects from camera, deletes the object
         ~ADTimePix();
@@ -462,6 +467,11 @@ class ADTimePix : ADDriver{
         
 
         std::string serverURL;
+        Image image;
+
+        bool acquiring=false;
+
+        epicsThreadId callbackThreadId;
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
@@ -500,6 +510,7 @@ class ADTimePix : ADDriver{
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
+        asynStatus readImage();
 
 };
 
