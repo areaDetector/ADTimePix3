@@ -1,14 +1,10 @@
 /**
- * Main source file for the ADTimePix EPICS driver 
+ * This is a driver for the TimePix3 pixel array detector 
  * 
- * This file contains functions for connecting and disconnectiong from the camera,
- * for starting and stopping image acquisition, and for controlling all camera functions through
- * EPICS.
- * 
- * Author: 
- * Created On: 
- * 
- * Copyright (c) : 
+ * Author: Kazimierz Gofron
+ * Created On: June,2022
+ * Last EDited: July 20, 2022
+ * Copyright (c): 2022 Brookhaven National Laboratory
  * 
  */
 
@@ -798,6 +794,8 @@ asynStatus ADTimePix::initAcquisition(){
 asynStatus ADTimePix::acquireStart(){
     const char* functionName = "acquireStart";
     asynStatus status;
+
+
     
     return status;
 }
@@ -1189,6 +1187,33 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixWriteMsgString,                   asynParamOctet,  &ADTimePixWriteMsg); 
     createParam(ADTimePixWriteBPCFileString,               asynParamInt32,  &ADTimePixWriteBPCFile);     
     createParam(ADTimePixWriteDACSFileString,              asynParamInt32,  &ADTimePixWriteDACSFile); 
+
+    // Server
+    createParam(ADTimePixRawBaseString,                    asynParamOctet,  &ADTimePixRawBase);               
+    createParam(ADTimePixRawFilePatString,                 asynParamOctet,  &ADTimePixRawFilePat);             
+    createParam(ADTimePixRawSplitStrategyString,           asynParamOctet,  &ADTimePixRawSplitStrategy);         
+    createParam(ADTimePixRawQueueSizeString,               asynParamOctet,  &ADTimePixRawQueueSize);             
+    // Server, PreviewasynParamOctet,  
+    createParam(ADTimePixPrvPeriodString,                  asynParamOctet,  &ADTimePixPrvPeriod);         
+    createParam(ADTimePixPrvSamplingModeString,            asynParamOctet,  &ADTimePixPrvSamplingMode);  
+    // Server, Preview, ImageChannelsasynParamOctet,  
+    createParam(ADTimePixPrvImgBaseString,                   asynParamOctet, &ADTimePixPrvImgBase);            
+    createParam(ADTimePixPrvImgFilePatString,                asynParamOctet, &ADTimePixPrvImgFilePat);         
+    createParam(ADTimePixPrvImgFormatString,                 asynParamOctet, &ADTimePixPrvImgFormat);          
+    createParam(ADTimePixPrvImgModeString,                   asynParamOctet, &ADTimePixPrvImgMode);            
+    createParam(ADTimePixPrvImgThsString,                    asynParamOctet, &ADTimePixPrvImgThs);            
+    createParam(ADTimePixPrvImgIntSizeString,                asynParamOctet, &ADTimePixPrvImgIntSize);        
+    createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamOctet, &ADTimePixPrvImgStpOnDskLim);    
+    createParam(ADTimePixPrvImgQueueSizeString,              asynParamOctet, &ADTimePixPrvImgQueueSize);      
+    // Server, Preview, PreviewasynParamOctet,  
+    createParam(ADTimePixPrvImgPrvBaseString,                asynParamOctet, &ADTimePixPrvImgPrvBase);          
+    createParam(ADTimePixPrvImgPrvFormatString,              asynParamOctet, &ADTimePixPrvImgPrvFormat);        
+    createParam(ADTimePixPrvImgPrvModeString,                asynParamOctet, &ADTimePixPrvImgPrvMode);          
+    createParam(ADTimePixPrvImgPrvThsString,                 asynParamOctet, &ADTimePixPrvImgPrvThs);         
+    createParam(ADTimePixPrvImgPrvIntSizeString,             asynParamOctet, &ADTimePixPrvImgPrvIntSize);     
+    createParam(ADTimePixPrvImgPrvStpOnDskLimString,         asynParamOctet, &ADTimePixPrvImgPrvStpOnDskLim); 
+    createParam(ADTimePixPrvImgPrvQueueSizeString,           asynParamOctet, &ADTimePixPrvImgPrvQueueSize);   
+
     
     //sets driver version
     char versionString[25];
