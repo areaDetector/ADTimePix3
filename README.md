@@ -14,6 +14,7 @@ Notes:
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
 * This has only been tested on ubuntu 18.04 and 20.04 Linux 64-bit machines.
 * This has only been developed for 2 x 2 chips layout, since that is what I have access to now
+* This has only been tested with serval version 2.3.6
 
 Before compiling:
 -----------------
@@ -25,6 +26,7 @@ How to run:
 -----------
 
 * Under `ADTimePix/iocs/tpx3IOC/iocBoot/iocTimePix` there is already a ready to use IOC for the TimePix3
+  - run serval
   - Change the IP address in `st.cmd`.
   - Run `./st.cmd`.
 * There are CSS-Boy, screens under `areaDetector/tpx3App/op/` [TODO - copy from main CSS repo].
