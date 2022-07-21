@@ -228,7 +228,7 @@ using namespace Magick;
 
 
 // ----------------------------------------
-// DRIVERNAMESTANDARD Data Structures
+// ADTimePix3 Data Structures
 //-----------------------------------------
 
 // Place any in use Data structures here
