@@ -32,6 +32,7 @@
 
 using namespace std;
 using json = nlohmann::json;
+using namespace Magick;
 
 // Add any additional namespaces here
 
@@ -73,6 +74,12 @@ extern "C" int ADTimePixConfig(const char* portName, const char* serverURL, int 
 static void exitCallbackC(void* pPvt){
     ADTimePix* pTimePix = (ADTimePix*) pPvt;
     delete(pTimePix);
+}
+
+
+static void timePixCallbackC(void* pPvt){
+    ADTimePix* pTimePix = (ADTimePix*) pPvt;
+    pTimePix->timePixCallback();
 }
 
 
@@ -795,11 +802,87 @@ asynStatus ADTimePix::acquireStart(){
     const char* functionName = "acquireStart";
     asynStatus status;
 
+    setIntegerParam(ADStatus, ADStatusAcquire);
 
+    epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
+    opts.joinable = 1;
+
+    string startMeasurementURL = this->serverURL + std::string("/measurement/start");
+    cpr::Response r = cpr::Get(cpr::Url{startMeasurementURL},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+
+    if (r.status_code != 200){
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Failed to start measurement!", driverName, functionName);
+        return asynError;
+    }
+
+    this->callbackThreadId = epicsThreadCreateOpt("timePixCallback", timePixCallbackC, this, &opts);
+    this->acquiring = true;
     
     return status;
 }
 
+
+void ADTimePix::timePixCallback(){
+
+    const char* functionName = "timePixCallback";
+
+    int numImages;
+    int imageCounter;
+    int imagesAcquired;
+    int mode;
+    NDArray* pImage;
+    int arrayCallbacks;
+    epicsTimeStamp startTime, endTime;
+
+    getIntegerParam(ADImageMode, &mode);
+    getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+
+    while(this->acquiring){
+
+        getIntegerParam(ADNumImages, &numImages);
+        getIntegerParam(ADNumImagesCounter, &imageCounter);
+        getIntegerParam(NDArrayCounter, &imagesAcquired);
+        epicsTimeGetCurrent(&startTime);
+        asynStatus imageStatus = readImage();
+
+        callParamCallbacks();
+
+        if (imageStatus == asynSuccess) {
+            imageCounter++;
+            imagesAcquired++;
+            pImage = this->pArrays[0];
+
+            /* Put the frame number and time stamp into the buffer */
+            pImage->uniqueId = imageCounter;
+            pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+            updateTimeStamp(&pImage->epicsTS);
+
+            /* Get any attributes that have been defined for this driver */
+            this->getAttributes(pImage->pAttributeList);
+
+            if (arrayCallbacks) {
+                /* Call the NDArray callback */
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+                     "%s:%s: calling imageData callback\n", driverName, functionName);
+                doCallbacksGenericPointer(pImage, NDArrayData, 0);
+            }
+            if(mode == 0){
+                acquireStop();
+            }
+            else if(mode == 1){
+                if (numImages == imageCounter){
+                    acquireStop();
+                }
+            }
+            setIntegerParam(ADNumImagesCounter, imageCounter);
+            setIntegerParam(NDArrayCounter, imagesAcquired);
+            callParamCallbacks();
+        }
+
+    }
+}
 
 
 
@@ -812,6 +895,22 @@ asynStatus ADTimePix::acquireStart(){
 asynStatus ADTimePix::acquireStop(){
     const char* functionName = "acquireStop";
     asynStatus status;
+
+    this->acquiring=false;
+    if(this->callbackThreadId != NULL)
+        epicsThreadMustJoin(this->callbackThreadId);
+
+    this->callbackThreadId = NULL;
+
+    string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
+    cpr::Response r = cpr::Get(cpr::Url{stopMeasurementURL},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+
+    if (r.status_code != 200){
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Failed to stop measurement!", driverName, functionName);
+        return asynError;
+    }
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setIntegerParam(ADAcquire, 0);
@@ -1005,6 +1104,106 @@ void ADTimePix::report(FILE* fp, int details){
         ADDriver::report(fp, details);
     }
 }
+
+
+asynStatus ADTimePix::readImage()
+{
+//    char URLString[MAX_FILENAME_LEN];
+    string URLString=this->serverURL + std::string("/measurement/image"); 
+    size_t dims[3];
+    int ndims;
+    int nrows, ncols;
+    ImageType imageType;
+    StorageType storageType;
+    NDDataType_t dataType;
+    NDColorMode_t colorMode;
+    NDArrayInfo_t arrayInfo;
+    NDArray *pImage = this->pArrays[0];
+    int depth;
+    const char *map;
+    static const char *functionName = "readImage";
+    
+    try {
+        image.read(URLString);
+        imageType = image.type();
+        depth = image.depth();
+        nrows = image.rows();
+        ncols = image.columns();
+        switch(imageType) {
+        case GrayscaleType:
+            ndims = 2;
+            dims[0] = ncols;
+            dims[1] = nrows;
+            dims[2] = 0;
+            map = "R";
+            colorMode = NDColorModeMono;
+            break;
+        case TrueColorType:
+            ndims = 3;
+            dims[0] = 3;
+            dims[1] = ncols;
+            dims[2] = nrows;
+            map = "RGB";
+            colorMode = NDColorModeRGB1;
+            break;
+        default:
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s: unknown ImageType=%d\n", 
+                driverName, functionName, imageType);
+            return(asynError);
+            break;
+        }
+        switch(depth) {
+        case 1:
+        case 8:
+            dataType = NDUInt8;
+            storageType = CharPixel;
+            break;
+        case 16:
+            dataType = NDUInt16;
+            storageType = ShortPixel;
+            break;
+        case 32:
+            dataType = NDUInt32;
+            storageType = IntegerPixel;
+            break;
+        default:
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, 
+                "%s:%s: unsupported depth=%d\n", 
+                driverName, functionName, depth);
+            return(asynError);
+            break;
+        }
+        if (pImage) pImage->release();
+        this->pArrays[0] = this->pNDArrayPool->alloc(ndims, dims, dataType, 0, NULL);
+        pImage = this->pArrays[0];
+        asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER,
+            "%s:%s: reading URL=%s, dimensions=[%lu,%lu,%lu], ImageType=%d, depth=%d\n",
+            driverName, functionName, URLString, 
+            (unsigned long)dims[0], (unsigned long)dims[1], (unsigned long)dims[2], imageType, depth);
+        image.write(0, 0, ncols, nrows, map, storageType, pImage->pData);
+        pImage->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
+        setIntegerParam(ADSizeX, ncols);
+        setIntegerParam(NDArraySizeX, ncols);
+        setIntegerParam(ADSizeY, nrows);
+        setIntegerParam(NDArraySizeY, nrows);
+        pImage->getInfo(&arrayInfo);
+        setIntegerParam(NDArraySize,  (int)arrayInfo.totalBytes);
+        setIntegerParam(NDDataType, dataType);
+        setIntegerParam(NDColorMode, colorMode);
+    }
+    catch(std::exception &error)
+    {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+            "%s:%s: error reading URL=%s\n", 
+            driverName, functionName, error.what());
+        return(asynError);
+    }
+         
+    return(asynSuccess);
+}
+
+
 
 
 //----------------------------------------------------------------------------
