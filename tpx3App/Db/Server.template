@@ -1,0 +1,82 @@
+# Author: K. Gofron
+# Date: 2022/7/26
+
+##################################################################
+# Define all of your PV records here in the following form:
+#
+# record(RECORD_TYPE, "$(P)$(R)PVName"){
+#   field(DTYP, "data type")
+#   field(INP/OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PV_NAME")
+#   field(VAL, "value")
+#   field(SCAN, "I/O Intr")
+# }
+#
+# Consult other .template files for guides on how to write specific PVs
+#
+# The PV_NAME at the end of the INP or OUT field of the record is the 
+# PVString defined in ADTimpPix.h.
+#
+# example: #define ADTimePixServer "PV_NAME"
+# C='CHIP1', 'CHIP2', ...
+#
+##################################################################
+
+
+# File path.
+record(waveform, "$(P)$(R)RawFilePath")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_BASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)RawFilePath_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_BASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+record(bi, "$(P)$(R)RawFilePathExists_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))RAW_FILE_PATH_EXISTS")
+    field(ZNAM, "No")
+    field(ZSV,  "MAJOR")
+    field(ONAM, "Yes")
+    field(OSV,  "NO_ALARM")
+    field(SCAN, "I/O Intr")
+}
+
+# File template
+record(waveform, "$(P)$(R)RawFileTemplate")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_FILEPAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+
+record(waveform, "$(P)$(R)RawFileTemplate_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_FILEPAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+# Full filename, including path
+#record(waveform, "$(P)$(R)FullFileName_RBV")
+#{
+#    field(DTYP, "asynOctetRead")
+#    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))FULL_FILE_NAME")
+#    field(FTVL, "CHAR")
+#    field(NELM, "512")
+#    field(SCAN, "I/O Intr")
+#}
