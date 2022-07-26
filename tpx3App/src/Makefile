@@ -16,7 +16,7 @@ USR_CXXFLAGS += -DPREFIX_MAGICK_SYMBOLS
 
 INC += ADTimePix.h
 
-USR_INCLUDES += -I$(TOP)/tpx3Support/frozenSrc
+#USR_INCLUDES += -I$(TOP)/tpx3Support/frozenSrc
 USR_INCLUDES += $(addprefix -I, $(GRAPHICSMAGICK_INCLUDE))
 
 LIBRARY_IOC = ADTimePix
