@@ -14,6 +14,7 @@ DB += ADTimePix.template
 DB += TimePix3Base.template
 DB += Chips.template
 DB += File.template
+DB += Server.template
 
 #-------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

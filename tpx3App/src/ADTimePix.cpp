@@ -1391,7 +1391,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixRawBaseString,                    asynParamOctet,  &ADTimePixRawBase);               
     createParam(ADTimePixRawFilePatString,                 asynParamOctet,  &ADTimePixRawFilePat);             
     createParam(ADTimePixRawSplitStrategyString,           asynParamOctet,  &ADTimePixRawSplitStrategy);         
-    createParam(ADTimePixRawQueueSizeString,               asynParamOctet,  &ADTimePixRawQueueSize);             
+    createParam(ADTimePixRawQueueSizeString,               asynParamInt32,  &ADTimePixRawQueueSize);
+    createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists);             
     // Server, PreviewasynParamOctet,  
     createParam(ADTimePixPrvPeriodString,                  asynParamOctet,  &ADTimePixPrvPeriod);         
     createParam(ADTimePixPrvSamplingModeString,            asynParamOctet,  &ADTimePixPrvSamplingMode);  

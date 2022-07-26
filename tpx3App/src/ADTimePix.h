@@ -192,8 +192,10 @@
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRawFilePatString           "TPX3_RAW_FILEPAT"          // (asynOctet,         w)      Raw Destination File Pattern
-#define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"       // (asynOctet,         w)      Raw Destination Split Strategy
-#define ADTimePixRawQueueSizeString         "TPX3_RAW_QUEUESIZE"      // (asynInt32,         w)      Raw Destination Queue Size
+#define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"         // (asynOctet,         w)      Raw Destination Split Strategy
+#define ADTimePixRawQueueSizeString         "TPX3_RAW_QUEUESIZE"        // (asynInt32,         w)      Raw Destination Queue Size
+#define ADTimePixRawFilePathExistsString    "RAW_FILE_PATH_EXISTS"      // (asynInt32,       r/w) File path exists? */
+
     // Server, Preview
 #define ADTimePixPrvPeriodString            "TPX3_PRV_PERIOD"           // (asynFloat64,       w)      Preview Period
 #define ADTimePixPrvSamplingModeString      "TPX3_PRV_SAMPLMODE"        // (asynOctet,         w)      Preview Sampling Mode
@@ -433,7 +435,8 @@ class ADTimePix : ADDriver{
         int ADTimePixRawBase;              
         int ADTimePixRawFilePat;           
         int ADTimePixRawSplitStrategy;    
-        int ADTimePixRawQueueSize;        
+        int ADTimePixRawQueueSize;
+        int ADTimePixRawFilePathExists;        
             // Server, Preview
         int ADTimePixPrvPeriod;            
         int ADTimePixPrvSamplingMode;      
