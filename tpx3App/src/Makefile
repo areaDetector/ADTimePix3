@@ -21,9 +21,9 @@ USR_INCLUDES += $(addprefix -I, $(GRAPHICSMAGICK_INCLUDE))
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
-LIB_SRCS += restApi.cpp tpx3Param.cpp
+#LIB_SRCS += restApi.cpp tpx3Param.cpp
 
-LIB_LIBS += frozen
+#LIB_LIBS += frozen
 
 LIB_SYS_LIBS += cpr curl-d z
 
