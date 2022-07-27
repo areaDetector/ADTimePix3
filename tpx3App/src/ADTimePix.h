@@ -200,14 +200,15 @@
 #define ADTimePixPrvPeriodString            "TPX3_PRV_PERIOD"           // (asynFloat64,       w)      Preview Period
 #define ADTimePixPrvSamplingModeString      "TPX3_PRV_SAMPLMODE"        // (asynOctet,         w)      Preview Sampling Mode
     // Server, Preview, ImageChannels
-#define ADTimePixPrvImgBaseString           "TPX3_PRV_IMGBASE"          // (asynOctet,         w)      Preview ImageChannels Base file (Place raw files) 
-#define ADTimePixPrvImgFilePatString        "TPX3_PRV_IMGPAT"           // (asynOctet,         w)      Preview ImageChannels FilePattern 
-#define ADTimePixPrvImgFormatString         "TPX3_PRV_IMGFROMAT"        // (asynOctet,         w)      Preview ImageChannels Format
-#define ADTimePixPrvImgModeString           "TPX3_PRV_IMGMODE"          // (asynOctet,         w)      Preview ImageChannels Mode
-#define ADTimePixPrvImgThsString            "TPX3_PRV_IMGTHS"         // (asynOctet,         w)      Preview ImageChannels Thresholds
-#define ADTimePixPrvImgIntSizeString        "TPX3_PRV_INTSIZE"        // (asynInt32,         w)      Preview ImageChannels IntegrationSize
-#define ADTimePixPrvImgStpOnDskLimString    "TPX3_PRV_STPONDSK"       // (asynInt32,         w)      Preview ImageChannels StopMeasurementOnDiskLimit
-#define ADTimePixPrvImgQueueSizeString      "TPX3_PRV_QUEUESIZE"      // (asynInt32,         w)      Preview ImageChannels QueueSize
+#define ADTimePixPrvImgBaseString               "TPX3_PRV_IMGBASE"          // (asynOctet,         w)      Preview ImageChannels Base file (Place raw files) 
+#define ADTimePixPrvImgFilePatString            "TPX3_PRV_IMGPAT"           // (asynOctet,         w)      Preview ImageChannels FilePattern 
+#define ADTimePixPrvImgFormatString             "TPX3_PRV_IMGFROMAT"        // (asynOctet,         w)      Preview ImageChannels Format
+#define ADTimePixPrvImgModeString               "TPX3_PRV_IMGMODE"          // (asynOctet,         w)      Preview ImageChannels Mode
+#define ADTimePixPrvImgThsString                "TPX3_PRV_IMGTHS"           // (asynOctet,         w)      Preview ImageChannels Thresholds
+#define ADTimePixPrvImgIntSizeString            "TPX3_PRV_INTSIZE"          // (asynInt32,         w)      Preview ImageChannels IntegrationSize
+#define ADTimePixPrvImgStpOnDskLimString        "TPX3_PRV_STPONDSK"         // (asynInt32,         w)      Preview ImageChannels StopMeasurementOnDiskLimit
+#define ADTimePixPrvImgQueueSizeString          "TPX3_PRV_QUEUESIZE"        // (asynInt32,         w)      Preview ImageChannels QueueSize
+#define ADTimePixPrvImgFilePathExistsString     "IMG_FILE_PATH_EXISTS"      // (asynInt32,       r/w)      File path exists? */
     // Server, Preview, Preview
 #define ADTimePixPrvImgPrvBaseString            "TPX3_PRV_PRVBASE"      // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImgPrvFormatString          "TPX3_PRV_PRVFORMAT"    // (asynOctet,         w)      Preview ImageChannels Preview files Format
@@ -448,7 +449,8 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvImgThs;           
         int ADTimePixPrvImgIntSize;       
         int ADTimePixPrvImgStpOnDskLim;   
-        int ADTimePixPrvImgQueueSize;     
+        int ADTimePixPrvImgQueueSize;
+        int ADTimePixPrvImgFilePathExists;     
             // Server, Preview, Preview
         int ADTimePixPrvImgPrvBase;         
         int ADTimePixPrvImgPrvFormat;       
@@ -510,6 +512,8 @@ class ADTimePix : ADDriver{
         asynStatus initAcquisition();
         asynStatus checkBPCPath();
         asynStatus checkDACSPath();
+        asynStatus checkRawPath();
+        asynStatus checkImgPath();
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();

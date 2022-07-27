@@ -145,10 +145,10 @@ bool ADTimePix::checkPath(std::string &filePath)
 }
 
 
-/** Checks whether the directory specified NDFilePath parameter exists.
+/** Checks whether the directory specified BCP/DACS/Raw parameter exists.
   *
-  * This is a convenience function that determines the directory specified NDFilePath parameter exists.
-  * It sets the value of NDFilePathExists to 0 (does not exist) or 1 (exists).
+  * This is a convenience function that determines the directory specified BCP/DACS/Raw Path parameter exists.
+  * It sets the value of xxxPathExists to 0 (does not exist) or 1 (exists).
   * It also adds a trailing '/' character to the path if one is not present.
   * Returns a error status if the directory does not exist.
   */
@@ -182,6 +182,35 @@ asynStatus ADTimePix::checkDACSPath()
     return status;
 }
 
+asynStatus ADTimePix::checkRawPath()
+{
+    asynStatus status;
+    std::string filePath;
+    int pathExists;
+
+    getStringParam(ADTimePixRawBase, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+    pathExists = checkPath(filePath);
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixRawBase, filePath);
+    setIntegerParam(ADTimePixRawFilePathExists, pathExists);
+    return status;
+}
+
+asynStatus ADTimePix::checkImgPath()
+{
+    asynStatus status;
+    std::string filePath;
+    int pathExists;
+
+    getStringParam(ADTimePixPrvImgBase, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+    pathExists = checkPath(filePath);
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixPrvImgBase, filePath);
+    setIntegerParam(ADTimePixPrvImgFilePathExists, pathExists);
+    return status;
+}
 
 // -----------------------------------------------------------------------
 // ADTimePix Connect/Disconnect Functions
@@ -953,6 +982,10 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkBPCPath();        
     } else if (function == ADTimePixDACSFilePath) {
         status = this->checkDACSPath();
+    } else if (function == ADTimePixRawBase) {
+        status = this->checkRawPath();
+    } else if (function == ADTimePixPrvImgBase) {
+        status = this->checkImgPath();
     }
      /* Do callbacks so higher layers see any changes */
     status = (asynStatus)callParamCallbacks(addr, addr);
@@ -1404,7 +1437,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgThsString,                    asynParamOctet, &ADTimePixPrvImgThs);            
     createParam(ADTimePixPrvImgIntSizeString,                asynParamOctet, &ADTimePixPrvImgIntSize);        
     createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamOctet, &ADTimePixPrvImgStpOnDskLim);    
-    createParam(ADTimePixPrvImgQueueSizeString,              asynParamOctet, &ADTimePixPrvImgQueueSize);      
+    createParam(ADTimePixPrvImgQueueSizeString,              asynParamOctet, &ADTimePixPrvImgQueueSize);
+    createParam(ADTimePixPrvImgFilePathExistsString,        asynParamInt32, &ADTimePixPrvImgFilePathExists);          
     // Server, Preview, PreviewasynParamOctet,  
     createParam(ADTimePixPrvImgPrvBaseString,                asynParamOctet, &ADTimePixPrvImgPrvBase);          
     createParam(ADTimePixPrvImgPrvFormatString,              asynParamOctet, &ADTimePixPrvImgPrvFormat);        
