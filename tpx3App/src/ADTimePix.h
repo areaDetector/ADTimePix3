@@ -210,14 +210,14 @@
 #define ADTimePixPrvImgQueueSizeString          "TPX3_PRV_QUEUESIZE"        // (asynInt32,         w)      Preview ImageChannels QueueSize
 #define ADTimePixPrvImgFilePathExistsString     "IMG_FILE_PATH_EXISTS"      // (asynInt32,       r/w)      File path exists? */
     // Server, Preview, Preview
-#define ADTimePixPrvImgPrvBaseString            "TPX3_PRV_PRVBASE"      // (asynOctet,         w)      Preview ImageChannels Preview files Base
-#define ADTimePixPrvImgPrvFormatString          "TPX3_PRV_PRVFORMAT"    // (asynOctet,         w)      Preview ImageChannels Preview files Format
-#define ADTimePixPrvImgPrvModeString            "TPX3_PRV_PRVMODE"      // (asynOctet,         w)      Preview ImageChannels Preview files Mode
-#define ADTimePixPrvImgPrvThsString             "TPX3_PRV_PRVTHS"         // (asynOctet,         w)      Preview ImageChannels Preview files Thresholds
-#define ADTimePixPrvImgPrvIntSizeString         "TPX3_PRV_PRVINTSIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files IntegrationSize
-#define ADTimePixPrvImgPrvStpOnDskLimString     "TPX3_PRV_PRVSTPONDSK"    // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
-#define ADTimePixPrvImgPrvQueueSizeString       "TPX3_PRV_PRVQUEUESIZE"   // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
-
+#define ADTimePixPrvImgPrvBaseString            "TPX3_PRV_PRVBASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
+#define ADTimePixPrvImgPrvFormatString          "TPX3_PRV_PRVFORMAT"        // (asynOctet,         w)      Preview ImageChannels Preview files Format
+#define ADTimePixPrvImgPrvModeString            "TPX3_PRV_PRVMODE"          // (asynOctet,         w)      Preview ImageChannels Preview files Mode
+#define ADTimePixPrvImgPrvThsString             "TPX3_PRV_PRVTHS"           // (asynOctet,         w)      Preview ImageChannels Preview files Thresholds
+#define ADTimePixPrvImgPrvIntSizeString         "TPX3_PRV_PRVINTSIZE"       // (asynInt32,         w)      Preview ImageChannels Preview files IntegrationSize
+#define ADTimePixPrvImgPrvStpOnDskLimString     "TPX3_PRV_PRVSTPONDSK"      // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
+#define ADTimePixPrvImgPrvQueueSizeString       "TPX3_PRV_PRVQUEUESIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
+#define ADTimePixPrvPrvFilePathExistsString     "IMG_PRV_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
 // Place any required inclues here
 
@@ -459,6 +459,7 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvImgPrvIntSize;    
         int ADTimePixPrvImgPrvStpOnDskLim;
         int ADTimePixPrvImgPrvQueueSize;  
+        int ADTimePixPrvPrvFilePathExists;
 
 
         int ADTimePixFreeSpace;

@@ -1427,8 +1427,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixRawQueueSizeString,               asynParamInt32,  &ADTimePixRawQueueSize);
     createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists);             
     // Server, PreviewasynParamOctet,  
-    createParam(ADTimePixPrvPeriodString,                  asynParamOctet,  &ADTimePixPrvPeriod);         
-    createParam(ADTimePixPrvSamplingModeString,            asynParamOctet,  &ADTimePixPrvSamplingMode);  
+    createParam(ADTimePixPrvPeriodString,                  asynParamFloat64,  &ADTimePixPrvPeriod);        
+    createParam(ADTimePixPrvSamplingModeString,            asynParamOctet,    &ADTimePixPrvSamplingMode);  
     // Server, Preview, ImageChannelsasynParamOctet,  
     createParam(ADTimePixPrvImgBaseString,                   asynParamOctet, &ADTimePixPrvImgBase);            
     createParam(ADTimePixPrvImgFilePatString,                asynParamOctet, &ADTimePixPrvImgFilePat);         
@@ -1447,7 +1447,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgPrvIntSizeString,             asynParamOctet, &ADTimePixPrvImgPrvIntSize);     
     createParam(ADTimePixPrvImgPrvStpOnDskLimString,         asynParamOctet, &ADTimePixPrvImgPrvStpOnDskLim); 
     createParam(ADTimePixPrvImgPrvQueueSizeString,           asynParamOctet, &ADTimePixPrvImgPrvQueueSize);   
-
+    createParam(ADTimePixPrvPrvFilePathExistsString,         asynParamInt32, &ADTimePixPrvPrvFilePathExists); 
     
     //sets driver version
     char versionString[25];
