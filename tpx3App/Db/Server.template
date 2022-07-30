@@ -21,6 +21,13 @@
 #
 ##################################################################
 
+record(bo, "$(P)$(R)WriteData"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_WRITE_DATA")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
 
 # Raw file path.
 record(waveform, "$(P)$(R)RawFilePath")

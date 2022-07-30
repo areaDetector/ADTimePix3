@@ -189,6 +189,9 @@
 #define ADTimePixWriteBPCFileString         "WRITE_BPC_FILE"            /**< (asynInt32,    r/w) Manually upload BPC file to detector when value=1 */
 #define ADTimePixWriteDACSFileString        "WRITE_DACS_FILE"           /**< (asynInt32,    r/w) Manually upload Chips/DACS file to detector when value=1 */
 
+
+    // Server, write data channels
+#define ADTimePixWriteDataString            "TPX3_WRITE_DATA"           // (asynInt32,         w)      Write Data output channels (raw,img,preview)
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRawFilePatString           "TPX3_RAW_FILEPAT"          // (asynOctet,         w)      Raw Destination File Pattern
@@ -218,6 +221,7 @@
 #define ADTimePixPrvImgPrvStpOnDskLimString     "TPX3_PRV_PRVSTPONDSK"      // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
 #define ADTimePixPrvImgPrvQueueSizeString       "TPX3_PRV_PRVQUEUESIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
 #define ADTimePixPrvPrvFilePathExistsString     "IMG_PRV_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
+
 
 // Place any required inclues here
 
@@ -432,6 +436,8 @@ class ADTimePix : ADDriver{
         int ADTimePixWriteBPCFile;                
         int ADTimePixWriteDACSFile;
 
+            // Server, write output channels
+        int ADTimePixWriteData;
             // Server, raw
         int ADTimePixRawBase;              
         int ADTimePixRawFilePat;           
@@ -519,6 +525,7 @@ class ADTimePix : ADDriver{
         asynStatus uploadBPC();
         asynStatus uploadDACS();
         asynStatus readImage();
+        asynStatus fileWriter();
 
 };
 

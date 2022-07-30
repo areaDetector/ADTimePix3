@@ -678,6 +678,67 @@ asynStatus ADTimePix::uploadDACS(){
 }
 
 /**
+ * FileWriter server channels
+ * 
+ * serverURL:       the URL of the running SERVAL (string)
+ * detectorConfig:  the Detector Config to upload (dictionary)
+ * 
+ * @return: status
+ */
+asynStatus ADTimePix::fileWriter(){
+    const char* functionName = "fileWriter";
+    asynStatus status = asynSuccess;
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
+    
+    std::string fileStr;
+    int fileInt;
+
+    // std::string server;
+// 
+    // server = this->serverURL + std::string("/server");
+    // cpr::Response r = cpr::Get(cpr::Url{server},
+    //                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+    //                        cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    // printf("Status code server: %li\n", r.status_code);
+    // //printf("Text server: %s\n", r.text.c_str()); 
+// 
+    // json server_j = json::parse(r.text.c_str());
+    // //printf("server=%s\n",server_j.dump(3,' ', true).c_str());
+
+    json server_j;
+
+    // Raw
+    getStringParam(ADTimePixRawBase, fileStr);
+    server_j["Destination"]["Raw"][0]["Base"] = "file://" + fileStr;
+    getStringParam(ADTimePixRawFilePat, fileStr);
+    server_j["Destination"]["Raw"][0]["FilePattern"] = fileStr;
+
+    // Preview
+    getIntegerParam(ADTimePixPrvSamplingMode, &fileInt);
+
+    json samplingMode;
+    samplingMode[0] = "skipOnFrame";
+    samplingMode[1] = "skipOnPeriod";
+
+    server_j["Destination"]["Preview"]["SamplingMode"] = samplingMode[fileInt];
+
+    printf("server=%s\n",server_j.dump(3,' ', true).c_str());
+
+    //cpr::Response r3 = cpr::Put(cpr::Url{det_config},
+    //r = cpr::Put(cpr::Url{det_config},
+    //            cpr::Body{config_j.dump().c_str()},                      
+    //            cpr::Header{{"Content-Type", "text/plain"}});
+//
+    //printf("Status code: %li\n", r.status_code);
+    //printf("Text: %s\n", r.text.c_str());
+//
+    //setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
+
+    return status;
+}
+
+
+/**
  * Initialize detector - used typically for emulator (uploadBPC/uploadDACS instead for real detector if needed)
  * 
  * serverURL:       the URL of the running SERVAL (string)
@@ -1047,6 +1108,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixWriteDACSFile) { 
         status = uploadDACS();
+    }
+
+    else if(function == ADTimePixWriteData) { 
+        status = fileWriter();
     }
 
     else if(function == ADNumImages || function == ADTriggerMode) { 
@@ -1421,15 +1486,17 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixWriteDACSFileString,              asynParamInt32,  &ADTimePixWriteDACSFile); 
 
     // Server
+    createParam(ADTimePixWriteDataString,                  asynParamInt32,  &ADTimePixWriteData);
+    // Server, Raw
     createParam(ADTimePixRawBaseString,                    asynParamOctet,  &ADTimePixRawBase);               
     createParam(ADTimePixRawFilePatString,                 asynParamOctet,  &ADTimePixRawFilePat);             
     createParam(ADTimePixRawSplitStrategyString,           asynParamOctet,  &ADTimePixRawSplitStrategy);         
     createParam(ADTimePixRawQueueSizeString,               asynParamInt32,  &ADTimePixRawQueueSize);
     createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists);             
-    // Server, PreviewasynParamOctet,  
+    // Server, Preview   
     createParam(ADTimePixPrvPeriodString,                  asynParamFloat64,  &ADTimePixPrvPeriod);        
     createParam(ADTimePixPrvSamplingModeString,            asynParamOctet,    &ADTimePixPrvSamplingMode);  
-    // Server, Preview, ImageChannelsasynParamOctet,  
+    // Server, Preview, ImageChannels  
     createParam(ADTimePixPrvImgBaseString,                   asynParamOctet, &ADTimePixPrvImgBase);            
     createParam(ADTimePixPrvImgFilePatString,                asynParamOctet, &ADTimePixPrvImgFilePat);         
     createParam(ADTimePixPrvImgFormatString,                 asynParamOctet, &ADTimePixPrvImgFormat);          
@@ -1439,7 +1506,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamOctet, &ADTimePixPrvImgStpOnDskLim);    
     createParam(ADTimePixPrvImgQueueSizeString,              asynParamOctet, &ADTimePixPrvImgQueueSize);
     createParam(ADTimePixPrvImgFilePathExistsString,        asynParamInt32, &ADTimePixPrvImgFilePathExists);          
-    // Server, Preview, PreviewasynParamOctet,  
+    // Server, Preview, Preview  
     createParam(ADTimePixPrvImgPrvBaseString,                asynParamOctet, &ADTimePixPrvImgPrvBase);          
     createParam(ADTimePixPrvImgPrvFormatString,              asynParamOctet, &ADTimePixPrvImgPrvFormat);        
     createParam(ADTimePixPrvImgPrvModeString,                asynParamOctet, &ADTimePixPrvImgPrvMode);          
