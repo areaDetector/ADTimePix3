@@ -691,11 +691,12 @@ asynStatus ADTimePix::fileWriter(){
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
     
     std::string fileStr;
-    int fileInt;
+    int intNum;
+    double doubleNum;
 
-    // std::string server;
-// 
-    // server = this->serverURL + std::string("/server");
+    std::string server;
+    server = this->serverURL + std::string("/server");
+
     // cpr::Response r = cpr::Get(cpr::Url{server},
     //                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
     //                        cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
@@ -714,25 +715,51 @@ asynStatus ADTimePix::fileWriter(){
     server_j["Destination"]["Raw"][0]["FilePattern"] = fileStr;
 
     // Preview
-    getIntegerParam(ADTimePixPrvSamplingMode, &fileInt);
+    getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
+    server_j["Destination"]["Preview"]["Period"] = doubleNum;
 
-    json samplingMode;
-    samplingMode[0] = "skipOnFrame";
-    samplingMode[1] = "skipOnPeriod";
+    getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
+    json samplingMode = {"skipOnFrame","skipOnPeriod"};
+    server_j["Destination"]["Preview"]["SamplingMode"] = samplingMode[intNum];
 
-    server_j["Destination"]["Preview"]["SamplingMode"] = samplingMode[fileInt];
+    // Preview, ImageChannels[0]
+    getStringParam(ADTimePixPrvImgBase, fileStr);
+    server_j["Destination"]["Preview"]["ImageChannels"][0]["Base"] = "file://" + fileStr;
+    getStringParam(ADTimePixPrvImgFilePat, fileStr);
+    server_j["Destination"]["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
+
+    getIntegerParam(ADTimePixPrvImgFormat, &intNum);
+    json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
+    server_j["Destination"]["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
+
+    getIntegerParam(ADTimePixPrvImgMode, &intNum);
+    json imgMode = {"count","tot","toa","tof",};
+    server_j["Destination"]["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
+
+    // Preview, ImageChannels[1]
+    getStringParam(ADTimePixPrvImgPrvBase, fileStr);
+    server_j["Destination"]["Preview"]["ImageChannels"][1]["Base"] = fileStr;
+
+    getIntegerParam(ADTimePixPrvImgPrvFormat, &intNum);
+    imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
+    server_j["Destination"]["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
+
+    getIntegerParam(ADTimePixPrvImgPrvMode, &intNum);
+    imgMode = {"count","tot","toa","tof",};
+    server_j["Destination"]["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
+
 
     printf("server=%s\n",server_j.dump(3,' ', true).c_str());
 
-    //cpr::Response r3 = cpr::Put(cpr::Url{det_config},
-    //r = cpr::Put(cpr::Url{det_config},
-    //            cpr::Body{config_j.dump().c_str()},                      
-    //            cpr::Header{{"Content-Type", "text/plain"}});
-//
+    cpr::Response r = cpr::Put(cpr::Url{server},
+                cpr::Body{server_j.dump().c_str()},                      
+                cpr::Header{{"Content-Type", "text/plain"}});
+
     //printf("Status code: %li\n", r.status_code);
     //printf("Text: %s\n", r.text.c_str());
-//
-    //setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
+
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
 
     return status;
 }
@@ -1490,17 +1517,17 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Server, Raw
     createParam(ADTimePixRawBaseString,                    asynParamOctet,  &ADTimePixRawBase);               
     createParam(ADTimePixRawFilePatString,                 asynParamOctet,  &ADTimePixRawFilePat);             
-    createParam(ADTimePixRawSplitStrategyString,           asynParamOctet,  &ADTimePixRawSplitStrategy);         
+    createParam(ADTimePixRawSplitStrategyString,           asynParamInt32,  &ADTimePixRawSplitStrategy);         
     createParam(ADTimePixRawQueueSizeString,               asynParamInt32,  &ADTimePixRawQueueSize);
     createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists);             
     // Server, Preview   
     createParam(ADTimePixPrvPeriodString,                  asynParamFloat64,  &ADTimePixPrvPeriod);        
-    createParam(ADTimePixPrvSamplingModeString,            asynParamOctet,    &ADTimePixPrvSamplingMode);  
+    createParam(ADTimePixPrvSamplingModeString,            asynParamInt32,    &ADTimePixPrvSamplingMode);  
     // Server, Preview, ImageChannels  
     createParam(ADTimePixPrvImgBaseString,                   asynParamOctet, &ADTimePixPrvImgBase);            
     createParam(ADTimePixPrvImgFilePatString,                asynParamOctet, &ADTimePixPrvImgFilePat);         
-    createParam(ADTimePixPrvImgFormatString,                 asynParamOctet, &ADTimePixPrvImgFormat);          
-    createParam(ADTimePixPrvImgModeString,                   asynParamOctet, &ADTimePixPrvImgMode);            
+    createParam(ADTimePixPrvImgFormatString,                 asynParamInt32, &ADTimePixPrvImgFormat);          
+    createParam(ADTimePixPrvImgModeString,                   asynParamInt32, &ADTimePixPrvImgMode);            
     createParam(ADTimePixPrvImgThsString,                    asynParamOctet, &ADTimePixPrvImgThs);            
     createParam(ADTimePixPrvImgIntSizeString,                asynParamOctet, &ADTimePixPrvImgIntSize);        
     createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamOctet, &ADTimePixPrvImgStpOnDskLim);    
@@ -1508,8 +1535,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgFilePathExistsString,        asynParamInt32, &ADTimePixPrvImgFilePathExists);          
     // Server, Preview, Preview  
     createParam(ADTimePixPrvImgPrvBaseString,                asynParamOctet, &ADTimePixPrvImgPrvBase);          
-    createParam(ADTimePixPrvImgPrvFormatString,              asynParamOctet, &ADTimePixPrvImgPrvFormat);        
-    createParam(ADTimePixPrvImgPrvModeString,                asynParamOctet, &ADTimePixPrvImgPrvMode);          
+    createParam(ADTimePixPrvImgPrvFormatString,              asynParamInt32, &ADTimePixPrvImgPrvFormat);        
+    createParam(ADTimePixPrvImgPrvModeString,                asynParamInt32, &ADTimePixPrvImgPrvMode);          
     createParam(ADTimePixPrvImgPrvThsString,                 asynParamOctet, &ADTimePixPrvImgPrvThs);         
     createParam(ADTimePixPrvImgPrvIntSizeString,             asynParamOctet, &ADTimePixPrvImgPrvIntSize);     
     createParam(ADTimePixPrvImgPrvStpOnDskLimString,         asynParamOctet, &ADTimePixPrvImgPrvStpOnDskLim); 

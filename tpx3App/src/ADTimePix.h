@@ -205,8 +205,8 @@
     // Server, Preview, ImageChannels
 #define ADTimePixPrvImgBaseString               "TPX3_PRV_IMGBASE"          // (asynOctet,         w)      Preview ImageChannels Base file (Place raw files) 
 #define ADTimePixPrvImgFilePatString            "TPX3_PRV_IMGPAT"           // (asynOctet,         w)      Preview ImageChannels FilePattern 
-#define ADTimePixPrvImgFormatString             "TPX3_PRV_IMGFROMAT"        // (asynOctet,         w)      Preview ImageChannels Format
-#define ADTimePixPrvImgModeString               "TPX3_PRV_IMGMODE"          // (asynOctet,         w)      Preview ImageChannels Mode
+#define ADTimePixPrvImgFormatString             "TPX3_PRV_IMGFORMAT"        // (asynInt32,         w)      Preview ImageChannels Format
+#define ADTimePixPrvImgModeString               "TPX3_PRV_IMGMODE"          // (asynInt32,         w)      Preview ImageChannels Mode
 #define ADTimePixPrvImgThsString                "TPX3_PRV_IMGTHS"           // (asynOctet,         w)      Preview ImageChannels Thresholds
 #define ADTimePixPrvImgIntSizeString            "TPX3_PRV_INTSIZE"          // (asynInt32,         w)      Preview ImageChannels IntegrationSize
 #define ADTimePixPrvImgStpOnDskLimString        "TPX3_PRV_STPONDSK"         // (asynInt32,         w)      Preview ImageChannels StopMeasurementOnDiskLimit
@@ -214,8 +214,8 @@
 #define ADTimePixPrvImgFilePathExistsString     "IMG_FILE_PATH_EXISTS"      // (asynInt32,       r/w)      File path exists? */
     // Server, Preview, Preview
 #define ADTimePixPrvImgPrvBaseString            "TPX3_PRV_PRVBASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
-#define ADTimePixPrvImgPrvFormatString          "TPX3_PRV_PRVFORMAT"        // (asynOctet,         w)      Preview ImageChannels Preview files Format
-#define ADTimePixPrvImgPrvModeString            "TPX3_PRV_PRVMODE"          // (asynOctet,         w)      Preview ImageChannels Preview files Mode
+#define ADTimePixPrvImgPrvFormatString          "TPX3_PRV_PRVFORMAT"        // (asynInt32,         w)      Preview ImageChannels Preview files Format
+#define ADTimePixPrvImgPrvModeString            "TPX3_PRV_PRVMODE"          // (asynInt32,         w)      Preview ImageChannels Preview files Mode
 #define ADTimePixPrvImgPrvThsString             "TPX3_PRV_PRVTHS"           // (asynOctet,         w)      Preview ImageChannels Preview files Thresholds
 #define ADTimePixPrvImgPrvIntSizeString         "TPX3_PRV_PRVINTSIZE"       // (asynInt32,         w)      Preview ImageChannels Preview files IntegrationSize
 #define ADTimePixPrvImgPrvStpOnDskLimString     "TPX3_PRV_PRVSTPONDSK"      // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
