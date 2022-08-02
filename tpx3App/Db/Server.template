@@ -172,7 +172,7 @@ record(mbbi, "$(P)$(R)PrvSmplgMode_RBV")
    field(SCAN, "I/O Intr")
 }
 
-# Image file path.
+# Preview Image Channels[0] file path.
 record(waveform, "$(P)$(R)PrvImgFilePath")
 {
     field(PINI, "YES")
@@ -193,7 +193,7 @@ record(waveform, "$(P)$(R)PrvImgFilePath_RBV")
 record(bi, "$(P)$(R)PrvImgFilePathExists_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))IMG_FILE_PATH_EXISTS")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))PRV_IMG_FILE_PATH_EXISTS")
     field(ZNAM, "No")
     field(ZSV,  "MAJOR")
     field(ONAM, "Yes")
@@ -287,28 +287,28 @@ record(mbbi, "$(P)$(R)PrvImgFileMode_RBV")
    field(SCAN, "I/O Intr")
 }
 
-# Preview from measurement/image file path.
-record(waveform, "$(P)$(R)PrvPrvFilePath")
+# Preview Image Channel[1], measurement/image file path.
+record(waveform, "$(P)$(R)PrvImg1FilePath")
 {
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PRVBASE")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1BASE")
     field(FTVL, "CHAR")
     field(NELM, "256")
     info(autosaveFields, "VAL")
 }
-record(waveform, "$(P)$(R)PrvPrvFilePath_RBV")
+record(waveform, "$(P)$(R)PrvImg1FilePath_RBV")
 {
     field(DTYP, "asynOctetRead")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PRVBASE")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1BASE")
     field(FTVL, "CHAR")
     field(NELM, "256")
     field(SCAN, "I/O Intr")
 }
-record(bi, "$(P)$(R)PrvPrvFilePathExists_RBV")
+record(bi, "$(P)$(R)PrvImg1FilePathExists_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))IMG_PRV_FILE_PATH_EXISTS")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))PRV_IMG1_FILE_PATH_EXISTS")
     field(ZNAM, "No")
     field(ZSV,  "MAJOR")
     field(ONAM, "Yes")
@@ -316,11 +316,11 @@ record(bi, "$(P)$(R)PrvPrvFilePathExists_RBV")
     field(SCAN, "I/O Intr")
 }
 
-record(mbbo, "$(P)$(R)PrvPrvFileFmt")
+record(mbbo, "$(P)$(R)PrvImg1FileFmt")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PRVFORMAT")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1FORMAT")
    field(ZRST, "tiff") 
    field(ZRVL, "0")
    field(ONST, "pgm") 
@@ -334,10 +334,10 @@ record(mbbo, "$(P)$(R)PrvPrvFileFmt")
    info(autosaveFields, "VAL")
 }
 
-record(mbbi, "$(P)$(R)PrvPrvFileFmt_RBV")
+record(mbbi, "$(P)$(R)PrvImg1FileFmt_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PRVFORMAT")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1FORMAT")
    field(ZRST, "tiff") 
    field(ZRVL, "0")
    field(ONST, "pgm") 
@@ -351,11 +351,11 @@ record(mbbi, "$(P)$(R)PrvPrvFileFmt_RBV")
    field(SCAN, "I/O Intr")
 }
 
-record(mbbo, "$(P)$(R)PrvPrvFileMode")
+record(mbbo, "$(P)$(R)PrvImg1FileMode")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PRVMODE")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1MODE")
    field(ZRST, "count") 
    field(ZRVL, "0")
    field(ONST, "tot") 
@@ -367,10 +367,10 @@ record(mbbo, "$(P)$(R)PrvPrvFileMode")
    info(autosaveFields, "VAL")
 }
 
-record(mbbi, "$(P)$(R)PrvPrvFileMode_RBV")
+record(mbbi, "$(P)$(R)PrvImg1FileMode_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PRVMODE")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1MODE")
    field(ZRST, "count") 
    field(ZRVL, "0")
    field(ONST, "tot") 
