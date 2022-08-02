@@ -695,7 +695,7 @@ asynStatus ADTimePix::fileWriter(){
     double doubleNum;
 
     std::string server;
-    server = this->serverURL + std::string("/server");
+    server = this->serverURL + std::string("/server/destination");
 
     // cpr::Response r = cpr::Get(cpr::Url{server},
     //                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
@@ -710,43 +710,47 @@ asynStatus ADTimePix::fileWriter(){
 
     // Raw
     getStringParam(ADTimePixRawBase, fileStr);
-    server_j["Destination"]["Raw"][0]["Base"] = "file://" + fileStr;
+    server_j["Raw"][0]["Base"] = "file://" + fileStr;
     getStringParam(ADTimePixRawFilePat, fileStr);
-    server_j["Destination"]["Raw"][0]["FilePattern"] = fileStr;
+    server_j["Raw"][0]["FilePattern"] = fileStr;
+
+    getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
+    json splitStrategy = {"single_file","frame"};
+    server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
 
     // Preview
     getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
-    server_j["Destination"]["Preview"]["Period"] = doubleNum;
+    server_j["Preview"]["Period"] = doubleNum;
 
     getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
     json samplingMode = {"skipOnFrame","skipOnPeriod"};
-    server_j["Destination"]["Preview"]["SamplingMode"] = samplingMode[intNum];
+    server_j["Preview"]["SamplingMode"] = samplingMode[intNum];
 
     // Preview, ImageChannels[0]
     getStringParam(ADTimePixPrvImgBase, fileStr);
-    server_j["Destination"]["Preview"]["ImageChannels"][0]["Base"] = "file://" + fileStr;
+    server_j["Preview"]["ImageChannels"][0]["Base"] = "file://" + fileStr;
     getStringParam(ADTimePixPrvImgFilePat, fileStr);
-    server_j["Destination"]["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
+    server_j["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
 
     getIntegerParam(ADTimePixPrvImgFormat, &intNum);
     json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
-    server_j["Destination"]["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
+    server_j["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
 
     getIntegerParam(ADTimePixPrvImgMode, &intNum);
     json imgMode = {"count","tot","toa","tof",};
-    server_j["Destination"]["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
+    server_j["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
 
     // Preview, ImageChannels[1]
     getStringParam(ADTimePixPrvImg1Base, fileStr);
-    server_j["Destination"]["Preview"]["ImageChannels"][1]["Base"] = fileStr;
+    server_j["Preview"]["ImageChannels"][1]["Base"] = fileStr;
 
     getIntegerParam(ADTimePixPrvImg1Format, &intNum);
     imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
-    server_j["Destination"]["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
+    server_j["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
 
     getIntegerParam(ADTimePixPrvImg1Mode, &intNum);
     imgMode = {"count","tot","toa","tof",};
-    server_j["Destination"]["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
+    server_j["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
 
 
     printf("server=%s\n",server_j.dump(3,' ', true).c_str());
