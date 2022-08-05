@@ -128,7 +128,142 @@ record(longin, "$(P)$(R)RawQueueSize_RBV")
 #}
 
 ###################################################################
-#  Preview
+#  Image                                                          #
+#  These records control the Image Channel                        #
+###################################################################
+# Image Channels[0] file path.
+record(waveform, "$(P)$(R)ImgFilePath")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGBASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)ImgFilePath_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGBASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+record(bi, "$(P)$(R)ImgFilePathExists_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))IMG_FILE_PATH_EXISTS")
+    field(ZNAM, "No")
+    field(ZSV,  "MAJOR")
+    field(ONAM, "Yes")
+    field(OSV,  "NO_ALARM")
+    field(SCAN, "I/O Intr")
+}
+
+# Image file template/pattern "f%Hms_"
+record(waveform, "$(P)$(R)ImgFileTemplate")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGPAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)ImgFileTemplate_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGPAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)ImgFileFmt")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGFORMAT")  
+   field(ZRST, "tiff") 
+   field(ZRVL, "0")
+   field(ONST, "pgm") 
+   field(ONVL, "1")
+   field(TWST, "png")    
+   field(TWVL, "2")
+   field(THST, "jsonimage")    
+   field(THVL, "3")
+   field(FRST, "jsonhisto") 
+   field(FRVL, "4")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)ImgFileFmt_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGFORMAT")  
+   field(ZRST, "tiff") 
+   field(ZRVL, "0")
+   field(ONST, "pgm") 
+   field(ONVL, "1")
+   field(TWST, "png")    
+   field(TWVL, "2")
+   field(THST, "jsonimage")    
+   field(THVL, "3")
+   field(FRST, "jsonhisto") 
+   field(FRVL, "4")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)ImgFileMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGMODE")
+   field(ZRST, "count") 
+   field(ZRVL, "0")
+   field(ONST, "tot") 
+   field(ONVL, "1")
+   field(TWST, "toa")    
+   field(TWVL, "2")
+   field(THST, "tof")    
+   field(THVL, "3")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)ImgFileMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGMODE")
+   field(ZRST, "count") 
+   field(ZRVL, "0")
+   field(ONST, "tot") 
+   field(ONVL, "1")
+   field(TWST, "toa")    
+   field(TWVL, "2")
+   field(THST, "tof")    
+   field(THVL, "3")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)StpOnDskLim")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)TPX3_IMG_STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(VAL,  "0")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)StpOnDskLim_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)TPX3_IMG_STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  Preview                                                        #
 #  These records control the preview period                       #
 ###################################################################
 record(ao, "$(P)$(R)PrvPeriod")
@@ -305,16 +440,16 @@ record(waveform, "$(P)$(R)PrvImg1FilePath_RBV")
     field(NELM, "256")
     field(SCAN, "I/O Intr")
 }
-record(bi, "$(P)$(R)PrvImg1FilePathExists_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))PRV_IMG1_FILE_PATH_EXISTS")
-    field(ZNAM, "No")
-    field(ZSV,  "MAJOR")
-    field(ONAM, "Yes")
-    field(OSV,  "NO_ALARM")
-    field(SCAN, "I/O Intr")
-}
+# record(bi, "$(P)$(R)PrvImg1FilePathExists_RBV")
+# {
+#     field(DTYP, "asynInt32")
+#     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))PRV_IMG1_FILE_PATH_EXISTS")
+#     field(ZNAM, "No")
+#     field(ZSV,  "MAJOR")
+#     field(ONAM, "Yes")
+#     field(OSV,  "NO_ALARM")
+#     field(SCAN, "I/O Intr")
+# }
 
 record(mbbo, "$(P)$(R)PrvImg1FileFmt")
 {

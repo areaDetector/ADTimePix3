@@ -203,6 +203,21 @@ asynStatus ADTimePix::checkImgPath()
     std::string filePath;
     int pathExists;
 
+    getStringParam(ADTimePixImgBase, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+    pathExists = checkPath(filePath);
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixImgBase, filePath);
+    setIntegerParam(ADTimePixImgFilePathExists, pathExists);
+    return status;
+}
+
+asynStatus ADTimePix::checkPrvImgPath()
+{
+    asynStatus status;
+    std::string filePath;
+    int pathExists;
+
     getStringParam(ADTimePixPrvImgBase, filePath);
     if (filePath.size() == 0) return asynSuccess;
     pathExists = checkPath(filePath);
@@ -707,6 +722,9 @@ asynStatus ADTimePix::fileWriter(){
     // //printf("server=%s\n",server_j.dump(3,' ', true).c_str());
 
     json server_j;
+    json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
+    json imgMode = {"count","tot","toa","tof",};
+    json samplingMode = {"skipOnFrame","skipOnPeriod"};
 
     // Raw
     getStringParam(ADTimePixRawBase, fileStr);
@@ -718,12 +736,23 @@ asynStatus ADTimePix::fileWriter(){
     json splitStrategy = {"single_file","frame"};
     server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
 
+    // Image
+    getStringParam(ADTimePixImgBase, fileStr);
+    server_j["Image"][0]["Base"] = "file://" + fileStr;
+    getStringParam(ADTimePixImgFilePat, fileStr);
+    server_j["Image"][0]["FilePattern"] = fileStr;
+
+    getIntegerParam(ADTimePixImgFormat, &intNum);
+    server_j["Image"][0]["Format"] = imgFormat[intNum];
+
+    getIntegerParam(ADTimePixImgMode, &intNum);
+    server_j["Image"][0]["Mode"] = imgMode[intNum];
+
     // Preview
     getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
     server_j["Preview"]["Period"] = doubleNum;
 
     getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
-    json samplingMode = {"skipOnFrame","skipOnPeriod"};
     server_j["Preview"]["SamplingMode"] = samplingMode[intNum];
 
     // Preview, ImageChannels[0]
@@ -733,11 +762,9 @@ asynStatus ADTimePix::fileWriter(){
     server_j["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
 
     getIntegerParam(ADTimePixPrvImgFormat, &intNum);
-    json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
     server_j["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
 
     getIntegerParam(ADTimePixPrvImgMode, &intNum);
-    json imgMode = {"count","tot","toa","tof",};
     server_j["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
 
     // Preview, ImageChannels[1]
@@ -745,11 +772,9 @@ asynStatus ADTimePix::fileWriter(){
     server_j["Preview"]["ImageChannels"][1]["Base"] = fileStr;
 
     getIntegerParam(ADTimePixPrvImg1Format, &intNum);
-    imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
     server_j["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
 
     getIntegerParam(ADTimePixPrvImg1Mode, &intNum);
-    imgMode = {"count","tot","toa","tof",};
     server_j["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
 
 
@@ -1076,8 +1101,10 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkDACSPath();
     } else if (function == ADTimePixRawBase) {
         status = this->checkRawPath();
+    } else if (function == ADTimePixImgBase) {
+        status = this->checkImgPath();      
     } else if (function == ADTimePixPrvImgBase) {
-        status = this->checkImgPath();
+        status = this->checkPrvImgPath();
     }
      /* Do callbacks so higher layers see any changes */
     status = (asynStatus)callParamCallbacks(addr, addr);
@@ -1523,11 +1550,21 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixRawFilePatString,                 asynParamOctet,  &ADTimePixRawFilePat);             
     createParam(ADTimePixRawSplitStrategyString,           asynParamInt32,  &ADTimePixRawSplitStrategy);         
     createParam(ADTimePixRawQueueSizeString,               asynParamInt32,  &ADTimePixRawQueueSize);
-    createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists);             
+    createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists); 
+    // Server, Image
+    createParam(ADTimePixImgBaseString,                   asynParamOctet,    &ADTimePixImgBase);              
+    createParam(ADTimePixImgFilePatString,                asynParamOctet,    &ADTimePixImgFilePat);            
+    createParam(ADTimePixImgFormatString,                 asynParamInt32,    &ADTimePixImgFormat);            
+    createParam(ADTimePixImgModeString,                   asynParamInt32,    &ADTimePixImgMode);              
+    createParam(ADTimePixImgThsString,                    asynParamOctet,    &ADTimePixImgThs);             
+    createParam(ADTimePixImgIntSizeString,                asynParamOctet,    &ADTimePixImgIntSize);            
+    createParam(ADTimePixImgStpOnDskLimString,            asynParamOctet,    &ADTimePixImgStpOnDskLim);        
+    createParam(ADTimePixImgQueueSizeString,              asynParamOctet,    &ADTimePixImgQueueSize);         
+    createParam(ADTimePixImgFilePathExistsString,         asynParamInt32,    &ADTimePixImgFilePathExists);    
     // Server, Preview   
     createParam(ADTimePixPrvPeriodString,                  asynParamFloat64,  &ADTimePixPrvPeriod);        
     createParam(ADTimePixPrvSamplingModeString,            asynParamInt32,    &ADTimePixPrvSamplingMode);  
-    // Server, Preview, ImageChannels  
+    // Server, Preview, ImageChannels[0]  
     createParam(ADTimePixPrvImgBaseString,                   asynParamOctet, &ADTimePixPrvImgBase);            
     createParam(ADTimePixPrvImgFilePatString,                asynParamOctet, &ADTimePixPrvImgFilePat);         
     createParam(ADTimePixPrvImgFormatString,                 asynParamInt32, &ADTimePixPrvImgFormat);          
@@ -1537,7 +1574,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamOctet, &ADTimePixPrvImgStpOnDskLim);    
     createParam(ADTimePixPrvImgQueueSizeString,              asynParamOctet, &ADTimePixPrvImgQueueSize);
     createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);          
-    // Server, Preview, Preview  
+    // Server, Preview, ImageChannels[1]   
     createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);          
     createParam(ADTimePixPrvImg1FormatString,              asynParamInt32, &ADTimePixPrvImg1Format);        
     createParam(ADTimePixPrvImg1ModeString,                asynParamInt32, &ADTimePixPrvImg1Mode);          
@@ -1545,7 +1582,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImg1IntSizeString,             asynParamOctet, &ADTimePixPrvImg1IntSize);     
     createParam(ADTimePixPrvImg1StpOnDskLimString,         asynParamOctet, &ADTimePixPrvImg1StpOnDskLim); 
     createParam(ADTimePixPrvImg1QueueSizeString,           asynParamOctet, &ADTimePixPrvImg1QueueSize);   
-    createParam(ADTimePixPrvImg1FilePathExistsString,      asynParamInt32, &ADTimePixPrvImg1FilePathExists); 
+//    createParam(ADTimePixPrvImg1FilePathExistsString,      asynParamInt32, &ADTimePixPrvImg1FilePathExists); 
     
     //sets driver version
     char versionString[25];

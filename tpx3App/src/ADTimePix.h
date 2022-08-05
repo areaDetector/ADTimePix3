@@ -199,6 +199,17 @@
 #define ADTimePixRawQueueSizeString         "TPX3_RAW_QUEUESIZE"        // (asynInt32,         w)      Raw Destination Queue Size
 #define ADTimePixRawFilePathExistsString    "RAW_FILE_PATH_EXISTS"      // (asynInt32,       r/w) File path exists? */
 
+    // Server, Image, ImageChannels[0]
+#define ADTimePixImgBaseString               "TPX3_IMG_IMGBASE"          // (asynOctet,         w)      Preview ImageChannels Base file (Place raw files) 
+#define ADTimePixImgFilePatString            "TPX3_IMG_IMGPAT"           // (asynOctet,         w)      Preview ImageChannels FilePattern 
+#define ADTimePixImgFormatString             "TPX3_IMG_IMGFORMAT"        // (asynInt32,         w)      Preview ImageChannels Format
+#define ADTimePixImgModeString               "TPX3_IMG_IMGMODE"          // (asynInt32,         w)      Preview ImageChannels Mode
+#define ADTimePixImgThsString                "TPX3_IMG_IMGTHS"           // (asynOctet,         w)      Preview ImageChannels Thresholds
+#define ADTimePixImgIntSizeString            "TPX3_IMG_INTSIZE"          // (asynInt32,         w)      Preview ImageChannels IntegrationSize
+#define ADTimePixImgStpOnDskLimString        "TPX3_IMG_STPONDSK"         // (asynInt32,         w)      Preview ImageChannels StopMeasurementOnDiskLimit
+#define ADTimePixImgQueueSizeString          "TPX3_IMG_QUEUESIZE"        // (asynInt32,         w)      Preview ImageChannels QueueSize
+#define ADTimePixImgFilePathExistsString     "IMG_FILE_PATH_EXISTS"      // (asynInt32,       r/w)      File path exists? */
+
     // Server, Preview
 #define ADTimePixPrvPeriodString            "TPX3_PRV_PERIOD"           // (asynFloat64,       w)      Preview Period
 #define ADTimePixPrvSamplingModeString      "TPX3_PRV_SAMPLMODE"        // (asynOctet,         w)      Preview Sampling Mode
@@ -220,7 +231,7 @@
 #define ADTimePixPrvImg1IntSizeString         "TPX3_PRV_IMG1INTSIZE"       // (asynInt32,         w)      Preview ImageChannels Preview files IntegrationSize
 #define ADTimePixPrvImg1StpOnDskLimString     "TPX3_PRV_IMG1STPONDSK"      // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
 #define ADTimePixPrvImg1QueueSizeString       "TPX3_PRV_IMG1QUEUESIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
-#define ADTimePixPrvImg1FilePathExistsString  "PRV_IMG1_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
+//#define ADTimePixPrvImg1FilePathExistsString  "PRV_IMG1_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
 
 // Place any required inclues here
@@ -443,11 +454,23 @@ class ADTimePix : ADDriver{
         int ADTimePixRawFilePat;           
         int ADTimePixRawSplitStrategy;    
         int ADTimePixRawQueueSize;
-        int ADTimePixRawFilePathExists;        
+        int ADTimePixRawFilePathExists;
+
+            // Server, Image
+        int ADTimePixImgBase;           
+        int ADTimePixImgFilePat;        
+        int ADTimePixImgFormat;         
+        int ADTimePixImgMode;           
+        int ADTimePixImgThs;            
+        int ADTimePixImgIntSize;        
+        int ADTimePixImgStpOnDskLim;    
+        int ADTimePixImgQueueSize;      
+        int ADTimePixImgFilePathExists; 
+
             // Server, Preview
         int ADTimePixPrvPeriod;            
         int ADTimePixPrvSamplingMode;      
-            // Server, Preview, ImageChannels
+            // Server, Preview, ImageChannels[0]
         int ADTimePixPrvImgBase;           
         int ADTimePixPrvImgFilePat;        
         int ADTimePixPrvImgFormat;         
@@ -457,7 +480,7 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvImgStpOnDskLim;   
         int ADTimePixPrvImgQueueSize;
         int ADTimePixPrvImgFilePathExists;     
-            // Server, Preview, Preview
+            // Server, Preview, ImageChannel[1]
         int ADTimePixPrvImg1Base;         
         int ADTimePixPrvImg1Format;       
         int ADTimePixPrvImg1Mode;         
@@ -465,7 +488,7 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvImg1IntSize;    
         int ADTimePixPrvImg1StpOnDskLim;
         int ADTimePixPrvImg1QueueSize;  
-        int ADTimePixPrvImg1FilePathExists;
+    //    int ADTimePixPrvImg1FilePathExists;
 
 
         int ADTimePixFreeSpace;
@@ -521,6 +544,7 @@ class ADTimePix : ADDriver{
         asynStatus checkDACSPath();
         asynStatus checkRawPath();
         asynStatus checkImgPath();
+        asynStatus checkPrvImgPath();
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
