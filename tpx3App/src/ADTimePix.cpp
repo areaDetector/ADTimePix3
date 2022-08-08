@@ -1557,9 +1557,10 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixImgFormatString,                 asynParamInt32,    &ADTimePixImgFormat);            
     createParam(ADTimePixImgModeString,                   asynParamInt32,    &ADTimePixImgMode);              
     createParam(ADTimePixImgThsString,                    asynParamOctet,    &ADTimePixImgThs);             
-    createParam(ADTimePixImgIntSizeString,                asynParamOctet,    &ADTimePixImgIntSize);            
-    createParam(ADTimePixImgStpOnDskLimString,            asynParamOctet,    &ADTimePixImgStpOnDskLim);        
-    createParam(ADTimePixImgQueueSizeString,              asynParamOctet,    &ADTimePixImgQueueSize);         
+    createParam(ADTimePixImgIntSizeString,                asynParamInt32,    &ADTimePixImgIntSize); 
+    createParam(ADTimePixImgIntModeString,                asynParamInt32,    &ADTimePixImgIntMode);            
+    createParam(ADTimePixImgStpOnDskLimString,            asynParamInt32,    &ADTimePixImgStpOnDskLim);        
+    createParam(ADTimePixImgQueueSizeString,              asynParamInt32,    &ADTimePixImgQueueSize);         
     createParam(ADTimePixImgFilePathExistsString,         asynParamInt32,    &ADTimePixImgFilePathExists);    
     // Server, Preview   
     createParam(ADTimePixPrvPeriodString,                  asynParamFloat64,  &ADTimePixPrvPeriod);        
@@ -1570,9 +1571,10 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgFormatString,                 asynParamInt32, &ADTimePixPrvImgFormat);          
     createParam(ADTimePixPrvImgModeString,                   asynParamInt32, &ADTimePixPrvImgMode);            
     createParam(ADTimePixPrvImgThsString,                    asynParamOctet, &ADTimePixPrvImgThs);            
-    createParam(ADTimePixPrvImgIntSizeString,                asynParamOctet, &ADTimePixPrvImgIntSize);        
-    createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamOctet, &ADTimePixPrvImgStpOnDskLim);    
-    createParam(ADTimePixPrvImgQueueSizeString,              asynParamOctet, &ADTimePixPrvImgQueueSize);
+    createParam(ADTimePixPrvImgIntSizeString,                asynParamInt32, &ADTimePixPrvImgIntSize);
+    createParam(ADTimePixPrvImgIntModeString,                asynParamInt32, &ADTimePixPrvImgIntMode);        
+    createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamInt32, &ADTimePixPrvImgStpOnDskLim);    
+    createParam(ADTimePixPrvImgQueueSizeString,              asynParamInt32, &ADTimePixPrvImgQueueSize);
     createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);          
     // Server, Preview, ImageChannels[1]   
     createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);          

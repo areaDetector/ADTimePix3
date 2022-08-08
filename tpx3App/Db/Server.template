@@ -243,11 +243,53 @@ record(mbbi, "$(P)$(R)ImgFileMode_RBV")
    field(SCAN, "I/O Intr")
 }
 
+record(longout, "$(P)$(R)ImgIntgSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_INTSIZE")
+   field(VAL,  "1")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)ImgIntgSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_INTSIZE")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)ImgIntgMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)ImgIntgMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
+
 record(bo, "$(P)$(R)StpOnDskLim")
 {
     field(PINI, "YES")
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)TPX3_IMG_STPONDSK")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_STPONDSK")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(VAL,  "0")
@@ -256,10 +298,26 @@ record(bo, "$(P)$(R)StpOnDskLim")
 record(bi, "$(P)$(R)StpOnDskLim_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)TPX3_IMG_STPONDSK")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_STPONDSK")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)ImgQueueSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_QUEUESIZE")
+   field(VAL,  "1024")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)ImgQueueSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_QUEUESIZE")
+   field(SCAN, "I/O Intr")
 }
 
 ###################################################################
@@ -420,6 +478,83 @@ record(mbbi, "$(P)$(R)PrvImgFileMode_RBV")
    field(THST, "tof")    
    field(THVL, "3")
    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)PrvImgIntgSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_INTSIZE")
+   field(VAL,  "1")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)PrvImgIntgSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_INTSIZE")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)PrvImgIntgMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_INTMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)PrvImgIntgMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_INTMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)PrvImgQueueSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_QUEUESIZE")
+   field(VAL,  "1024")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)PrvImgQueueSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_QUEUESIZE")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)PrvStpOnDskLim")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(VAL,  "0")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)PrvStpOnDskLim_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
 }
 
 # Preview Image Channel[1], measurement/image file path.
