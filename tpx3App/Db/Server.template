@@ -308,7 +308,7 @@ record(longout, "$(P)$(R)ImgQueueSize")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_QUEUESIZE")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_QUEUESIZE")
    field(VAL,  "1024")
    info(autosaveFields, "VAL")
 }
@@ -316,7 +316,7 @@ record(longout, "$(P)$(R)ImgQueueSize")
 record(longin, "$(P)$(R)ImgQueueSize_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_QUEUESIZE")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_QUEUESIZE")
    field(SCAN, "I/O Intr")
 }
 
