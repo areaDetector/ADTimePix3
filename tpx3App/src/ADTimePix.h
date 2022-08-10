@@ -191,7 +191,12 @@
 
 
     // Server, write data channels
-#define ADTimePixWriteDataString            "TPX3_WRITE_DATA"           // (asynInt32,         w)      Write Data output channels (raw,img,preview)
+#define ADTimePixWriteDataString           "TPX3_WRITE_DATA"          // (asynInt32,         w)      Write Data output channels (raw,img,preview)
+#define ADTimePixWriteRawString            "TPX3_WRITE_RAW"           // (asynInt32,         w)      Write Data output channels (raw)
+#define ADTimePixWriteImgString            "TPX3_WRITE_IMG"           // (asynInt32,         w)      Write Data output channels (img)
+#define ADTimePixWritePrvImgString         "TPX3_WRITE_PRVIMG"        // (asynInt32,         w)      Write Data output channels (preview->img)
+#define ADTimePixWritePrvImg1String        "TPX3_WRITE_PRVIMG1"       // (asynInt32,         w)      Write Data output channels (preview->img1)
+
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRawFilePatString           "TPX3_RAW_FILEPAT"          // (asynOctet,         w)      Raw Destination File Pattern
@@ -235,6 +240,7 @@
 #define ADTimePixPrvImg1StpOnDskLimString     "TPX3_PRV_IMG1STPONDSK"      // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
 #define ADTimePixPrvImg1QueueSizeString       "TPX3_PRV_IMG1QUEUESIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
 //#define ADTimePixPrvImg1FilePathExistsString  "PRV_IMG1_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
+
 
 
 // Place any required inclues here
@@ -451,8 +457,13 @@ class ADTimePix : ADDriver{
         int ADTimePixWriteBPCFile;                
         int ADTimePixWriteDACSFile;
 
-            // Server, write output channels
-        int ADTimePixWriteData;
+            // Server, write output channels/modes
+        int ADTimePixWriteData;    
+        int ADTimePixWriteRaw;      
+        int ADTimePixWriteImg;      
+        int ADTimePixWritePrvImg;   
+        int ADTimePixWritePrvImg1;  
+
             // Server, raw
         int ADTimePixRawBase;              
         int ADTimePixRawFilePat;           

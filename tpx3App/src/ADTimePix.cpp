@@ -467,9 +467,9 @@ asynStatus ADTimePix::getDetector(){
     setStringParam(ADTimePixTriggerMode,             strip_quotes(detector_j["Config"]["TriggerMode"].dump().c_str()));
     //setStringParam(ADTriggerMode,             strip_quotes(detector_j["Config"]["TriggerMode"].dump().c_str()));
     setDoubleParam(ADTimePixExposureTime,            detector_j["Config"]["ExposureTime"].get<double>());
-    setDoubleParam(ADAcquireTime,            detector_j["Config"]["ExposureTime"].get<double>());       // Exposure Time RBV
+    setDoubleParam(ADAcquireTime,                    detector_j["Config"]["ExposureTime"].get<double>());       // Exposure Time RBV
     setDoubleParam(ADTimePixTriggerPeriod,           detector_j["Config"]["TriggerPeriod"].get<double>());
-    setDoubleParam(ADAcquirePeriod,          detector_j["Config"]["TriggerPeriod"].get<double>());     // Exposure Period RBV
+    setDoubleParam(ADAcquirePeriod,                  detector_j["Config"]["TriggerPeriod"].get<double>());     // Exposure Period RBV
     setIntegerParam(ADTimePixnTriggers,              detector_j["Config"]["nTriggers"].get<int>());
     setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Config"]["DetectorOrientation"].dump().c_str()));
     setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, falue->0
@@ -706,7 +706,7 @@ asynStatus ADTimePix::fileWriter(){
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
     
     std::string fileStr;
-    int intNum;
+    int intNum, writeChannel;
     double doubleNum;
 
     std::string server;
@@ -726,27 +726,33 @@ asynStatus ADTimePix::fileWriter(){
     json imgMode = {"count","tot","toa","tof",};
     json samplingMode = {"skipOnFrame","skipOnPeriod"};
 
-    // Raw
-    getStringParam(ADTimePixRawBase, fileStr);
-    server_j["Raw"][0]["Base"] = "file://" + fileStr;
-    getStringParam(ADTimePixRawFilePat, fileStr);
-    server_j["Raw"][0]["FilePattern"] = fileStr;
+    getIntegerParam(ADTimePixWriteRaw, &writeChannel);
+    if (writeChannel != 0) {
+        // Raw
+        getStringParam(ADTimePixRawBase, fileStr);
+        server_j["Raw"][0]["Base"] = "file://" + fileStr;
+        getStringParam(ADTimePixRawFilePat, fileStr);
+        server_j["Raw"][0]["FilePattern"] = fileStr;
 
-    getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
-    json splitStrategy = {"single_file","frame"};
-    server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
+        getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
+        json splitStrategy = {"single_file","frame"};
+        server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
+    }   
 
-    // Image
-    getStringParam(ADTimePixImgBase, fileStr);
-    server_j["Image"][0]["Base"] = "file://" + fileStr;
-    getStringParam(ADTimePixImgFilePat, fileStr);
-    server_j["Image"][0]["FilePattern"] = fileStr;
+    getIntegerParam(ADTimePixWriteImg, &writeChannel);
+    if (writeChannel != 0) {
+        // Image
+        getStringParam(ADTimePixImgBase, fileStr);
+        server_j["Image"][0]["Base"] = "file://" + fileStr;
+        getStringParam(ADTimePixImgFilePat, fileStr);
+        server_j["Image"][0]["FilePattern"] = fileStr;
 
-    getIntegerParam(ADTimePixImgFormat, &intNum);
-    server_j["Image"][0]["Format"] = imgFormat[intNum];
+        getIntegerParam(ADTimePixImgFormat, &intNum);
+        server_j["Image"][0]["Format"] = imgFormat[intNum];
 
-    getIntegerParam(ADTimePixImgMode, &intNum);
-    server_j["Image"][0]["Mode"] = imgMode[intNum];
+        getIntegerParam(ADTimePixImgMode, &intNum);
+        server_j["Image"][0]["Mode"] = imgMode[intNum];
+    }
 
     // Preview
     getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
@@ -755,28 +761,34 @@ asynStatus ADTimePix::fileWriter(){
     getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
     server_j["Preview"]["SamplingMode"] = samplingMode[intNum];
 
-    // Preview, ImageChannels[0]
-    getStringParam(ADTimePixPrvImgBase, fileStr);
-    server_j["Preview"]["ImageChannels"][0]["Base"] = "file://" + fileStr;
-    getStringParam(ADTimePixPrvImgFilePat, fileStr);
-    server_j["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
 
-    getIntegerParam(ADTimePixPrvImgFormat, &intNum);
-    server_j["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
+    getIntegerParam(ADTimePixWritePrvImg, &writeChannel);
+    if (writeChannel != 0) {
+        // Preview, ImageChannels[0]
+        getStringParam(ADTimePixPrvImgBase, fileStr);
+        server_j["Preview"]["ImageChannels"][0]["Base"] = "file://" + fileStr;
+        getStringParam(ADTimePixPrvImgFilePat, fileStr);
+        server_j["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
 
-    getIntegerParam(ADTimePixPrvImgMode, &intNum);
-    server_j["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
+        getIntegerParam(ADTimePixPrvImgFormat, &intNum);
+        server_j["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
 
-    // Preview, ImageChannels[1]
-    getStringParam(ADTimePixPrvImg1Base, fileStr);
-    server_j["Preview"]["ImageChannels"][1]["Base"] = fileStr;
+        getIntegerParam(ADTimePixPrvImgMode, &intNum);
+        server_j["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
+    }
 
-    getIntegerParam(ADTimePixPrvImg1Format, &intNum);
-    server_j["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
+    getIntegerParam(ADTimePixWritePrvImg1, &writeChannel);
+    if (writeChannel != 0) {
+        // Preview, ImageChannels[1]
+        getStringParam(ADTimePixPrvImg1Base, fileStr);
+        server_j["Preview"]["ImageChannels"][1]["Base"] = fileStr;
 
-    getIntegerParam(ADTimePixPrvImg1Mode, &intNum);
-    server_j["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
+        getIntegerParam(ADTimePixPrvImg1Format, &intNum);
+        server_j["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
 
+        getIntegerParam(ADTimePixPrvImg1Mode, &intNum);
+        server_j["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
+    }
 
     printf("server=%s\n",server_j.dump(3,' ', true).c_str());
 
@@ -1543,8 +1555,13 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixWriteBPCFileString,               asynParamInt32,  &ADTimePixWriteBPCFile);     
     createParam(ADTimePixWriteDACSFileString,              asynParamInt32,  &ADTimePixWriteDACSFile); 
 
-    // Server
+    // Server, File Writer channels
     createParam(ADTimePixWriteDataString,                  asynParamInt32,  &ADTimePixWriteData);
+    createParam(ADTimePixWriteRawString,                   asynParamInt32,  &ADTimePixWriteRaw);         
+    createParam(ADTimePixWriteImgString,                   asynParamInt32,  &ADTimePixWriteImg);         
+    createParam(ADTimePixWritePrvImgString,                asynParamInt32,  &ADTimePixWritePrvImg);   
+    createParam(ADTimePixWritePrvImg1String,               asynParamInt32,  &ADTimePixWritePrvImg1);     
+
     // Server, Raw
     createParam(ADTimePixRawBaseString,                    asynParamOctet,  &ADTimePixRawBase);               
     createParam(ADTimePixRawFilePatString,                 asynParamOctet,  &ADTimePixRawFilePat);             
