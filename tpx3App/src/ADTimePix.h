@@ -231,6 +231,7 @@
 #define ADTimePixPrvImg1ModeString            "TPX3_PRV_IMG1MODE"          // (asynInt32,         w)      Preview ImageChannels Preview files Mode
 #define ADTimePixPrvImg1ThsString             "TPX3_PRV_IMG1THS"           // (asynOctet,         w)      Preview ImageChannels Preview files Thresholds
 #define ADTimePixPrvImg1IntSizeString         "TPX3_PRV_IMG1INTSIZE"       // (asynInt32,         w)      Preview ImageChannels Preview files IntegrationSize
+#define ADTimePixPrvImg1IntModeString         "TPX3_PRV_IMG1INTMODE"       // (asynInt32,         w)      Preview ImageChannels IntegrationMode
 #define ADTimePixPrvImg1StpOnDskLimString     "TPX3_PRV_IMG1STPONDSK"      // (asynInt32,         w)      Preview ImageChannels Preview files StopMeasurementOnDiskLimit
 #define ADTimePixPrvImg1QueueSizeString       "TPX3_PRV_IMG1QUEUESIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
 //#define ADTimePixPrvImg1FilePathExistsString  "PRV_IMG1_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
@@ -281,14 +282,15 @@ class ADTimePix : ADDriver{
         ~ADTimePix();
 
     protected:
+        int ADTimePixHttpCode;
+        #define ADTIMEPIX_FIRST_PARAM ADTimePixHttpCode
+        int ADTimePixWriteSpeed;
 
-        int ADTimePixServer;
-        #define ADTIMEPIX_FIRST_PARAM ADTimePixServer
         int ADTimePixDetType;
         int ADTimePixFWTimeStamp;
     //    int ADTimePixDetConnected;    // TODO
-        int ADTimePixWriteSpeed;
-        int ADTimePixHttpCode;
+
+        int ADTimePixServer;
 
     // Health
         int ADTimePixLocalTemp;
@@ -489,7 +491,8 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvImg1Format;       
         int ADTimePixPrvImg1Mode;         
         int ADTimePixPrvImg1Ths;        
-        int ADTimePixPrvImg1IntSize;    
+        int ADTimePixPrvImg1IntSize; 
+        int ADTimePixPrvImg1IntMode;
         int ADTimePixPrvImg1StpOnDskLim;
         int ADTimePixPrvImg1QueueSize;  
     //    int ADTimePixPrvImg1FilePathExists;

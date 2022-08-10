@@ -330,7 +330,7 @@ record(ao, "$(P)$(R)PrvPeriod")
    field(DTYP, "asynFloat64")
    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_PERIOD")
    field(PREC, "3")
-   field(VAL,  "1.0")
+   field(VAL,  "0.2")
    info(autosaveFields, "VAL")
 }
 
@@ -527,7 +527,7 @@ record(longout, "$(P)$(R)PrvImgQueueSize")
    field(PINI, "YES")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_QUEUESIZE")
-   field(VAL,  "1024")
+   field(VAL,  "16")
    info(autosaveFields, "VAL")
 }
 
@@ -649,5 +649,82 @@ record(mbbi, "$(P)$(R)PrvImg1FileMode_RBV")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)PrvImg1IntgSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1INTSIZE")
+   field(VAL,  "1")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)PrvImg1IntgSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1INTSIZE")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)PrvImg1IntgMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1INTMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)PrvImg1IntgMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1INTMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)Prv1StpOnDskLim")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(VAL,  "0")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)Prv1StpOnDskLim_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)PrvImg1QueueSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1QUEUESIZE")
+   field(VAL,  "16")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)PrvImg1QueueSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1QUEUESIZE")
    field(SCAN, "I/O Intr")
 }

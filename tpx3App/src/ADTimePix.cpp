@@ -1581,9 +1581,10 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImg1FormatString,              asynParamInt32, &ADTimePixPrvImg1Format);        
     createParam(ADTimePixPrvImg1ModeString,                asynParamInt32, &ADTimePixPrvImg1Mode);          
     createParam(ADTimePixPrvImg1ThsString,                 asynParamOctet, &ADTimePixPrvImg1Ths);         
-    createParam(ADTimePixPrvImg1IntSizeString,             asynParamOctet, &ADTimePixPrvImg1IntSize);     
-    createParam(ADTimePixPrvImg1StpOnDskLimString,         asynParamOctet, &ADTimePixPrvImg1StpOnDskLim); 
-    createParam(ADTimePixPrvImg1QueueSizeString,           asynParamOctet, &ADTimePixPrvImg1QueueSize);   
+    createParam(ADTimePixPrvImg1IntSizeString,             asynParamInt32, &ADTimePixPrvImg1IntSize);    
+    createParam(ADTimePixPrvImg1IntModeString,             asynParamInt32, &ADTimePixPrvImg1IntMode);
+    createParam(ADTimePixPrvImg1StpOnDskLimString,         asynParamInt32, &ADTimePixPrvImg1StpOnDskLim); 
+    createParam(ADTimePixPrvImg1QueueSizeString,           asynParamInt32, &ADTimePixPrvImg1QueueSize);   
 //    createParam(ADTimePixPrvImg1FilePathExistsString,      asynParamInt32, &ADTimePixPrvImg1FilePathExists); 
     
     //sets driver version
