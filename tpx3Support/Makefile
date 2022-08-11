@@ -5,16 +5,11 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-#SRC_DIRS += ../frozenSrc
 SRC_DIRS += ../cprSrc
 #SRC_DIRS += ../cprSrc/cpr/build/cpr_generated_includes
 SRC_DIRS += ../cprSrc/cpr/include
 SRC_DIRS += ../jsonSrc/json/include
 
-
-#LIBRARY=frozen
-
-#INC += frozen.h
 
 # C++ request:  Curl for people
 INC += cpr/cprver.h
@@ -115,7 +110,6 @@ INC += nlohmann/thirdparty/hedley/hedley.hpp
 INC += nlohmann/thirdparty/hedley/hedley_undef.hpp
 # json parser end
 
-#frozen_SRCS += frozen.c
 
 LIB_INSTALLS_Linux +=  ../cprSrc/cpr/build/lib/libcpr.so
 LIB_INSTALLS_Linux +=  ../cprSrc/cpr/build/lib/libcurl-d.so
