@@ -196,6 +196,7 @@
 #define ADTimePixWriteImgString            "TPX3_WRITE_IMG"           // (asynInt32,         w)      Write Data output channels (img)
 #define ADTimePixWritePrvImgString         "TPX3_WRITE_PRVIMG"        // (asynInt32,         w)      Write Data output channels (preview->img)
 #define ADTimePixWritePrvImg1String        "TPX3_WRITE_PRVIMG1"       // (asynInt32,         w)      Write Data output channels (preview->img1)
+#define ADTimePixWritePrvHstString         "TPX3_WRITE_PRVHST"        // (asynInt32,         w)      Write Data output channels (preview->hst)
 
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
@@ -241,6 +242,17 @@
 #define ADTimePixPrvImg1QueueSizeString       "TPX3_PRV_IMG1QUEUESIZE"     // (asynInt32,         w)      Preview ImageChannels Preview files QueueSize
 //#define ADTimePixPrvImg1FilePathExistsString  "PRV_IMG1_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
+    // Server, Preview, HistogramChannels[0]
+#define ADTimePixPrvHstBaseString               "TPX3_PRV_HSTBASE"          // (asynOctet,         w)      Preview HistogramChannels Base file (Place raw files) 
+#define ADTimePixPrvHstFilePatString            "TPX3_PRV_HSTPAT"           // (asynOctet,         w)      Preview HistogramChannels FilePattern 
+#define ADTimePixPrvHstFormatString             "TPX3_PRV_HSTFORMAT"        // (asynInt32,         w)      Preview HistogramChannels Format
+#define ADTimePixPrvHstModeString               "TPX3_PRV_HSTMODE"          // (asynInt32,         w)      Preview HistogramChannels Mode
+#define ADTimePixPrvHstThsString                "TPX3_PRV_HSTTHS"           // (asynOctet,         w)      Preview HistogramChannels Thresholds
+#define ADTimePixPrvHstIntSizeString            "TPX3_PRV_HSTINTSIZE"          // (asynInt32,         w)      Preview HistogramChannels IntegrationSize
+#define ADTimePixPrvHstIntModeString            "TPX3_PRV_HSTINTMODE"          // (asynInt32,         w)      Preview HistogramChannels IntegrationMode
+#define ADTimePixPrvHstStpOnDskLimString        "TPX3_PRV_HSTSTPONDSK"      // (asynInt32,         w)      Preview HistogramChannels StopMeasurementOnDiskLimit
+#define ADTimePixPrvHstQueueSizeString          "TPX3_PRV_HSTQUEUESIZE"     // (asynInt32,         w)      Preview HistogramChannels QueueSize
+#define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
 
 // Place any required inclues here
@@ -463,6 +475,7 @@ class ADTimePix : ADDriver{
         int ADTimePixWriteImg;      
         int ADTimePixWritePrvImg;   
         int ADTimePixWritePrvImg1;  
+        int ADTimePixWritePrvHst;
 
             // Server, raw
         int ADTimePixRawBase;              
@@ -507,7 +520,17 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvImg1StpOnDskLim;
         int ADTimePixPrvImg1QueueSize;  
     //    int ADTimePixPrvImg1FilePathExists;
-
+            // Server, Preview, HistogramChannels[0]
+        int ADTimePixPrvHstBase;           
+        int ADTimePixPrvHstFilePat;        
+        int ADTimePixPrvHstFormat;         
+        int ADTimePixPrvHstMode;           
+        int ADTimePixPrvHstThs;           
+        int ADTimePixPrvHstIntSize;
+        int ADTimePixPrvHstIntMode;      
+        int ADTimePixPrvHstStpOnDskLim;   
+        int ADTimePixPrvHstQueueSize;
+        int ADTimePixPrvHstFilePathExists;     
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
@@ -563,6 +586,7 @@ class ADTimePix : ADDriver{
         asynStatus checkRawPath();
         asynStatus checkImgPath();
         asynStatus checkPrvImgPath();
+        asynStatus checkPrvHstPath();
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
