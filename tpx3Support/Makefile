@@ -67,6 +67,7 @@ INC += nlohmann/json_fwd.hpp
 INC += nlohmann/json.hpp
 INC += nlohmann/ordered_map.hpp
 
+INC += nlohmann/detail/abi_macros.hpp
 INC += nlohmann/detail/exceptions.hpp
 INC += nlohmann/detail/hash.hpp
 INC += nlohmann/detail/json_pointer.hpp
@@ -99,6 +100,7 @@ INC += nlohmann/detail/meta/cpp_future.hpp
 INC += nlohmann/detail/meta/detected.hpp
 INC += nlohmann/detail/meta/identity_tag.hpp
 INC += nlohmann/detail/meta/is_sax.hpp
+INC += nlohmann/detail/meta/std_fs.hpp
 INC += nlohmann/detail/meta/type_traits.hpp
 INC += nlohmann/detail/meta/void_t.hpp
 
