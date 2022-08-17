@@ -28,6 +28,31 @@
 // Area Detector include
 #include "ADTimePix.h"
 
+// Error message formatters
+#define ERR(msg)                                                                                 \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, functionName, \
+              msg)
+
+#define ERR_ARGS(fmt, ...)                                                              \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
+              functionName, __VA_ARGS__);
+
+// Warning message formatters
+#define WARN(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, functionName, msg)
+
+#define WARN_ARGS(fmt, ...)                                                            \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
+              functionName, __VA_ARGS__);
+
+// Log message formatters
+#define LOG(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, functionName, msg)
+
+#define LOG_ARGS(fmt, ...)                                                                       \
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, functionName, \
+              __VA_ARGS__);
+
 #define delim "/"
 
 using namespace std;
@@ -1020,6 +1045,10 @@ void ADTimePix::timePixCallback(){
     int imageCounter;
     int imagesAcquired;
     int mode;
+    int frameCounter = 0;
+    int new_frame_num = 0;
+    bool isIdle = false;
+
     NDArray* pImage;
     int arrayCallbacks;
     epicsTimeStamp startTime, endTime;
@@ -1033,41 +1062,62 @@ void ADTimePix::timePixCallback(){
         getIntegerParam(ADNumImagesCounter, &imageCounter);
         getIntegerParam(NDArrayCounter, &imagesAcquired);
         epicsTimeGetCurrent(&startTime);
-        asynStatus imageStatus = readImage();
 
-        callParamCallbacks();
 
-        if (imageStatus == asynSuccess) {
-            imageCounter++;
-            imagesAcquired++;
-            pImage = this->pArrays[0];
-
-            /* Put the frame number and time stamp into the buffer */
-            pImage->uniqueId = imageCounter;
-            pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
-            updateTimeStamp(&pImage->epicsTS);
-
-            /* Get any attributes that have been defined for this driver */
-            this->getAttributes(pImage->pAttributeList);
-
-            if (arrayCallbacks) {
-                /* Call the NDArray callback */
-                asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
-                     "%s:%s: calling imageData callback\n", driverName, functionName);
-                doCallbacksGenericPointer(pImage, NDArrayData, 0);
+        while(frameCounter == new_frame_num){
+            string measurement = this->serverURL + std::string("/measurement");
+            cpr::Response r = cpr::Get(cpr::Url{measurement},
+                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+            json measurement_j = json::parse(r.text.c_str());
+            new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
+            if (measurement_j["Info"]["Status"] == "DA_IDLE" || this->acquiring == false) {
+                isIdle = true;
+                break;
             }
-            if(mode == 0){
-                acquireStop();
-            }
-            else if(mode == 1){
-                if (numImages == imageCounter){
-                    acquireStop();
-                }
-            }
-            setIntegerParam(ADNumImagesCounter, imageCounter);
-            setIntegerParam(NDArrayCounter, imagesAcquired);
-            callParamCallbacks();
+            epicsThreadSleep(0.002);
         }
+        frameCounter = new_frame_num;
+
+        if(this->acquiring){
+            asynStatus imageStatus = readImage();
+
+            callParamCallbacks();
+
+            if (imageStatus == asynSuccess) {
+                imageCounter++;
+                imagesAcquired++;
+                pImage = this->pArrays[0];
+
+                /* Put the frame number and time stamp into the buffer */
+                pImage->uniqueId = imageCounter;
+                pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+                updateTimeStamp(&pImage->epicsTS);
+
+                /* Get any attributes that have been defined for this driver */
+                 this->getAttributes(pImage->pAttributeList);
+
+                 if (arrayCallbacks) {
+                     /* Call the NDArray callback */
+                     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+                          "%s:%s: calling imageData callback\n", driverName, functionName);
+                     doCallbacksGenericPointer(pImage, NDArrayData, 0);
+                 }
+                 if(mode == 0){
+                     acquireStop();
+                 }
+                 else if(mode == 1){
+                     if (numImages == imageCounter){
+                         acquireStop();
+                     }
+                 }
+                 setIntegerParam(ADNumImagesCounter, frameCounter);
+                 setIntegerParam(NDArrayCounter, imagesAcquired);
+                 callParamCallbacks();
+            }
+        }
+
+        if (isIdle)  acquireStop();
 
     }
 }
@@ -1198,6 +1248,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADImageMode){
         if(acquiring == 1) acquireStop();
+        if(value == 0) {
+            setIntegerParam(ADNumImages,1);  // Set number of images to 1 for single mode
+            status = initAcquisition();
+        }
     }
 
     else if(function == ADTimePixHealth) { 
@@ -1217,7 +1271,14 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADNumImages || function == ADTriggerMode) { 
-        status = initAcquisition();
+        if(function == ADNumImages) {
+            int imageMode;
+            getIntegerParam(ADImageMode,&imageMode);
+            if (imageMode == 0 && value != 1) {status = asynError;
+                ERR("Cannot set numImages in single mode");
+            }
+        }
+        if (status == asynSuccess) status = initAcquisition();
     }
 
     else{
