@@ -1,0 +1,63 @@
+#=================================================================#
+# Template file: Mesurement.template
+# Serval Measurement status.
+# Author: K. Gofron
+# Date: 2022/8/25
+#=================================================================#
+
+##################################################################
+# Define measurement status PV records here.
+#
+##################################################################
+
+record(longin, "$(P)$(R)PelEvtRate_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PEL_RATE")
+  field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)TdcEvtRate_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC_RATE")
+  field(SCAN, "I/O Intr")
+}
+record(ai, "$(P)$(R)StartTime_RBV"){
+  field(DTYP, "asynInt64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_START_TIME")
+  field(SCAN, "I/O Intr")
+}
+record(ai, "$(P)$(R)ElapsedTime_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_ELAPSED_TIME")
+  field(SCAN, "I/O Intr")
+}
+record(ai, "$(P)$(R)TimeLeft_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TIME_LEFT")
+  field(SCAN, "I/O Intr")
+}
+record(longin, "$(P)$(R)FrameCnt_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FRAME_COUNT")
+  field(SCAN, "I/O Intr")
+}
+record(longin, "$(P)$(R)DroppedFrames_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DROPPED_FRAMES")
+  field(SCAN, "I/O Intr")
+}
+record(stringin, "$(P)$(R)Status_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MSMT_STATUS")
+  field(SCAN, "I/O Intr")
+}
+#record(mbbi, "$(P)$(R)Status_RBV")
+#{
+#   field(DTYP, "asynInt32")
+#   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MSMT_STATUS") 
+#   field(ZRST, "DA_IDLE") 
+#   field(ZRVL, "0")
+#   field(ONST, "DA_RECORDING") 
+#   field(ONVL, "1")
+#   field(SCAN, "I/O Intr")
+#}
