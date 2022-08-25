@@ -1075,7 +1075,8 @@ void ADTimePix::timePixCallback(){
                 isIdle = true;
                 break;
             }
-            epicsThreadSleep(0.002);
+        //    epicsThreadSleep(0.002);
+            epicsThreadSleep(0);
         }
         frameCounter = new_frame_num;
 
@@ -1708,6 +1709,16 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstStpOnDskLimString,            asynParamInt32, &ADTimePixPrvHstStpOnDskLim);    
     createParam(ADTimePixPrvHstQueueSizeString,              asynParamInt32, &ADTimePixPrvHstQueueSize);
     createParam(ADTimePixPrvHstFilePathExistsString,         asynParamInt32, &ADTimePixPrvHstFilePathExists);   
+
+    // Measurement
+    createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
+    createParam(ADTimePixTdcRateString,                     asynParamInt32,     &ADTimePixTdcRate);      
+    createParam(ADTimePixStartTimeString,                   asynParamInt32,     &ADTimePixStartTime);    
+    createParam(ADTimePixElapsedTimeString,                 asynParamFloat64,   &ADTimePixElapsedTime);  
+    createParam(ADTimePixTimeLeftString,                    asynParamFloat64,   &ADTimePixTimeLeft);     
+    createParam(ADTimePixFrameCountString,                  asynParamInt32,     &ADTimePixFrameCount);   
+    createParam(ADTimePixDroppedFramesString,               asynParamInt32,     &ADTimePixDroppedFrames);
+    createParam(ADTimePixStatusString,                      asynParamInt32,     &ADTimePixStatus);       
     
     //sets driver version
     char versionString[25];

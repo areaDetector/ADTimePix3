@@ -248,12 +248,21 @@
 #define ADTimePixPrvHstFormatString             "TPX3_PRV_HSTFORMAT"        // (asynInt32,         w)      Preview HistogramChannels Format
 #define ADTimePixPrvHstModeString               "TPX3_PRV_HSTMODE"          // (asynInt32,         w)      Preview HistogramChannels Mode
 #define ADTimePixPrvHstThsString                "TPX3_PRV_HSTTHS"           // (asynOctet,         w)      Preview HistogramChannels Thresholds
-#define ADTimePixPrvHstIntSizeString            "TPX3_PRV_HSTINTSIZE"          // (asynInt32,         w)      Preview HistogramChannels IntegrationSize
-#define ADTimePixPrvHstIntModeString            "TPX3_PRV_HSTINTMODE"          // (asynInt32,         w)      Preview HistogramChannels IntegrationMode
+#define ADTimePixPrvHstIntSizeString            "TPX3_PRV_HSTINTSIZE"       // (asynInt32,         w)      Preview HistogramChannels IntegrationSize
+#define ADTimePixPrvHstIntModeString            "TPX3_PRV_HSTINTMODE"       // (asynInt32,         w)      Preview HistogramChannels IntegrationMode
 #define ADTimePixPrvHstStpOnDskLimString        "TPX3_PRV_HSTSTPONDSK"      // (asynInt32,         w)      Preview HistogramChannels StopMeasurementOnDiskLimit
 #define ADTimePixPrvHstQueueSizeString          "TPX3_PRV_HSTQUEUESIZE"     // (asynInt32,         w)      Preview HistogramChannels QueueSize
 #define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
+    // Measurement
+#define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
+#define ADTimePixTdcRateString               "TPX3_TDC_RATE"          // (asynInt32,         w)      TdcEventRate
+#define ADTimePixStartTimeString             "TPX3_START_TIME"        // (asynInt32,         w)      StartDateTime
+#define ADTimePixElapsedTimeString           "TPX3_ELAPSED_TIME"      // (asynFloat64,       w)      ElapsedTime
+#define ADTimePixTimeLeftString              "TPX3_TIME_LEFT"         // (asynFloat64,       w)      TimeLeft
+#define ADTimePixFrameCountString            "TPX3_FRAME_COUNT"       // (asynInt32,         w)      FrameCount
+#define ADTimePixDroppedFramesString         "TPX3_DROPPED_FRAMES"    // (asynInt32,         w)      DroppedFrames
+#define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
 // Place any required inclues here
 
@@ -529,7 +538,17 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvHstIntMode;      
         int ADTimePixPrvHstStpOnDskLim;   
         int ADTimePixPrvHstQueueSize;
-        int ADTimePixPrvHstFilePathExists;     
+        int ADTimePixPrvHstFilePathExists;    
+
+            // Measurement
+        int ADTimePixPelRate;        
+        int ADTimePixTdcRate;        
+        int ADTimePixStartTime;      
+        int ADTimePixElapsedTime;    
+        int ADTimePixTimeLeft;       
+        int ADTimePixFrameCount;     
+        int ADTimePixDroppedFrames;  
+        int ADTimePixStatus;         
 
         int ADTimePixFreeSpace;
         #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
