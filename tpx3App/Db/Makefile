@@ -15,6 +15,7 @@ DB += TimePix3Base.template
 DB += Chips.template
 DB += File.template
 DB += Server.template
+DB += Measurement.template
 
 #-------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
