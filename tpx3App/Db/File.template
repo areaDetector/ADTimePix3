@@ -3,6 +3,7 @@
 # Database for BPC and Chip/DACS files, which configure pixels and chips.
 # Kazimierz Gofron
 # July 1, 2022
+#=================================================================#
 
 ###################################################################
 #  These records control file I/O                                 # 

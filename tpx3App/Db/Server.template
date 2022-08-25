@@ -1,23 +1,18 @@
+#=================================================================#
+# Template file: Server.template
+# Serval File Writer modes, which configure which files are written to disk.
 # Author: K. Gofron
 # Date: 2022/7/26
+#=================================================================#
 
 ##################################################################
 # Define all of your PV records here in the following form:
 #
-# record(RECORD_TYPE, "$(P)$(R)PVName"){
-#   field(DTYP, "data type")
-#   field(INP/OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PV_NAME")
-#   field(VAL, "value")
-#   field(SCAN, "I/O Intr")
-# }
-#
-# Consult other .template files for guides on how to write specific PVs
-#
-# The PV_NAME at the end of the INP or OUT field of the record is the 
-# PVString defined in ADTimpPix.h.
-#
-# example: #define ADTimePixServer "PV_NAME"
-# C='CHIP1', 'CHIP2', ...
+# Serval 2.6.3 supports
+# Raw file format: .tpx 
+# Image file format: .tiff, png, ...
+# Preview image file format: .tiff, png, ...
+# Preview histogram: might be available in -experimental version of serval 2.3.6
 #
 ##################################################################
 
