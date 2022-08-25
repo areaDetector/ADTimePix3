@@ -1070,6 +1070,18 @@ void ADTimePix::timePixCallback(){
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
             json measurement_j = json::parse(r.text.c_str());
+        //    printf("StartDataTime=%li\n",  measurement_j["Info"]["StartDateTime"].get<long>());
+            setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
+            setIntegerParam(ADTimePixTdcRate,           measurement_j["Info"]["TdcEventRate"].get<int>());
+            setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
+        //    setInteger64Param(ADTimePixStartTime,       (epicsInt64)measurement_j["Info"]["StartDateTime"].get<long>());
+        //    setInteger64Param(ADTimePixStartTime,       1661466046253);
+            setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
+            setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
+            setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
+            setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
+            setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());
+            
             new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
             if (measurement_j["Info"]["Status"] == "DA_IDLE" || this->acquiring == false) {
                 isIdle = true;
@@ -1713,12 +1725,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
     createParam(ADTimePixTdcRateString,                     asynParamInt32,     &ADTimePixTdcRate);      
-    createParam(ADTimePixStartTimeString,                   asynParamInt32,     &ADTimePixStartTime);    
+    createParam(ADTimePixStartTimeString,                   asynParamInt64,     &ADTimePixStartTime);    
     createParam(ADTimePixElapsedTimeString,                 asynParamFloat64,   &ADTimePixElapsedTime);  
     createParam(ADTimePixTimeLeftString,                    asynParamFloat64,   &ADTimePixTimeLeft);     
     createParam(ADTimePixFrameCountString,                  asynParamInt32,     &ADTimePixFrameCount);   
     createParam(ADTimePixDroppedFramesString,               asynParamInt32,     &ADTimePixDroppedFrames);
-    createParam(ADTimePixStatusString,                      asynParamInt32,     &ADTimePixStatus);       
+    createParam(ADTimePixStatusString,                      asynParamOctet,     &ADTimePixStatus);       
     
     //sets driver version
     char versionString[25];
