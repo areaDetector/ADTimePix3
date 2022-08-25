@@ -6,9 +6,9 @@
 #=================================================================#
 
 ##################################################################
-# Define all of your PV records here in the following form:
+# Define FileWriter PV records here:
 #
-# Serval 2.6.3 supports
+# Serval 2.3.6 supports:
 # Raw file format: .tpx 
 # Image file format: .tiff, png, ...
 # Preview image file format: .tiff, png, ...
