@@ -21,7 +21,12 @@ record(longin, "$(P)$(R)TdcEvtRate_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC_RATE")
   field(SCAN, "I/O Intr")
 }
-record(ai, "$(P)$(R)StartTime_RBV"){
+#record(ai, "$(P)$(R)StartTime_RBV"){
+#  field(DTYP, "asynInt64")
+#  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_START_TIME")
+#  field(SCAN, "I/O Intr")
+#}
+record(int64in, "$(P)$(R)StartTime_RBV"){
   field(DTYP, "asynInt64")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_START_TIME")
   field(SCAN, "I/O Intr")

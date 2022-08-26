@@ -257,7 +257,7 @@
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
 #define ADTimePixTdcRateString               "TPX3_TDC_RATE"          // (asynInt32,         w)      TdcEventRate
-#define ADTimePixStartTimeString             "TPX3_START_TIME"        // (asynInt32,         w)      StartDateTime
+#define ADTimePixStartTimeString             "TPX3_START_TIME"        // (asynInt64,         w)      StartDateTime
 #define ADTimePixElapsedTimeString           "TPX3_ELAPSED_TIME"      // (asynFloat64,       w)      ElapsedTime
 #define ADTimePixTimeLeftString              "TPX3_TIME_LEFT"         // (asynFloat64,       w)      TimeLeft
 #define ADTimePixFrameCountString            "TPX3_FRAME_COUNT"       // (asynInt32,         w)      FrameCount

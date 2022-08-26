@@ -1064,14 +1064,15 @@ void ADTimePix::timePixCallback(){
 //    printf("StartDataTime=%li\n",  measurement_j["Info"]["StartDateTime"].get<long>());
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
     setIntegerParam(ADTimePixTdcRate,           measurement_j["Info"]["TdcEventRate"].get<int>());
-    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
+//    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
 //    setInteger64Param(ADTimePixStartTime,       (epicsInt64)measurement_j["Info"]["StartDateTime"].get<long>());
-//    setInteger64Param(ADTimePixStartTime,       1661466046253);
+    setInteger64Param(ADTimePixStartTime,       1661534948766);
     setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
     setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
     setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
     setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
     setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());   
+    callParamCallbacks();
 
     while(this->acquiring){
 
@@ -1088,12 +1089,14 @@ void ADTimePix::timePixCallback(){
             measurement_j = json::parse(r.text.c_str());
             setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
             setIntegerParam(ADTimePixTdcRate,           measurement_j["Info"]["TdcEventRate"].get<int>());
-            setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
+        //    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
+            setInteger64Param(ADTimePixStartTime,       1661535362057);
             setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
             setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
             setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
             setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
             setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());
+            callParamCallbacks();
             
             new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
             if (measurement_j["Info"]["Status"] == "DA_IDLE" || this->acquiring == false) {
