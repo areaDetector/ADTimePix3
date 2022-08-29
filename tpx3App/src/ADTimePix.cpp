@@ -35,7 +35,7 @@
 
 #define ERR_ARGS(fmt, ...)                                                              \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
-              functionName, __VA_ARGS__);
+              functionName, __VA_ARGS__)
 
 // Warning message formatters
 #define WARN(msg) \
@@ -43,7 +43,7 @@
 
 #define WARN_ARGS(fmt, ...)                                                            \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
-              functionName, __VA_ARGS__);
+              functionName, __VA_ARGS__)
 
 // Log message formatters
 #define LOG(msg) \
@@ -51,7 +51,14 @@
 
 #define LOG_ARGS(fmt, ...)                                                                       \
     asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, functionName, \
-              __VA_ARGS__);
+              __VA_ARGS__)
+
+// Flow message formatters
+#define FLOW(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, functionName, msg)
+
+#define FLOW_ARGS(fmt,...) \
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, functionName, __VA_ARGS__)
 
 #define delim "/"
 
@@ -352,7 +359,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
 
     if(connected) return asynSuccess;
     else{
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Error: Failed to connect to server %s\n", driverName, functionName, this->serverURL.c_str());
+        ERR_ARGS("ERROR: Failed to connect to server %s",this->serverURL.c_str());
         return asynError;
     }
     callParamCallbacks();   // Apply to EPICS, at end of file
@@ -366,7 +373,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
 asynStatus ADTimePix::getDashboard(){
     const char* functionName = "getDashboard";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Collecting detector information\n", driverName, functionName);
+    FLOW("Collecting detector information");
     std::string dashboard;
 
     // Use the vendor library to collect information about the connected camera here, and set the appropriate PVs
@@ -406,7 +413,7 @@ asynStatus ADTimePix::getDashboard(){
 asynStatus ADTimePix::getHealth(){
     const char* functionName = "getHealth";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Checking Health\n", driverName, functionName);
+    FLOW("Checking Health");
     std::string health;
 
     health = this->serverURL + std::string("/detector/health");
@@ -440,7 +447,7 @@ asynStatus ADTimePix::getHealth(){
 asynStatus ADTimePix::getDetector(){
     const char* functionName = "getDetector";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Reading Detector Health, inof, config, chipcs\n", driverName, functionName);
+    FLOW("Reading Detector Health, inof, config, chipcs");
     std::string detector;
 
     detector = this->serverURL + std::string("/detector");
@@ -623,7 +630,7 @@ asynStatus ADTimePix::getDetector(){
 asynStatus ADTimePix::getServer(){
     const char* functionName = "getServer";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Collecting detector information\n", driverName, functionName);
+    FLOW("Collecting detector information");
     std::string server;
 
     // Use the vendor library to collect information about the camera format here, and set the appropriate PVs
@@ -683,7 +690,7 @@ asynStatus ADTimePix::getServer(){
 asynStatus ADTimePix::uploadBPC(){
     const char* functionName = "uploadBPC";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing BPC detector information\n", driverName, functionName);
+    FLOW("Initializing BPC detector information");
     std::string config, bpc_file, filePath, fileName;
 
     config = this->serverURL + std::string("/detector/config");    
@@ -713,7 +720,7 @@ asynStatus ADTimePix::uploadBPC(){
 asynStatus ADTimePix::uploadDACS(){
     const char* functionName = "uploadDACS";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing Chips/DACS detector information\n", driverName, functionName);
+    FLOW("Initializing Chips/DACS detector information");
     std::string config, dacs_file, filePath, fileName;
 
     config = this->serverURL + std::string("/detector/config");
@@ -743,7 +750,7 @@ asynStatus ADTimePix::uploadDACS(){
 asynStatus ADTimePix::fileWriter(){
     const char* functionName = "fileWriter";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
+    FLOW("Initializing detector information");
     
     std::string fileStr;
     int intNum, writeChannel;
@@ -873,7 +880,7 @@ asynStatus ADTimePix::fileWriter(){
 asynStatus ADTimePix::initCamera(){
     const char* functionName = "initCamera";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
+    FLOW("Initializing detector");
     
     std::string config, bpc_file, dacs_file;
 
@@ -932,7 +939,7 @@ asynStatus ADTimePix::initCamera(){
 asynStatus ADTimePix::initAcquisition(){
     const char* functionName = "initAcquisition";
     asynStatus status = asynSuccess;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Initializing detector information\n", driverName, functionName);
+    FLOW("Initializing Acquisition");
     
     std::string det_config;
     int intNum;
@@ -1026,7 +1033,7 @@ asynStatus ADTimePix::acquireStart(){
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
     if (r.status_code != 200){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Failed to start measurement!", driverName, functionName);
+        ERR("Failed to start measurement!");
         return asynError;
     }
 
@@ -1128,8 +1135,7 @@ void ADTimePix::timePixCallback(){
 
                  if (arrayCallbacks) {
                      /* Call the NDArray callback */
-                     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
-                          "%s:%s: calling imageData callback\n", driverName, functionName);
+                     FLOW("calling imageData callback");
                      doCallbacksGenericPointer(pImage, NDArrayData, 0);
                  }
                  if(mode == 0){
@@ -1175,14 +1181,14 @@ asynStatus ADTimePix::acquireStop(){
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
     if (r.status_code != 200){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Failed to stop measurement!", driverName, functionName);
+        ERR("Failed to stop measurement!");
         return asynError;
     }
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setIntegerParam(ADAcquire, 0);
     callParamCallbacks();
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Stopping Image Acquisition\n", driverName, functionName);
+    FLOW("Stopping Image Acquisition");
     return status;
 }
 
@@ -1237,9 +1243,7 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
                   "%s:%s: status=%d, function=%d, paramName=%s, value=%s",
                   driverName, functionName, status, function, paramName, value);
     else
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
-              "%s:%s: function=%d, paramName=%s, value=%s\n",
-              driverName, functionName, function, paramName, value);
+        LOG_ARGS("function=%d, paramName=%s, value=%s", function, paramName, value);
     *nActual = nChars;
     return status;
 }
@@ -1264,7 +1268,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     if(function == ADAcquire){
         printf("SAW ACQUIRE CHANGE!\n");
         if(value && !acquiring){
-            //asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Entering aquire\n", driverName, functionName);
+            FLOW("Entering aquire\n");
             status = acquireStart();
             if(status < 0){
                 return asynError;
@@ -1318,10 +1322,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     callParamCallbacks();
 
     if(status){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s ERROR status=%d, function=%d, value=%d\n", driverName, functionName, status, function, value);
+        ERR_ARGS("ERROR status=%d function=%d, value=%d", status, function, value);
         return asynError;
     }
-    else asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s function=%d value=%d\n", driverName, functionName, function, value);
+    else LOG_ARGS("function=%d value=%d", function, value);
     return asynSuccess;
 }
 
@@ -1357,13 +1361,12 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
     callParamCallbacks();
 
     if(status){
-        asynPrint(this-> pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s ERROR status = %d, function =%d, value = %f\n", driverName, functionName, status, function, value);
+        ERR_ARGS("ERROR status = %d, function =%d, value = %f", status, function, value);
         return asynError;
     }
-    else asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s function=%d value=%f\n", driverName, functionName, function, value);
+    else LOG_ARGS("function=%d value=%f", function, value);
     return asynSuccess;
 }
-
 
 
 /*
@@ -1379,7 +1382,7 @@ void ADTimePix::report(FILE* fp, int details){
     const char* functionName = "report";
     int height;
     int width;
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s reporting to external log file\n",driverName, functionName);
+    ERR("reporting to external log file");
     if(details > 0){
         fprintf(fp, " -------------------------------------------------------------------\n");
         fprintf(fp, " Connected Device Information\n");
@@ -1437,9 +1440,7 @@ asynStatus ADTimePix::readImage()
             colorMode = NDColorModeRGB1;
             break;
         default:
-            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, 
-                "%s:%s: unknown ImageType=%d\n", 
-                driverName, functionName, imageType);
+            ERR_ARGS("unknown ImageType=%d",imageType);    
             return(asynError);
             break;
         }
@@ -1458,18 +1459,14 @@ asynStatus ADTimePix::readImage()
             storageType = IntegerPixel;
             break;
         default:
-            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, 
-                "%s:%s: unsupported depth=%d\n", 
-                driverName, functionName, depth);
+            ERR_ARGS("unsupported depth=%d",depth);
             return(asynError);
             break;
         }
         if (pImage) pImage->release();
         this->pArrays[0] = this->pNDArrayPool->alloc(ndims, dims, dataType, 0, NULL);
-        pImage = this->pArrays[0];
-        asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER,
-            "%s:%s: reading URL=%s, dimensions=[%lu,%lu,%lu], ImageType=%d, depth=%d\n",
-            driverName, functionName, URLString, 
+        pImage = this->pArrays[0];  
+        LOG_ARGS("reading URL=%s, dimensions=[%lu,%lu,%lu], ImageType=%d, depth=%d", URLString.c_str(), 
             (unsigned long)dims[0], (unsigned long)dims[1], (unsigned long)dims[2], imageType, depth);
         image.write(0, 0, ncols, nrows, map, storageType, pImage->pData);
         pImage->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
@@ -1484,9 +1481,7 @@ asynStatus ADTimePix::readImage()
     }
     catch(std::exception &error)
     {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
-            "%s:%s: error reading URL=%s\n", 
-            driverName, functionName, error.what());
+        ERR_ARGS("ERROR reading URL=%s",error.what());
         return(asynError);
     }
          
@@ -1757,15 +1752,14 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
     if(strlen(serverURL) < 0){
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s Connection failed, abort\n", driverName, functionName);
+        ERR("Connection failed, abort");
     }
 // asynSuccess = 0, so use !0 for true/connected    
     else{
         asynStatus connected = initialServerCheckConnection();
  //       if(!connected){   // readability: in UNIX 0 is success for a command, but in C++ 0 is "false"
         if(connected == asynSuccess) {
-
-            asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s Acquiring device information\n", driverName, functionName);
+            FLOW("Acquiring device information");
         //    getDashboard(serverURL); 
             printf("Dashboard done HERE!\n\n");
         //    getServer();
@@ -1782,7 +1776,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 ADTimePix::~ADTimePix(){
     const char* functionName = "~ADTimePix";
-    asynPrint(this->pasynUserSelf, ASYN_TRACEIO_DRIVER,"%s::%s ADTimePix driver exiting\n", driverName, functionName);
+    FLOW("ADTimePix driver exiting");
     disconnect(this->pasynUserSelf);
 }
 
