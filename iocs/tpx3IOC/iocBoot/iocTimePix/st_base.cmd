@@ -85,5 +85,7 @@ dbpf("$(PREFIX)cam1:PrvHstFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
 
+#dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
+
 # save things every thirty seconds
 create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
