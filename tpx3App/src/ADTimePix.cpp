@@ -469,11 +469,12 @@ asynStatus ADTimePix::getDetector(){
 
     // Detector Info
     setStringParam(ADTimePixIfaceName,   strip_quotes(detector_j["Info"]["IfaceName"].dump().c_str()));
-    setStringParam(ADTimePixChipboardID, strip_quotes(detector_j["Info"]["ChipboardID"].dump().c_str()));
+    //setStringParam(ADTimePixChipboardID, strip_quotes(detector_j["Info"]["ChipboardID"].dump().c_str()));
     setStringParam(ADTimePixSW_version,  strip_quotes(detector_j["Info"]["SW_version"].dump().c_str()));
     setStringParam(ADTimePixFW_version,  strip_quotes(detector_j["Info"]["FW_version"].dump().c_str()));
 
-    setStringParam(ADSerialNumber,      strip_quotes(detector_j["Info"]["ChipboardID"].dump().c_str()));
+//    setStringParam(ADSerialNumber,      strip_quotes(detector_j["Info"]["ChipboardID"].dump().c_str()));
+    setStringParam(ADSerialNumber,      strip_quotes(detector_j["Info"]["SW_version"].dump().c_str()));
     setStringParam(ADFirmwareVersion,   strip_quotes(detector_j["Info"]["FW_version"].dump().c_str()));
 
     setIntegerParam(ADTimePixPixCount,      detector_j["Info"]["PixCount"].get<int>());
@@ -486,7 +487,7 @@ asynStatus ADTimePix::getDetector(){
 
     setStringParam(ADTimePixBoardsID,   strip_quotes(detector_j["Info"]["Boards"][0]["ChipboardId"].dump().c_str()));
     setStringParam(ADTimePixBoardsIP,   strip_quotes(detector_j["Info"]["Boards"][0]["IpAddress"].dump().c_str()));
-    setIntegerParam(ADTimePixBoardsPort, detector_j["Info"]["Boards"][0]["PortNumber"].get<int>());
+//    setIntegerParam(ADTimePixBoardsPort, detector_j["Info"]["Boards"][0]["PortNumber"].get<int>());
     setStringParam(ADTimePixBoardsCh1,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][0].dump().c_str()));
     setStringParam(ADTimePixBoardsCh2,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][1].dump().c_str()));
     setStringParam(ADTimePixBoardsCh3,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][2].dump().c_str()));
@@ -518,7 +519,7 @@ asynStatus ADTimePix::getDetector(){
     setDoubleParam(ADTimePixTriggerPeriod,           detector_j["Config"]["TriggerPeriod"].get<double>());
     setDoubleParam(ADAcquirePeriod,                  detector_j["Config"]["TriggerPeriod"].get<double>());     // Exposure Period RBV
     setIntegerParam(ADTimePixnTriggers,              detector_j["Config"]["nTriggers"].get<int>());
-    setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Config"]["DetectorOrientation"].dump().c_str()));
+    //setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Config"]["DetectorOrientation"].dump().c_str()));
     setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, falue->0
     setDoubleParam(ADTimePixTriggerDelay,            detector_j["Config"]["TriggerDelay"].get<double>());
     setStringParam(ADTimePixTdc,                     strip_quotes(detector_j["Config"]["Tdc"].dump().c_str()));
@@ -610,11 +611,18 @@ asynStatus ADTimePix::getDetector(){
     setIntegerParam(ADTimePixChip3VTthresholdFine,    detector_j["Chips"][3]["DACs"]["Vthreshold_fine"].get<int>());
     //setIntegerParam(ADTimePixChip3Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
 
-    // Detector Chip Layout
-    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"][0].dump().c_str());
-    setStringParam(ADTimePixChip1Layout,    detector_j["Layout"][1].dump().c_str());
-    setStringParam(ADTimePixChip2Layout,    detector_j["Layout"][2].dump().c_str());
-    setStringParam(ADTimePixChip3Layout,    detector_j["Layout"][3].dump().c_str());
+    // Serval2.3.6 Detector Chip Layout
+//    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"][0].dump().c_str());
+//    setStringParam(ADTimePixChip1Layout,    detector_j["Layout"][1].dump().c_str());
+//    setStringParam(ADTimePixChip2Layout,    detector_j["Layout"][2].dump().c_str());
+//    setStringParam(ADTimePixChip3Layout,    detector_j["Layout"][3].dump().c_str());
+
+    // Serval3 - Detector Chip Layout
+    setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
+    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
+    setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
+    setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
+    setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str());
 
     // Refresh PV values
     callParamCallbacks();
@@ -1059,6 +1067,7 @@ void ADTimePix::timePixCallback(){
     NDArray* pImage;
     int arrayCallbacks;
     epicsTimeStamp startTime, endTime;
+    double elapsedTime;
 
     getIntegerParam(ADImageMode, &mode);
     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
@@ -1110,6 +1119,10 @@ void ADTimePix::timePixCallback(){
                 isIdle = true;
                 break;
             }
+
+            epicsTimeGetCurrent(&endTime);
+            elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);
+            
         //    epicsThreadSleep(0.002);
             epicsThreadSleep(0);
         }
