@@ -2,7 +2,8 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-ADTIMEPIX=$(AREA_DETECTOR)/ADTimePix3
+# ADTIMEPIX=$(AREA_DETECTOR)/ADTimePix3
+ADTIMEPIX=$(TOP)/../..
 
 -include $(TOP)/../configure/RELEASE_LIBS_INCLUDE
 -include $(TOP)/../../../configure/RELEASE_PRODS_INCLUDE
