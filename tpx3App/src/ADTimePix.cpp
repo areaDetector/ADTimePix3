@@ -506,7 +506,7 @@ asynStatus ADTimePix::getDetector(){
     // Detector Config Readback
     setIntegerParam(ADTimePixFan1PWM,                detector_j["Config"]["Fan1PWM"].get<int>());
     setIntegerParam(ADTimePixFan2PWM,                detector_j["Config"]["Fan2PWM"].get<int>());
-    setIntegerParam(ADTimePixBiasVolt,               detector_j["Config"]["BiasVoltage"].get<int>());    
+    setDoubleParam(ADTimePixBiasVolt,                detector_j["Config"]["BiasVoltage"].get<double>());    
     setIntegerParam(ADTimePixBiasEnable,             int(detector_j["Config"]["BiasEnabled"]));         // bool->int true->1, falue->0
     setStringParam(ADTimePixChainMode,               strip_quotes(detector_j["Config"]["ChainMode"].dump().c_str()));
     setIntegerParam(ADTimePixTriggerIn,              detector_j["Config"]["TriggerIn"].get<int>());
@@ -1571,7 +1571,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             // Detector Config
     createParam(ADTimePixFan1PWMString,                     asynParamInt32,     &ADTimePixFan1PWM);
     createParam(ADTimePixFan2PWMString,                     asynParamInt32,     &ADTimePixFan2PWM);      
-    createParam(ADTimePixBiasVoltString,                    asynParamInt32,     &ADTimePixBiasVolt);
+    createParam(ADTimePixBiasVoltString,                    asynParamFloat64,   &ADTimePixBiasVolt);
     createParam(ADTimePixBiasEnableString,                  asynParamInt32,     &ADTimePixBiasEnable);
     createParam(ADTimePixChainModeString,                   asynParamOctet,     &ADTimePixChainMode);
     createParam(ADTimePixTriggerInString,                   asynParamInt32,     &ADTimePixTriggerIn);

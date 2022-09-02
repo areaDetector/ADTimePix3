@@ -234,8 +234,12 @@ record(longin, "$(P)$(R)Fan2PWM_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FAN2PWM")
   field(SCAN, "I/O Intr")
 }
-record(longin, "$(P)$(R)BiasVolt_RBV"){
-  field(DTYP, "asynInt32")
+record(ao, "$(P)$(R)BiasVolt"){
+  field(DTYP, "asynFloat64")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BIAS_VOLT_R")
+}
+record(ai, "$(P)$(R)BiasVolt_RBV"){
+  field(DTYP, "asynFloat64")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BIAS_VOLT_R")
   field(SCAN, "I/O Intr")
 }
