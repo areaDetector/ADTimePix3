@@ -1028,7 +1028,7 @@ asynStatus ADTimePix::initAcquisition(){
  */
 asynStatus ADTimePix::acquireStart(){
     const char* functionName = "acquireStart";
-    asynStatus status;
+    asynStatus status = asynSuccess;
 
     setIntegerParam(ADStatus, ADStatusAcquire);
 
@@ -1122,7 +1122,7 @@ void ADTimePix::timePixCallback(){
 
             epicsTimeGetCurrent(&endTime);
             elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);
-            
+
         //    epicsThreadSleep(0.002);
             epicsThreadSleep(0);
         }
@@ -1279,7 +1279,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     status = setIntegerParam(function, value);
     // start/stop acquisition
     if(function == ADAcquire){
-        printf("SAW ACQUIRE CHANGE!\n");
+        printf("SAW ACQUIRE CHANGE!, status=%d\n", status);
         if(value && !acquiring){
             FLOW("Entering aquire\n");
             status = acquireStart();
@@ -1288,6 +1288,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             }
         }
         if(!value && acquiring){
+            FLOW("Entering acquire stop");
             acquireStop();
         }
     }
@@ -1334,6 +1335,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
     callParamCallbacks();
 
+    // Log status updates
     if(status){
         ERR_ARGS("ERROR status=%d function=%d, value=%d", status, function, value);
         return asynError;
