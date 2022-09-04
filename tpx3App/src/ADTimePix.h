@@ -73,7 +73,7 @@
     // Detector Config
 #define ADTimePixFan1PWMString                  "TPX3_FAN1PWM"           // (asynInt32,         r)   Fan1PWM   
 #define ADTimePixFan2PWMString                  "TPX3_FAN2PWM"           // (asynInt32,         r)   Fan2PWM   
-#define ADTimePixBiasVoltString                 "TPX3_BIAS_VOLT_R"        // (asynFloat64,         r)   BiasVoltage
+#define ADTimePixBiasVoltString                 "TPX3_BIAS_VOLT_R"       // (asynInt32,         r)   BiasVoltage
 #define ADTimePixBiasEnableString               "TPX3_BIAS_ENBL"         // (asynInt32,         r)   BiasEnabled
 #define ADTimePixChainModeString                "TPX3_CHAIN_MODE"        // (asynOctet,         r)   ChainMode
 #define ADTimePixTriggerInString                "TPX3_TRIGGER_IN"        // (asynInt32,         r)   TriggerIn

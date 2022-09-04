@@ -506,7 +506,7 @@ asynStatus ADTimePix::getDetector(){
     // Detector Config Readback
     setIntegerParam(ADTimePixFan1PWM,                detector_j["Config"]["Fan1PWM"].get<int>());
     setIntegerParam(ADTimePixFan2PWM,                detector_j["Config"]["Fan2PWM"].get<int>());
-    setDoubleParam(ADTimePixBiasVolt,                detector_j["Config"]["BiasVoltage"].get<double>());    
+    setIntegerParam(ADTimePixBiasVolt,               detector_j["Config"]["BiasVoltage"].get<int>());    
     setIntegerParam(ADTimePixBiasEnable,             int(detector_j["Config"]["BiasEnabled"]));         // bool->int true->1, falue->0
     setStringParam(ADTimePixChainMode,               strip_quotes(detector_j["Config"]["ChainMode"].dump().c_str()));
     setIntegerParam(ADTimePixTriggerIn,              detector_j["Config"]["TriggerIn"].get<int>());
@@ -699,9 +699,8 @@ asynStatus ADTimePix::uploadBPC(){
     const char* functionName = "uploadBPC";
     asynStatus status = asynSuccess;
     FLOW("Initializing BPC detector information");
-    std::string config, bpc_file, filePath, fileName;
+    std::string bpc_file, filePath, fileName;
 
-    config = this->serverURL + std::string("/detector/config");    
 //    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.bpc");
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixBPCFileName, fileName);
@@ -729,9 +728,8 @@ asynStatus ADTimePix::uploadDACS(){
     const char* functionName = "uploadDACS";
     asynStatus status = asynSuccess;
     FLOW("Initializing Chips/DACS detector information");
-    std::string config, dacs_file, filePath, fileName;
+    std::string dacs_file, filePath, fileName;
 
-    config = this->serverURL + std::string("/detector/config");
 //    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.dacs");
     getStringParam(ADTimePixDACSFilePath, filePath);
     getStringParam(ADTimePixDACSFileName, fileName);
@@ -969,8 +967,8 @@ asynStatus ADTimePix::initAcquisition(){
     config_j["ExposureTime"] = doubleNum;
     getDoubleParam(ADAcquirePeriod, &doubleNum);
     config_j["TriggerPeriod"] = doubleNum;
-    getIntegerParam(ADTriggerMode, &intNum);
 
+    getIntegerParam(ADTriggerMode, &intNum);
     json triggerMode; 
     triggerMode[0] = "PEXSTART_NEXSTOP";
     triggerMode[1] = "NEXSTART_PEXSTOP";
@@ -980,12 +978,28 @@ asynStatus ADTimePix::initAcquisition(){
     triggerMode[5] = "CONTINUOUS";
     triggerMode[6] = "SOFTWARESTART_TIMERSTOP";
     triggerMode[7] = "SOFTWARESTART_SOFTWARESTOP";
-
     config_j["TriggerMode"] = triggerMode[intNum];
 
-    printf("triggerMode=%s\n",triggerMode.dump().c_str());
-    printf("triggerMode[intNum]=%s, triggMode_num=%d\n",triggerMode[intNum].dump().c_str(), intNum);
+//    printf("triggerMode=%s\n",triggerMode.dump().c_str());
+//    printf("triggerMode[intNum]=%s, triggMode_num=%d\n",triggerMode[intNum].dump().c_str(), intNum);
     //config_j["TriggerMode"]="AUTOTRIGSTART_TIMERSTOP";
+
+    getIntegerParam(ADTimePixBiasVolt, &intNum);
+    config_j["BiasVoltage"] = intNum;    
+
+    getIntegerParam(ADTimePixBiasVolt, &intNum);
+    config_j["BiasVoltage"] = intNum;    
+
+    getIntegerParam(ADTimePixBiasEnable, &intNum);
+    json biasEnabled;
+    biasEnabled[0] = "false";
+    biasEnabled[1] = "true";
+    config_j["BiasEnabled"] = biasEnabled[intNum];        
+
+    getDoubleParam(ADTimePixTriggerDelay, &doubleNum);
+    config_j["TriggerDelay"] = doubleNum;        
+    getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
+    config_j["GlobalTimestampInterval"] = doubleNum;        
 
     //cpr::Response r3 = cpr::Put(cpr::Url{det_config},
     r = cpr::Put(cpr::Url{det_config},
@@ -1317,6 +1331,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = fileWriter();
     }
 
+    else if(function == ADTimePixBiasVolt || ADTimePixBiasEnable) {  // set and enable bias
+        status = initAcquisition();
+    }    
+
     else if(function == ADNumImages || function == ADTriggerMode) { 
         if(function == ADNumImages) {
             int imageMode;
@@ -1363,7 +1381,8 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
 
     status = setDoubleParam(function, value);
 
-    if(function == ADAcquireTime || function == ADAcquirePeriod){
+    if(function == ADAcquireTime || function == ADAcquirePeriod || ADTimePixBiasVolt \
+                || ADTimePixTriggerDelay || ADTimePixGlobalTimestampInterval){
         if(acquiring) acquireStop();
         status = initAcquisition();
     }
@@ -1571,7 +1590,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
             // Detector Config
     createParam(ADTimePixFan1PWMString,                     asynParamInt32,     &ADTimePixFan1PWM);
     createParam(ADTimePixFan2PWMString,                     asynParamInt32,     &ADTimePixFan2PWM);      
-    createParam(ADTimePixBiasVoltString,                    asynParamFloat64,   &ADTimePixBiasVolt);
+    createParam(ADTimePixBiasVoltString,                    asynParamInt32,     &ADTimePixBiasVolt);
     createParam(ADTimePixBiasEnableString,                  asynParamInt32,     &ADTimePixBiasEnable);
     createParam(ADTimePixChainModeString,                   asynParamOctet,     &ADTimePixChainMode);
     createParam(ADTimePixTriggerInString,                   asynParamInt32,     &ADTimePixTriggerIn);
