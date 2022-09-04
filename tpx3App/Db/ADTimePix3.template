@@ -257,28 +257,135 @@ record(bi, "$(P)$(R)BiasEnbl_RBV"){
   field(SCAN, "I/O Intr")
 }
 
-record(stringin, "$(P)$(R)ChainMode_RBV"){
-  field(DTYP, "asynOctetRead")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHAIN_MODE")
-  field(SCAN, "I/O Intr")
+record(mbbo, "$(P)$(R)ChainMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_CHAIN_MODE")  
+   field(ZRST, "NONE") 
+   field(ZRVL, "0")
+   field(ONST, "LEADER") 
+   field(ONVL, "1")
+   field(TWST, "FOLLOWER")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)ChainMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_CHAIN_MODE")  
+   field(ZRST, "NONE") 
+   field(ZRVL, "0")
+   field(ONST, "LEADER") 
+   field(ONVL, "1")
+   field(TWST, "FOLLOWER")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
 }
 
-record(longin, "$(P)$(R)TriggerIn_RBV"){
-  field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TRIGGER_IN")
-  field(SCAN, "I/O Intr")
+record(mbbo, "$(P)$(R)TriggerIn")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TRIGGER_IN")  
+   field(ZRST, "0") 
+   field(ZRVL, "0")
+   field(ONST, "1") 
+   field(ONVL, "1")
+   field(TWST, "2")    
+   field(TWVL, "2")
+   field(THST, "3")    
+   field(THVL, "3")
+   field(FRST, "4") 
+   field(FRVL, "4")
+   field(FVST, "5")    
+   field(FVVL, "5")
+   field(SXST, "6") 
+   field(SXVL, "6")
+   info(autosaveFields, "VAL")
 }
-record(longin, "$(P)$(R)TriggerOut_RBV"){
-  field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TRIGGER_OUT")
-  field(SCAN, "I/O Intr")
+record(mbbi, "$(P)$(R)TriggerIn_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TRIGGER_IN")  
+   field(ZRST, "0") 
+   field(ZRVL, "0")
+   field(ONST, "1") 
+   field(ONVL, "1")
+   field(TWST, "2")    
+   field(TWVL, "2")
+   field(THST, "3")    
+   field(THVL, "3")
+   field(FRST, "4") 
+   field(FRVL, "4")
+   field(FVST, "5")    
+   field(FVVL, "5")
+   field(SXST, "6") 
+   field(SXVL, "6")
+   field(SCAN, "I/O Intr")
 }
 
-record(stringin, "$(P)$(R)Polarity_RBV"){
-  field(DTYP, "asynOctetRead")
+record(mbbo, "$(P)$(R)TriggerOut")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TRIGGER_OUT")  
+   field(ZRST, "0") 
+   field(ZRVL, "0")
+   field(ONST, "1") 
+   field(ONVL, "1")
+   field(TWST, "2")    
+   field(TWVL, "2")
+   field(THST, "3")    
+   field(THVL, "3")
+   field(FRST, "4") 
+   field(FRVL, "4")
+   field(FVST, "5")    
+   field(FVVL, "5")
+   field(SXST, "6") 
+   field(SXVL, "6")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)TriggerOut_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TRIGGER_OUT")  
+   field(ZRST, "0") 
+   field(ZRVL, "0")
+   field(ONST, "1") 
+   field(ONVL, "1")
+   field(TWST, "2")    
+   field(TWVL, "2")
+   field(THST, "3")    
+   field(THVL, "3")
+   field(FRST, "4") 
+   field(FRVL, "4")
+   field(FVST, "5")    
+   field(FVVL, "5")
+   field(SXST, "6") 
+   field(SXVL, "6")
+   field(SCAN, "I/O Intr")
+}
+
+#record(stringin, "$(P)$(R)Polarity_RBV"){
+#  field(DTYP, "asynOctetRead")
+#  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_POLARITY")
+#  field(SCAN, "I/O Intr")
+#}
+record(bo, "$(P)$(R)Polarity"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_POLARITY")
+  field(ZNAM, "Positive")
+  field(ONAM, "Negative")  
+}
+record(bi, "$(P)$(R)Polarity_RBV"){
+  field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_POLARITY")
+  field(ZNAM, "Positive")
+  field(ONAM, "Negative")    
   field(SCAN, "I/O Intr")
 }
+
 record(stringin, "$(P)$(R)TriggerModeC_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TRIGGER_MODE")
@@ -308,12 +415,25 @@ record(stringin, "$(P)$(R)DetOrient_RBV"){
   field(SCAN, "I/O Intr")
 }
 
+record(bo, "$(P)$(R)PeriphClk80"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PERIPH_CLK80")
+  field(ZNAM, "false")
+  field(ONAM, "true")  
+  info(autosaveFields, "VAL")
+}
 record(bi, "$(P)$(R)PeriphClk80_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PERIPH_CLK80")
+  field(ZNAM, "false")
+  field(ONAM, "true")    
   field(SCAN, "I/O Intr")
 }
 
+record(ao, "$(P)$(R)TriggerDelay"){
+  field(DTYP, "asynFloat64")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TRIG_DELAY")
+}
 record(ai, "$(P)$(R)TriggerDelay_RBV"){
   field(DTYP, "asynFloat64")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TRIG_DELAY")
@@ -325,9 +445,11 @@ record(stringin, "$(P)$(R)Tdc_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC")
   field(SCAN, "I/O Intr")
 }
-record(ai, "$(P)$(R)GlblTimestampIntvl"){
+
+record(ao, "$(P)$(R)GlblTimestampIntvl"){
   field(DTYP, "asynFloat64")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GL_TIMESTAMP_INT")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GL_TIMESTAMP_INT")
+  info(autosaveFields, "VAL")
 }
 record(ai, "$(P)$(R)GlblTimestampIntvl_RBV"){
   field(DTYP, "asynFloat64")
@@ -335,15 +457,44 @@ record(ai, "$(P)$(R)GlblTimestampIntvl_RBV"){
   field(SCAN, "I/O Intr")
 }
 
+record(bo, "$(P)$(R)RefClock"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_EXT_REF_CLOCK")
+  field(ZNAM, "false")
+  field(ONAM, "true")  
+  info(autosaveFields, "VAL")
+}
 record(bi, "$(P)$(R)RefClock_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_EXT_REF_CLOCK")
-  field(SCAN, "I/O Intr")
-}
-record(longin, "$(P)$(R)LogLevel_RBV"){
-  field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LOG_LEVEL")
+  field(ZNAM, "false")
+  field(ONAM, "true")    
   field(SCAN, "I/O Intr")
 }
 
+record(mbbo, "$(P)$(R)LogLevel")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_LOG_LEVEL")  
+   field(ZRST, "0") 
+   field(ZRVL, "0")
+   field(ONST, "1") 
+   field(ONVL, "1")
+   field(TWST, "2")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)LogLevel_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_LOG_LEVEL")  
+   field(ZRST, "0") 
+   field(ZRVL, "0")
+   field(ONST, "1") 
+   field(ONVL, "1")
+   field(TWST, "2")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
 

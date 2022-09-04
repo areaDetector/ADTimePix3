@@ -75,10 +75,10 @@
 #define ADTimePixFan2PWMString                  "TPX3_FAN2PWM"           // (asynInt32,         r)   Fan2PWM   
 #define ADTimePixBiasVoltString                 "TPX3_BIAS_VOLT_R"       // (asynInt32,         r)   BiasVoltage
 #define ADTimePixBiasEnableString               "TPX3_BIAS_ENBL"         // (asynInt32,         r)   BiasEnabled
-#define ADTimePixChainModeString                "TPX3_CHAIN_MODE"        // (asynOctet,         r)   ChainMode
+#define ADTimePixChainModeString                "TPX3_CHAIN_MODE"        // (asynInt32,         r)   ChainMode
 #define ADTimePixTriggerInString                "TPX3_TRIGGER_IN"        // (asynInt32,         r)   TriggerIn
 #define ADTimePixTriggerOutString               "TPX3_TRIGGER_OUT"       // (asynInt32,         r)   TriggerOut
-#define ADTimePixPolarityString                 "TPX3_POLARITY"          // (asynOctet,         r)   Polarity
+#define ADTimePixPolarityString                 "TPX3_POLARITY"          // (asynInt32,         r)   Polarity
 #define ADTimePixTriggerModeString              "TPX3_TRIGGER_MODE"      // (asynOctet,         r)   TriggerMode
 #define ADTimePixExposureTimeString             "TPX3_EXPOSURE_TIME"     // (asynFloat64,       r)   ExposureTime
 #define ADTimePixTriggerPeriodString            "TPX3_TRIGGER_PERIOD"    // (asynFloat64,       r)   TriggerPeriod
