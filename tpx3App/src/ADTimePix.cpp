@@ -1363,7 +1363,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = fileWriter();
     }
 
-    else if(function == ADTimePixBiasVolt || ADTimePixBiasEnable || ADTimePixLogLevel \
+    else if(function == ADTimePixBiasVolt || ADTimePixBiasEnable || ADTimePixTriggerIn || ADTimePixTriggerOut || ADTimePixLogLevel \
                 || ADTimePixExternalReferenceClock || ADTimePixChainMode) {  // set and enable bias, log level
         status = initAcquisition();
     }    
