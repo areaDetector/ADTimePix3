@@ -372,7 +372,8 @@ record(mbbi, "$(P)$(R)TriggerOut_RBV")
 #  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_POLARITY")
 #  field(SCAN, "I/O Intr")
 #}
-record(bo, "$(P)$(R)Polarity"){
+record(bo, "$(P)$(R)Polarity"){   
+  field(PINI, "YES")
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_POLARITY")
   field(ZNAM, "Positive")
