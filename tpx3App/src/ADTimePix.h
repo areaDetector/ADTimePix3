@@ -87,6 +87,8 @@
 #define ADTimePixPeriphClk80String              "TPX3_PERIPH_CLK80"      // (asynInt32,         r)   PeriphClk80
 #define ADTimePixTriggerDelayString             "TPX3_TRIG_DELAY"        // (asynFloat64,       r)   TriggerDelay
 #define ADTimePixTdcString                      "TPX3_TDC"               // (asynOctet,         r)   Tdc
+#define ADTimePixTdc0String                      "TPX3_TDC0"             // (asynInt32,         r)   Tdc0
+#define ADTimePixTdc1String                      "TPX3_TDC1"             // (asynInt32,         r)   Tdc1
 #define ADTimePixGlobalTimestampIntervalString  "TPX3_GL_TIMESTAMP_INT"  // (asynFloat64,       r)   GlobalTimestampInterval
 #define ADTimePixExternalReferenceClockString   "TPX3_EXT_REF_CLOCK"     // (asynInt32,         r)   ExternalReferenceClock
 #define ADTimePixLogLevelString                 "TPX3_LOG_LEVEL"         // (asynInt32,         r)   LogLevel
@@ -373,8 +375,10 @@ class ADTimePix : ADDriver{
         int ADTimePixnTriggers;                
         int ADTimePixDetectorOrientation;      
         int ADTimePixPeriphClk80;              
-        int ADTimePixTriggerDelay;             
-        int ADTimePixTdc;                      
+        int ADTimePixTriggerDelay;
+        int ADTimePixTdc;           
+        int ADTimePixTdc0;
+        int ADTimePixTdc1;                     
         int ADTimePixGlobalTimestampInterval;  
         int ADTimePixExternalReferenceClock;   
         int ADTimePixLogLevel;                 

@@ -367,11 +367,6 @@ record(mbbi, "$(P)$(R)TriggerOut_RBV")
    field(SCAN, "I/O Intr")
 }
 
-#record(stringin, "$(P)$(R)Polarity_RBV"){
-#  field(DTYP, "asynOctetRead")
-#  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_POLARITY")
-#  field(SCAN, "I/O Intr")
-#}
 record(bo, "$(P)$(R)Polarity"){   
   field(PINI, "YES")
   field(DTYP, "asynInt32")
@@ -447,57 +442,57 @@ record(stringin, "$(P)$(R)Tdc_RBV"){
   field(SCAN, "I/O Intr")
 }
 
-#record(mbbo, "$(P)$(R)Tdc1")
-#{
-#   field(PINI, "YES")
-#   field(DTYP, "asynInt32")
-#   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC1")  
-#   field(ZRST, "P0123") 
-#   field(ZRVL, "0")
-#   field(ONST, "N0123") 
-#   field(ONVL, "1")
-#   field(TWST, "PN0123")    
-#   field(TWVL, "2")
-#   info(autosaveFields, "VAL")
-#}
-#record(mbbi, "$(P)$(R)Tdc1_RBV")
-#{
-#   field(DTYP, "asynInt32")
-#   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC1")  
-#   field(ZRST, "P0123") 
-#   field(ZRVL, "0")
-#   field(ONST, "N0123") 
-#   field(ONVL, "1")
-#   field(TWST, "PN0123")    
-#   field(TWVL, "2")
-#   field(SCAN, "I/O Intr")
-#}
-#
-#record(mbbo, "$(P)$(R)Tdc2")
-#{
-#   field(PINI, "YES")
-#   field(DTYP, "asynInt32")
-#   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC2")  
-#   field(ZRST, "P0123") 
-#   field(ZRVL, "0")
-#   field(ONST, "N0123") 
-#   field(ONVL, "1")
-#   field(TWST, "PN0123")    
-#   field(TWVL, "2")
-#   info(autosaveFields, "VAL")
-#}
-#record(mbbi, "$(P)$(R)Tdc2_RBV")
-#{
-#   field(DTYP, "asynInt32")
-#   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC2")  
-#   field(ZRST, "P0123") 
-#   field(ZRVL, "0")
-#   field(ONST, "N0123") 
-#   field(ONVL, "1")
-#   field(TWST, "PN0123")    
-#   field(TWVL, "2")
-#   field(SCAN, "I/O Intr")
-#}
+record(mbbo, "$(P)$(R)Tdc0")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC0")  
+   field(ZRST, "P0123") 
+   field(ZRVL, "0")
+   field(ONST, "N0123") 
+   field(ONVL, "1")
+   field(TWST, "PN0123")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)Tdc0_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC0")  
+   field(ZRST, "P0123") 
+   field(ZRVL, "0")
+   field(ONST, "N0123") 
+   field(ONVL, "1")
+   field(TWST, "PN0123")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)Tdc1")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC1")  
+   field(ZRST, "P0123") 
+   field(ZRVL, "0")
+   field(ONST, "N0123") 
+   field(ONVL, "1")
+   field(TWST, "PN0123")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)Tdc1_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_TDC1")  
+   field(ZRST, "P0123") 
+   field(ZRVL, "0")
+   field(ONST, "N0123") 
+   field(ONVL, "1")
+   field(TWST, "PN0123")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
 
 record(ao, "$(P)$(R)GlblTimestampIntvl"){
   field(DTYP, "asynFloat64")

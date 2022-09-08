@@ -522,7 +522,7 @@ asynStatus ADTimePix::getDetector(){
     //setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Config"]["DetectorOrientation"].dump().c_str()));
     setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, falue->0
     setDoubleParam(ADTimePixTriggerDelay,            detector_j["Config"]["TriggerDelay"].get<double>());
-    setStringParam(ADTimePixTdc,                     strip_quotes(detector_j["Config"]["Tdc"].dump().c_str()));
+    setStringParam(ADTimePixTdc,                     strip_quotes(detector_j["Config"]["Tdc"].dump().c_str()));    
     setDoubleParam(ADTimePixGlobalTimestampInterval, detector_j["Config"]["GlobalTimestampInterval"].get<double>());
     setIntegerParam(ADTimePixExternalReferenceClock, int(detector_j["Config"]["ExternalReferenceClock"]));   // bool->int true->1, falue->0
     setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
@@ -1018,6 +1018,18 @@ asynStatus ADTimePix::initAcquisition(){
     config_j["TriggerDelay"] = doubleNum;        
     getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
     config_j["GlobalTimestampInterval"] = doubleNum;   
+
+    getIntegerParam(ADTimePixTdc0, &intNum);
+    json tdc;
+    tdc[0] = "P0123";
+    tdc[1] = "N0123";
+    tdc[2] = "PN0123";
+    config_j["Tdc"][0] = tdc[intNum]; 
+    getIntegerParam(ADTimePixTdc1, &intNum);
+    tdc[0] = "P0123";
+    tdc[1] = "N0123";
+    tdc[2] = "PN0123";
+    config_j["Tdc"][1] = tdc[intNum];     
 
     getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
     json externalClock;
@@ -1636,6 +1648,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPeriphClk80String,                 asynParamInt32,     &ADTimePixPeriphClk80);
     createParam(ADTimePixTriggerDelayString,                asynParamFloat64,   &ADTimePixTriggerDelay);  
     createParam(ADTimePixTdcString,                         asynParamOctet,     &ADTimePixTdc);
+    createParam(ADTimePixTdc0String,                        asynParamInt32,     &ADTimePixTdc0);
+    createParam(ADTimePixTdc1String,                        asynParamInt32,     &ADTimePixTdc1);
     createParam(ADTimePixGlobalTimestampIntervalString,     asynParamFloat64,   &ADTimePixGlobalTimestampInterval);             
     createParam(ADTimePixExternalReferenceClockString,      asynParamInt32,     &ADTimePixExternalReferenceClock);          
     createParam(ADTimePixLogLevelString,                    asynParamInt32,     &ADTimePixLogLevel);
