@@ -37,3 +37,27 @@ How to run
 * There are CSS-Boy, screens under areaDetector/tpx3App/op/ [TODO - update for serval 3.0.0].
 
 
+CSS screens
+-----------
+
+The following is the CSS screen ADTimePix3.opi when controlling an ADTimePix3 camera.
+
+.. figure:: Screenshots/TimePix3_main.png
+    :align: center
+
+The following are the CSS screens for features of ADTimePix3 detector 
+
+.. figure:: Screenshots/TimePix3_base.png
+    :align: center
+
+.. figure:: Screenshots/TimePix3_config.png
+    :align: center
+
+.. figure:: Screenshots/TimePix3_FileWriter.png
+    :align: center
+
+.. figure:: Screenshots/TimePix3_LoadBPC.png
+    :align: center
+
+.. figure:: Screenshots/TimePix3_status.png
+    :align: center
