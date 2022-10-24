@@ -36,6 +36,15 @@ How to run
 
 * There are CSS-Boy, screens under areaDetector/tpx3App/op/ [TODO - update for serval 3.0.0].
 
+Adjust chip thresholds
+----------------------
+
+* Optimize/equalize chips in the 'count' mode (not ToT)
+* Threshold fine increase is closer to noise (you get more counts)
+* Threshold fine decrease is away from noise, higher threshold in keV. (you get less counts)
+* These threshold settings can depend on X-ray energy.
+* After changing the thresholds take a background image to check that you do not get extra noise pixels.
+
 
 CSS screens
 -----------
