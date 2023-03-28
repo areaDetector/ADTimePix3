@@ -15,7 +15,8 @@ tpx3App_registerRecordDeviceDriver(pdbbase)
 
 
 
-epicsEnvSet("SERVER_URL", "http://localhost:8080")
+# epicsEnvSet("SERVER_URL", "http://localhost:8080")
+epicsEnvSet("SERVER_URL", "http://localhost:8081")
 epicsEnvSet("PREFIX", "TPX3-TEST:")
 epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db:$(ADTIMEPIX)/db")
 
