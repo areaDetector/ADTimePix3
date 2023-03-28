@@ -1,12 +1,12 @@
 /*
- * Header file for the ADTimePix EPICS driver
+ * Header file for the ADTimePix3 EPICS driver
  *
- * This file contains the definitions of PV params, and the definition of the ADTimePix class and functions.
+ * This file contains the definitions of PV params, and the definition of the ADTimePix3 class and functions.
  *
- * Author: 
- * Created:
- *
- * Copyright (c) :
+ * Author:  Kazimierz Gofron
+ * Created: June, 2022
+ * Last edited: March 28, 2023
+ * Copyright (c) : Oak Ridge National Laboratory
  *
  */
 

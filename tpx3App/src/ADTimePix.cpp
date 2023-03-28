@@ -2,7 +2,7 @@
  * This is a driver for the TimePix3 pixel array detector 
  * 
  * Author: Kazimierz Gofron
- * Created On: June,2022
+ * Created On: June, 2022
  * Last EDited: July 20, 2022
  * Copyright (c): 2022 Brookhaven National Laboratory
  * 
