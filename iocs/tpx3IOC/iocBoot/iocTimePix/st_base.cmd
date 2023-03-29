@@ -86,7 +86,12 @@ dbpf("$(PREFIX)cam1:PrvHstFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
 
-#dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
+dbpf("$(PREFIX)cam1:BPCFilePath","/epics/src/RHEL8/support/areaDetector/ADTimePix3/vendor/")
+dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")       # load BPC calibration
+dbpf("$(PREFIX)cam1:DACSFilePath","/epics/src/RHEL8/support/areaDetector/ADTimePix3/vendor/")
+dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")     # load DACS calibration
+
+dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
 
 # save things every thirty seconds
 create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
