@@ -36,6 +36,7 @@
 #define ADTimePixFan1SpeedString            "TPX3_FAN1_SPEED"            // (asynFloat64,       r)      Fan1 Speed
 #define ADTimePixFan2SpeedString            "TPX3_FAN2_SPEED"            // (asynFloat64,       r)      Fan Speed
 #define ADTimePixBiasVoltageString          "TPX3_BIAS_VOLT_H"           // (asynFloat64,       r)      Bias Voltage
+#define ADTimePixHumidityString             "TPX3_HUMIDITY"              // (asynInt32,         r)      Humidity
 #define ADTimePixChipTemperatureString      "TPX3_CHIP_TEMPS"            // (asynOctet,         r)      Chip temperature list
 #define ADTimePixVDDString                  "TPX3_VDD"                   // (asynOctet,         r)      VDD list
 #define ADTimePixAVDDString                 "TPX3_AVDD"                  // (asynOctet,         r)      AVDD list
@@ -324,6 +325,7 @@ class ADTimePix : ADDriver{
         int ADTimePixFan1Speed;
         int ADTimePixFan2Speed;
         int ADTimePixBiasVoltage;
+        int ADTimePixHumidity;
         int ADTimePixChipTemperature;
         int ADTimePixVDD;
         int ADTimePixAVDD;

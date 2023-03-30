@@ -149,7 +149,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <group_name></group_name>
-    <height>230</height>
+    <height>255</height>
     <macros>
       <include_parent_macros>true</include_parent_macros>
     </macros>
@@ -209,7 +209,7 @@ $(pv_value)</tooltip>
     <width>350</width>
     <wuid>-681b7cb2:1819850d1ce:-750c</wuid>
     <x>2</x>
-    <y>270</y>
+    <y>300</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
     <actions hook="false" hook_all="false" />

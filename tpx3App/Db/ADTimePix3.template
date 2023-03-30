@@ -69,6 +69,12 @@ record(ai, "$(P)$(R)BiasVoltage_RBV"){
   field(SCAN, "I/O Intr")
 }
 
+record(longin, "$(P)$(R)Humidity_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HUMIDITY")
+  field(SCAN, "I/O Intr")
+}
+
 # Arrays of values
 record(stringin, "$(P)$(R)ChipTemps_RBV"){
   field(DTYP, "asynOctetRead")

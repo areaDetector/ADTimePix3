@@ -465,7 +465,7 @@ asynStatus ADTimePix::getDetector(){
     setDoubleParam(ADTimePixFan1Speed, detector_j["Health"]["Fan1Speed"].get<double>());
     setDoubleParam(ADTimePixFan2Speed, detector_j["Health"]["Fan2Speed"].get<double>());
     setDoubleParam(ADTimePixBiasVoltage, detector_j["Health"]["BiasVoltage"].get<double>());
-
+    setIntegerParam(ADTimePixHumidity,   detector_j["Health"]["Humidity"].get<int>());
     setStringParam(ADTimePixChipTemperature, detector_j["Health"]["ChipTemperatures"].dump().c_str());
     setStringParam(ADTimePixVDD, detector_j["Health"]["VDD"].dump().c_str());
     setStringParam(ADTimePixAVDD, detector_j["Health"]["AVDD"].dump().c_str());
@@ -1611,6 +1611,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixFan1SpeedString,       asynParamFloat64, &ADTimePixFan1Speed);
     createParam(ADTimePixFan2SpeedString,       asynParamFloat64, &ADTimePixFan2Speed);
     createParam(ADTimePixBiasVoltageString,     asynParamFloat64, &ADTimePixBiasVoltage);
+    createParam(ADTimePixHumidityString,        asynParamInt32, &ADTimePixHumidity);
     createParam(ADTimePixChipTemperatureString, asynParamOctet, &ADTimePixChipTemperature);
     createParam(ADTimePixVDDString,             asynParamOctet, &ADTimePixVDD);
     createParam(ADTimePixAVDDString,            asynParamOctet, &ADTimePixAVDD);
