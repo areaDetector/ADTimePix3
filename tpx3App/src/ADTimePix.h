@@ -43,7 +43,6 @@
 
     // Detector Info
 #define ADTimePixIfaceNameString            "TPX3_IFACE"            // (asynOctet,         r)      IfaceName
-#define ADTimePixChipboardIDString          "TPX3_CHIPID"           // (asynOctet,         r)      ChipboardID
 #define ADTimePixSW_versionString           "TPX3_SW_VER"           // (asynOctet,         r)      SW_version
 #define ADTimePixFW_versionString           "TPX3_FW_VER"           // (asynOctet,         r)      FW_versionS
 #define ADTimePixPixCountString             "TPX3_PEL_CNT"          // (asynInt32,         r)      PixCount
@@ -333,7 +332,6 @@ class ADTimePix : ADDriver{
 
         // Detector Info
         int ADTimePixIfaceName;            
-        int ADTimePixChipboardID;          
         int ADTimePixSW_version;           
         int ADTimePixFW_version;           
         int ADTimePixPixCount;             

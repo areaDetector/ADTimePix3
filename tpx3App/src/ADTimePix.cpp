@@ -1619,7 +1619,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
         // Detector Info (detector)
     createParam(ADTimePixIfaceNameString,       asynParamOctet, &ADTimePixIfaceName);
-    createParam(ADTimePixChipboardIDString,     asynParamOctet, &ADTimePixChipboardID);
     createParam(ADTimePixSW_versionString,      asynParamOctet, &ADTimePixSW_version);
     createParam(ADTimePixFW_versionString,      asynParamOctet, &ADTimePixFW_version);
     createParam(ADTimePixPixCountString,        asynParamInt32, &ADTimePixPixCount);

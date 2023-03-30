@@ -101,11 +101,6 @@ record(stringin, "$(P)$(R)Iface_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IFACE")
   field(SCAN, "I/O Intr")
 }
-record(stringin, "$(P)$(R)ChipboardID_RBV"){
-  field(DTYP, "asynOctetRead")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIPID")
-  field(SCAN, "I/O Intr")
-}
 record(stringin, "$(P)$(R)SW_ver_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_SW_VER")
