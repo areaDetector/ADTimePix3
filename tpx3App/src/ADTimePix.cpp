@@ -456,6 +456,9 @@ asynStatus ADTimePix::getDetector(){
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
 
     json detector_j = json::parse(r.text.c_str());
+
+    // printf("Number of chips=%d\n", detector_j["Info"]["NumberOfChips"].get<int>());
+
     // Detector health PVs
     setDoubleParam(ADTimePixLocalTemp, detector_j["Health"]["LocalTemperature"].get<double>());
     setDoubleParam(ADTimePixFPGATemp, detector_j["Health"]["FPGATemperature"].get<double>());
@@ -548,68 +551,81 @@ asynStatus ADTimePix::getDetector(){
     setIntegerParam(ADTimePixChip0VTthresholdFine,    detector_j["Chips"][0]["DACs"]["Vthreshold_fine"].get<int>());
     //setIntegerParam(ADTimePixChip0Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
 
-    // Detector Chips: Chip1
-    setIntegerParam(ADTimePixChip1CP_PLL,             detector_j["Chips"][1]["DACs"]["Ibias_CP_PLL"].get<int>());
-    setIntegerParam(ADTimePixChip1DiscS1OFF,          detector_j["Chips"][1]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip1DiscS1ON,           detector_j["Chips"][1]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-    setIntegerParam(ADTimePixChip1DiscS2OFF,          detector_j["Chips"][1]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip1DiscS2ON,           detector_j["Chips"][1]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-    setIntegerParam(ADTimePixChip1Ikrum,              detector_j["Chips"][1]["DACs"]["Ibias_Ikrum"].get<int>());
-    setIntegerParam(ADTimePixChip1PixelDAC,           detector_j["Chips"][1]["DACs"]["Ibias_PixelDAC"].get<int>());
-    setIntegerParam(ADTimePixChip1PreampOFF,          detector_j["Chips"][1]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip1PreampON,           detector_j["Chips"][1]["DACs"]["Ibias_Preamp_ON"].get<int>());
-    setIntegerParam(ADTimePixChip1TPbufferIn,         detector_j["Chips"][1]["DACs"]["Ibias_TPbufferIn"].get<int>());
-    setIntegerParam(ADTimePixChip1TPbufferOut,        detector_j["Chips"][1]["DACs"]["Ibias_TPbufferOut"].get<int>());
-    setIntegerParam(ADTimePixChip1PLL_Vcntrl,         detector_j["Chips"][1]["DACs"]["PLL_Vcntrl"].get<int>());
-    setIntegerParam(ADTimePixChip1VPreampNCAS,        detector_j["Chips"][1]["DACs"]["VPreamp_NCAS"].get<int>());
-    setIntegerParam(ADTimePixChip1VTPcoarse,          detector_j["Chips"][1]["DACs"]["VTP_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip1VTPfine,            detector_j["Chips"][1]["DACs"]["VTP_fine"].get<int>());
-    setIntegerParam(ADTimePixChip1Vfbk,               detector_j["Chips"][1]["DACs"]["Vfbk"].get<int>());
-    setIntegerParam(ADTimePixChip1VthresholdCoarse,   detector_j["Chips"][1]["DACs"]["Vthreshold_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip1VTthresholdFine,    detector_j["Chips"][1]["DACs"]["Vthreshold_fine"].get<int>());
-    //setIntegerParam(ADTimePixChip1Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+     // Serval3 - Detector Chip Layout
+    setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
+    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());   
 
-    // Detector Chips: Chip2
-    setIntegerParam(ADTimePixChip2CP_PLL,             detector_j["Chips"][2]["DACs"]["Ibias_CP_PLL"].get<int>());
-    setIntegerParam(ADTimePixChip2DiscS1OFF,          detector_j["Chips"][2]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip2DiscS1ON,           detector_j["Chips"][2]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-    setIntegerParam(ADTimePixChip2DiscS2OFF,          detector_j["Chips"][2]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip2DiscS2ON,           detector_j["Chips"][2]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-    setIntegerParam(ADTimePixChip2Ikrum,              detector_j["Chips"][2]["DACs"]["Ibias_Ikrum"].get<int>());
-    setIntegerParam(ADTimePixChip2PixelDAC,           detector_j["Chips"][2]["DACs"]["Ibias_PixelDAC"].get<int>());
-    setIntegerParam(ADTimePixChip2PreampOFF,          detector_j["Chips"][2]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip2PreampON,           detector_j["Chips"][2]["DACs"]["Ibias_Preamp_ON"].get<int>());
-    setIntegerParam(ADTimePixChip2TPbufferIn,         detector_j["Chips"][2]["DACs"]["Ibias_TPbufferIn"].get<int>());
-    setIntegerParam(ADTimePixChip2TPbufferOut,        detector_j["Chips"][2]["DACs"]["Ibias_TPbufferOut"].get<int>());
-    setIntegerParam(ADTimePixChip2PLL_Vcntrl,         detector_j["Chips"][2]["DACs"]["PLL_Vcntrl"].get<int>());
-    setIntegerParam(ADTimePixChip2VPreampNCAS,        detector_j["Chips"][2]["DACs"]["VPreamp_NCAS"].get<int>());
-    setIntegerParam(ADTimePixChip2VTPcoarse,          detector_j["Chips"][2]["DACs"]["VTP_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip2VTPfine,            detector_j["Chips"][2]["DACs"]["VTP_fine"].get<int>());
-    setIntegerParam(ADTimePixChip2Vfbk,               detector_j["Chips"][2]["DACs"]["Vfbk"].get<int>());
-    setIntegerParam(ADTimePixChip2VthresholdCoarse,   detector_j["Chips"][2]["DACs"]["Vthreshold_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip2VTthresholdFine,    detector_j["Chips"][2]["DACs"]["Vthreshold_fine"].get<int>());
-    //setIntegerParam(ADTimePixChip2Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+    if (detector_j["Info"]["NumberOfChips"].get<int>() >= 2) {
+        // Detector Chips: Chip1
+        setIntegerParam(ADTimePixChip1CP_PLL,             detector_j["Chips"][1]["DACs"]["Ibias_CP_PLL"].get<int>());
+        setIntegerParam(ADTimePixChip1DiscS1OFF,          detector_j["Chips"][1]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip1DiscS1ON,           detector_j["Chips"][1]["DACs"]["Ibias_DiscS1_ON"].get<int>());
+        setIntegerParam(ADTimePixChip1DiscS2OFF,          detector_j["Chips"][1]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip1DiscS2ON,           detector_j["Chips"][1]["DACs"]["Ibias_DiscS2_ON"].get<int>());
+        setIntegerParam(ADTimePixChip1Ikrum,              detector_j["Chips"][1]["DACs"]["Ibias_Ikrum"].get<int>());
+        setIntegerParam(ADTimePixChip1PixelDAC,           detector_j["Chips"][1]["DACs"]["Ibias_PixelDAC"].get<int>());
+        setIntegerParam(ADTimePixChip1PreampOFF,          detector_j["Chips"][1]["DACs"]["Ibias_Preamp_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip1PreampON,           detector_j["Chips"][1]["DACs"]["Ibias_Preamp_ON"].get<int>());
+        setIntegerParam(ADTimePixChip1TPbufferIn,         detector_j["Chips"][1]["DACs"]["Ibias_TPbufferIn"].get<int>());
+        setIntegerParam(ADTimePixChip1TPbufferOut,        detector_j["Chips"][1]["DACs"]["Ibias_TPbufferOut"].get<int>());
+        setIntegerParam(ADTimePixChip1PLL_Vcntrl,         detector_j["Chips"][1]["DACs"]["PLL_Vcntrl"].get<int>());
+        setIntegerParam(ADTimePixChip1VPreampNCAS,        detector_j["Chips"][1]["DACs"]["VPreamp_NCAS"].get<int>());
+        setIntegerParam(ADTimePixChip1VTPcoarse,          detector_j["Chips"][1]["DACs"]["VTP_coarse"].get<int>());
+        setIntegerParam(ADTimePixChip1VTPfine,            detector_j["Chips"][1]["DACs"]["VTP_fine"].get<int>());
+        setIntegerParam(ADTimePixChip1Vfbk,               detector_j["Chips"][1]["DACs"]["Vfbk"].get<int>());
+        setIntegerParam(ADTimePixChip1VthresholdCoarse,   detector_j["Chips"][1]["DACs"]["Vthreshold_coarse"].get<int>());
+        setIntegerParam(ADTimePixChip1VTthresholdFine,    detector_j["Chips"][1]["DACs"]["Vthreshold_fine"].get<int>());
+        //setIntegerParam(ADTimePixChip1Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+        setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
+    }
 
-    // Detector Chips: Chip3
-    setIntegerParam(ADTimePixChip3CP_PLL,             detector_j["Chips"][3]["DACs"]["Ibias_CP_PLL"].get<int>());
-    setIntegerParam(ADTimePixChip3DiscS1OFF,          detector_j["Chips"][3]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip3DiscS1ON,           detector_j["Chips"][3]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-    setIntegerParam(ADTimePixChip3DiscS2OFF,          detector_j["Chips"][3]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip3DiscS2ON,           detector_j["Chips"][3]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-    setIntegerParam(ADTimePixChip3Ikrum,              detector_j["Chips"][3]["DACs"]["Ibias_Ikrum"].get<int>());
-    setIntegerParam(ADTimePixChip3PixelDAC,           detector_j["Chips"][3]["DACs"]["Ibias_PixelDAC"].get<int>());
-    setIntegerParam(ADTimePixChip3PreampOFF,          detector_j["Chips"][3]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip3PreampON,           detector_j["Chips"][3]["DACs"]["Ibias_Preamp_ON"].get<int>());
-    setIntegerParam(ADTimePixChip3TPbufferIn,         detector_j["Chips"][3]["DACs"]["Ibias_TPbufferIn"].get<int>());
-    setIntegerParam(ADTimePixChip3TPbufferOut,        detector_j["Chips"][3]["DACs"]["Ibias_TPbufferOut"].get<int>());
-    setIntegerParam(ADTimePixChip3PLL_Vcntrl,         detector_j["Chips"][3]["DACs"]["PLL_Vcntrl"].get<int>());
-    setIntegerParam(ADTimePixChip3VPreampNCAS,        detector_j["Chips"][3]["DACs"]["VPreamp_NCAS"].get<int>());
-    setIntegerParam(ADTimePixChip3VTPcoarse,          detector_j["Chips"][3]["DACs"]["VTP_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip3VTPfine,            detector_j["Chips"][3]["DACs"]["VTP_fine"].get<int>());
-    setIntegerParam(ADTimePixChip3Vfbk,               detector_j["Chips"][3]["DACs"]["Vfbk"].get<int>());
-    setIntegerParam(ADTimePixChip3VthresholdCoarse,   detector_j["Chips"][3]["DACs"]["Vthreshold_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip3VTthresholdFine,    detector_j["Chips"][3]["DACs"]["Vthreshold_fine"].get<int>());
-    //setIntegerParam(ADTimePixChip3Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+    if (detector_j["Info"]["NumberOfChips"].get<int>() >= 3) {
+        // Detector Chips: Chip2
+        setIntegerParam(ADTimePixChip2CP_PLL,             detector_j["Chips"][2]["DACs"]["Ibias_CP_PLL"].get<int>());
+        setIntegerParam(ADTimePixChip2DiscS1OFF,          detector_j["Chips"][2]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip2DiscS1ON,           detector_j["Chips"][2]["DACs"]["Ibias_DiscS1_ON"].get<int>());
+        setIntegerParam(ADTimePixChip2DiscS2OFF,          detector_j["Chips"][2]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip2DiscS2ON,           detector_j["Chips"][2]["DACs"]["Ibias_DiscS2_ON"].get<int>());
+        setIntegerParam(ADTimePixChip2Ikrum,              detector_j["Chips"][2]["DACs"]["Ibias_Ikrum"].get<int>());
+        setIntegerParam(ADTimePixChip2PixelDAC,           detector_j["Chips"][2]["DACs"]["Ibias_PixelDAC"].get<int>());
+        setIntegerParam(ADTimePixChip2PreampOFF,          detector_j["Chips"][2]["DACs"]["Ibias_Preamp_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip2PreampON,           detector_j["Chips"][2]["DACs"]["Ibias_Preamp_ON"].get<int>());
+        setIntegerParam(ADTimePixChip2TPbufferIn,         detector_j["Chips"][2]["DACs"]["Ibias_TPbufferIn"].get<int>());
+        setIntegerParam(ADTimePixChip2TPbufferOut,        detector_j["Chips"][2]["DACs"]["Ibias_TPbufferOut"].get<int>());
+        setIntegerParam(ADTimePixChip2PLL_Vcntrl,         detector_j["Chips"][2]["DACs"]["PLL_Vcntrl"].get<int>());
+        setIntegerParam(ADTimePixChip2VPreampNCAS,        detector_j["Chips"][2]["DACs"]["VPreamp_NCAS"].get<int>());
+        setIntegerParam(ADTimePixChip2VTPcoarse,          detector_j["Chips"][2]["DACs"]["VTP_coarse"].get<int>());
+        setIntegerParam(ADTimePixChip2VTPfine,            detector_j["Chips"][2]["DACs"]["VTP_fine"].get<int>());
+        setIntegerParam(ADTimePixChip2Vfbk,               detector_j["Chips"][2]["DACs"]["Vfbk"].get<int>());
+        setIntegerParam(ADTimePixChip2VthresholdCoarse,   detector_j["Chips"][2]["DACs"]["Vthreshold_coarse"].get<int>());
+        setIntegerParam(ADTimePixChip2VTthresholdFine,    detector_j["Chips"][2]["DACs"]["Vthreshold_fine"].get<int>());
+        //setIntegerParam(ADTimePixChip2Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+        setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
+    }
+
+    if (detector_j["Info"]["NumberOfChips"].get<int>() >= 4) {
+        // Detector Chips: Chip3
+        setIntegerParam(ADTimePixChip3CP_PLL,             detector_j["Chips"][3]["DACs"]["Ibias_CP_PLL"].get<int>());
+        setIntegerParam(ADTimePixChip3DiscS1OFF,          detector_j["Chips"][3]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip3DiscS1ON,           detector_j["Chips"][3]["DACs"]["Ibias_DiscS1_ON"].get<int>());
+        setIntegerParam(ADTimePixChip3DiscS2OFF,          detector_j["Chips"][3]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip3DiscS2ON,           detector_j["Chips"][3]["DACs"]["Ibias_DiscS2_ON"].get<int>());
+        setIntegerParam(ADTimePixChip3Ikrum,              detector_j["Chips"][3]["DACs"]["Ibias_Ikrum"].get<int>());
+        setIntegerParam(ADTimePixChip3PixelDAC,           detector_j["Chips"][3]["DACs"]["Ibias_PixelDAC"].get<int>());
+        setIntegerParam(ADTimePixChip3PreampOFF,          detector_j["Chips"][3]["DACs"]["Ibias_Preamp_OFF"].get<int>());
+        setIntegerParam(ADTimePixChip3PreampON,           detector_j["Chips"][3]["DACs"]["Ibias_Preamp_ON"].get<int>());
+        setIntegerParam(ADTimePixChip3TPbufferIn,         detector_j["Chips"][3]["DACs"]["Ibias_TPbufferIn"].get<int>());
+        setIntegerParam(ADTimePixChip3TPbufferOut,        detector_j["Chips"][3]["DACs"]["Ibias_TPbufferOut"].get<int>());
+        setIntegerParam(ADTimePixChip3PLL_Vcntrl,         detector_j["Chips"][3]["DACs"]["PLL_Vcntrl"].get<int>());
+        setIntegerParam(ADTimePixChip3VPreampNCAS,        detector_j["Chips"][3]["DACs"]["VPreamp_NCAS"].get<int>());
+        setIntegerParam(ADTimePixChip3VTPcoarse,          detector_j["Chips"][3]["DACs"]["VTP_coarse"].get<int>());
+        setIntegerParam(ADTimePixChip3VTPfine,            detector_j["Chips"][3]["DACs"]["VTP_fine"].get<int>());
+        setIntegerParam(ADTimePixChip3Vfbk,               detector_j["Chips"][3]["DACs"]["Vfbk"].get<int>());
+        setIntegerParam(ADTimePixChip3VthresholdCoarse,   detector_j["Chips"][3]["DACs"]["Vthreshold_coarse"].get<int>());
+        setIntegerParam(ADTimePixChip3VTthresholdFine,    detector_j["Chips"][3]["DACs"]["Vthreshold_fine"].get<int>());
+        //setIntegerParam(ADTimePixChip3Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+        setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str()); 
+    }
 
     // Serval2.3.6 Detector Chip Layout
 //    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"][0].dump().c_str());
@@ -618,11 +634,11 @@ asynStatus ADTimePix::getDetector(){
 //    setStringParam(ADTimePixChip3Layout,    detector_j["Layout"][3].dump().c_str());
 
     // Serval3 - Detector Chip Layout
-    setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
-    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
-    setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
-    setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
-    setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str());
+    // setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
+    // setStringParam(ADTimePixChip0Layout,    detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
+    // setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
+    // setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
+    // setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str());
 
     // Refresh PV values
     callParamCallbacks();
