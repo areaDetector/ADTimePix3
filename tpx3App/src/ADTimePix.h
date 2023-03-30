@@ -83,7 +83,6 @@
 #define ADTimePixExposureTimeString             "TPX3_EXPOSURE_TIME"     // (asynFloat64,       r)   ExposureTime
 #define ADTimePixTriggerPeriodString            "TPX3_TRIGGER_PERIOD"    // (asynFloat64,       r)   TriggerPeriod
 #define ADTimePixnTriggersString                "TPX3_NTRIGGERS"         // (asynInt32,         r)   nTriggers
-#define ADTimePixDetectorOrientationString      "TPX3_DET_ORIENTATION"   // (asynOctet,         r)   DetectorOrientation
 #define ADTimePixPeriphClk80String              "TPX3_PERIPH_CLK80"      // (asynInt32,         r)   PeriphClk80
 #define ADTimePixTriggerDelayString             "TPX3_TRIG_DELAY"        // (asynFloat64,       r)   TriggerDelay
 #define ADTimePixTdcString                      "TPX3_TDC"               // (asynOctet,         r)   Tdc
@@ -175,6 +174,7 @@
 #define ADTimePixChip3AdjustString              "TPX3_CHIP3_ADJUST"           // (asynInt32,         r)      DACs->Adjust
 
     // Chip Layout
+#define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"            // (asynOctet,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
 #define ADTimePixChip0LayoutString          "TPX3_CHIP0_LAYTOUT"              // (asynOctet,         r)      Chip 0 layout
 #define ADTimePixChip1LayoutString          "TPX3_CHIP1_LAYTOUT"              // (asynOctet,         r)      Chip 1 layout
 #define ADTimePixChip2LayoutString          "TPX3_CHIP2_LAYTOUT"              // (asynOctet,         r)      Chip 2 layout
@@ -369,11 +369,10 @@ class ADTimePix : ADDriver{
         int ADTimePixTriggerIn;                
         int ADTimePixTriggerOut;               
         int ADTimePixPolarity;                 
-        int ADTimePixTriggerMode;              
+        int ADTimePixTriggerMode;
         int ADTimePixExposureTime;             
         int ADTimePixTriggerPeriod;            
-        int ADTimePixnTriggers;                
-        int ADTimePixDetectorOrientation;      
+        int ADTimePixnTriggers;
         int ADTimePixPeriphClk80;              
         int ADTimePixTriggerDelay;
         int ADTimePixTdc;           
@@ -465,6 +464,7 @@ class ADTimePix : ADDriver{
         int ADTimePixChip3Adjust;
             
             //  Detector Chip layout
+        int ADTimePixDetectorOrientation;
         int ADTimePixChip0Layout;
         int ADTimePixChip1Layout;
         int ADTimePixChip2Layout;

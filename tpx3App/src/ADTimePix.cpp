@@ -522,7 +522,6 @@ asynStatus ADTimePix::getDetector(){
     setDoubleParam(ADTimePixTriggerPeriod,           detector_j["Config"]["TriggerPeriod"].get<double>());
     setDoubleParam(ADAcquirePeriod,                  detector_j["Config"]["TriggerPeriod"].get<double>());     // Exposure Period RBV
     setIntegerParam(ADTimePixnTriggers,              detector_j["Config"]["nTriggers"].get<int>());
-    //setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Config"]["DetectorOrientation"].dump().c_str()));
     setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, falue->0
     setDoubleParam(ADTimePixTriggerDelay,            detector_j["Config"]["TriggerDelay"].get<double>());
     setStringParam(ADTimePixTdc,                     strip_quotes(detector_j["Config"]["Tdc"].dump().c_str()));    
