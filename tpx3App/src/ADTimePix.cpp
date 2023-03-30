@@ -490,7 +490,6 @@ asynStatus ADTimePix::getDetector(){
 
     setStringParam(ADTimePixBoardsID,   strip_quotes(detector_j["Info"]["Boards"][0]["ChipboardId"].dump().c_str()));
     setStringParam(ADTimePixBoardsIP,   strip_quotes(detector_j["Info"]["Boards"][0]["IpAddress"].dump().c_str()));
-//    setIntegerParam(ADTimePixBoardsPort, detector_j["Info"]["Boards"][0]["PortNumber"].get<int>());
     setStringParam(ADTimePixBoardsCh1,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][0].dump().c_str()));
     setStringParam(ADTimePixBoardsCh2,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][1].dump().c_str()));
     setStringParam(ADTimePixBoardsCh3,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][2].dump().c_str()));
@@ -1629,7 +1628,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
     createParam(ADTimePixBoardsIDString,        asynParamOctet, &ADTimePixBoardsID);
     createParam(ADTimePixBoardsIPString,        asynParamOctet, &ADTimePixBoardsIP);
-    createParam(ADTimePixBoardsPortString,      asynParamInt32, &ADTimePixBoardsPort); 
     createParam(ADTimePixBoardsCh1String,       asynParamOctet, &ADTimePixBoardsCh1);
     createParam(ADTimePixBoardsCh2String,       asynParamOctet, &ADTimePixBoardsCh2);
     createParam(ADTimePixBoardsCh3String,       asynParamOctet, &ADTimePixBoardsCh3);

@@ -53,7 +53,6 @@
 
 #define ADTimePixBoardsIDString             "TPX3_BOARDS_ID"        // (asynOctet,         r)      Boards->ChipboardId
 #define ADTimePixBoardsIPString             "TPX3_BOARDS_IP"        // (asynOctet,         r)      Boards->IpAddress
-#define ADTimePixBoardsPortString           "TPX3_BOARDS_PORT"      // (asynInt32,         r)      Boards->PortNumber
 #define ADTimePixBoardsCh1String            "TPX3_BOARDS_CH1"       // (asynOctet,         r)      Boards->Chip1{Id,Name}
 #define ADTimePixBoardsCh2String            "TPX3_BOARDS_CH2"       // (asynOctet,         r)      Boards->Chip2{Id,Name}
 #define ADTimePixBoardsCh3String            "TPX3_BOARDS_CH3"       // (asynOctet,         r)      Boards->Chip3{Id,Name}
@@ -341,8 +340,7 @@ class ADTimePix : ADDriver{
         int ADTimePixMpxType;
         
         int ADTimePixBoardsID;             
-        int ADTimePixBoardsIP;             
-        int ADTimePixBoardsPort;           
+        int ADTimePixBoardsIP;
         int ADTimePixBoardsCh1;            
         int ADTimePixBoardsCh2;            
         int ADTimePixBoardsCh3;           

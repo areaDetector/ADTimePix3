@@ -146,11 +146,6 @@ record(stringin, "$(P)$(R)IpAddr_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_IP")
   field(SCAN, "I/O Intr")
 }
-record(longin, "$(P)$(R)Port_RBV"){
-  field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_PORT")
-  field(SCAN, "I/O Intr")
-}
 record(stringin, "$(P)$(R)Chip1_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_CH1")
