@@ -49,6 +49,9 @@ gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-44)
           * $(EPICS_BASE)/configure/os/CONFIG.linux-x86_64.linux-x86_64
             * CC=/opt/rh/devtoolset-9/root/usr/bin/g++
             * GCC=/opt/rh/devtoolset-9/root/usr/bin/gcc
+* curl/system.h (ADTimePix3 compile: point to curl headers)
+    * export C_INCLUDE_PATH=/opt/puppetlabs/puppet/include
+    * export CPLUS_INCLUDE_PATH=/opt/puppetlabs/puppet/include
 
 
 
