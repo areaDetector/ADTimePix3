@@ -72,12 +72,15 @@ dbpf("$(PREFIX)cam1:PrvImgFileFmt","2")    # png
 dbpf("$(PREFIX)cam1:PrvImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
+dbpf("$(PREFIX)cam1:PrvPeriod","1.0")	# Preview once per second
+dbpf("$(PREFIX)cam1:WritePrvImg","1")   # Select Preview write
 
 dbpf("$(PREFIX)cam1:PrvImg1FilePath","http://localhost")
 dbpf("$(PREFIX)cam1:PrvImg1FileFmt","0")    # tiff
 dbpf("$(PREFIX)cam1:PrvImg1FileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImg1IntgMode","1")   # average
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")   # false
+dbpf("$(PREFIX)cam1:WritePrvImg1","1")   # Select Stream write
 
 dbpf("$(PREFIX)cam1:PrvHstFilePath","/media/nvme/hst")
 dbpf("$(PREFIX)cam1:PrvHstFileTemplate","f%MdHms_")
@@ -85,6 +88,9 @@ dbpf("$(PREFIX)cam1:PrvHstFileFmt","4")    # jsonhisto
 dbpf("$(PREFIX)cam1:PrvHstFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
+
+sleep 1
+dbpf("$(PREFIX)cam1:WriteData","1")   # Write selected data files to disk and stream to socket
 
 dbpf("$(PREFIX)cam1:BPCFilePath","/epics/src/RHEL8/support/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")       # load BPC calibration
