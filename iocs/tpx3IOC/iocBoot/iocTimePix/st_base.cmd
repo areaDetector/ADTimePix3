@@ -57,17 +57,17 @@ set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
 iocInit()
 
 dbpf("$(PREFIX)cam1:RawFilePath","/media/nvme/raw")
-dbpf("$(PREFIX)cam1:RawFileTemplate","raw%Hms_")
+dbpf("$(PREFIX)cam1:RawFileTemplate","raw%MdHms_")
 
 dbpf("$(PREFIX)cam1:ImgFilePath","/media/nvme/img")
-dbpf("$(PREFIX)cam1:ImgFileTemplate","f%Hms_")
+dbpf("$(PREFIX)cam1:ImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:ImgFileFmt","0")    # tiff
 dbpf("$(PREFIX)cam1:ImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:ImgIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:StpOnDskLim","1")   # true
 
 dbpf("$(PREFIX)cam1:PrvImgFilePath","/media/nvme/prv")
-dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%Hms_")
+dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImgFileFmt","2")    # png
 dbpf("$(PREFIX)cam1:PrvImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","1")   # average
@@ -80,7 +80,7 @@ dbpf("$(PREFIX)cam1:PrvImg1IntgMode","1")   # average
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")   # false
 
 dbpf("$(PREFIX)cam1:PrvHstFilePath","/media/nvme/hst")
-dbpf("$(PREFIX)cam1:PrvHstFileTemplate","f%Hms_")
+dbpf("$(PREFIX)cam1:PrvHstFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvHstFileFmt","4")    # jsonhisto
 dbpf("$(PREFIX)cam1:PrvHstFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
