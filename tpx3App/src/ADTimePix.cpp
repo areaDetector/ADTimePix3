@@ -547,7 +547,13 @@ asynStatus ADTimePix::getDetector(){
     setIntegerParam(ADTimePixChip0Vfbk,               detector_j["Chips"][0]["DACs"]["Vfbk"].get<int>());
     setIntegerParam(ADTimePixChip0VthresholdCoarse,   detector_j["Chips"][0]["DACs"]["Vthreshold_coarse"].get<int>());
     setIntegerParam(ADTimePixChip0VTthresholdFine,    detector_j["Chips"][0]["DACs"]["Vthreshold_fine"].get<int>());
-    //setIntegerParam(ADTimePixChip0Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+    if (detector_j["Chips"][0]["Adjust"].is_null()) {
+        setIntegerParam(ADTimePixChip0Adjust,            -1 );
+    }   else if (detector_j["Chips"][0]["Adjust"].is_number_integer()) {
+        setIntegerParam(ADTimePixChip0Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+    }   else {
+            setIntegerParam(ADTimePixChip0Adjust,            -2 );
+    }
 
      // Serval3 - Detector Chip Layout
     setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
@@ -573,7 +579,13 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixChip1Vfbk,               detector_j["Chips"][1]["DACs"]["Vfbk"].get<int>());
         setIntegerParam(ADTimePixChip1VthresholdCoarse,   detector_j["Chips"][1]["DACs"]["Vthreshold_coarse"].get<int>());
         setIntegerParam(ADTimePixChip1VTthresholdFine,    detector_j["Chips"][1]["DACs"]["Vthreshold_fine"].get<int>());
-        //setIntegerParam(ADTimePixChip1Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+        if (detector_j["Chips"][1]["Adjust"].is_null()) {
+            setIntegerParam(ADTimePixChip1Adjust,            -1 );
+        }   else if (detector_j["Chips"][1]["Adjust"].is_number_integer()) {
+            setIntegerParam(ADTimePixChip1Adjust,             detector_j["Chips"][1]["Adjust"].get<int>());
+        }   else {
+            setIntegerParam(ADTimePixChip1Adjust,            -2 );
+        }
         setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
     }
 
@@ -597,7 +609,13 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixChip2Vfbk,               detector_j["Chips"][2]["DACs"]["Vfbk"].get<int>());
         setIntegerParam(ADTimePixChip2VthresholdCoarse,   detector_j["Chips"][2]["DACs"]["Vthreshold_coarse"].get<int>());
         setIntegerParam(ADTimePixChip2VTthresholdFine,    detector_j["Chips"][2]["DACs"]["Vthreshold_fine"].get<int>());
-        //setIntegerParam(ADTimePixChip2Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+        if (detector_j["Chips"][2]["Adjust"].is_null()) {
+            setIntegerParam(ADTimePixChip2Adjust,            -1 );
+        }   else if (detector_j["Chips"][2]["Adjust"].is_number_integer()) {
+            setIntegerParam(ADTimePixChip2Adjust,             detector_j["Chips"][2]["Adjust"].get<int>());
+        }   else {
+            setIntegerParam(ADTimePixChip2Adjust,            -2 );
+        }
         setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
     }
 
@@ -621,7 +639,13 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixChip3Vfbk,               detector_j["Chips"][3]["DACs"]["Vfbk"].get<int>());
         setIntegerParam(ADTimePixChip3VthresholdCoarse,   detector_j["Chips"][3]["DACs"]["Vthreshold_coarse"].get<int>());
         setIntegerParam(ADTimePixChip3VTthresholdFine,    detector_j["Chips"][3]["DACs"]["Vthreshold_fine"].get<int>());
-        //setIntegerParam(ADTimePixChip3Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
+        if (detector_j["Chips"][3]["Adjust"].is_null()) {
+            setIntegerParam(ADTimePixChip3Adjust,            -1 );
+        }   else if (detector_j["Chips"][3]["Adjust"].is_number_integer()) {
+            setIntegerParam(ADTimePixChip3Adjust,             detector_j["Chips"][3]["Adjust"].get<int>());
+        }   else {
+            setIntegerParam(ADTimePixChip3Adjust,            -2 );
+        }
         setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str()); 
     }
 
@@ -1686,7 +1710,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixChip0VfbkString,               asynParamInt32, &ADTimePixChip0Vfbk);
     createParam(ADTimePixChip0VthresholdCoarseString,   asynParamInt32, &ADTimePixChip0VthresholdCoarse);            
     createParam(ADTimePixChip0VTthresholdFineString,    asynParamInt32, &ADTimePixChip0VTthresholdFine);            
-    createParam(ADTimePixChip0AdjustString,             asynParamOctet, &ADTimePixChip0Adjust);
+    createParam(ADTimePixChip0AdjustString,             asynParamInt32, &ADTimePixChip0Adjust);
     // Detector Chips: Chip1
     createParam(ADTimePixChip1CP_PLLString,               asynParamInt32, &ADTimePixChip1CP_PLL);
     createParam(ADTimePixChip1DiscS1OFFString,            asynParamInt32, &ADTimePixChip1DiscS1OFF);    
@@ -1706,7 +1730,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixChip1VfbkString,                 asynParamInt32, &ADTimePixChip1Vfbk);
     createParam(ADTimePixChip1VthresholdCoarseString,     asynParamInt32, &ADTimePixChip1VthresholdCoarse);    
     createParam(ADTimePixChip1VTthresholdFineString,      asynParamInt32, &ADTimePixChip1VTthresholdFine);    
-    createParam(ADTimePixChip1AdjustString,               asynParamOctet, &ADTimePixChip1Adjust);
+    createParam(ADTimePixChip1AdjustString,               asynParamInt32, &ADTimePixChip1Adjust);
     // Detector Chips: Chip2
     createParam(ADTimePixChip2CP_PLLString,                asynParamInt32, &ADTimePixChip2CP_PLL);
     createParam(ADTimePixChip2DiscS1OFFString,             asynParamInt32, &ADTimePixChip2DiscS1OFF);
@@ -1726,7 +1750,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixChip2VfbkString,                  asynParamInt32, &ADTimePixChip2Vfbk);
     createParam(ADTimePixChip2VthresholdCoarseString,      asynParamInt32, &ADTimePixChip2VthresholdCoarse);
     createParam(ADTimePixChip2VTthresholdFineString,       asynParamInt32, &ADTimePixChip2VTthresholdFine);
-    createParam(ADTimePixChip2AdjustString,                asynParamOctet, &ADTimePixChip2Adjust);     
+    createParam(ADTimePixChip2AdjustString,                asynParamInt32, &ADTimePixChip2Adjust);     
     // Detector Chips: Chip3
     createParam(ADTimePixChip3CP_PLLString,                 asynParamInt32, &ADTimePixChip3CP_PLL);
     createParam(ADTimePixChip3DiscS1OFFString,              asynParamInt32, &ADTimePixChip3DiscS1OFF);
@@ -1746,7 +1770,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixChip3VfbkString,                   asynParamInt32, &ADTimePixChip3Vfbk);
     createParam(ADTimePixChip3VthresholdCoarseString,       asynParamInt32, &ADTimePixChip3VthresholdCoarse);
     createParam(ADTimePixChip3VTthresholdFineString,        asynParamInt32, &ADTimePixChip3VTthresholdFine);
-    createParam(ADTimePixChip3AdjustString,                 asynParamOctet, &ADTimePixChip3Adjust);
+    createParam(ADTimePixChip3AdjustString,                 asynParamInt32, &ADTimePixChip3Adjust);
              
     // Detector Chip Layout
     createParam(ADTimePixChip0LayoutString,               asynParamOctet, &ADTimePixChip0Layout);
