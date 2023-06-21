@@ -1173,12 +1173,10 @@ void ADTimePix::timePixCallback(){
                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                        cpr::Parameters{{"anon", "true"}, {"key", "value"}});
     json measurement_j = json::parse(r.text.c_str());
-//    printf("StartDataTime=%li\n",  measurement_j["Info"]["StartDateTime"].get<long>());
+
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
     setIntegerParam(ADTimePixTdcRate,           measurement_j["Info"]["TdcEventRate"].get<int>());
-//    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
-//    setInteger64Param(ADTimePixStartTime,       (epicsInt64)measurement_j["Info"]["StartDateTime"].get<long>());
-    setInteger64Param(ADTimePixStartTime,       1661534948766);
+    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
     setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
     setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
     setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
