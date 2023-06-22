@@ -15,10 +15,14 @@ record(longin, "$(P)$(R)PelEvtRate_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PEL_RATE")
   field(SCAN, "I/O Intr")
 }
-
-record(longin, "$(P)$(R)TdcEvtRate_RBV"){
+record(longin, "$(P)$(R)Tdc1EvtRate_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC_RATE")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC1_RATE")
+  field(SCAN, "I/O Intr")
+}
+record(longin, "$(P)$(R)Tdc2EvtRate_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC2_RATE")
   field(SCAN, "I/O Intr")
 }
 record(int64in, "$(P)$(R)StartTime_RBV"){

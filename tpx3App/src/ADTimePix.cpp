@@ -1164,6 +1164,7 @@ void ADTimePix::timePixCallback(){
     int arrayCallbacks;
     epicsTimeStamp startTime, endTime;
     double elapsedTime;
+    std::string API_Ver;
 
     getIntegerParam(ADImageMode, &mode);
     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
@@ -1175,7 +1176,17 @@ void ADTimePix::timePixCallback(){
     json measurement_j = json::parse(r.text.c_str());
 
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
-    setIntegerParam(ADTimePixTdcRate,           measurement_j["Info"]["TdcEventRate"].get<int>());
+
+    getStringParam(ADSDKVersion, API_Ver);
+    if (API_Ver == "3.2.0") {
+        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
+        setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
+    } else if (API_Ver == "3.1.1") {
+        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
+    } else {
+        printf ("Serval Version not compared, event rate not read\n");
+    }
+
     setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
     setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
     setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
@@ -1198,7 +1209,16 @@ void ADTimePix::timePixCallback(){
                         cpr::Parameters{{"anon", "true"}, {"key", "value"}});
             measurement_j = json::parse(r.text.c_str());
             setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
-            setIntegerParam(ADTimePixTdcRate,           measurement_j["Info"]["TdcEventRate"].get<int>());
+            
+            if (API_Ver == "3.2.0") {
+                setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
+                setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
+            } else if (API_Ver == "3.1.0") {
+                setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
+            } else {
+            //    printf ("Serval Version event rate not specified\n");
+            }
+
             setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
             setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
             setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
@@ -1849,7 +1869,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
-    createParam(ADTimePixTdcRateString,                     asynParamInt32,     &ADTimePixTdcRate);      
+    createParam(ADTimePixTdc1RateString,                    asynParamInt32,     &ADTimePixTdc1Rate);
+    createParam(ADTimePixTdc2RateString,                    asynParamInt32,     &ADTimePixTdc2Rate);      
     createParam(ADTimePixStartTimeString,                   asynParamInt64,     &ADTimePixStartTime);    
     createParam(ADTimePixElapsedTimeString,                 asynParamFloat64,   &ADTimePixElapsedTime);  
     createParam(ADTimePixTimeLeftString,                    asynParamFloat64,   &ADTimePixTimeLeft);     

@@ -257,7 +257,8 @@
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
-#define ADTimePixTdcRateString               "TPX3_TDC_RATE"          // (asynInt32,         w)      TdcEventRate
+#define ADTimePixTdc1RateString              "TPX3_TDC1_RATE"         // (asynInt32,         w)      Tdc1EventRate
+#define ADTimePixTdc2RateString              "TPX3_TDC2_RATE"         // (asynInt32,         w)      Tdc2EventRate
 #define ADTimePixStartTimeString             "TPX3_START_TIME"        // (asynInt64,         w)      StartDateTime
 #define ADTimePixElapsedTimeString           "TPX3_ELAPSED_TIME"      // (asynFloat64,       w)      ElapsedTime
 #define ADTimePixTimeLeftString              "TPX3_TIME_LEFT"         // (asynFloat64,       w)      TimeLeft
@@ -544,7 +545,8 @@ class ADTimePix : ADDriver{
 
             // Measurement
         int ADTimePixPelRate;        
-        int ADTimePixTdcRate;        
+        int ADTimePixTdc1Rate;
+        int ADTimePixTdc2Rate;        
         int ADTimePixStartTime;      
         int ADTimePixElapsedTime;    
         int ADTimePixTimeLeft;       
