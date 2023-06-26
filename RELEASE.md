@@ -15,6 +15,14 @@ The master branch (under development) is for Serval 3.0.0
 
 Driver depends on Serval versions, at this time.
 
+R0-7 (June 26, 2023)
+* Driver works for Serval 3.2 and Emulator 3.2
+    * Separate TDC1 and TDC2 EventRate PVs in Serval 3.2
+* Performance bug resolved for reading preview images. Mulitple connections were opening, since libcurl does not close connection.
+    * Used cpr library object called a Session. The only statful piece of the cpr library.
+    * Session object of cpr library is useful to hold on to state while reading preview images.
+* 
+
 R0-6 (March 30, 2023)
 * Driver works for one chip, in addition to four chips, and any number of chips
     * Status (temperature, ...) PVs exists for up to four chips

@@ -1169,10 +1169,19 @@ void ADTimePix::timePixCallback(){
     getIntegerParam(ADImageMode, &mode);
     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
 
-    string measurement = this->serverURL + std::string("/measurement");
-    cpr::Response r = cpr::Get(cpr::Url{measurement},
-                       cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                       cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    string measurement = this->serverURL + std::string("/measurement");   
+    cpr::Url url = cpr::Url{measurement};
+    cpr::Session session;       //  Stateful piece of the library is needed for while loop. This avoids open connections otherwise generated in while loop below.
+    session.SetOption(url);
+    cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};   // Reserve space for at least 1 million characters
+    session.SetOption(reserveSize);
+    //session.SetReserveSize(reserveSize);
+    cpr::Authentication authentication = cpr::Authentication("user", "pass", cpr::AuthMode::BASIC);
+    session.SetOption(authentication);
+    cpr::Parameters parameters = cpr::Parameters{{"anon", "true"}, {"key", "value"}};
+    session.SetOption(parameters);
+    cpr::Response r = session.Get();
+    
     json measurement_j = json::parse(r.text.c_str());
 
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
@@ -1204,9 +1213,8 @@ void ADTimePix::timePixCallback(){
 
 
         while(frameCounter == new_frame_num){
-            r = cpr::Get(cpr::Url{measurement},
-                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                        cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+            r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplicaiton" of sessions
+                        
             measurement_j = json::parse(r.text.c_str());
             setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
             
@@ -1234,7 +1242,9 @@ void ADTimePix::timePixCallback(){
             }
 
             epicsTimeGetCurrent(&endTime);
-            elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);
+            elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);     // 0.0006->0.97 s
+            // elapsedTime = r.elapsed;                                      // 0.00035 s
+            // printf("Elapsed Time = %f\n", elapsedTime);
 
         //    epicsThreadSleep(0.002);
             epicsThreadSleep(0);
