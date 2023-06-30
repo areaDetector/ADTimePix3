@@ -217,12 +217,27 @@ asynStatus ADTimePix::checkDACSPath()
 asynStatus ADTimePix::checkRawPath()
 {
     asynStatus status;
-    std::string filePath;
-    int pathExists;
+    std::string filePath, fileOrStream;
+    int pathExists = 0;
 
     getStringParam(ADTimePixRawBase, filePath);
     if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
+
+    if (filePath.size() > 6) {
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+            fileOrStream = filePath.substr(5);
+            pathExists = checkPath(fileOrStream);
+        }
+        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            fileOrStream = filePath.substr(5);
+            pathExists = 1;
+        }
+        else {
+            printf("Raw file path must be file://path_to_raw_folder, or tcp://localhost:8085\n");
+            pathExists = 0;
+        }
+    }
+
     status = pathExists ? asynSuccess : asynError;
     setStringParam(ADTimePixRawBase, filePath);
     setIntegerParam(ADTimePixRawFilePathExists, pathExists);
@@ -232,12 +247,27 @@ asynStatus ADTimePix::checkRawPath()
 asynStatus ADTimePix::checkImgPath()
 {
     asynStatus status;
-    std::string filePath;
-    int pathExists;
+    std::string filePath, fileOrStream;
+    int pathExists = 0;
 
     getStringParam(ADTimePixImgBase, filePath);
     if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
+
+    if (filePath.size() > 6) {
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+            fileOrStream = filePath.substr(5);
+            pathExists = checkPath(fileOrStream);
+        }
+        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            fileOrStream = filePath.substr(5);
+            pathExists = 1;
+        }
+        else {
+            printf("Img file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
+            pathExists = 0;
+        }
+    }
+
     status = pathExists ? asynSuccess : asynError;
     setStringParam(ADTimePixImgBase, filePath);
     setIntegerParam(ADTimePixImgFilePathExists, pathExists);
@@ -247,12 +277,58 @@ asynStatus ADTimePix::checkImgPath()
 asynStatus ADTimePix::checkPrvImgPath()
 {
     asynStatus status;
-    std::string filePath;
-    int pathExists;
+    std::string filePath, fileOrStream;
+    int pathExists = 0;
 
     getStringParam(ADTimePixPrvImgBase, filePath);
     if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
+
+    if (filePath.size() > 6) {
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+            fileOrStream = filePath.substr(5);
+            pathExists = checkPath(fileOrStream);
+        }
+        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            fileOrStream = filePath.substr(5);
+            pathExists = 1;
+        }
+        else {
+            printf("Prv file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
+            pathExists = 0;
+        }
+    }
+
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixPrvImgBase, filePath);
+    setIntegerParam(ADTimePixPrvImgFilePathExists, pathExists);
+    return status;
+}
+
+
+asynStatus ADTimePix::checkPrvImg1Path()
+{
+    asynStatus status;
+    std::string filePath, fileOrStream;
+    int pathExists = 0;
+
+    getStringParam(ADTimePixPrvImg1Base, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+
+    if (filePath.size() > 6) {
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+            fileOrStream = filePath.substr(5);
+            pathExists = checkPath(fileOrStream);
+        }
+        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            fileOrStream = filePath.substr(5);
+            pathExists = 1;
+        }
+        else {
+            printf("Prv1 file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
+            pathExists = 0;
+        }
+    }
+
     status = pathExists ? asynSuccess : asynError;
     setStringParam(ADTimePixPrvImgBase, filePath);
     setIntegerParam(ADTimePixPrvImgFilePathExists, pathExists);
@@ -262,12 +338,27 @@ asynStatus ADTimePix::checkPrvImgPath()
 asynStatus ADTimePix::checkPrvHstPath()
 {
     asynStatus status;
-    std::string filePath;
-    int pathExists;
+    std::string filePath, fileOrStream;
+    int pathExists = 0;
 
     getStringParam(ADTimePixPrvHstBase, filePath);
     if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
+
+    if (filePath.size() > 6) {
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+            fileOrStream = filePath.substr(5);
+            pathExists = checkPath(fileOrStream);
+        }
+        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            fileOrStream = filePath.substr(5);
+            pathExists = 1;
+        }
+        else {
+            printf("Prv Hstogram file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
+            pathExists = 0;
+        }
+    }
+    
     status = pathExists ? asynSuccess : asynError;
     setStringParam(ADTimePixPrvHstBase, filePath);
     setIntegerParam(ADTimePixPrvHstFilePathExists, pathExists);
@@ -821,7 +912,7 @@ asynStatus ADTimePix::fileWriter(){
     if (writeChannel != 0) {
         // Raw
         getStringParam(ADTimePixRawBase, fileStr);
-        server_j["Raw"][0]["Base"] = "file://" + fileStr;
+        server_j["Raw"][0]["Base"] = fileStr;
         getStringParam(ADTimePixRawFilePat, fileStr);
         server_j["Raw"][0]["FilePattern"] = fileStr;
 
@@ -834,7 +925,7 @@ asynStatus ADTimePix::fileWriter(){
     if (writeChannel != 0) {
         // Image
         getStringParam(ADTimePixImgBase, fileStr);
-        server_j["Image"][0]["Base"] = "file://" + fileStr;
+        server_j["Image"][0]["Base"] = fileStr;
         getStringParam(ADTimePixImgFilePat, fileStr);
         server_j["Image"][0]["FilePattern"] = fileStr;
 
@@ -857,7 +948,7 @@ asynStatus ADTimePix::fileWriter(){
     if (writeChannel != 0) {
         // Preview, ImageChannels[0]
         getStringParam(ADTimePixPrvImgBase, fileStr);
-        server_j["Preview"]["ImageChannels"][0]["Base"] = "file://" + fileStr;
+        server_j["Preview"]["ImageChannels"][0]["Base"] = fileStr;
         getStringParam(ADTimePixPrvImgFilePat, fileStr);
         server_j["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
 
@@ -873,6 +964,8 @@ asynStatus ADTimePix::fileWriter(){
         // Preview, ImageChannels[1]
         getStringParam(ADTimePixPrvImg1Base, fileStr);
         server_j["Preview"]["ImageChannels"][1]["Base"] = fileStr;
+        getStringParam(ADTimePixPrvImg1FilePat, fileStr);
+        server_j["Preview"]["ImageChannels"][1]["FilePattern"] = fileStr;
 
         getIntegerParam(ADTimePixPrvImg1Format, &intNum);
         server_j["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
@@ -885,7 +978,7 @@ asynStatus ADTimePix::fileWriter(){
     if (writeChannel != 0) {
         // Preview, HistogramChannels[0]
         getStringParam(ADTimePixPrvHstBase, fileStr);
-        server_j["Preview"]["HistogramChannels"][0]["Base"] = "file://" + fileStr;
+        server_j["Preview"]["HistogramChannels"][0]["Base"] = fileStr;
         getStringParam(ADTimePixPrvHstFilePat, fileStr);
         server_j["Preview"]["HistogramChannels"][0]["FilePattern"] = fileStr;
 
@@ -1856,7 +1949,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgQueueSizeString,              asynParamInt32, &ADTimePixPrvImgQueueSize);
     createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);          
     // Server, Preview, ImageChannels[1]   
-    createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);          
+    createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);
+    createParam(ADTimePixPrvImg1FilePatString,             asynParamOctet, &ADTimePixPrvImg1FilePat);             
     createParam(ADTimePixPrvImg1FormatString,              asynParamInt32, &ADTimePixPrvImg1Format);        
     createParam(ADTimePixPrvImg1ModeString,                asynParamInt32, &ADTimePixPrvImg1Mode);          
     createParam(ADTimePixPrvImg1ThsString,                 asynParamOctet, &ADTimePixPrvImg1Ths);         
@@ -1864,7 +1958,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImg1IntModeString,             asynParamInt32, &ADTimePixPrvImg1IntMode);
     createParam(ADTimePixPrvImg1StpOnDskLimString,         asynParamInt32, &ADTimePixPrvImg1StpOnDskLim); 
     createParam(ADTimePixPrvImg1QueueSizeString,           asynParamInt32, &ADTimePixPrvImg1QueueSize);   
-//    createParam(ADTimePixPrvImg1FilePathExistsString,      asynParamInt32, &ADTimePixPrvImg1FilePathExists); 
+    createParam(ADTimePixPrvImg1FilePathExistsString,      asynParamInt32, &ADTimePixPrvImg1FilePathExists); 
     // Server, Preview, HistogramChannels[0]  
     createParam(ADTimePixPrvHstBaseString,                   asynParamOctet, &ADTimePixPrvHstBase);            
     createParam(ADTimePixPrvHstFilePatString,                asynParamOctet, &ADTimePixPrvHstFilePat);         

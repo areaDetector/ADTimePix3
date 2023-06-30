@@ -18,10 +18,16 @@ Driver depends on Serval versions, at this time.
 R0-7 (June 26, 2023)
 * Driver works for Serval 3.2 and Emulator 3.2
     * Separate TDC1 and TDC2 EventRate PVs in Serval 3.2
-* Performance bug resolved for reading preview images. Mulitple connections were opening, since libcurl does not close connection.
+* Performance issue resolved for reading preview images. Mulitple connections were opening in callback while loop.
     * Used cpr library object called a Session. The only statful piece of the cpr library.
     * Session object of cpr library is useful to hold on to state while reading preview images.
-* 
+* The priview images do not need to be written to disk, and are read from from PrvImg Base [0] channel socket channel. 
+    * The preview is on Preview [1] channel, which does not have to enabled
+* Allow streaming of raw .tpx3 data. 
+    * Streamling: tcp://localhost:8085
+    * Writing to .tpx3 file: file:/media/nvme/raw
+* More consistent settings for file writing and streaming channels in st_base.cmd
+* TODO: opi screens modificaitons
 
 R0-6 (March 30, 2023)
 * Driver works for one chip, in addition to four chips, and any number of chips
