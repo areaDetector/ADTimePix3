@@ -56,8 +56,9 @@ set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
 #asynSetTraceMask($(PORT),0,0x11)
 iocInit()
 
-dbpf("$(PREFIX)cam1:RawFilePath","file:/media/nvme/raw")
+dbpf("$(PREFIX)cam1:RawFilePath","file:/media/nvme/raw")    # tcp://localhost:8085 for stream
 dbpf("$(PREFIX)cam1:RawFileTemplate","raw%MdHms_")
+dbpf("$(PREFIX)cam1:WriteRaw","0")   # Select raw disk write, or stream
 
 dbpf("$(PREFIX)cam1:ImgFilePath","file:/media/nvme/img")
 dbpf("$(PREFIX)cam1:ImgFileTemplate","f%MdHms_")
@@ -65,6 +66,7 @@ dbpf("$(PREFIX)cam1:ImgFileFmt","0")    # tiff
 dbpf("$(PREFIX)cam1:ImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:ImgIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:StpOnDskLim","1")   # true
+dbpf("$(PREFIX)cam1:WriteImg","0")   # Select img disk write
 
 dbpf("$(PREFIX)cam1:PrvImgFilePath","http://localhost:8081")
 dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
@@ -73,7 +75,7 @@ dbpf("$(PREFIX)cam1:PrvImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:PrvPeriod","1.0")	# Preview once per second
-dbpf("$(PREFIX)cam1:WritePrvImg","1")   # Select Preview write
+dbpf("$(PREFIX)cam1:WritePrvImg","1")   # Select preview stream
 
 dbpf("$(PREFIX)cam1:PrvImg1FilePath","file:/media/nvme/prv")
 dbpf("$(PREFIX)cam1:PrvImg1FileTemplate","f%MdHms_")
@@ -81,7 +83,7 @@ dbpf("$(PREFIX)cam1:PrvImg1FileFmt","2")    # png
 dbpf("$(PREFIX)cam1:PrvImg1FileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImg1IntgMode","1")   # average
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")   # false
-dbpf("$(PREFIX)cam1:WritePrvImg1","0")   # Select Stream write
+dbpf("$(PREFIX)cam1:WritePrvImg1","0")   # Select preview disk write
 
 dbpf("$(PREFIX)cam1:PrvHstFilePath","tcp://localhost:8451")
 dbpf("$(PREFIX)cam1:PrvHstFileTemplate","f%MdHms_")
@@ -89,6 +91,7 @@ dbpf("$(PREFIX)cam1:PrvHstFileFmt","4")    # jsonhisto
 dbpf("$(PREFIX)cam1:PrvHstFileMode","3")   # tof
 dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
+dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 
 sleep 1
 dbpf("$(PREFIX)cam1:WriteData","1")   # Write selected data files to disk and stream to socket
