@@ -224,10 +224,14 @@ asynStatus ADTimePix::checkRawPath()
     if (filePath.size() == 0) return asynSuccess;
 
     if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data to disk
             fileOrStream = filePath.substr(5);
             pathExists = checkPath(fileOrStream);
         }
+        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8085
+            fileOrStream = filePath.substr(6);
+            pathExists = 1;
+        }   
         else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
             fileOrStream = filePath.substr(5);
             pathExists = 1;
@@ -254,10 +258,14 @@ asynStatus ADTimePix::checkImgPath()
     if (filePath.size() == 0) return asynSuccess;
 
     if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing images to disk
             fileOrStream = filePath.substr(5);
             pathExists = checkPath(fileOrStream);
         }
+        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
+            fileOrStream = filePath.substr(6);
+            pathExists = 1;
+        }        
         else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
             fileOrStream = filePath.substr(5);
             pathExists = 1;
@@ -288,6 +296,10 @@ asynStatus ADTimePix::checkPrvImgPath()
             fileOrStream = filePath.substr(5);
             pathExists = checkPath(fileOrStream);
         }
+        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
+            fileOrStream = filePath.substr(6);
+            pathExists = 1;
+        }   
         else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
             fileOrStream = filePath.substr(5);
             pathExists = 1;
@@ -319,6 +331,10 @@ asynStatus ADTimePix::checkPrvImg1Path()
             fileOrStream = filePath.substr(5);
             pathExists = checkPath(fileOrStream);
         }
+        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
+            fileOrStream = filePath.substr(6);
+            pathExists = 1;
+        }   
         else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
             fileOrStream = filePath.substr(5);
             pathExists = 1;
@@ -330,8 +346,8 @@ asynStatus ADTimePix::checkPrvImg1Path()
     }
 
     status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixPrvImgBase, filePath);
-    setIntegerParam(ADTimePixPrvImgFilePathExists, pathExists);
+    setStringParam(ADTimePixPrvImg1Base, filePath);
+    setIntegerParam(ADTimePixPrvImg1FilePathExists, pathExists);
     return status;
 }
 
@@ -349,6 +365,10 @@ asynStatus ADTimePix::checkPrvHstPath()
             fileOrStream = filePath.substr(5);
             pathExists = checkPath(fileOrStream);
         }
+            else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
+            fileOrStream = filePath.substr(6);
+            pathExists = 1;
+        }       
         else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
             fileOrStream = filePath.substr(5);
             pathExists = 1;
@@ -1461,6 +1481,8 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkImgPath();      
     } else if (function == ADTimePixPrvImgBase) {
         status = this->checkPrvImgPath();
+    } else if (function == ADTimePixPrvImg1Base) {
+        status = this->checkPrvImg1Path();    
     } else if (function == ADTimePixPrvHstBase) {
         status = this->checkPrvHstPath();
     }
