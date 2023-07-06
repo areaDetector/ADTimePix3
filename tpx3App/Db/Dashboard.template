@@ -1,0 +1,43 @@
+#=================================================================#
+# Template file: Dashboard.template
+# Serval Dashboard status.
+# Author: K. Gofron
+# Date: 2023/7/6
+#=================================================================#
+
+##################################################################
+# Define dashboard status PV records here.
+#
+##################################################################
+
+record(int64in, "$(P)$(R)FreeSpace_RBV"){
+  field(DTYP, "asynInt64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FREE_SPACE")
+  field(SCAN, "I/O Intr")
+}
+
+record(bi, "$(P)$(R)DiskLimReach_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_LLIM_REACH")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
+
+#record(int64out, "$(P)$(R)DiskLowLimit"){
+#  field(DTYP, "asynInt64")
+#  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LLIM_SPACE")
+#  info(autosaveFields, "VAL")
+#}
+record(int64in, "$(P)$(R)DiskLowLimit_RBV"){
+  field(DTYP, "asynInt64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LLIM_SPACE")
+  field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)WriteSpeed_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_WRITE_SPEED")
+  field(SCAN, "I/O Intr")
+}

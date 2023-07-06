@@ -5,7 +5,7 @@
  *
  * Author:  Kazimierz Gofron
  * Created: June, 2022
- * Last edited: March 28, 2023
+ * Last edited: July 6, 2023
  * Copyright (c) : Oak Ridge National Laboratory
  *
  */
@@ -26,8 +26,10 @@
 #define ADTimePixDetTypeString             "TPX3_DETECTOR_TYPE"          // (asynOctet,         r)      Detector Type, should be binary DetConnected
 #define ADTimePixFWTimeStampString         "TPX3_FW_TIMESTAMP"           // (asynOctet,         r)      Firmware TimeStamp
 //#define ADTimePixDetConnectedString       "TPX3_DETECTOR_CONNECTED"     // (asynOctet,         r)      Detector Connected, TODO
-#define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             // (asynFloat64,       r)
-#define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)
+#define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             // (asynInt64          r)      Free Space [Bytes]
+#define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)      Hits? [320 Mhits/s]
+#define ADTimePixLowerLimitString          "TPX3_LLIM_SPACE"             // (asynInt64,         w)      Lower limit on available disk space [Bytes]
+#define ADTimePixLLimReachedString         "TPX3_LLIM_REACH"             // (asynInt32,         r)      Reached Lower disk limit
 #define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
 
 // Detector Health
@@ -313,7 +315,12 @@ class ADTimePix : ADDriver{
     protected:
         int ADTimePixHttpCode;
         #define ADTIMEPIX_FIRST_PARAM ADTimePixHttpCode
+    
+    //  Dashboard
+        int ADTimePixFreeSpace;
         int ADTimePixWriteSpeed;
+        int ADTimePixLowerLimit; 
+        int ADTimePixLLimReached;
 
         int ADTimePixDetType;
         int ADTimePixFWTimeStamp;
@@ -556,8 +563,7 @@ class ADTimePix : ADDriver{
         int ADTimePixDroppedFrames;  
         int ADTimePixStatus;         
 
-        int ADTimePixFreeSpace;
-        #define ADTIMEPIX_LAST_PARAM ADTimePixFreeSpace
+        #define ADTIMEPIX_LAST_PARAM ADTimePixStatus
 
     private:
 

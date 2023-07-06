@@ -506,17 +506,21 @@ asynStatus ADTimePix::getDashboard(){
     */
 
     dashboard = this->serverURL + std::string("/dashboard");
-    printf("ServerURL/dashboard=%s\n", dashboard.c_str());
+    // printf("ServerURL/dashboard=%s\n", dashboard.c_str());
     cpr::Response r = cpr::Get(cpr::Url{dashboard},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
-    printf("Status code: %li\n", r.status_code);
-    printf("Text: %s\n", r.text.c_str());
+    // printf("Status code: %li\n", r.status_code);
+    // printf("Text: %s\n", r.text.c_str());
 
     json dashboard_j = json::parse(r.text.c_str());
     // dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
-    printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
+    // printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
+    setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
+    setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
+    setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
+    setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, falue->0
 
     return status;
 }
@@ -1541,6 +1545,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixHealth) { 
         // status = getHealth();
+        status = getDashboard();
         status = getDetector();
     }
     else if(function == ADTimePixWriteBPCFile) { 
@@ -1770,6 +1775,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
     // API serval version
     createParam(ADTimePixServerNameString,      asynParamOctet, &ADTimePixServer);
+
+    // Dashboard
+    createParam(ADTimePixFreeSpaceString,       asynParamInt64,   &ADTimePixFreeSpace);
+    createParam(ADTimePixWriteSpeedString,      asynParamFloat64, &ADTimePixWriteSpeed);
+    createParam(ADTimePixLowerLimitString,      asynParamInt64,   &ADTimePixLowerLimit); 
+    createParam(ADTimePixLLimReachedString,     asynParamInt32,   &ADTimePixLLimReached);
 
     // Detector Health (detector/health, detector)
     createParam(ADTimePixLocalTempString,       asynParamFloat64, &ADTimePixLocalTemp);

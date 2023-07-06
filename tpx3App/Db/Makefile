@@ -16,6 +16,7 @@ DB += Chips.template
 DB += File.template
 DB += Server.template
 DB += Measurement.template
+DB += Dashboard.template
 
 #-------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

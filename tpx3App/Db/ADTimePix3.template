@@ -20,18 +20,6 @@ record(stringin, "$(P)$(R)FwTS_RBV"){
   field(SCAN, "I/O Intr")
 }
 
-record(ai, "$(P)$(R)FreeSpace_RBV"){
-  field(DTYP, "asynFloat64")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FREE_SPACE")
-  field(SCAN, "I/O Intr")
-}
-
-record(ai, "$(P)$(R)WriteSpeed_RBV"){
-  field(DTYP, "asynFloat64")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_WRITE_SPEED")
-  field(SCAN, "I/O Intr")
-}
-
 record(ai, "$(P)$(R)HttpCode_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HTTP_CODE")

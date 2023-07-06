@@ -1630,12 +1630,12 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>0</format_type>
+    <format_type>1</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update_18</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
+    <precision>1</precision>
+    <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)ClockRead_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
@@ -1814,12 +1814,12 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>0</format_type>
+    <format_type>1</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update_20</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
+    <precision>1</precision>
+    <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)MaxPulseHgt_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
@@ -1906,12 +1906,12 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>0</format_type>
+    <format_type>1</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update_21</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
+    <precision>8</precision>
+    <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)MaxPulsePeriod_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
@@ -1998,12 +1998,12 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>0</format_type>
+    <format_type>1</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update_22</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
+    <precision>8</precision>
+    <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)TimerMaxVal_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
@@ -2274,12 +2274,12 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>0</format_type>
+    <format_type>1</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update_25</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
+    <precision>1</precision>
+    <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)ClockTimepix_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
