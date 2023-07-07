@@ -1545,7 +1545,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixHealth) { 
         // status = getHealth();
-        status = getDashboard();
+    //    status = getDashboard();
         status = getDetector();
     }
     else if(function == ADTimePixWriteBPCFile) { 
