@@ -518,7 +518,7 @@ asynStatus ADTimePix::getDashboard(){
     // dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
     // printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
 
-    // Diskspace is an empty array until raw file writing selected, and acquisition starts
+    // DiskSpace is an empty array until raw file writing selected, and acquisition starts
     if (!dashboard_j["Server"]["DiskSpace"].empty()) {
         setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
         setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
@@ -1113,7 +1113,7 @@ asynStatus ADTimePix::initAcquisition(){
     cpr::Response r = cpr::Get(cpr::Url{det_config},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
-    printf("Status code server: %li\n", r.status_code);
+    // printf("Status code server: %li\n", r.status_code);
     //printf("Text server: %s\n", r.text.c_str()); 
 
     json config_j = json::parse(r.text.c_str());
@@ -1208,8 +1208,8 @@ asynStatus ADTimePix::initAcquisition(){
                 cpr::Body{config_j.dump().c_str()},                      
                 cpr::Header{{"Content-Type", "text/plain"}});
 
-    printf("Status code: %li\n", r.status_code);
-    printf("Text: %s\n", r.text.c_str());
+    // printf("Status code: %li\n", r.status_code);
+    // printf("Text: %s\n", r.text.c_str());
 
     setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
 
