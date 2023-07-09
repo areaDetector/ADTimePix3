@@ -517,11 +517,14 @@ asynStatus ADTimePix::getDashboard(){
     json dashboard_j = json::parse(r.text.c_str());
     // dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
     // printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
-    setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
-    setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
-    setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
-    setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, falue->0
 
+    // Diskspace is an empty array until raw file writing selected, and acquisition starts
+    if (!dashboard_j["Server"]["DiskSpace"].empty()) {
+        setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
+        setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
+        setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
+        setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, falue->0
+    }
     return status;
 }
 
@@ -1545,7 +1548,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixHealth) { 
         // status = getHealth();
-    //    status = getDashboard();
+        status = getDashboard();
         status = getDetector();
     }
     else if(function == ADTimePixWriteBPCFile) { 
