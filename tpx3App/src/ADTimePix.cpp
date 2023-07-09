@@ -1341,7 +1341,7 @@ void ADTimePix::timePixCallback(){
             if (API_Ver == "3.2.0") {
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
                 setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-            } else if (API_Ver == "3.1.0") {
+            } else if (API_Ver == "3.1.0" || API_Ver == "3.0.0") {
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
             } else {
             //    printf ("Serval Version event rate not specified\n");
