@@ -410,16 +410,16 @@ asynStatus ADTimePix::initialServerCheckConnection(){
     cpr::Response r = cpr::Get(cpr::Url{this->serverURL},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
-    printf("Status code: %li\n", r.status_code);
-    printf("Header:\n");
-    for (const pair<string, string>& kv : r.header) {
-        printf("\t%s:%s\n",kv.first.c_str(),kv.second.c_str());
-    }
-    printf("Text: %s\n", r.text.c_str());
+    // printf("Status code: %li\n", r.status_code);
+    // printf("Header:\n");
+    // for (const pair<string, string>& kv : r.header) {
+    //     printf("\t%s:%s\n",kv.first.c_str(),kv.second.c_str());
+    // }
+    // printf("Text: %s\n", r.text.c_str());
 
     if(r.status_code == 200) {
         connected = true;
-        printf("CONNECTED to Welcom URI! (Serval running), http_code= %li\n\n", r.status_code);
+        printf("\n\nCONNECTED to Welcom URI! (Serval running), http_code = %li\n", r.status_code);
     //    printf("asynSuccess! %d\n\n", asynSuccess);
     }
 
@@ -430,16 +430,16 @@ asynStatus ADTimePix::initialServerCheckConnection(){
     std::string dashboard;
 
     dashboard = this->serverURL + std::string("/dashboard");
-    printf("ServerURL/dashboard=%s\n", dashboard.c_str());
+    printf("ServerURL/dashboard =%s\n", dashboard.c_str());
     r = cpr::Get(cpr::Url{dashboard},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
     printf("Status code: %li\n", r.status_code);
-    printf("Text: %s\n", r.text.c_str());
+    printf("Text:\n %s\n", r.text.c_str());
 
     json dashboard_j = json::parse(r.text.c_str());
-    printf("Dashboard text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
+//    printf("Dashboard text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
 
     // strip double quote from beginning and end of string
     std::string API_Ver, API_TS;
@@ -1107,7 +1107,7 @@ asynStatus ADTimePix::initAcquisition(){
     
     std::string det_config;
     int intNum;
-    double doubleNum;
+    double doubleNum, doubleTmp;
 
     det_config = this->serverURL + std::string("/detector/config");
     cpr::Response r = cpr::Get(cpr::Url{det_config},
@@ -1118,13 +1118,6 @@ asynStatus ADTimePix::initAcquisition(){
 
     json config_j = json::parse(r.text.c_str());
     //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
-
-    getIntegerParam(ADNumImages, &intNum);
-    config_j["nTriggers"] = intNum;
-    getDoubleParam(ADAcquireTime, &doubleNum);
-    config_j["ExposureTime"] = doubleNum;
-    getDoubleParam(ADAcquirePeriod, &doubleNum);
-    config_j["TriggerPeriod"] = doubleNum;
 
     getIntegerParam(ADTriggerMode, &intNum);
     json triggerMode; 
@@ -1141,6 +1134,29 @@ asynStatus ADTimePix::initAcquisition(){
 //    printf("triggerMode=%s\n",triggerMode.dump().c_str());
 //    printf("triggerMode[intNum]=%s, triggMode_num=%d\n",triggerMode[intNum].dump().c_str(), intNum);
     //config_j["TriggerMode"]="AUTOTRIGSTART_TIMERSTOP";
+
+
+    if (intNum == 5) {    // Continuous mode
+        getDoubleParam(ADAcquireTime, &doubleNum);
+        config_j["ExposureTime"] = doubleNum;
+        config_j["TriggerPeriod"] = doubleNum;
+    }
+    else {
+        getDoubleParam(ADAcquireTime, &doubleNum);
+        config_j["ExposureTime"] = doubleNum;
+        doubleTmp = doubleNum;
+        getDoubleParam(ADAcquirePeriod, &doubleNum);
+        if (doubleNum <= doubleTmp + 0.003) {
+            doubleNum = doubleTmp + 0.003;
+            config_j["TriggerPeriod"] = doubleNum;  
+        }
+        else {
+            config_j["TriggerPeriod"] = doubleNum;
+        }
+    }
+
+    getIntegerParam(ADNumImages, &intNum);
+    config_j["nTriggers"] = intNum;
 
     getIntegerParam(ADTimePixBiasVolt, &intNum);
     config_j["BiasVoltage"] = intNum;    
@@ -1212,6 +1228,8 @@ asynStatus ADTimePix::initAcquisition(){
     // printf("Text: %s\n", r.text.c_str());
 
     setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
+
+    callParamCallbacks();
 
     return status;
 }
@@ -1366,8 +1384,8 @@ void ADTimePix::timePixCallback(){
             // elapsedTime = r.elapsed;                                      // 0.00035 s
             // printf("Elapsed Time = %f\n", elapsedTime);
 
-            epicsThreadSleep(0.952);
-        //    epicsThreadSleep(0);
+        //    epicsThreadSleep(0.952);
+            epicsThreadSleep(0);
         }
         frameCounter = new_frame_num;
 
