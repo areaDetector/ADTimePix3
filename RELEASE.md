@@ -28,7 +28,8 @@ R0-7 (June 26, 2023)
     * Writing to .tpx3 file: file:/media/nvme/raw
 * More consistent settings for file writing and streaming channels in st_base.cmd
 * opi screens for fileWriter streaming enhancement
-* Continous mode: ExposureTime (AcauireTime) used and propagates to TriggerPeriod (AcquirePeriod)
+* Continous mode: ExposureTime (AcquireTime) used and propagates to TriggerPeriod (AcquirePeriod)
+* Preveiw[0] does not need to be enabled. Preview images are then not displayed.
 
 R0-6 (March 30, 2023)
 * Driver works for one chip, in addition to four chips, and any number of chips

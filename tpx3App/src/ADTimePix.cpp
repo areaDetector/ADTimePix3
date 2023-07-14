@@ -964,16 +964,23 @@ asynStatus ADTimePix::fileWriter(){
     }
 
     // Preview
-    getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
-    server_j["Preview"]["Period"] = doubleNum;
-
-    getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
-    server_j["Preview"]["SamplingMode"] = samplingMode[intNum];
+//    getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
+//    server_j["Preview"]["Period"] = doubleNum;
+//
+//    getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
+//    server_j["Preview"]["SamplingMode"] = samplingMode[intNum];
 
 
     getIntegerParam(ADTimePixWritePrvImg, &writeChannel);
     if (writeChannel != 0) {
         // Preview, ImageChannels[0]
+
+        getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
+        server_j["Preview"]["Period"] = doubleNum;
+
+        getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
+        server_j["Preview"]["SamplingMode"] = samplingMode[intNum]; 
+
         getStringParam(ADTimePixPrvImgBase, fileStr);
         server_j["Preview"]["ImageChannels"][0]["Base"] = fileStr;
         getStringParam(ADTimePixPrvImgFilePat, fileStr);
@@ -1297,6 +1304,7 @@ void ADTimePix::timePixCallback(){
     int frameCounter = 0;
     int new_frame_num = 0;
     bool isIdle = false;
+    int writeChannel;
 
     NDArray* pImage;
     int arrayCallbacks;
@@ -1384,45 +1392,51 @@ void ADTimePix::timePixCallback(){
             // elapsedTime = r.elapsed;                                      // 0.00035 s
             // printf("Elapsed Time = %f\n", elapsedTime);
 
-        //    epicsThreadSleep(0.952);
-            epicsThreadSleep(0);
+            epicsThreadSleep(0.952);
+        //    epicsThreadSleep(0);
         }
         frameCounter = new_frame_num;
 
-        if(this->acquiring){
-            asynStatus imageStatus = readImage();
-
-            callParamCallbacks();
-
-            if (imageStatus == asynSuccess) {
-                imageCounter++;
-                imagesAcquired++;
-                pImage = this->pArrays[0];
-
-                /* Put the frame number and time stamp into the buffer */
-                pImage->uniqueId = imageCounter;
-                pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
-                updateTimeStamp(&pImage->epicsTS);
-
-                /* Get any attributes that have been defined for this driver */
-                 this->getAttributes(pImage->pAttributeList);
-
-                 if (arrayCallbacks) {
-                     /* Call the NDArray callback */
-                     FLOW("calling imageData callback");
-                     doCallbacksGenericPointer(pImage, NDArrayData, 0);
-                 }
-                 if(mode == 0){
-                     acquireStop();
-                 }
-                 else if(mode == 1){
-                     if (numImages == imageCounter){
+        getIntegerParam(ADTimePixWritePrvImg, &writeChannel);
+        if (writeChannel != 0) {
+            // Preview, ImageChannels[0]
+    
+    
+            if(this->acquiring){
+                asynStatus imageStatus = readImage();
+    
+                callParamCallbacks();
+    
+                if (imageStatus == asynSuccess) {
+                    imageCounter++;
+                    imagesAcquired++;
+                    pImage = this->pArrays[0];
+    
+                    /* Put the frame number and time stamp into the buffer */
+                    pImage->uniqueId = imageCounter;
+                    pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+                    updateTimeStamp(&pImage->epicsTS);
+    
+                    /* Get any attributes that have been defined for this driver */
+                     this->getAttributes(pImage->pAttributeList);
+    
+                     if (arrayCallbacks) {
+                         /* Call the NDArray callback */
+                         FLOW("calling imageData callback");
+                         doCallbacksGenericPointer(pImage, NDArrayData, 0);
+                     }
+                     if(mode == 0){
                          acquireStop();
                      }
-                 }
-                 setIntegerParam(ADNumImagesCounter, frameCounter);
-                 setIntegerParam(NDArrayCounter, imagesAcquired);
-                 callParamCallbacks();
+                     else if(mode == 1){
+                         if (numImages == imageCounter){
+                             acquireStop();
+                         }
+                     }
+                     setIntegerParam(ADNumImagesCounter, frameCounter);
+                     setIntegerParam(NDArrayCounter, imagesAcquired);
+                     callParamCallbacks();
+                }
             }
         }
 
