@@ -94,7 +94,6 @@ dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 
-sleep 1
 dbpf("$(PREFIX)cam1:WriteData","1")   # Write selected data files to disk and stream to socket
 
 dbpf("$(PREFIX)cam1:BPCFilePath","/epics/src/RHEL8/support/areaDetector/ADTimePix3/vendor/")
