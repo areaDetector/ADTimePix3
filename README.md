@@ -40,3 +40,28 @@ Adjust chip thresholds
 * Threshold fine decrease is away from noise, higher threshold in keV. (you get less counts)
 * These threshold settings can depend on X-ray energy.
 * After changing the thresholds take a background image to check that you do not get extra noise pixels.
+
+areaDetector 
+------------
+
+Uncomment following lines in ADCore/iocBoot
+
+* ADCore/iocBoot/commonPlugins.cmd
+  * Magick file saving plugin
+    * NDFileMagickConfigure("FileMagick1", $(QSIZE), 0, "$(PORT)", 0)
+    * dbLoadRecords("NDFileMagick.template","P=$(PREFIX),R=Magick1:,PORT=FileMagick1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+  * load NDPluginPva plugin
+    * NDPvaConfigure("PVA1", $(QSIZE), 0, "$(PORT)", 0, $(PREFIX)Pva1:Image, 0, 0, 0)
+    * dbLoadRecords("NDPva.template",  "P=$(PREFIX),R=Pva1:, PORT=PVA1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+    * startPVAServer
+  * load sseq record for acquisition sequence
+    * dbLoadRecords("$(CALC)/calcApp/Db/sseqRecord.db", "P=$(PREFIX), S=AcquireSequence")
+    * set_requestfile_path("$(CALC)/calcApp/Db")
+  * load devIocStats records
+    * dbLoadRecords("$(DEVIOCSTATS)/db/iocAdminSoft.db", "IOC=$(PREFIX)")
+
+* ADCore/iocBoot/commonPlugin_settings.req
+  * file "NDFileMagick_settings.req",   P=$(P),  R=Magick1:
+  * file "NDPva_settings.req",          P=$(P),  R=Pva1:
+
+  
