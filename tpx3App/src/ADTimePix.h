@@ -269,6 +269,9 @@
 #define ADTimePixDroppedFramesString         "TPX3_DROPPED_FRAMES"    // (asynInt32,         w)      DroppedFrames
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
+// Control
+#define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
+
 // Place any required inclues here
 
 #include "ADDriver.h"
@@ -561,9 +564,12 @@ class ADTimePix : ADDriver{
         int ADTimePixTimeLeft;       
         int ADTimePixFrameCount;     
         int ADTimePixDroppedFrames;  
-        int ADTimePixStatus;         
+        int ADTimePixStatus;
+  
+            // Controls
+        int ADTimePixRawStream;
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixStatus
+        #define ADTIMEPIX_LAST_PARAM ADTimePixRawStream
 
     private:
 

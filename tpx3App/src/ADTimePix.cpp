@@ -225,19 +225,23 @@ asynStatus ADTimePix::checkRawPath()
 
     if (filePath.size() > 6) {
         if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data to disk
+            setIntegerParam(ADTimePixRawStream, 0);
             fileOrStream = filePath.substr(5);
             pathExists = checkPath(fileOrStream);
         }
         else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8085
+            setIntegerParam(ADTimePixRawStream, 1);
             fileOrStream = filePath.substr(6);
             pathExists = 1;
         }   
         else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            setIntegerParam(ADTimePixRawStream, 2);
             fileOrStream = filePath.substr(5);
             pathExists = 1;
         }
         else {
             printf("Raw file path must be file://path_to_raw_folder, or tcp://localhost:8085\n");
+            setIntegerParam(ADTimePixRawStream, 3);
             pathExists = 0;
         }
     }
@@ -915,7 +919,7 @@ asynStatus ADTimePix::fileWriter(){
     FLOW("Initializing detector information");
     
     std::string fileStr;
-    int intNum, writeChannel;
+    int intNum, writeChannel, rawStream;
     double doubleNum;
 
     std::string server;
@@ -936,6 +940,7 @@ asynStatus ADTimePix::fileWriter(){
     json samplingMode = {"skipOnFrame","skipOnPeriod"};
 
     getIntegerParam(ADTimePixWriteRaw, &writeChannel);
+    getIntegerParam(ADTimePixRawStream, &rawStream);
     if (writeChannel != 0) {
         // Raw
         getStringParam(ADTimePixRawBase, fileStr);
@@ -943,9 +948,11 @@ asynStatus ADTimePix::fileWriter(){
         getStringParam(ADTimePixRawFilePat, fileStr);
         server_j["Raw"][0]["FilePattern"] = fileStr;
 
-        getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
-        json splitStrategy = {"single_file","frame"};
-        server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
+        if (rawStream == 0) {       // file:/
+            getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
+            json splitStrategy = {"single_file","frame"};
+            server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
+        }
     }   
 
     getIntegerParam(ADTimePixWriteImg, &writeChannel);
@@ -2050,6 +2057,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixDroppedFramesString,               asynParamInt32,     &ADTimePixDroppedFrames);
     createParam(ADTimePixStatusString,                      asynParamOctet,     &ADTimePixStatus);       
     
+    // Controls
+    createParam(ADTimePixRawStreamString,       asynParamInt32,     &ADTimePixRawStream);
+
     //sets driver version
     char versionString[25];
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", ADTIMEPIX_VERSION, ADTIMEPIX_REVISION, ADTIMEPIX_MODIFICATION);
