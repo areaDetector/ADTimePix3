@@ -1212,11 +1212,17 @@ asynStatus ADTimePix::initAcquisition(){
     tdc[0] = "P0123";
     tdc[1] = "N0123";
     tdc[2] = "PN0123";
+    tdc[3] = "P0";
+    tdc[4] = "N0";
+    tdc[5] = "PN0";    
     config_j["Tdc"][0] = tdc[intNum]; 
     getIntegerParam(ADTimePixTdc1, &intNum);
     tdc[0] = "P0123";
     tdc[1] = "N0123";
     tdc[2] = "PN0123";
+    tdc[3] = "P0";
+    tdc[4] = "N0";
+    tdc[5] = "PN0";  
     config_j["Tdc"][1] = tdc[intNum];     
 
     getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
