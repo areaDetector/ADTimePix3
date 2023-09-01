@@ -2098,7 +2098,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 
 ADTimePix::~ADTimePix(){
-    const char* functionName = "~ADTimePix";
+    static const char* functionName = "~ADTimePix";
     FLOW("ADTimePix driver exiting");
     disconnect(this->pasynUserSelf);
 }
