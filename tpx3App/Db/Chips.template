@@ -24,103 +24,103 @@
 
 record(longin, "$(P)$(R)$(C)_CP_PLL_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_CP_PLL")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CP_PLL")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_S1_OFF_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_DISCS1OFF")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DISCS1OFF")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_S1_ON_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_DISCS1ON")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DISCS1ON")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_S2_OFF_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_DISCS2OFF")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DISCS2OFF")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_S2_ON_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_DISCS2ON")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DISCS2ON")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Ikrum_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_IKRUM")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IKRUM")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_PixelDAC_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_PIXELDAC")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXELDAC")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Preamp_OFF_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_PREAMPOFF")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PREAMPOFF")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Preamp_ON_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_PREAMPON")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PREAMPON")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_TPbufferIn_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_TPBUFFERIN")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TPBUFFERIN")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_TPbufferOut_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_TPBUFFEROUT")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TPBUFFEROUT")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_PLL_Vcntrl_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_PLL_VCNTRL")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PLL_VCNTRL")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_VPreamp_NCAS_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_VPREAMPNCAS")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VPREAMPNCAS")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_VTP_coarse_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_VTP_COARSE")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VTP_COARSE")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_VTP_fine_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_VTP_FINE")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VTP_FINE")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Vfbk_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_VFBK")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VFBK")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Vth_coarse_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_VTH_COARSE")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VTH_COARSE")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Vth_fine_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_VTH_FINE")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_VTH_FINE")
   field(SCAN, "I/O Intr")
 }
 record(longin, "$(P)$(R)$(C)_Adjust_RBV"){
   field(DTYP, "asynInt32")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_ADJUST")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_ADJUST")
   field(SCAN, "I/O Intr")
 }
 
 # Detector Chip Layout
 record(stringin, "$(P)$(R)$(C)_Layout_RBV"){
   field(DTYP, "asynOctetRead")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_$(C)_LAYTOUT")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LAYTOUT")
   field(SCAN, "I/O Intr")
 }
