@@ -1810,6 +1810,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     : ADDriver(portName, 1, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory, asynInt64Mask | asynEnumMask, asynInt64Mask | asynEnumMask, ASYN_CANBLOCK, 1, priority, stackSize){
     static const char* functionName = "ADTimePix";
 
+    /* Initialize GraphicsMagick */
+    InitializeMagick(NULL);
 
     this->serverURL = string(serverURL);
 
