@@ -9,6 +9,7 @@
  */
 
 // Standard includes
+#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -567,6 +568,35 @@ asynStatus ADTimePix::getHealth(){
 }
 
 /**
+ * Write value on individual DAC
+ *
+ * chip:      Chip number (int)
+ * dac:       Dac name (string)
+ * value:     Value to be updated on the dac (int)
+ *
+ * @return: status
+ */
+asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
+    asynStatus status = asynSuccess;
+
+    std::string dac_url = this->serverURL + std::string("/detector/chips/") + std::to_string(chip) + std::string("/dacs/");
+    std::string json_data = "{\"" + dac + "\":" + std::to_string(value) + "}";
+
+    cpr::Response r = cpr::Put(
+        cpr::Url{dac_url},
+        cpr::Body{json_data},
+        cpr::Header{{"Content-Type", "application/json"}}
+    );
+
+    if (r.status_code != 200) {
+        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        status = asynError;
+    }
+
+    return status;
+}
+
+/**
  * Fetch DACs values and update PVs readback
  *
  * data:      Json Data (json)
@@ -593,7 +623,7 @@ asynStatus ADTimePix::fecthDacs(json& data, int chip) {
     setIntegerParam(chip, ADTimePixVTPfine,            data["Chips"][chip]["DACs"]["VTP_fine"].get<int>());
     setIntegerParam(chip, ADTimePixVfbk,               data["Chips"][chip]["DACs"]["Vfbk"].get<int>());
     setIntegerParam(chip, ADTimePixVthresholdCoarse,   data["Chips"][chip]["DACs"]["Vthreshold_coarse"].get<int>());
-    setIntegerParam(chip, ADTimePixVTthresholdFine,    data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
+    setIntegerParam(chip, ADTimePixVthresholdFine,     data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
 
     if (data["Chips"][chip]["Adjust"].is_null()) {
         setIntegerParam(chip, ADTimePixAdjust, -1);
@@ -1488,9 +1518,12 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     int acquiring;
     int status = asynSuccess;
     static const char* functionName = "writeInt32";
+    int addr = 0;
+    this->getAddress(pasynUser, &addr);
+
     getIntegerParam(ADAcquire, &acquiring);
 
-    status = setIntegerParam(function, value);
+    status = setIntegerParam(addr, function, value);
     // start/stop acquisition
     if(function == ADAcquire){
         printf("SAW ACQUIRE CHANGE!, status=%d\n", status);
@@ -1513,6 +1546,14 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             setIntegerParam(ADNumImages,1);  // Set number of images to 1 for single mode
             status = initAcquisition();
         }
+    }
+
+    else if(function == ADTimePixVthresholdFine) {
+        status = writeDac(addr, "Vthreshold_fine", value);
+    }
+
+    else if(function == ADTimePixVthresholdCoarse) {
+        status = writeDac(addr, "Vthreshold_coarse", value);
     }
 
     else if(function == ADTimePixHealth) { 
@@ -1553,7 +1594,9 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             status = ADDriver::writeInt32(pasynUser, value);
         }
     }
-    callParamCallbacks();
+
+    /* Do callbacks so higher layers see any changes */
+	callParamCallbacks(addr);
 
     // Log status updates
     if(status){
@@ -1843,7 +1886,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixVTPfineString,            asynParamInt32, &ADTimePixVTPfine);
     createParam(ADTimePixVfbkString,               asynParamInt32, &ADTimePixVfbk);
     createParam(ADTimePixVthresholdCoarseString,   asynParamInt32, &ADTimePixVthresholdCoarse);
-    createParam(ADTimePixVTthresholdFineString,    asynParamInt32, &ADTimePixVTthresholdFine);
+    createParam(ADTimePixVthresholdFineString,     asynParamInt32, &ADTimePixVthresholdFine);
     createParam(ADTimePixAdjustString,             asynParamInt32, &ADTimePixAdjust);
              
     // Detector Chip Layout

@@ -114,7 +114,7 @@ using json = nlohmann::json;
 #define ADTimePixVTPfineString             "TPX3_VTP_FINE"         // (asynInt32,         r)      DACs->VTP_fine
 #define ADTimePixVfbkString                "TPX3_VFBK"             // (asynInt32,         r)      DACs->Vfbk
 #define ADTimePixVthresholdCoarseString    "TPX3_VTH_COARSE"       // (asynInt32,         r)      DACs->Vthreshold_coarse
-#define ADTimePixVTthresholdFineString     "TPX3_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
+#define ADTimePixVthresholdFineString      "TPX3_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
 #define ADTimePixAdjustString              "TPX3_ADJUST"           // (asynInt32,         r)      DACs->Adjust
 // Chip Layout
 #define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"            // (asynOctet,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
@@ -349,7 +349,7 @@ class ADTimePix : ADDriver{
         int ADTimePixVTPfine;
         int ADTimePixVfbk;
         int ADTimePixVthresholdCoarse;
-        int ADTimePixVTthresholdFine;
+        int ADTimePixVthresholdFine;
         int ADTimePixAdjust;
             
         // Detector Chip layout
@@ -503,6 +503,7 @@ class ADTimePix : ADDriver{
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
+        asynStatus writeDac(int chip, const std::string &dac, int value);
         asynStatus fecthDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
