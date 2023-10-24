@@ -9,6 +9,7 @@
  */
 
 // Standard includes
+#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -566,6 +567,77 @@ asynStatus ADTimePix::getHealth(){
     return status;
 }
 
+/**
+ * Write value on individual DAC
+ *
+ * chip:      Chip number (int)
+ * dac:       Dac name (string)
+ * value:     Value to be updated on the dac (int)
+ *
+ * @return: status
+ */
+asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
+    asynStatus status = asynSuccess;
+
+    std::string dac_url = this->serverURL + std::string("/detector/chips/") + std::to_string(chip) + std::string("/dacs/");
+    std::string json_data = "{\"" + dac + "\":" + std::to_string(value) + "}";
+
+    cpr::Response r = cpr::Put(
+        cpr::Url{dac_url},
+        cpr::Body{json_data},
+        cpr::Header{{"Content-Type", "application/json"}}
+    );
+
+    if (r.status_code != 200) {
+        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        status = asynError;
+    }
+
+    return status;
+}
+
+/**
+ * Fetch DACs values and update PVs readback
+ *
+ * data:      Json Data (json)
+ * chip:      Number of the chip (int)
+ *
+ * @return: status
+*/
+
+asynStatus ADTimePix::fecthDacs(json& data, int chip) {
+    setIntegerParam(chip, ADTimePixCP_PLL,             data["Chips"][chip]["DACs"]["Ibias_CP_PLL"].get<int>());
+    setIntegerParam(chip, ADTimePixDiscS1OFF,          data["Chips"][chip]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
+    setIntegerParam(chip, ADTimePixDiscS1ON,           data["Chips"][chip]["DACs"]["Ibias_DiscS1_ON"].get<int>());
+    setIntegerParam(chip, ADTimePixDiscS2OFF,          data["Chips"][chip]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
+    setIntegerParam(chip, ADTimePixDiscS2ON,           data["Chips"][chip]["DACs"]["Ibias_DiscS2_ON"].get<int>());
+    setIntegerParam(chip, ADTimePixIkrum,              data["Chips"][chip]["DACs"]["Ibias_Ikrum"].get<int>());
+    setIntegerParam(chip, ADTimePixPixelDAC,           data["Chips"][chip]["DACs"]["Ibias_PixelDAC"].get<int>());
+    setIntegerParam(chip, ADTimePixPreampOFF,          data["Chips"][chip]["DACs"]["Ibias_Preamp_OFF"].get<int>());
+    setIntegerParam(chip, ADTimePixPreampON,           data["Chips"][chip]["DACs"]["Ibias_Preamp_ON"].get<int>());
+    setIntegerParam(chip, ADTimePixTPbufferIn,         data["Chips"][chip]["DACs"]["Ibias_TPbufferIn"].get<int>());
+    setIntegerParam(chip, ADTimePixTPbufferOut,        data["Chips"][chip]["DACs"]["Ibias_TPbufferOut"].get<int>());
+    setIntegerParam(chip, ADTimePixPLL_Vcntrl,         data["Chips"][chip]["DACs"]["PLL_Vcntrl"].get<int>());
+    setIntegerParam(chip, ADTimePixVPreampNCAS,        data["Chips"][chip]["DACs"]["VPreamp_NCAS"].get<int>());
+    setIntegerParam(chip, ADTimePixVTPcoarse,          data["Chips"][chip]["DACs"]["VTP_coarse"].get<int>());
+    setIntegerParam(chip, ADTimePixVTPfine,            data["Chips"][chip]["DACs"]["VTP_fine"].get<int>());
+    setIntegerParam(chip, ADTimePixVfbk,               data["Chips"][chip]["DACs"]["Vfbk"].get<int>());
+    setIntegerParam(chip, ADTimePixVthresholdCoarse,   data["Chips"][chip]["DACs"]["Vthreshold_coarse"].get<int>());
+    setIntegerParam(chip, ADTimePixVthresholdFine,     data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
+
+    if (data["Chips"][chip]["Adjust"].is_null()) {
+        setIntegerParam(chip, ADTimePixAdjust, -1);
+    }
+    else if (data["Chips"][chip]["Adjust"].is_number_integer()) {
+        setIntegerParam(chip, ADTimePixAdjust, data["Chips"][chip]["Adjust"].get<int>());
+    }
+    else {
+        setIntegerParam(chip, ADTimePixAdjust, -2);
+    }
+
+    return asynSuccess;
+}
+
 asynStatus ADTimePix::getDetector(){
     const char* functionName = "getDetector";
     asynStatus status = asynSuccess;
@@ -651,141 +723,23 @@ asynStatus ADTimePix::getDetector(){
     setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
 
     // Detector Chips: Chip0
-    setIntegerParam(ADTimePixChip0CP_PLL,             detector_j["Chips"][0]["DACs"]["Ibias_CP_PLL"].get<int>());
-    setIntegerParam(ADTimePixChip0DiscS1OFF,          detector_j["Chips"][0]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip0DiscS1ON,           detector_j["Chips"][0]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-    setIntegerParam(ADTimePixChip0DiscS2OFF,          detector_j["Chips"][0]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip0DiscS2ON,           detector_j["Chips"][0]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-    setIntegerParam(ADTimePixChip0Ikrum,              detector_j["Chips"][0]["DACs"]["Ibias_Ikrum"].get<int>());
-    setIntegerParam(ADTimePixChip0PixelDAC,           detector_j["Chips"][0]["DACs"]["Ibias_PixelDAC"].get<int>());
-    setIntegerParam(ADTimePixChip0PreampOFF,          detector_j["Chips"][0]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-    setIntegerParam(ADTimePixChip0PreampON,           detector_j["Chips"][0]["DACs"]["Ibias_Preamp_ON"].get<int>());
-    setIntegerParam(ADTimePixChip0TPbufferIn,         detector_j["Chips"][0]["DACs"]["Ibias_TPbufferIn"].get<int>());
-    setIntegerParam(ADTimePixChip0TPbufferOut,        detector_j["Chips"][0]["DACs"]["Ibias_TPbufferOut"].get<int>());
-    setIntegerParam(ADTimePixChip0PLL_Vcntrl,         detector_j["Chips"][0]["DACs"]["PLL_Vcntrl"].get<int>());
-    setIntegerParam(ADTimePixChip0VPreampNCAS,        detector_j["Chips"][0]["DACs"]["VPreamp_NCAS"].get<int>());
-    setIntegerParam(ADTimePixChip0VTPcoarse,          detector_j["Chips"][0]["DACs"]["VTP_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip0VTPfine,            detector_j["Chips"][0]["DACs"]["VTP_fine"].get<int>());
-    setIntegerParam(ADTimePixChip0Vfbk,               detector_j["Chips"][0]["DACs"]["Vfbk"].get<int>());
-    setIntegerParam(ADTimePixChip0VthresholdCoarse,   detector_j["Chips"][0]["DACs"]["Vthreshold_coarse"].get<int>());
-    setIntegerParam(ADTimePixChip0VTthresholdFine,    detector_j["Chips"][0]["DACs"]["Vthreshold_fine"].get<int>());
-    if (detector_j["Chips"][0]["Adjust"].is_null()) {
-        setIntegerParam(ADTimePixChip0Adjust,            -1 );
-    }   else if (detector_j["Chips"][0]["Adjust"].is_number_integer()) {
-        setIntegerParam(ADTimePixChip0Adjust,             detector_j["Chips"][0]["Adjust"].get<int>());
-    }   else {
-            setIntegerParam(ADTimePixChip0Adjust,            -2 );
-    }
-
-     // Serval3 - Detector Chip Layout
-    setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
-    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());   
-
-    if (detector_j["Info"]["NumberOfChips"].get<int>() >= 2) {
-        // Detector Chips: Chip1
-        setIntegerParam(ADTimePixChip1CP_PLL,             detector_j["Chips"][1]["DACs"]["Ibias_CP_PLL"].get<int>());
-        setIntegerParam(ADTimePixChip1DiscS1OFF,          detector_j["Chips"][1]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip1DiscS1ON,           detector_j["Chips"][1]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-        setIntegerParam(ADTimePixChip1DiscS2OFF,          detector_j["Chips"][1]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip1DiscS2ON,           detector_j["Chips"][1]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-        setIntegerParam(ADTimePixChip1Ikrum,              detector_j["Chips"][1]["DACs"]["Ibias_Ikrum"].get<int>());
-        setIntegerParam(ADTimePixChip1PixelDAC,           detector_j["Chips"][1]["DACs"]["Ibias_PixelDAC"].get<int>());
-        setIntegerParam(ADTimePixChip1PreampOFF,          detector_j["Chips"][1]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip1PreampON,           detector_j["Chips"][1]["DACs"]["Ibias_Preamp_ON"].get<int>());
-        setIntegerParam(ADTimePixChip1TPbufferIn,         detector_j["Chips"][1]["DACs"]["Ibias_TPbufferIn"].get<int>());
-        setIntegerParam(ADTimePixChip1TPbufferOut,        detector_j["Chips"][1]["DACs"]["Ibias_TPbufferOut"].get<int>());
-        setIntegerParam(ADTimePixChip1PLL_Vcntrl,         detector_j["Chips"][1]["DACs"]["PLL_Vcntrl"].get<int>());
-        setIntegerParam(ADTimePixChip1VPreampNCAS,        detector_j["Chips"][1]["DACs"]["VPreamp_NCAS"].get<int>());
-        setIntegerParam(ADTimePixChip1VTPcoarse,          detector_j["Chips"][1]["DACs"]["VTP_coarse"].get<int>());
-        setIntegerParam(ADTimePixChip1VTPfine,            detector_j["Chips"][1]["DACs"]["VTP_fine"].get<int>());
-        setIntegerParam(ADTimePixChip1Vfbk,               detector_j["Chips"][1]["DACs"]["Vfbk"].get<int>());
-        setIntegerParam(ADTimePixChip1VthresholdCoarse,   detector_j["Chips"][1]["DACs"]["Vthreshold_coarse"].get<int>());
-        setIntegerParam(ADTimePixChip1VTthresholdFine,    detector_j["Chips"][1]["DACs"]["Vthreshold_fine"].get<int>());
-        if (detector_j["Chips"][1]["Adjust"].is_null()) {
-            setIntegerParam(ADTimePixChip1Adjust,            -1 );
-        }   else if (detector_j["Chips"][1]["Adjust"].is_number_integer()) {
-            setIntegerParam(ADTimePixChip1Adjust,             detector_j["Chips"][1]["Adjust"].get<int>());
-        }   else {
-            setIntegerParam(ADTimePixChip1Adjust,            -2 );
-        }
-        setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
-    }
-
-    if (detector_j["Info"]["NumberOfChips"].get<int>() >= 3) {
-        // Detector Chips: Chip2
-        setIntegerParam(ADTimePixChip2CP_PLL,             detector_j["Chips"][2]["DACs"]["Ibias_CP_PLL"].get<int>());
-        setIntegerParam(ADTimePixChip2DiscS1OFF,          detector_j["Chips"][2]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip2DiscS1ON,           detector_j["Chips"][2]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-        setIntegerParam(ADTimePixChip2DiscS2OFF,          detector_j["Chips"][2]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip2DiscS2ON,           detector_j["Chips"][2]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-        setIntegerParam(ADTimePixChip2Ikrum,              detector_j["Chips"][2]["DACs"]["Ibias_Ikrum"].get<int>());
-        setIntegerParam(ADTimePixChip2PixelDAC,           detector_j["Chips"][2]["DACs"]["Ibias_PixelDAC"].get<int>());
-        setIntegerParam(ADTimePixChip2PreampOFF,          detector_j["Chips"][2]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip2PreampON,           detector_j["Chips"][2]["DACs"]["Ibias_Preamp_ON"].get<int>());
-        setIntegerParam(ADTimePixChip2TPbufferIn,         detector_j["Chips"][2]["DACs"]["Ibias_TPbufferIn"].get<int>());
-        setIntegerParam(ADTimePixChip2TPbufferOut,        detector_j["Chips"][2]["DACs"]["Ibias_TPbufferOut"].get<int>());
-        setIntegerParam(ADTimePixChip2PLL_Vcntrl,         detector_j["Chips"][2]["DACs"]["PLL_Vcntrl"].get<int>());
-        setIntegerParam(ADTimePixChip2VPreampNCAS,        detector_j["Chips"][2]["DACs"]["VPreamp_NCAS"].get<int>());
-        setIntegerParam(ADTimePixChip2VTPcoarse,          detector_j["Chips"][2]["DACs"]["VTP_coarse"].get<int>());
-        setIntegerParam(ADTimePixChip2VTPfine,            detector_j["Chips"][2]["DACs"]["VTP_fine"].get<int>());
-        setIntegerParam(ADTimePixChip2Vfbk,               detector_j["Chips"][2]["DACs"]["Vfbk"].get<int>());
-        setIntegerParam(ADTimePixChip2VthresholdCoarse,   detector_j["Chips"][2]["DACs"]["Vthreshold_coarse"].get<int>());
-        setIntegerParam(ADTimePixChip2VTthresholdFine,    detector_j["Chips"][2]["DACs"]["Vthreshold_fine"].get<int>());
-        if (detector_j["Chips"][2]["Adjust"].is_null()) {
-            setIntegerParam(ADTimePixChip2Adjust,            -1 );
-        }   else if (detector_j["Chips"][2]["Adjust"].is_number_integer()) {
-            setIntegerParam(ADTimePixChip2Adjust,             detector_j["Chips"][2]["Adjust"].get<int>());
-        }   else {
-            setIntegerParam(ADTimePixChip2Adjust,            -2 );
-        }
-        setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
-    }
-
-    if (detector_j["Info"]["NumberOfChips"].get<int>() >= 4) {
-        // Detector Chips: Chip3
-        setIntegerParam(ADTimePixChip3CP_PLL,             detector_j["Chips"][3]["DACs"]["Ibias_CP_PLL"].get<int>());
-        setIntegerParam(ADTimePixChip3DiscS1OFF,          detector_j["Chips"][3]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip3DiscS1ON,           detector_j["Chips"][3]["DACs"]["Ibias_DiscS1_ON"].get<int>());
-        setIntegerParam(ADTimePixChip3DiscS2OFF,          detector_j["Chips"][3]["DACs"]["Ibias_DiscS2_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip3DiscS2ON,           detector_j["Chips"][3]["DACs"]["Ibias_DiscS2_ON"].get<int>());
-        setIntegerParam(ADTimePixChip3Ikrum,              detector_j["Chips"][3]["DACs"]["Ibias_Ikrum"].get<int>());
-        setIntegerParam(ADTimePixChip3PixelDAC,           detector_j["Chips"][3]["DACs"]["Ibias_PixelDAC"].get<int>());
-        setIntegerParam(ADTimePixChip3PreampOFF,          detector_j["Chips"][3]["DACs"]["Ibias_Preamp_OFF"].get<int>());
-        setIntegerParam(ADTimePixChip3PreampON,           detector_j["Chips"][3]["DACs"]["Ibias_Preamp_ON"].get<int>());
-        setIntegerParam(ADTimePixChip3TPbufferIn,         detector_j["Chips"][3]["DACs"]["Ibias_TPbufferIn"].get<int>());
-        setIntegerParam(ADTimePixChip3TPbufferOut,        detector_j["Chips"][3]["DACs"]["Ibias_TPbufferOut"].get<int>());
-        setIntegerParam(ADTimePixChip3PLL_Vcntrl,         detector_j["Chips"][3]["DACs"]["PLL_Vcntrl"].get<int>());
-        setIntegerParam(ADTimePixChip3VPreampNCAS,        detector_j["Chips"][3]["DACs"]["VPreamp_NCAS"].get<int>());
-        setIntegerParam(ADTimePixChip3VTPcoarse,          detector_j["Chips"][3]["DACs"]["VTP_coarse"].get<int>());
-        setIntegerParam(ADTimePixChip3VTPfine,            detector_j["Chips"][3]["DACs"]["VTP_fine"].get<int>());
-        setIntegerParam(ADTimePixChip3Vfbk,               detector_j["Chips"][3]["DACs"]["Vfbk"].get<int>());
-        setIntegerParam(ADTimePixChip3VthresholdCoarse,   detector_j["Chips"][3]["DACs"]["Vthreshold_coarse"].get<int>());
-        setIntegerParam(ADTimePixChip3VTthresholdFine,    detector_j["Chips"][3]["DACs"]["Vthreshold_fine"].get<int>());
-        if (detector_j["Chips"][3]["Adjust"].is_null()) {
-            setIntegerParam(ADTimePixChip3Adjust,            -1 );
-        }   else if (detector_j["Chips"][3]["Adjust"].is_number_integer()) {
-            setIntegerParam(ADTimePixChip3Adjust,             detector_j["Chips"][3]["Adjust"].get<int>());
-        }   else {
-            setIntegerParam(ADTimePixChip3Adjust,            -2 );
-        }
-        setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str()); 
-    }
-
-    // Serval2.3.6 Detector Chip Layout
-//    setStringParam(ADTimePixChip0Layout,    detector_j["Layout"][0].dump().c_str());
-//    setStringParam(ADTimePixChip1Layout,    detector_j["Layout"][1].dump().c_str());
-//    setStringParam(ADTimePixChip2Layout,    detector_j["Layout"][2].dump().c_str());
-//    setStringParam(ADTimePixChip3Layout,    detector_j["Layout"][3].dump().c_str());
+    fecthDacs(detector_j, 0);
 
     // Serval3 - Detector Chip Layout
-    // setStringParam(ADTimePixDetectorOrientation,     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
-    // setStringParam(ADTimePixChip0Layout,    detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
-    // setStringParam(ADTimePixChip1Layout,    detector_j["Layout"]["Original"]["Chips"][1].dump().c_str());
-    // setStringParam(ADTimePixChip2Layout,    detector_j["Layout"]["Original"]["Chips"][2].dump().c_str());
-    // setStringParam(ADTimePixChip3Layout,    detector_j["Layout"]["Original"]["Chips"][3].dump().c_str());
-
-    // Refresh PV values
+    setStringParam(ADTimePixDetectorOrientation, strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
+    setStringParam(0, ADTimePixLayout, detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
     callParamCallbacks();
+
+    int number_chips = detector_j["Info"]["NumberOfChips"].get<int>();
+    for (int chip = 1; chip < number_chips; chip++) {
+        fecthDacs(detector_j, 1);
+        setStringParam(
+            chip,
+            ADTimePixLayout,
+            detector_j["Layout"]["Original"]["Chips"][chip].dump().c_str()
+        );
+        callParamCallbacks(chip);
+    }
 
     return status;
 }
@@ -1564,9 +1518,12 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     int acquiring;
     int status = asynSuccess;
     static const char* functionName = "writeInt32";
+    int addr = 0;
+    this->getAddress(pasynUser, &addr);
+
     getIntegerParam(ADAcquire, &acquiring);
 
-    status = setIntegerParam(function, value);
+    status = setIntegerParam(addr, function, value);
     // start/stop acquisition
     if(function == ADAcquire){
         printf("SAW ACQUIRE CHANGE!, status=%d\n", status);
@@ -1589,6 +1546,14 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             setIntegerParam(ADNumImages,1);  // Set number of images to 1 for single mode
             status = initAcquisition();
         }
+    }
+
+    else if(function == ADTimePixVthresholdFine) {
+        status = writeDac(addr, "Vthreshold_fine", value);
+    }
+
+    else if(function == ADTimePixVthresholdCoarse) {
+        status = writeDac(addr, "Vthreshold_coarse", value);
     }
 
     else if(function == ADTimePixHealth) { 
@@ -1629,7 +1594,9 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             status = ADDriver::writeInt32(pasynUser, value);
         }
     }
-    callParamCallbacks();
+
+    /* Do callbacks so higher layers see any changes */
+	callParamCallbacks(addr);
 
     // Log status updates
     if(status){
@@ -1806,10 +1773,19 @@ asynStatus ADTimePix::readImage()
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
-ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize )
-    : ADDriver(portName, 1, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory, asynInt64Mask | asynEnumMask, asynInt64Mask | asynEnumMask, ASYN_CANBLOCK, 1, priority, stackSize){
+ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize)
+    : ADDriver(portName, 4, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+        asynInt64Mask | asynEnumMask,
+        asynInt64Mask | asynEnumMask,
+        ASYN_MULTIDEVICE | ASYN_CANBLOCK,
+        1,
+        priority,
+        stackSize)
+{
     static const char* functionName = "ADTimePix";
 
+    /* Initialize GraphicsMagick */
+    InitializeMagick(NULL);
 
     this->serverURL = string(serverURL);
 
@@ -1892,92 +1868,29 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixExternalReferenceClockString,      asynParamInt32,     &ADTimePixExternalReferenceClock);          
     createParam(ADTimePixLogLevelString,                    asynParamInt32,     &ADTimePixLogLevel);
 
-        // Detector Chips: Chip0
-    createParam(ADTimePixChip0CP_PLLString,             asynParamInt32, &ADTimePixChip0CP_PLL);
-    createParam(ADTimePixChip0DiscS1OFFString,          asynParamInt32, &ADTimePixChip0DiscS1OFF);    
-    createParam(ADTimePixChip0DiscS1ONString,           asynParamInt32, &ADTimePixChip0DiscS1ON);    
-    createParam(ADTimePixChip0DiscS2OFFString,          asynParamInt32, &ADTimePixChip0DiscS2OFF);    
-    createParam(ADTimePixChip0DiscS2ONString,           asynParamInt32, &ADTimePixChip0DiscS2ON);    
-    createParam(ADTimePixChip0IkrumString,              asynParamInt32, &ADTimePixChip0Ikrum);
-    createParam(ADTimePixChip0PixelDACString,           asynParamInt32, &ADTimePixChip0PixelDAC);    
-    createParam(ADTimePixChip0PreampOFFString,          asynParamInt32, &ADTimePixChip0PreampOFF);    
-    createParam(ADTimePixChip0PreampONString,           asynParamInt32, &ADTimePixChip0PreampON);    
-    createParam(ADTimePixChip0TPbufferInString,         asynParamInt32, &ADTimePixChip0TPbufferIn);    
-    createParam(ADTimePixChip0TPbufferOutString,        asynParamInt32, &ADTimePixChip0TPbufferOut);        
-    createParam(ADTimePixChip0PLL_VcntrlString,         asynParamInt32, &ADTimePixChip0PLL_Vcntrl);    
-    createParam(ADTimePixChip0VPreampNCASString,        asynParamInt32, &ADTimePixChip0VPreampNCAS);        
-    createParam(ADTimePixChip0VTPcoarseString,          asynParamInt32, &ADTimePixChip0VTPcoarse);    
-    createParam(ADTimePixChip0VTPfineString,            asynParamInt32, &ADTimePixChip0VTPfine);    
-    createParam(ADTimePixChip0VfbkString,               asynParamInt32, &ADTimePixChip0Vfbk);
-    createParam(ADTimePixChip0VthresholdCoarseString,   asynParamInt32, &ADTimePixChip0VthresholdCoarse);            
-    createParam(ADTimePixChip0VTthresholdFineString,    asynParamInt32, &ADTimePixChip0VTthresholdFine);            
-    createParam(ADTimePixChip0AdjustString,             asynParamInt32, &ADTimePixChip0Adjust);
-    // Detector Chips: Chip1
-    createParam(ADTimePixChip1CP_PLLString,               asynParamInt32, &ADTimePixChip1CP_PLL);
-    createParam(ADTimePixChip1DiscS1OFFString,            asynParamInt32, &ADTimePixChip1DiscS1OFF);    
-    createParam(ADTimePixChip1DiscS1ONString,             asynParamInt32, &ADTimePixChip1DiscS1ON);    
-    createParam(ADTimePixChip1DiscS2OFFString,            asynParamInt32, &ADTimePixChip1DiscS2OFF);    
-    createParam(ADTimePixChip1DiscS2ONString,             asynParamInt32, &ADTimePixChip1DiscS2ON);    
-    createParam(ADTimePixChip1IkrumString,                asynParamInt32, &ADTimePixChip1Ikrum);
-    createParam(ADTimePixChip1PixelDACString,             asynParamInt32, &ADTimePixChip1PixelDAC);    
-    createParam(ADTimePixChip1PreampOFFString,            asynParamInt32, &ADTimePixChip1PreampOFF);    
-    createParam(ADTimePixChip1PreampONString,             asynParamInt32, &ADTimePixChip1PreampON);    
-    createParam(ADTimePixChip1TPbufferInString,           asynParamInt32, &ADTimePixChip1TPbufferIn);    
-    createParam(ADTimePixChip1TPbufferOutString,          asynParamInt32, &ADTimePixChip1TPbufferOut);        
-    createParam(ADTimePixChip1PLL_VcntrlString,           asynParamInt32, &ADTimePixChip1PLL_Vcntrl);    
-    createParam(ADTimePixChip1VPreampNCASString,          asynParamInt32, &ADTimePixChip1VPreampNCAS);        
-    createParam(ADTimePixChip1VTPcoarseString,            asynParamInt32, &ADTimePixChip1VTPcoarse);    
-    createParam(ADTimePixChip1VTPfineString,              asynParamInt32, &ADTimePixChip1VTPfine);    
-    createParam(ADTimePixChip1VfbkString,                 asynParamInt32, &ADTimePixChip1Vfbk);
-    createParam(ADTimePixChip1VthresholdCoarseString,     asynParamInt32, &ADTimePixChip1VthresholdCoarse);    
-    createParam(ADTimePixChip1VTthresholdFineString,      asynParamInt32, &ADTimePixChip1VTthresholdFine);    
-    createParam(ADTimePixChip1AdjustString,               asynParamInt32, &ADTimePixChip1Adjust);
-    // Detector Chips: Chip2
-    createParam(ADTimePixChip2CP_PLLString,                asynParamInt32, &ADTimePixChip2CP_PLL);
-    createParam(ADTimePixChip2DiscS1OFFString,             asynParamInt32, &ADTimePixChip2DiscS1OFF);
-    createParam(ADTimePixChip2DiscS1ONString,              asynParamInt32, &ADTimePixChip2DiscS1ON);
-    createParam(ADTimePixChip2DiscS2OFFString,             asynParamInt32, &ADTimePixChip2DiscS2OFF);
-    createParam(ADTimePixChip2DiscS2ONString,              asynParamInt32, &ADTimePixChip2DiscS2ON);
-    createParam(ADTimePixChip2IkrumString,                 asynParamInt32, &ADTimePixChip2Ikrum);
-    createParam(ADTimePixChip2PixelDACString,              asynParamInt32, &ADTimePixChip2PixelDAC);
-    createParam(ADTimePixChip2PreampOFFString,             asynParamInt32, &ADTimePixChip2PreampOFF);
-    createParam(ADTimePixChip2PreampONString,              asynParamInt32, &ADTimePixChip2PreampON);
-    createParam(ADTimePixChip2TPbufferInString,            asynParamInt32, &ADTimePixChip2TPbufferIn);
-    createParam(ADTimePixChip2TPbufferOutString,           asynParamInt32, &ADTimePixChip2TPbufferOut);
-    createParam(ADTimePixChip2PLL_VcntrlString,            asynParamInt32, &ADTimePixChip2PLL_Vcntrl);
-    createParam(ADTimePixChip2VPreampNCASString,           asynParamInt32, &ADTimePixChip2VPreampNCAS);
-    createParam(ADTimePixChip2VTPcoarseString,             asynParamInt32, &ADTimePixChip2VTPcoarse);
-    createParam(ADTimePixChip2VTPfineString,               asynParamInt32, &ADTimePixChip2VTPfine);
-    createParam(ADTimePixChip2VfbkString,                  asynParamInt32, &ADTimePixChip2Vfbk);
-    createParam(ADTimePixChip2VthresholdCoarseString,      asynParamInt32, &ADTimePixChip2VthresholdCoarse);
-    createParam(ADTimePixChip2VTthresholdFineString,       asynParamInt32, &ADTimePixChip2VTthresholdFine);
-    createParam(ADTimePixChip2AdjustString,                asynParamInt32, &ADTimePixChip2Adjust);     
-    // Detector Chips: Chip3
-    createParam(ADTimePixChip3CP_PLLString,                 asynParamInt32, &ADTimePixChip3CP_PLL);
-    createParam(ADTimePixChip3DiscS1OFFString,              asynParamInt32, &ADTimePixChip3DiscS1OFF);
-    createParam(ADTimePixChip3DiscS1ONString,               asynParamInt32, &ADTimePixChip3DiscS1ON);
-    createParam(ADTimePixChip3DiscS2OFFString,              asynParamInt32, &ADTimePixChip3DiscS2OFF);
-    createParam(ADTimePixChip3DiscS2ONString,               asynParamInt32, &ADTimePixChip3DiscS2ON);
-    createParam(ADTimePixChip3IkrumString,                  asynParamInt32, &ADTimePixChip3Ikrum);
-    createParam(ADTimePixChip3PixelDACString,               asynParamInt32, &ADTimePixChip3PixelDAC);
-    createParam(ADTimePixChip3PreampOFFString,              asynParamInt32, &ADTimePixChip3PreampOFF);
-    createParam(ADTimePixChip3PreampONString,               asynParamInt32, &ADTimePixChip3PreampON);
-    createParam(ADTimePixChip3TPbufferInString,             asynParamInt32, &ADTimePixChip3TPbufferIn);
-    createParam(ADTimePixChip3TPbufferOutString,            asynParamInt32, &ADTimePixChip3TPbufferOut);
-    createParam(ADTimePixChip3PLL_VcntrlString,             asynParamInt32, &ADTimePixChip3PLL_Vcntrl);
-    createParam(ADTimePixChip3VPreampNCASString,            asynParamInt32, &ADTimePixChip3VPreampNCAS);
-    createParam(ADTimePixChip3VTPcoarseString,              asynParamInt32, &ADTimePixChip3VTPcoarse);
-    createParam(ADTimePixChip3VTPfineString,                asynParamInt32, &ADTimePixChip3VTPfine);
-    createParam(ADTimePixChip3VfbkString,                   asynParamInt32, &ADTimePixChip3Vfbk);
-    createParam(ADTimePixChip3VthresholdCoarseString,       asynParamInt32, &ADTimePixChip3VthresholdCoarse);
-    createParam(ADTimePixChip3VTthresholdFineString,        asynParamInt32, &ADTimePixChip3VTthresholdFine);
-    createParam(ADTimePixChip3AdjustString,                 asynParamInt32, &ADTimePixChip3Adjust);
+    // Detector Chips
+    createParam(ADTimePixCP_PLLString,             asynParamInt32, &ADTimePixCP_PLL);
+    createParam(ADTimePixDiscS1OFFString,          asynParamInt32, &ADTimePixDiscS1OFF);
+    createParam(ADTimePixDiscS1ONString,           asynParamInt32, &ADTimePixDiscS1ON);
+    createParam(ADTimePixDiscS2OFFString,          asynParamInt32, &ADTimePixDiscS2OFF);
+    createParam(ADTimePixDiscS2ONString,           asynParamInt32, &ADTimePixDiscS2ON);
+    createParam(ADTimePixIkrumString,              asynParamInt32, &ADTimePixIkrum);
+    createParam(ADTimePixPixelDACString,           asynParamInt32, &ADTimePixPixelDAC);
+    createParam(ADTimePixPreampOFFString,          asynParamInt32, &ADTimePixPreampOFF);
+    createParam(ADTimePixPreampONString,           asynParamInt32, &ADTimePixPreampON);
+    createParam(ADTimePixTPbufferInString,         asynParamInt32, &ADTimePixTPbufferIn);
+    createParam(ADTimePixTPbufferOutString,        asynParamInt32, &ADTimePixTPbufferOut);
+    createParam(ADTimePixPLL_VcntrlString,         asynParamInt32, &ADTimePixPLL_Vcntrl);
+    createParam(ADTimePixVPreampNCASString,        asynParamInt32, &ADTimePixVPreampNCAS);
+    createParam(ADTimePixVTPcoarseString,          asynParamInt32, &ADTimePixVTPcoarse);
+    createParam(ADTimePixVTPfineString,            asynParamInt32, &ADTimePixVTPfine);
+    createParam(ADTimePixVfbkString,               asynParamInt32, &ADTimePixVfbk);
+    createParam(ADTimePixVthresholdCoarseString,   asynParamInt32, &ADTimePixVthresholdCoarse);
+    createParam(ADTimePixVthresholdFineString,     asynParamInt32, &ADTimePixVthresholdFine);
+    createParam(ADTimePixAdjustString,             asynParamInt32, &ADTimePixAdjust);
              
     // Detector Chip Layout
-    createParam(ADTimePixChip0LayoutString,               asynParamOctet, &ADTimePixChip0Layout);
-    createParam(ADTimePixChip1LayoutString,               asynParamOctet, &ADTimePixChip1Layout);
-    createParam(ADTimePixChip2LayoutString,               asynParamOctet, &ADTimePixChip2Layout);
-    createParam(ADTimePixChip3LayoutString,               asynParamOctet, &ADTimePixChip3Layout);
+    createParam(ADTimePixLayoutString,               asynParamOctet, &ADTimePixLayout);
 
     // Files BPC, Chip/DACS
     createParam(ADTimePixBPCFilePathString,                asynParamOctet,  &ADTimePixBPCFilePath);            

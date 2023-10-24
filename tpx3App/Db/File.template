@@ -131,7 +131,7 @@ record(waveform, "$(P)$(R)WriteFileMessage")
     field(SCAN, "I/O Intr")
 }
 
-record(mbbo, "$(P)$(R)RawStream")
+record(mbbi, "$(P)$(R)RawStream")
 {
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_STREAM")
