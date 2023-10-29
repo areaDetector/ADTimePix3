@@ -504,7 +504,7 @@ class ADTimePix : ADDriver{
         asynStatus uploadBPC();
         asynStatus uploadDACS();
         asynStatus writeDac(int chip, const std::string &dac, int value);
-        asynStatus fecthDacs(json &data, int chip);
+        asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
 

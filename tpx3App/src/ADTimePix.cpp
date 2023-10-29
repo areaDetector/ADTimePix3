@@ -605,7 +605,7 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
  * @return: status
 */
 
-asynStatus ADTimePix::fecthDacs(json& data, int chip) {
+asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     setIntegerParam(chip, ADTimePixCP_PLL,             data["Chips"][chip]["DACs"]["Ibias_CP_PLL"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1OFF,          data["Chips"][chip]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1ON,           data["Chips"][chip]["DACs"]["Ibias_DiscS1_ON"].get<int>());
@@ -723,7 +723,7 @@ asynStatus ADTimePix::getDetector(){
     setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
 
     // Detector Chips: Chip0
-    fecthDacs(detector_j, 0);
+    fetchDacs(detector_j, 0);
 
     // Serval3 - Detector Chip Layout
     setStringParam(ADTimePixDetectorOrientation, strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
@@ -732,7 +732,7 @@ asynStatus ADTimePix::getDetector(){
 
     int number_chips = detector_j["Info"]["NumberOfChips"].get<int>();
     for (int chip = 1; chip < number_chips; chip++) {
-        fecthDacs(detector_j, 1);
+        fetchDacs(detector_j, 1);
         setStringParam(
             chip,
             ADTimePixLayout,
