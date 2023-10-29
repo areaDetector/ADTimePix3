@@ -96,9 +96,9 @@ dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 
 dbpf("$(PREFIX)cam1:WriteData","1")   # Write selected data files to disk and stream to socket
 
-dbpf("$(PREFIX)cam1:BPCFilePath","/epics/src/RHEL8/support/areaDetector/ADTimePix3/vendor/")
+dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")       # load BPC calibration
-dbpf("$(PREFIX)cam1:DACSFilePath","/epics/src/RHEL8/support/areaDetector/ADTimePix3/vendor/")
+dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")     # load DACS calibration
 
 #dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
