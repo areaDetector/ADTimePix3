@@ -1300,7 +1300,7 @@ void ADTimePix::timePixCallback(){
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
 
     getStringParam(ADSDKVersion, API_Ver);
-    if (API_Ver == "3.2.0") {
+    if ((API_Ver == "3.2.0") | (API_Ver == "3.3.0")) {
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
         setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
     } else if (API_Ver == "3.1.1") {
