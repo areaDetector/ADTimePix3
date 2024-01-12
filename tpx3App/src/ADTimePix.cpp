@@ -1359,7 +1359,7 @@ void ADTimePix::timePixCallback(){
             // elapsedTime = r.elapsed;                                      // 0.00035 s
             // printf("Elapsed Time = %f\n", elapsedTime);
 
-            epicsThreadSleep(0.952);
+            epicsThreadSleep(0.1);
         //    epicsThreadSleep(0);
         }
         frameCounter = new_frame_num;
@@ -1367,7 +1367,7 @@ void ADTimePix::timePixCallback(){
         getIntegerParam(ADTimePixWritePrvImg, &writeChannel);
         if (writeChannel != 0) {
             // Preview, ImageChannels[0]
-    
+
             if(this->acquiring){
                 asynStatus imageStatus = readImage();
     
@@ -1422,6 +1422,7 @@ void ADTimePix::timePixCallback(){
 asynStatus ADTimePix::acquireStop(){
     const char* functionName = "acquireStop";
     asynStatus status;
+    std::string API_Ver;
 
     this->acquiring=false;
     if(this->callbackThreadId != NULL)
@@ -1443,6 +1444,40 @@ asynStatus ADTimePix::acquireStop(){
     setIntegerParam(ADAcquire, 0);
     callParamCallbacks();
     FLOW("Stopping Image Acquisition");
+
+    // Update end measurement values
+    string measurementURL = this->serverURL + std::string("/measurement");
+    r = cpr::Get(cpr::Url{measurementURL},
+            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+            cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+
+    if (r.status_code != 200){
+        ERR("Failed to stop measurement!");
+        return asynError;
+    }
+
+    json measurement_j = json::parse(r.text.c_str());
+
+    setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
+
+    getStringParam(ADSDKVersion, API_Ver);
+    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0")) {
+        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
+        setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
+    } else if ((API_Ver == "3.1.1") || (API_Ver == "3.0.0")) {
+        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
+    } else {
+        printf ("Serval Version not compared, event rate not read in acquireStop\n");
+    }
+
+    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
+    setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
+    setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
+    setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
+    setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
+    setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());
+    callParamCallbacks();
+
     return status;
 }
 
