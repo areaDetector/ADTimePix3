@@ -1300,10 +1300,10 @@ void ADTimePix::timePixCallback(){
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
 
     getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver == "3.2.0") | (API_Ver == "3.3.0")) {
+    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0")) {
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
         setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-    } else if (API_Ver == "3.1.1") {
+    } else if ((API_Ver == "3.1.1") || (API_Ver == "3.0.0")) {
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
     } else {
         printf ("Serval Version not compared, event rate not read\n");
@@ -1331,13 +1331,13 @@ void ADTimePix::timePixCallback(){
             measurement_j = json::parse(r.text.c_str());
             setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
             
-            if (API_Ver == "3.2.0") {
+            if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0")) {
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
                 setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-            } else if (API_Ver == "3.1.0" || API_Ver == "3.0.0") {
+            } else if ((API_Ver == "3.1.0") || (API_Ver == "3.0.0")) {
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
             } else {
-            //    printf ("Serval Version event rate not specified\n");
+                printf ("Serval Version event rate not specified in while loop.\n");
             }
 
             setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
@@ -1367,7 +1367,6 @@ void ADTimePix::timePixCallback(){
         getIntegerParam(ADTimePixWritePrvImg, &writeChannel);
         if (writeChannel != 0) {
             // Preview, ImageChannels[0]
-    
     
             if(this->acquiring){
                 asynStatus imageStatus = readImage();
