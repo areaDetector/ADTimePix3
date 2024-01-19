@@ -133,6 +133,6 @@ record(longin, "$(P)$(R)$(C)_Adjust_RBV"){
 # Detector Chip Layout
 record(stringin, "$(P)$(R)$(C)_Layout_RBV"){
   field(DTYP, "asynOctetRead")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LAYTOUT")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LAYOUT")
   field(SCAN, "I/O Intr")
 }

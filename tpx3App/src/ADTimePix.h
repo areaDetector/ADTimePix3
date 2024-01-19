@@ -118,7 +118,7 @@ using json = nlohmann::json;
 #define ADTimePixAdjustString              "TPX3_ADJUST"           // (asynInt32,         r)      DACs->Adjust
 // Chip Layout
 #define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"            // (asynOctet,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
-#define ADTimePixLayoutString               "TPX3_LAYTOUT"              // (asynOctet,         r)      Chip layout
+#define ADTimePixLayoutString               "TPX3_LAYOUT"              // (asynOctet,         r)      Chip layout
 
     // Absolute path to the binary pixel configuration, absolute path to the text chips configuration
 #define ADTimePixBPCFilePathString          "BPC_FILE_PATH"             /**< (asynOctet,    r/w) The file path Binary Pixel Configuration */
