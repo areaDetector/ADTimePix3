@@ -568,6 +568,50 @@ asynStatus ADTimePix::getHealth(){
 }
 
 /**
+ * Write detector Layout
+ *
+ * There are seven possible orientations of the detector
+ * TODO: The function does NOT rotate detector - need to confirm with ASI about Serval functionality
+ *
+ * @return: status
+ */
+asynStatus ADTimePix::writeLayout() {
+    asynStatus status = asynSuccess;
+    int intNum;
+
+    std::string layout_url = this->serverURL + std::string("/detector/layout/");
+
+    getIntegerParam(ADTimePixDetectorOrientation, &intNum);
+    json detectorOrientation;
+    detectorOrientation[0] = "UP";
+    detectorOrientation[1] = "RIGHT";
+    detectorOrientation[2] = "DOWN";
+    detectorOrientation[3] = "LEFT";
+    detectorOrientation[4] = "UP_MIRRORED";
+    detectorOrientation[5] = "RIGHT_MIRRORED";
+    detectorOrientation[6] = "DOWN_MIRRORED";
+    detectorOrientation[7] = "LEFT_MIRRORED";
+
+    std::string json_data = "{\"DetectorOrientation\":\"" + std::string(detectorOrientation[intNum]) + "\"}";
+
+    // printf("Layout,layout_url=%s\n", layout_url.c_str());
+    // printf("Layout,json data=%s\n", json_data.c_str());
+
+    cpr::Response r = cpr::Put(
+        cpr::Url{layout_url},
+        cpr::Body{json_data},
+        cpr::Header{{"Content-Type", "application/json"}}
+    );
+
+    if (r.status_code != 200) {
+        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        status = asynError;
+    }
+
+    return status;
+}
+
+/**
  * Write value on individual DAC
  *
  * chip:      Chip number (int)
@@ -726,7 +770,7 @@ asynStatus ADTimePix::getDetector(){
     fetchDacs(detector_j, 0);
 
     // Serval3 - Detector Chip Layout
-    setStringParam(ADTimePixDetectorOrientation, strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str()));
+    setIntegerParam(ADTimePixDetectorOrientation, mDetOrientationMap[detector_j["Layout"]["DetectorOrientation"].dump().c_str()]);
     setStringParam(0, ADTimePixLayout, detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
     callParamCallbacks();
 
@@ -1612,6 +1656,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = initAcquisition();
     }    
 
+    else if(function == ADTimePixDetectorOrientation) {
+        status = writeLayout();
+    }
+
     else if(function == ADNumImages || function == ADTriggerMode) { 
         if(function == ADNumImages) {
             int imageMode;
@@ -1818,6 +1866,15 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 {
     static const char* functionName = "ADTimePix";
 
+    mDetOrientationMap["UP"] =      0;
+    mDetOrientationMap["RIGHT"] =   1;
+    mDetOrientationMap["DOWN"] =    2;
+    mDetOrientationMap["LEFT"] =    3;
+    mDetOrientationMap["UP_MIRRORED"] =     4;
+    mDetOrientationMap["RIGHT_MIRRORED"] =  5;
+    mDetOrientationMap["DOWN_MIRRORED"] =   6;
+    mDetOrientationMap["LEFT_MIRRORED"] =   7;
+
     /* Initialize GraphicsMagick */
     InitializeMagick(NULL);
 
@@ -1892,7 +1949,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixExposureTimeString,                asynParamFloat64,   &ADTimePixExposureTime);  
     createParam(ADTimePixTriggerPeriodString,               asynParamFloat64,   &ADTimePixTriggerPeriod);  
     createParam(ADTimePixnTriggersString,                   asynParamInt32,     &ADTimePixnTriggers);
-    createParam(ADTimePixDetectorOrientationString,         asynParamOctet,     &ADTimePixDetectorOrientation);      
+    createParam(ADTimePixDetectorOrientationString,         asynParamInt32,     &ADTimePixDetectorOrientation);
     createParam(ADTimePixPeriphClk80String,                 asynParamInt32,     &ADTimePixPeriphClk80);
     createParam(ADTimePixTriggerDelayString,                asynParamFloat64,   &ADTimePixTriggerDelay);  
     createParam(ADTimePixTdcString,                         asynParamOctet,     &ADTimePixTdc);

@@ -117,7 +117,7 @@ using json = nlohmann::json;
 #define ADTimePixVthresholdFineString      "TPX3_VTH_FINE"         // (asynInt32,         r)      DACs->Vthreshold_fine
 #define ADTimePixAdjustString              "TPX3_ADJUST"           // (asynInt32,         r)      DACs->Adjust
 // Chip Layout
-#define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"            // (asynOctet,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
+#define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"     // (asynInt32,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
 #define ADTimePixLayoutString               "TPX3_LAYOUT"              // (asynOctet,         r)      Chip layout
 
     // Absolute path to the binary pixel configuration, absolute path to the text chips configuration
@@ -453,6 +453,7 @@ class ADTimePix : ADDriver{
         epicsEventId startEventId;
         epicsEventId endEventId;
         
+        std::map<std::string, int> mDetOrientationMap;
 
         std::string serverURL;
         Image image;
@@ -507,6 +508,7 @@ class ADTimePix : ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
+        asynStatus writeLayout();
 
 };
 
