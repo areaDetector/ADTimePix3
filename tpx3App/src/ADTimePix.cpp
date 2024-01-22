@@ -775,7 +775,7 @@ asynStatus ADTimePix::getDetector(){
     callParamCallbacks();
 
     int number_chips = detector_j["Info"]["NumberOfChips"].get<int>();
-    for (int chip = 0; chip < number_chips; chip++) {
+    for (int chip = 1; chip < number_chips; chip++) {
         fetchDacs(detector_j, chip);
         setStringParam(
             chip,
