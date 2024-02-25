@@ -934,7 +934,7 @@ asynStatus ADTimePix::fileWriter(){
 
     json server_j;
     json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
-    json imgMode = {"count","tot","toa","tof",};
+    json imgMode = {"count","tot","toa","tof","count_fb"};
     json samplingMode = {"skipOnFrame","skipOnPeriod"};
 
     getIntegerParam(ADTimePixWriteRaw, &writeChannel);

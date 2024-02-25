@@ -317,6 +317,8 @@ record(mbbo, "$(P)$(R)ImgFileMode")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    info(autosaveFields, "VAL")
 }
 record(mbbi, "$(P)$(R)ImgFileMode_RBV")
@@ -331,6 +333,8 @@ record(mbbi, "$(P)$(R)ImgFileMode_RBV")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    field(SCAN, "I/O Intr")
 }
 
@@ -553,6 +557,8 @@ record(mbbo, "$(P)$(R)PrvImgFileMode")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    info(autosaveFields, "VAL")
 }
 
@@ -568,6 +574,8 @@ record(mbbi, "$(P)$(R)PrvImgFileMode_RBV")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    field(SCAN, "I/O Intr")
 }
 
@@ -745,6 +753,8 @@ record(mbbo, "$(P)$(R)PrvImg1FileMode")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    info(autosaveFields, "VAL")
 }
 
@@ -760,6 +770,8 @@ record(mbbi, "$(P)$(R)PrvImg1FileMode_RBV")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    field(SCAN, "I/O Intr")
 }
 
@@ -937,6 +949,8 @@ record(mbbo, "$(P)$(R)PrvHstFileMode")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    info(autosaveFields, "VAL")
 }
 
@@ -952,6 +966,8 @@ record(mbbi, "$(P)$(R)PrvHstFileMode_RBV")
    field(TWVL, "2")
    field(THST, "tof")    
    field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
    field(SCAN, "I/O Intr")
 }
 
