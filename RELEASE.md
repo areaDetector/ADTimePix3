@@ -13,7 +13,34 @@ Different branches of ADTimePix3 support differnet Serval versions.
 The master branch (under development) is for Serval 3.0.0
 
 
-Driver depends on Serval versions, at this time.
+Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.0
+
+R0-8 (February 25, 2024)
+* count_fb mode support added which was added originally in Serval 3.1
+* Chip loop update starts at chip1, since chip0
+* Initial work on Chip orientation control in FPGA
+* Measurement status values updated for interrupted acquisition
+* Serval 3.3.0 both TDC update during image readout
+* Serval 3.3.0 uses two TDC with separate computations
+* Updated BPC / DACS to have default shorter path
+* Chip Voltage threshold coarse/fine setting opi and control
+    * Douglas Araujo from ESS PR
+    * Refactor DACs code to use asyn multidevice mechanism, using different asyn address for the chips
+    * Initialize GraphicsMagick on class constructor
+    * Fix RawStream PV type
+* Destructor is now static const
+* TDC signals for one-chip TPX3 detector
+* Raw file streaming to tcp://connect@localhost:8085 enabled
+* ADCore commonPlugins.cmd settings
+* Preview image loop speed up
+* Preview[0] channel does not need to be enabled; however, prv images are not displayed
+* Driver ensures that for Continous mode ExposureTime (AcquireTime) propagates to TriggerPeriod (AcquirePeriod), must be equal to each other
+* Default reduce readout of preview images to not more than 1 per second
+* Remove disgnostic messages
+* Dashboard DiskSpace is empty until raw file writing enabled, and acquisition starts
+* Dashboard work updated
+* Startup update with description of channels
+* Allow streamling of raw .tpx3 events, saving of prv images not required, more consistent default chan
 
 R0-7 (June 26, 2023)
 * Driver works for Serval 3.2 and Emulator 3.2
