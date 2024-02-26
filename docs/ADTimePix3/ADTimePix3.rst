@@ -70,3 +70,15 @@ The following are the CSS screens for features of ADTimePix3 detector
 
 .. figure:: Screenshots/TimePix3_status.png
     :align: center
+
+Serval 3.3.0 allows multiple raw streams (socket, .tpx3 file writing)
+
+.. figure:: Screenshots/TimePix3_FileWriterRaw.png
+    :align: center
+
+Neutron clusters
+
+.. figure:: Screenshots/NeutronClusters.png
+    :align: center
+
+    
