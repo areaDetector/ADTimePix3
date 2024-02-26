@@ -253,6 +253,48 @@ asynStatus ADTimePix::checkRawPath()
     return status;
 }
 
+/* Serval 3.3.0 allows writing raw .tpx3 file, and stream data. This is the 2nd Base channel
+* to either write .tpx3 file, or stream to socket.
+* Operator decides which Raw or Raw1 is used for streaming, and which for .tpx3 file.
+*/
+asynStatus ADTimePix::checkRaw1Path()
+{
+    asynStatus status;
+    std::string filePath, fileOrStream;
+    int pathExists = 0;
+
+    getStringParam(ADTimePixRaw1Base, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+
+    if (filePath.size() > 6) {
+        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data to disk
+            setIntegerParam(ADTimePixRaw1Stream, 0);
+            fileOrStream = filePath.substr(5);
+            pathExists = checkPath(fileOrStream);
+        }
+        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8085
+            setIntegerParam(ADTimePixRaw1Stream, 1);
+            fileOrStream = filePath.substr(6);
+            pathExists = 1;
+        }
+        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
+            setIntegerParam(ADTimePixRaw1Stream, 2);
+            fileOrStream = filePath.substr(5);
+            pathExists = 1;
+        }
+        else {
+            printf("Raw file path must be file://path_to_raw_folder, or tcp://localhost:8085\n");
+            setIntegerParam(ADTimePixRaw1Stream, 3);
+            pathExists = 0;
+        }
+    }
+
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixRaw1Base, filePath);
+    setIntegerParam(ADTimePixRaw1FilePathExists, pathExists);
+    return status;
+}
+
 asynStatus ADTimePix::checkImgPath()
 {
     asynStatus status;
@@ -953,6 +995,23 @@ asynStatus ADTimePix::fileWriter(){
         }
     }   
 
+// Serval 3.3.0
+    getIntegerParam(ADTimePixWriteRaw1, &writeChannel);
+    getIntegerParam(ADTimePixRaw1Stream, &rawStream);
+    if (writeChannel != 0) {
+        // Raw
+        getStringParam(ADTimePixRaw1Base, fileStr);
+        server_j["Raw"][1]["Base"] = fileStr;
+        getStringParam(ADTimePixRaw1FilePat, fileStr);
+        server_j["Raw"][1]["FilePattern"] = fileStr;
+
+        if (rawStream == 0) {       // file:/
+            getIntegerParam(ADTimePixRaw1SplitStrategy, &intNum);
+            json splitStrategy = {"single_file","frame"};
+            server_j["Raw"][1]["SplitStrategy"] = splitStrategy[intNum];
+        }
+    }
+
     getIntegerParam(ADTimePixWriteImg, &writeChannel);
     if (writeChannel != 0) {
         // Image
@@ -1561,6 +1620,8 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkDACSPath();
     } else if (function == ADTimePixRawBase) {
         status = this->checkRawPath();
+    } else if (function == ADTimePixRaw1Base) {
+        status = this->checkRaw1Path();
     } else if (function == ADTimePixImgBase) {
         status = this->checkImgPath();      
     } else if (function == ADTimePixPrvImgBase) {
@@ -1997,6 +2058,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Server, File Writer channels
     createParam(ADTimePixWriteDataString,                  asynParamInt32,  &ADTimePixWriteData);
     createParam(ADTimePixWriteRawString,                   asynParamInt32,  &ADTimePixWriteRaw);         
+    createParam(ADTimePixWriteRaw1String,                  asynParamInt32,  &ADTimePixWriteRaw1);   // Serval 3.3.0
     createParam(ADTimePixWriteImgString,                   asynParamInt32,  &ADTimePixWriteImg);         
     createParam(ADTimePixWritePrvImgString,                asynParamInt32,  &ADTimePixWritePrvImg);   
     createParam(ADTimePixWritePrvImg1String,               asynParamInt32,  &ADTimePixWritePrvImg1);     
@@ -2008,6 +2070,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixRawSplitStrategyString,           asynParamInt32,  &ADTimePixRawSplitStrategy);         
     createParam(ADTimePixRawQueueSizeString,               asynParamInt32,  &ADTimePixRawQueueSize);
     createParam(ADTimePixRawFilePathExistsString,          asynParamInt32,  &ADTimePixRawFilePathExists); 
+    // Server, Raw; Serval 3.3.0 allows writing raw file and stream.
+    createParam(ADTimePixRaw1BaseString,                   asynParamOctet,  &ADTimePixRaw1Base);
+    createParam(ADTimePixRaw1FilePatString,                asynParamOctet,  &ADTimePixRaw1FilePat);
+    createParam(ADTimePixRaw1SplitStrategyString,          asynParamInt32,  &ADTimePixRaw1SplitStrategy);
+    createParam(ADTimePixRaw1QueueSizeString,              asynParamInt32,  &ADTimePixRaw1QueueSize);
+    createParam(ADTimePixRaw1FilePathExistsString,         asynParamInt32,  &ADTimePixRaw1FilePathExists);
     // Server, Image
     createParam(ADTimePixImgBaseString,                   asynParamOctet,    &ADTimePixImgBase);              
     createParam(ADTimePixImgFilePatString,                asynParamOctet,    &ADTimePixImgFilePat);            
@@ -2069,6 +2137,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     
     // Controls
     createParam(ADTimePixRawStreamString,       asynParamInt32,     &ADTimePixRawStream);
+    createParam(ADTimePixRaw1StreamString,      asynParamInt32,     &ADTimePixRaw1Stream);
 
     //sets driver version
     char versionString[25];

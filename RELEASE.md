@@ -15,6 +15,11 @@ The master branch (under development) is for Serval 3.0.0
 
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.0
 
+R0-9 (February 25, 2024)
+* Multiple raw streams (Serval 3.3.0 support)
+    * raw can be .tpx3 file
+    * raw1 can be a socket
+
 R0-8 (February 25, 2024)
 * count_fb mode support added which was added originally in Serval 3.1
 * Chip loop update starts at chip1, since chip0

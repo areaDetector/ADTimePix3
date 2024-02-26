@@ -5,7 +5,7 @@
  *
  * Author:  Kazimierz Gofron
  * Created: June, 2022
- * Last edited: July 6, 2023
+ * Last edited: February 25, 2023
  * Copyright (c) : Oak Ridge National Laboratory
  *
  */
@@ -135,6 +135,7 @@ using json = nlohmann::json;
     // Server, write data channels
 #define ADTimePixWriteDataString           "TPX3_WRITE_DATA"          // (asynInt32,         w)      Write Data output channels (raw,img,preview)
 #define ADTimePixWriteRawString            "TPX3_WRITE_RAW"           // (asynInt32,         w)      Write Data output channels (raw)
+#define ADTimePixWriteRaw1String           "TPX3_WRITE_RAW1"          // (asynInt32,         w)      Write Data output channels (raw), Serval 3.3.0
 #define ADTimePixWriteImgString            "TPX3_WRITE_IMG"           // (asynInt32,         w)      Write Data output channels (img)
 #define ADTimePixWritePrvImgString         "TPX3_WRITE_PRVIMG"        // (asynInt32,         w)      Write Data output channels (preview->img)
 #define ADTimePixWritePrvImg1String        "TPX3_WRITE_PRVIMG1"       // (asynInt32,         w)      Write Data output channels (preview->img1)
@@ -146,6 +147,13 @@ using json = nlohmann::json;
 #define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"         // (asynOctet,         w)      Raw Destination Split Strategy
 #define ADTimePixRawQueueSizeString         "TPX3_RAW_QUEUESIZE"        // (asynInt32,         w)      Raw Destination Queue Size
 #define ADTimePixRawFilePathExistsString    "RAW_FILE_PATH_EXISTS"      // (asynInt32,       r/w) File path exists? */
+
+    // Server, raw stream or .tpx3 file (Serval 3.3.0)
+#define ADTimePixRaw1BaseString              "TPX3_RAW1_BASE"            // (asynOctet,         w)      Raw Destination Base
+#define ADTimePixRaw1FilePatString           "TPX3_RAW1_FILEPAT"         // (asynOctet,         w)      Raw Destination File Pattern
+#define ADTimePixRaw1SplitStrategyString     "TPX3_RAW1_SPLITSTG"        // (asynOctet,         w)      Raw Destination Split Strategy
+#define ADTimePixRaw1QueueSizeString         "TPX3_RAW1_QUEUESIZE"       // (asynInt32,         w)      Raw Destination Queue Size
+#define ADTimePixRaw1FilePathExistsString    "RAW1_FILE_PATH_EXISTS"     // (asynInt32,       r/w) File path exists? */
 
     // Server, Image, ImageChannels[0]
 #define ADTimePixImgBaseString               "TPX3_IMG_IMGBASE"          // (asynOctet,         w)      ImageChannels Base file (Place raw files) 
@@ -210,6 +218,7 @@ using json = nlohmann::json;
 
 // Control
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
+#define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
 
 // Place any required inclues here
 
@@ -368,8 +377,9 @@ class ADTimePix : ADDriver{
         int ADTimePixWriteDACSFile;
 
             // Server, write output channels/modes
-        int ADTimePixWriteData;    
-        int ADTimePixWriteRaw;      
+        int ADTimePixWriteData;
+        int ADTimePixWriteRaw;
+        int ADTimePixWriteRaw1;      // Serval 3.3.0
         int ADTimePixWriteImg;      
         int ADTimePixWritePrvImg;   
         int ADTimePixWritePrvImg1;  
@@ -381,6 +391,13 @@ class ADTimePix : ADDriver{
         int ADTimePixRawSplitStrategy;    
         int ADTimePixRawQueueSize;
         int ADTimePixRawFilePathExists;
+
+            // Server, raw; Serval 3.3.0 multiple stream/file
+        int ADTimePixRaw1Base;
+        int ADTimePixRaw1FilePat;
+        int ADTimePixRaw1SplitStrategy;
+        int ADTimePixRaw1QueueSize;
+        int ADTimePixRaw1FilePathExists;
 
             // Server, Image
         int ADTimePixImgBase;           
@@ -444,8 +461,9 @@ class ADTimePix : ADDriver{
   
             // Controls
         int ADTimePixRawStream;
+        int ADTimePixRaw1Stream;
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixRawStream
+        #define ADTIMEPIX_LAST_PARAM ADTimePixRaw1Stream
 
     private:
 
@@ -497,6 +515,7 @@ class ADTimePix : ADDriver{
         asynStatus checkBPCPath();
         asynStatus checkDACSPath();
         asynStatus checkRawPath();
+        asynStatus checkRaw1Path();
         asynStatus checkImgPath();
         asynStatus checkPrvImgPath();
         asynStatus checkPrvImg1Path();

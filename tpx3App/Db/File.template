@@ -145,3 +145,18 @@ record(mbbi, "$(P)$(R)RawStream")
    field(THVL, "3")
    field(SCAN, "I/O Intr")
 }
+
+record(mbbi, "$(P)$(R)Raw1Stream")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_STREAM")
+   field(ZRST, "file:/")
+   field(ZRVL, "0")
+   field(ONST, "http://")
+   field(ONVL, "1")
+   field(TWST, "tcp://")
+   field(TWVL, "2")
+   field(THST, "unknown")
+   field(THVL, "3")
+   field(SCAN, "I/O Intr")
+}

@@ -43,6 +43,24 @@ record(bi, "$(P)$(R)WriteRaw_RBV")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
 }
+record(bo, "$(P)$(R)WriteRaw1")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_RAW1")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(VAL,  "0")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)WriteRaw1_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_RAW1")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
 
 record(bo, "$(P)$(R)WriteImg")
 {
@@ -173,10 +191,10 @@ record(mbbo, "$(P)$(R)RawSplitStg")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_SPLITSTG") 
-   field(ZRST, "single_file") 
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_SPLITSTG")
+   field(ZRST, "single_file")
    field(ZRVL, "0")
-   field(ONST, "frame") 
+   field(ONST, "frame")
    field(ONVL, "1")
    info(autosaveFields, "VAL")
 }
@@ -184,10 +202,10 @@ record(mbbo, "$(P)$(R)RawSplitStg")
 record(mbbi, "$(P)$(R)RawSplitStg_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_SPLITSTG") 
-   field(ZRST, "single_file") 
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_SPLITSTG")
+   field(ZRST, "single_file")
    field(ZRVL, "0")
-   field(ONST, "frame") 
+   field(ONST, "frame")
    field(ONVL, "1")
    field(SCAN, "I/O Intr")
 }
@@ -205,6 +223,94 @@ record(longin, "$(P)$(R)RawQueueSize_RBV")
 {
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_QUEUESIZE")
+   field(SCAN, "I/O Intr")
+}
+
+# Raw1 file path. Serval 3.3.0
+record(waveform, "$(P)$(R)Raw1FilePath")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_BASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)Raw1FilePath_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_BASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+record(bi, "$(P)$(R)Raw1FilePathExists_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))RAW1_FILE_PATH_EXISTS")
+    field(ZNAM, "No")
+    field(ZSV,  "MAJOR")
+    field(ONAM, "Yes")
+    field(OSV,  "NO_ALARM")
+    field(SCAN, "I/O Intr")
+}
+
+# Raw file template/pattern "raw%Hms_"
+record(waveform, "$(P)$(R)Raw1FileTemplate")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_FILEPAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+
+record(waveform, "$(P)$(R)Raw1FileTemplate_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_FILEPAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)Raw1SplitStg")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_SPLITSTG")
+   field(ZRST, "single_file")
+   field(ZRVL, "0")
+   field(ONST, "frame")
+   field(ONVL, "1")
+   info(autosaveFields, "VAL")
+}
+
+record(mbbi, "$(P)$(R)Raw1SplitStg_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_SPLITSTG")
+   field(ZRST, "single_file")
+   field(ZRVL, "0")
+   field(ONST, "frame")
+   field(ONVL, "1")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)Raw1QueueSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_QUEUESIZE")
+   field(VAL,  "16384")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)Raw1QueueSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_QUEUESIZE")
    field(SCAN, "I/O Intr")
 }
 
