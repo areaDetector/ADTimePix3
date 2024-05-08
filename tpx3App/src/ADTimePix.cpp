@@ -437,7 +437,7 @@ asynStatus ADTimePix::checkPrvHstPath()
 // -----------------------------------------------------------------------
 
 
-/**
+/*
  * Function that is used to initialize and connect to the device.
  * 
  * NOTE: Again, it is possible that for your camera, a different connection type is used (such as a product ID [int])
