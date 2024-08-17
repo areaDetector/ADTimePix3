@@ -655,6 +655,10 @@ asynStatus ADTimePix::writeLayout() {
 
 /**
  * Write value on individual DAC
+ * The write for each dacs of a chip is atomic: all dac values for specific chip written together
+ *    - Read dacs for specific chip from serval
+ *    - update specific dac value
+ *    - write dacs for that chip to serval
  *
  * chip:      Chip number (int)
  * dac:       Dac name (string)
@@ -666,9 +670,21 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     asynStatus status = asynSuccess;
 
     std::string dac_url = this->serverURL + std::string("/detector/chips/") + std::to_string(chip) + std::string("/dacs/");
-    std::string json_data = "{\"" + dac + "\":" + std::to_string(value) + "}";
+    cpr::Response r = cpr::Get(cpr::Url{dac_url},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
 
-    cpr::Response r = cpr::Put(
+    if (r.status_code != 200) {
+        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        status = asynError;
+    }
+
+    json dacsRead_j = json::parse(r.text.c_str());
+    dacsRead_j[dac]=value;
+    // printf("dacs=%s\n",dacsRead_j.dump(3,' ', true).c_str());
+    std::string json_data = dacsRead_j.dump(3,' ', true).c_str();
+
+    r = cpr::Put(
         cpr::Url{dac_url},
         cpr::Body{json_data},
         cpr::Header{{"Content-Type", "application/json"}}
