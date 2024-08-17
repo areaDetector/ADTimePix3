@@ -655,7 +655,7 @@ asynStatus ADTimePix::writeLayout() {
 
 /**
  * Write value on individual DAC
- * The write for each dacs of a chip is atomic: all dac values for specific chip written together
+ * The write for dacs of a chip is atomic: all dac values for specific chip must be written together
  *    - Read dacs for specific chip from serval
  *    - update specific dac value
  *    - write dacs for that chip to serval
@@ -680,7 +680,7 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     }
 
     json dacsRead_j = json::parse(r.text.c_str());
-    dacsRead_j[dac]=value;
+    dacsRead_j[dac] = value;
     // printf("dacs=%s\n",dacsRead_j.dump(3,' ', true).c_str());
     std::string json_data = dacsRead_j.dump(3,' ', true).c_str();
 
