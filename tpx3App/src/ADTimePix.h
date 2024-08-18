@@ -527,7 +527,7 @@ class ADTimePix : ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
-        asynStatus writeLayout();
+        asynStatus rotateLayout();
 
 };
 

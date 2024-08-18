@@ -613,15 +613,22 @@ asynStatus ADTimePix::getHealth(){
  * Write detector Layout
  *
  * There are seven possible orientations of the detector
- * TODO: The function does NOT rotate detector - need to confirm with ASI about Serval functionality
+ * TODO: The function does NOT rotate detector - need to confirm with ASI about Serval functionality.
+ *    /detector/Layout/DetectorOrientation: only reports orientation
+ * Use: GET <server>/detector/layout/rotate?flip=<flip>&direction=<direction>
+ *    flip: horizontal, vertical
+ *    direction: left, right, 180
+ *    reset: Not applicable
+ * Example: /detector/rotate?reset&flip=horizontal&direction=right
+ *    {reset layout -> flip horizontal -> rotate right}
  *
  * @return: status
  */
-asynStatus ADTimePix::writeLayout() {
+asynStatus ADTimePix::rotateLayout(){
     asynStatus status = asynSuccess;
     int intNum;
 
-    std::string layout_url = this->serverURL + std::string("/detector/layout/");
+    std::string layout_url = this->serverURL + std::string("/detector/layout/rotate?");
 
     getIntegerParam(ADTimePixDetectorOrientation, &intNum);
     json detectorOrientation;
@@ -634,16 +641,55 @@ asynStatus ADTimePix::writeLayout() {
     detectorOrientation[6] = "DOWN_MIRRORED";
     detectorOrientation[7] = "LEFT_MIRRORED";
 
-    std::string json_data = "{\"DetectorOrientation\":\"" + std::string(detectorOrientation[intNum]) + "\"}";
+//    json detOrientation_j;
+//    detOrientation_j["DetectorOrientation"] = detectorOrientation[intNum];
+//    std::string json_data = detOrientation_j.dump(3,' ', true).c_str();
+//    std::string json_data = "{\"DetectorOrientation\":\"" + std::string(detectorOrientation[intNum]) + "\"}";
+//    std::string json_data = "{\"" + std::string("DetectorOrientation") + "\":" + std::string(detectorOrientation[intNum]) + "}";
 
-    // printf("Layout,layout_url=%s\n", layout_url.c_str());
-    // printf("Layout,json data=%s\n", json_data.c_str());
+    switch (intNum) {
+        case 0:
+            layout_url += std::string("reset");
+            break;
+        case 1:
+            layout_url += std::string("direction=right");
+            break;
+        case 2:
+            layout_url += std::string("direction=180");
+            break;
+        case 3:
+            layout_url += std::string("direction=left");
+            break;
+        case 4:
+            layout_url += std::string("reset&flip=horizontal");
+            break;
+        case 5:
+            layout_url += std::string("reset&flip=horizontal&direction=right");
+            break;
+        case 6:
+            layout_url += std::string("reset&flip=horizontal&direction=180");
+            break;
+        case 7:
+            layout_url += std::string("reset&flip=horizontal&direction=left");
+            break;
+        default:
+            layout_url += std::string("reset&direction=right");
+            break;
+    }
 
-    cpr::Response r = cpr::Put(
-        cpr::Url{layout_url},
-        cpr::Body{json_data},
-        cpr::Header{{"Content-Type", "application/json"}}
-    );
+    printf("Layout,layout_url=%s\n", layout_url.c_str());
+
+    cpr::Response r = cpr::Get(cpr::Url{layout_url},
+                       cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+
+//    json layout_j = json::parse(r.text.c_str());
+//    printf("layout=%s\n",layout_j.dump(3,' ', true).c_str());
+
+//    cpr::Response r = cpr::Put(
+//        cpr::Url{layout_url},
+//        cpr::Body{json_data},
+//        cpr::Header{{"Content-Type", "application/json"}}
+//    );
 
     if (r.status_code != 200) {
         std::cerr << "Request failed with status code: " << r.status_code << std::endl;
@@ -1734,7 +1780,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }    
 
     else if(function == ADTimePixDetectorOrientation) {
-        status = writeLayout();
+        status = rotateLayout();
     }
 
     else if(function == ADNumImages || function == ADTriggerMode) { 
