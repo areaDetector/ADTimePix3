@@ -1,19 +1,25 @@
 ADTimePix3 Releases
 ==================
 
-The latest untagged master branch can be obtained at
-https://github.com/kgofron/ADTimePix3.
-
-Tagged source code can be obtained at
-https://github.com/kgofron/ADTimePix3/tags
+The repository was transferred a while back to 
+https://github.com/areaDetector/ADTimePix3
 
 There are currently only pre-releases for ADTimePix3
 Since Serval features differ the driver is specific to Serval version. 
 Different branches of ADTimePix3 support differnet Serval versions.
-The master branch (under development) is for Serval 3.0.0
+The master branch (under development) is for Serval 3.3.0
 
 
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.0
+
+R1-0 (August 17, 2024)
+* Chips DACs voltages settings use atomic function. The DACs voltages must be written at the same time (serval constraint).
+    * Two chips DACs voltages have PVs for setting values, but support for changing any of the 18 voltages can be added with new `writeDac()` rewrite.
+        * Vthreshold_coarse
+        * Vthreshold_fine
+* Another rewrite of the layout image rotation [not working, checking with ASI]
+    * There are 8 possible image rotation modes
+* The Phoebus .bob screens are converted/created, but not yet included in the driver.
 
 R0-9 (February 25, 2024)
 * Multiple raw streams (Serval 3.3.0 support)

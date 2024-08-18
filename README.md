@@ -12,10 +12,11 @@ Notes:
 * Depends on the [CPR](https://github.com/libcpr/cpr) verson 1.9.1.
 * Depends on the [json](https://github.com/nlohmann/json) version v3.11.2.
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
-* This has only been tested on ubuntu 18.04 and 20.04 Linux 64-bit machines.
-* This has only been developed for 2 x 2 chips layout, since that is what I have access to now
-* This has only been tested with serval version 3.0.0. 
-* Driver is specific to Serval version, since features differ.
+* This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.1 Linux 64-bit machines.
+* This has only been developed for 2 x 2 chips layout and 1 chip tpx3CAM, since that is what I have access to now.
+* This has been tested with serval version 3.3.0, 3.2.0, 3.1.0 and 3.0.0. Only most recent serval version(s) are tested extensivly.
+* Driver is specific to Serval version, since features differ. Driver for Serval 2.6 is in separate branch, and is not under current development
+* The driver has been developed using TimePix3 Emulator, and real detectors.
 
 Before compiling:
 -----------------
@@ -28,9 +29,10 @@ How to run:
 
 * Under `ADTimePix3/iocs/tpx3IOC/iocBoot/iocTimePix` there is already a ready to use IOC for the TimePix3
   - run serval
-  - Change the IP address in `st.cmd`.
+  - Change the IP address in `st.cmd` or `st_base.cmd`.
   - Run `./st.cmd`.
-* There are CSS-Boy, screens under `areaDetector/tpx3App/op/` [TODO - update for serval 3.0.0].
+* There are CSS-Boy, screens under `ADTimePix3/tpx3App/op/`
+  - Phoebus .bob screens have been converted/created but not yet included in the driver.
 
 Adjust chip thresholds
 ----------------
