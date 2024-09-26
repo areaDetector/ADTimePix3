@@ -1465,7 +1465,7 @@ void ADTimePix::timePixCallback(){
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
 
     getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0")) {
+    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0") ||  (API_Ver == "3.3.2-SNAPSHOT")) {
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
         setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
     } else if ((API_Ver == "3.1.1") || (API_Ver == "3.0.0")) {
@@ -1496,7 +1496,7 @@ void ADTimePix::timePixCallback(){
             measurement_j = json::parse(r.text.c_str());
             setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
             
-            if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0")) {
+            if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0") ||  (API_Ver == "3.3.2-SNAPSHOT")) {
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
                 setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
             } else if ((API_Ver == "3.1.0") || (API_Ver == "3.0.0")) {
@@ -1626,7 +1626,7 @@ asynStatus ADTimePix::acquireStop(){
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
 
     getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0")) {
+    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0") || (API_Ver == "3.3.2-SNAPSHOT")) {
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
         setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
     } else if ((API_Ver == "3.1.1") || (API_Ver == "3.0.0")) {
