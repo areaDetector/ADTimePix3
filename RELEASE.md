@@ -12,6 +12,14 @@ The master branch (under development) is for Serval 3.3.0
 
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.0
 
+R1-2 (xxx, 2025)
+* Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file is manageable.
+* Operational ioc: st.cmd delay before writing the preview images.
+
+R1-1 (August 18, 2024)
+* Updated documentaiton
+* Attempt at rotating images using DetectorOrientation in Layout
+
 R1-0 (August 17, 2024)
 * Chips DACs voltages settings use atomic function. The DACs voltages must be written at the same time (serval constraint).
     * Two chips DACs voltages have PVs for setting values, but support for changing any of the 18 voltages can be added with new `writeDac()` rewrite.
