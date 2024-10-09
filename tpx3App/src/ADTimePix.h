@@ -15,7 +15,7 @@
 #define ADTIMEPIX_H
 
 // version numbers
-#define ADTIMEPIX_VERSION      0
+#define ADTIMEPIX_VERSION      1
 #define ADTIMEPIX_REVISION     1
 #define ADTIMEPIX_MODIFICATION 0
 
