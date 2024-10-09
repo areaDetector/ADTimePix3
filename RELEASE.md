@@ -15,6 +15,7 @@ Driver depends on Serval versions, at this time. The current releases support Se
 R1-2 (xxx, 2025)
 * Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file is manageable.
 * Operational ioc: st.cmd delay before writing the preview images.
+* Updated Revision version
 
 R1-1 (August 18, 2024)
 * Updated documentaiton
