@@ -5,7 +5,7 @@
  *
  * Author:  Kazimierz Gofron
  * Created: June, 2022
- * Last edited: February 25, 2023
+ * Last edited: November 11, 2024
  * Copyright (c) : Oak Ridge National Laboratory
  *
  */
@@ -216,6 +216,19 @@ using json = nlohmann::json;
 #define ADTimePixDroppedFramesString         "TPX3_DROPPED_FRAMES"    // (asynInt32,         w)      DroppedFrames
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
+// BPC Mask
+#define ADTimePixMaskBPCString           "TPX3_MASK_ARRAY_BPC"        // (asynInt32,         w)      BPC mask to enable/disable pixel counting
+#define ADTimePixMaskOnOffPelString      "TPX3_MASK_ONOFF_PEL"        // (asynInt32,         w)      BPC mask positive/negative mask (count/not count)
+#define ADTimePixMaskResetString         "TPX3_MASK_RESET"            // (asynInt32,         w)      BPC mask initialize to 0 or 1 OnOffPel value
+#define ADTimePixMaskMinXString          "TPX3_MASK_MINX"             // (asynInt32,         w)      BPC mask rectangular/circular X
+#define ADTimePixMaskSizeXString         "TPX3_MASK_SIZEX"            // (asynInt32,         w)      BPC mask rectangular SizeX
+#define ADTimePixMaskMinYString          "TPX3_MASK_MINY"             // (asynInt32,         w)      BPC mask rectangular/circular Y
+#define ADTimePixMaskSizeYString         "TPX3_MASK_SIZEY"            // (asynInt32,         w)      BPC mask rectangular SizeY
+#define ADTimePixMaskRadiusString        "TPX3_MASK_RADIUS"           // (asynInt32,         w)      BPC mask circular Radius
+#define ADTimePixMaskRectangleString     "TPX3_MASK_RECTANGLE"        // (asynInt32,         w)      BPC mask rectangle mask write to array
+#define ADTimePixMaskCircleString        "TPX3_MASK_CIRCLE"           // (asynInt32,         w)      BPC mask circule mask write to array
+#define ADTimePixMaskFileNameString      "TPX3_MASK_FILENAME"         // (asynOctet,         w)      BPC mask FileName, file written to original location of .bpc
+
 // Control
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
@@ -244,7 +257,7 @@ using namespace Magick;
  * Includes constructor/destructor, PV params, function defs and variable defs
  *
  */
-class ADTimePix : ADDriver{
+class ADTimePix : public ADDriver{
 
     public:
 
@@ -257,6 +270,12 @@ class ADTimePix : ADDriver{
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
+        // Declaration for the new function in the driver class
+        virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn);
+
+        asynStatus maskReset(epicsInt32 *buf, int OnOff);
+        asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
+        asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
 
         void timePixCallback();
 
@@ -458,7 +477,20 @@ class ADTimePix : ADDriver{
         int ADTimePixFrameCount;     
         int ADTimePixDroppedFrames;  
         int ADTimePixStatus;
-  
+
+            // BPC Mask
+        int ADTimePixMaskBPC;
+        int ADTimePixMaskOnOffPel;
+        int ADTimePixMaskReset;
+        int ADTimePixMaskMinX;
+        int ADTimePixMaskSizeX;
+        int ADTimePixMaskMinY;
+        int ADTimePixMaskSizeY;
+        int ADTimePixMaskRadius;
+        int ADTimePixMaskRectangle;
+        int ADTimePixMaskCircle;
+        int ADTimePixMaskFileName;
+
             // Controls
         int ADTimePixRawStream;
         int ADTimePixRaw1Stream;
@@ -528,6 +560,7 @@ class ADTimePix : ADDriver{
         asynStatus readImage();
         asynStatus fileWriter();
         asynStatus rotateLayout();
+        asynStatus readBPCfile();
 
 };
 
