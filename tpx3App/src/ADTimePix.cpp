@@ -2197,6 +2197,19 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixDroppedFramesString,               asynParamInt32,     &ADTimePixDroppedFrames);
     createParam(ADTimePixStatusString,                      asynParamOctet,     &ADTimePixStatus);       
     
+    // BPC Mask
+    createParam(ADTimePixMaskBPCString,              asynParamInt32, &ADTimePixMaskBPC);
+    createParam(ADTimePixMaskOnOffPelString,         asynParamInt32, &ADTimePixMaskOnOffPel);
+    createParam(ADTimePixMaskResetString,            asynParamInt32, &ADTimePixMaskReset);
+    createParam(ADTimePixMaskMinXString,             asynParamInt32, &ADTimePixMaskMinX);
+    createParam(ADTimePixMaskSizeXString,            asynParamInt32, &ADTimePixMaskSizeX);
+    createParam(ADTimePixMaskMinYString,             asynParamInt32, &ADTimePixMaskMinY);
+    createParam(ADTimePixMaskSizeYString,            asynParamInt32, &ADTimePixMaskSizeY);
+    createParam(ADTimePixMaskRadiusString,           asynParamInt32, &ADTimePixMaskRadius);
+    createParam(ADTimePixMaskRectangleString,        asynParamInt32, &ADTimePixMaskRectangle);
+    createParam(ADTimePixMaskCircleString,           asynParamInt32, &ADTimePixMaskCircle);
+    createParam(ADTimePixMaskFileNameString,         asynParamOctet, &ADTimePixMaskFileName);
+
     // Controls
     createParam(ADTimePixRawStreamString,       asynParamInt32,     &ADTimePixRawStream);
     createParam(ADTimePixRaw1StreamString,      asynParamInt32,     &ADTimePixRaw1Stream);
