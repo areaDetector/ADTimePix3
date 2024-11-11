@@ -1,0 +1,148 @@
+#=================================================================#
+# Template file: MaskBPC.template
+# Detector Binary Pixel Configuration Mask.
+# Author: K. Gofron
+# Date: 2024/10/23
+#=================================================================#
+
+##################################################################
+# Build BPC mask array PV records here.
+# Allow positive and negative mask
+# Allow rectangular and circulat masks
+#
+##################################################################
+
+record(waveform, "$(P)$(R)MaskBPC"){
+    field(DTYP, "asyn$(TYPE)ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_ARRAY_BPC")
+  #  field(INP,  [1, 2, 3, 4, 5])
+    field(FTVL, "$(FTVL)")
+    field(NELM, "$(NELEMENTS)")
+  #  field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)MaskOnOff"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_ONOFF_PEL")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+record(bo, "$(P)$(R)MaskReset"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_RESET")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+record(longout, "$(P)$(R)MaskMinX")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINX")
+   field(VAL,  "0")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskMinX_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINX")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskSizeX")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEX")
+   field(VAL,  "256")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskSizeX_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEX")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskMinY")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINY")
+   field(VAL,  "0")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskMinY_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINY")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskSizeY")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEY")
+   field(VAL,  "256")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskSizeY_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEY")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskRadius")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_RADIUS")
+   field(VAL,  "256")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskRadius_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_RADIUS")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)MaskRectangle"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_RECTANGLE")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+record(bo, "$(P)$(R)MaskCircle"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_CIRCLE")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+# BPC mask file name  "_maskBPC". Probably write it to same FilePath as BPC file exists
+record(waveform, "$(P)$(R)MaskBPCFileName")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_FILENAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)MaskBPCFileName_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_FILENAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
