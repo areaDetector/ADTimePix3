@@ -170,8 +170,8 @@
     </y_axis_axis_color>
     <y_axis_axis_title>Y Axis</y_axis_axis_title>
     <y_axis_major_tick_step_hint>50</y_axis_major_tick_step_hint>
-    <y_axis_maximum>512.0</y_axis_maximum>
-    <y_axis_minimum>0.0</y_axis_minimum>
+    <y_axis_maximum>0.0</y_axis_maximum>
+    <y_axis_minimum>512.0</y_axis_minimum>
     <y_axis_scale_font>
       <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </y_axis_scale_font>
@@ -279,8 +279,8 @@
     </y_axis_axis_color>
     <y_axis_axis_title>Y Axis</y_axis_axis_title>
     <y_axis_major_tick_step_hint>50</y_axis_major_tick_step_hint>
-    <y_axis_maximum>256.0</y_axis_maximum>
-    <y_axis_minimum>0.0</y_axis_minimum>
+    <y_axis_maximum>0.0</y_axis_maximum>
+    <y_axis_minimum>256.0</y_axis_minimum>
     <y_axis_scale_font>
       <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </y_axis_scale_font>
