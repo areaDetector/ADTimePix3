@@ -56,7 +56,7 @@
     </fg_gradient_color>
     <fill_level>0.0</fill_level>
     <font>
-      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </font>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -114,7 +114,7 @@ $(pv_value)</tooltip>
     </fg_gradient_color>
     <fill_level>100.0</fill_level>
     <font>
-      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </font>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -292,7 +292,7 @@ $(pv_value)</tooltip>
     <border_width>1</border_width>
     <enabled>true</enabled>
     <font>
-      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </font>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -321,7 +321,7 @@ $(pv_value)</tooltip>
     <width>64</width>
     <wuid>-681b7cb2:1819850d1ce:-2441</wuid>
     <x>45</x>
-    <y>29</y>
+    <y>28</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="false">
@@ -347,7 +347,7 @@ $(pv_value)</tooltip>
     <border_width>1</border_width>
     <enabled>true</enabled>
     <font>
-      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </font>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -376,7 +376,7 @@ $(pv_value)</tooltip>
     <width>64</width>
     <wuid>-681b7cb2:1819850d1ce:-e4</wuid>
     <x>45</x>
-    <y>51</y>
+    <y>52</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="false">
@@ -402,7 +402,7 @@ $(pv_value)</tooltip>
     <border_width>1</border_width>
     <enabled>true</enabled>
     <font>
-      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </font>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -431,7 +431,7 @@ $(pv_value)</tooltip>
     <width>100</width>
     <wuid>-681b7cb2:1819850d1ce:d91</wuid>
     <x>203</x>
-    <y>29</y>
+    <y>28</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="false">
@@ -457,7 +457,7 @@ $(pv_value)</tooltip>
     <border_width>1</border_width>
     <enabled>true</enabled>
     <font>
-      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
     </font>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -486,6 +486,61 @@ $(pv_value)</tooltip>
     <width>100</width>
     <wuid>-661f465e:18240db8dc2:-7ad2</wuid>
     <x>203</x>
-    <y>53</y>
+    <y>52</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="OPEN_DISPLAY">
+        <path>Mask/Mask.opi</path>
+        <macros>
+          <include_parent_macros>true</include_parent_macros>
+        </macros>
+        <mode>1</mode>
+        <description>Mask</description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="115" green="223" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <image></image>
+    <name>Action Button_4</name>
+    <push_action_index>0</push_action_index>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>Mask</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>70</width>
+    <wuid>4a093d7a:192ba2229a9:-778c</wuid>
+    <x>120</x>
+    <y>52</y>
   </widget>
 </display>
