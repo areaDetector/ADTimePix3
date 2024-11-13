@@ -2209,6 +2209,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixMaskRectangleString,        asynParamInt32, &ADTimePixMaskRectangle);
     createParam(ADTimePixMaskCircleString,           asynParamInt32, &ADTimePixMaskCircle);
     createParam(ADTimePixMaskFileNameString,         asynParamOctet, &ADTimePixMaskFileName);
+    createParam(ADTimePixMaskPelString,              asynParamInt32, &ADTimePixMaskPel);
+    createParam(ADTimePixMaskWriteString,            asynParamInt32, &ADTimePixMaskWrite);
 
     // Controls
     createParam(ADTimePixRawStreamString,       asynParamInt32,     &ADTimePixRawStream);

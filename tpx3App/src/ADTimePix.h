@@ -228,6 +228,8 @@ using json = nlohmann::json;
 #define ADTimePixMaskRectangleString     "TPX3_MASK_RECTANGLE"        // (asynInt32,         w)      BPC mask rectangle mask write to array
 #define ADTimePixMaskCircleString        "TPX3_MASK_CIRCLE"           // (asynInt32,         w)      BPC mask circule mask write to array
 #define ADTimePixMaskFileNameString      "TPX3_MASK_FILENAME"         // (asynOctet,         w)      BPC mask FileName, file written to original location of .bpc
+#define ADTimePixMaskPelString           "TPX3_MASK_PEL"              // (asynInt32,         w)      BPC extract masked pel in vendor calibration .bpc File
+#define ADTimePixMaskWriteString         "TPX3_MASK_WRITE"            // (asynInt32,         w)      BPC write mask to new calibration .bpc File and push to TimePix3 FPGA
 
 // Control
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
@@ -276,6 +278,7 @@ class ADTimePix : public ADDriver{
         asynStatus maskReset(epicsInt32 *buf, int OnOff);
         asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
         asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
+        asynStatus readBPCfile(epicsInt32 *buf, int bufSize);
 
         void timePixCallback();
 
@@ -490,6 +493,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixMaskRectangle;
         int ADTimePixMaskCircle;
         int ADTimePixMaskFileName;
+        int ADTimePixMaskPel;
+        int ADTimePixMaskWrite;
 
             // Controls
         int ADTimePixRawStream;
@@ -560,7 +565,8 @@ class ADTimePix : public ADDriver{
         asynStatus readImage();
         asynStatus fileWriter();
         asynStatus rotateLayout();
-        asynStatus readBPCfile();
+    //    asynStatus readBPCfile();
+        int checkFile(std::string &fullFileName);
 
 };
 
