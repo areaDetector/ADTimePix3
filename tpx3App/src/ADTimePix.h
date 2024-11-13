@@ -272,6 +272,8 @@ class ADTimePix : public ADDriver{
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
+        asynStatus rotateLayout();
+
         // Declaration for the new function in the driver class
         virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn);
 
@@ -564,7 +566,6 @@ class ADTimePix : public ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
-        asynStatus rotateLayout();
     //    asynStatus readBPCfile();
         int checkFile(std::string &fullFileName);
 

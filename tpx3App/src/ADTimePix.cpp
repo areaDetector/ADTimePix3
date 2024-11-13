@@ -628,7 +628,7 @@ asynStatus ADTimePix::rotateLayout(){
     asynStatus status = asynSuccess;
     int intNum;
 
-    std::string layout_url = this->serverURL + std::string("/detector/layout/rotate?");
+    std::string layout_url = this->serverURL + std::string("/detector/layout/rotate?reset");
 
     getIntegerParam(ADTimePixDetectorOrientation, &intNum);
     json detectorOrientation;
@@ -649,35 +649,35 @@ asynStatus ADTimePix::rotateLayout(){
 
     switch (intNum) {
         case 0:
-            layout_url += std::string("reset");
+            layout_url += std::string("");
             break;
         case 1:
-            layout_url += std::string("direction=right");
+            layout_url += std::string("&direction=right");
             break;
         case 2:
-            layout_url += std::string("direction=180");
+            layout_url += std::string("&direction=180");
             break;
         case 3:
-            layout_url += std::string("direction=left");
+            layout_url += std::string("&direction=left");
             break;
         case 4:
-            layout_url += std::string("reset&flip=horizontal");
+            layout_url += std::string("&flip=horizontal");
             break;
         case 5:
-            layout_url += std::string("reset&flip=horizontal&direction=right");
+            layout_url += std::string("&direction=right&flip=horizontal");
             break;
         case 6:
-            layout_url += std::string("reset&flip=horizontal&direction=180");
+            layout_url += std::string("&flip=vertical");
             break;
         case 7:
-            layout_url += std::string("reset&flip=horizontal&direction=left");
+            layout_url += std::string("&direction=right&flip=vertical");
             break;
         default:
-            layout_url += std::string("reset&direction=right");
+            layout_url += std::string("");
             break;
     }
 
-    printf("Layout,layout_url=%s\n", layout_url.c_str());
+//    printf("Layout,layout_url=%s\n", layout_url.c_str());
 
     cpr::Response r = cpr::Get(cpr::Url{layout_url},
                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
@@ -1774,14 +1774,14 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = fileWriter();
     }
 
+    else if(function == ADTimePixDetectorOrientation) {
+        status = rotateLayout();
+    }
+
     else if(function == ADTimePixBiasVolt || ADTimePixBiasEnable || ADTimePixTriggerIn || ADTimePixTriggerOut || ADTimePixLogLevel \
                 || ADTimePixExternalReferenceClock || ADTimePixChainMode) {  // set and enable bias, log level
         status = initAcquisition();
     }    
-
-    else if(function == ADTimePixDetectorOrientation) {
-        status = rotateLayout();
-    }
 
     else if(function == ADNumImages || function == ADTriggerMode) { 
         if(function == ADNumImages) {
