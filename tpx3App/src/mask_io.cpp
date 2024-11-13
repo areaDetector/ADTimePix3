@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 // Area Detector include
 #include "ADTimePix.h"
 
@@ -22,6 +23,10 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
 	int reason = pasynUser->reason;
     int maskOnOff_val, maskReset_val, maskRectangle_val, maskCircle_val;
     int maskRectangle_MinX, maskRectangle_SizeX, maskRectangle_MinY, maskRectangle_SizeY, maskCircle_Radius;
+    int maskBPCfile_val, maskWrite_val;
+    int pathExists=0;
+
+    std::string BPCFilePath, BPCFileName, maskFileName, fullFileName;
  
 	if(reason == ADTimePixMaskBPC){
         getIntegerParam(ADTimePixMaskReset,&maskReset_val);
@@ -34,6 +39,12 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         getIntegerParam(ADTimePixMaskMinY,&maskRectangle_MinY);
         getIntegerParam(ADTimePixMaskSizeY,&maskRectangle_SizeY);
         getIntegerParam(ADTimePixMaskRadius,&maskCircle_Radius);
+        getIntegerParam(ADTimePixMaskPel,&maskBPCfile_val);
+        getIntegerParam(ADTimePixMaskWrite,&maskWrite_val);
+
+        getStringParam(ADTimePixBPCFilePath, BPCFilePath);
+        getStringParam(ADTimePixBPCFileName, BPCFileName);
+        getStringParam(ADTimePixMaskFileName, maskFileName);
 
         if (maskReset_val == 1) {            
             printf("The readInt32Array reset 0, %ld\n", nElements);
@@ -48,6 +59,23 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         else if (maskCircle_val == 1) {
             printf("The readInt32Array circle, %ld\n", nElements);
             maskCircle(value, maskRectangle_MinX, maskRectangle_MinY, maskCircle_Radius, maskOnOff_val);
+        }
+        else if (maskBPCfile_val == 1) {
+            fullFileName = BPCFilePath + BPCFileName;
+            printf("The readInt32Array bcp file read, %ld\n", nElements);
+            pathExists = checkFile(fullFileName);
+            printf("BPC file Exists=%d\n",pathExists);
+            if (pathExists == 2) {  // BPC file exists, read and process it
+    //            readBPCfile(value, bufSize);  // write ADTimePix:readOctet ??
+            }
+        }
+        else if (maskWrite_val == 1) {
+            fullFileName = BPCFilePath + maskFileName;
+            printf("The readInt32Array write mask, %ld\n", nElements);
+            pathExists = checkFile(BPCFilePath);
+            printf("BPC pathExists=%d\n",pathExists);
+            pathExists = checkFile(fullFileName);
+            printf("mask fileExists=%d\n",pathExists);
         }
         else {
             printf("The readInt32Array no mask, %ld\n", nElements);
@@ -88,7 +116,8 @@ asynStatus ADTimePix::maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, 
     return asynSuccess;
 }
 
-// Mask a circle: OnOff=1 set bit to 1, OnOff=0, set bit to 0
+// Mask a circle: OnOff=1 set bit to 1; OnOff=0, set bit to 0
+// 0 -> pixel is counting; 1-> pixel is not counting
 asynStatus ADTimePix::maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff) {
     for (int j = nY - nRadius; j <= nY+nRadius; ++j) {
         for (int i = nX - nRadius; i <= nX + nRadius; ++i) {
@@ -105,8 +134,28 @@ asynStatus ADTimePix::maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, in
     return asynSuccess;
 }
 
+// filePath can be a full file path name: directory->1, file->2, !exists-> 0
+int ADTimePix::checkFile(std::string &filePath) {
+    struct stat buff;
+    int istat, isDir=0, isFile=0, fileStat=0;
 
-asynStatus ADTimePix::readBPCfile() {   
+    // Return 0 on success, or -1 if unable to get file properties.
+    istat = stat(filePath.c_str(), &buff);
+    if (!istat) isDir = (S_IFDIR & buff.st_mode);
+    if (!istat && isDir) {
+        fileStat = 1;
+    //    printf("path success,%s\n", filePath.c_str());
+    }
+
+    if (!istat) isFile = (S_IFMT & buff.st_mode);
+    if (!istat && isFile) {
+        fileStat = 2;
+    //    printf("file success,%s\n", filePath.c_str());
+    }
+    return fileStat;
+}
+
+asynStatus ADTimePix::readBPCfile(epicsInt32 *buf, int bufSize) {   
 
     FILE *sourceFile, *destFile;
     long fileSize;
@@ -119,8 +168,8 @@ asynStatus ADTimePix::readBPCfile() {
     // BPC calibration mask file to read, and write new mask.
     std::string maskFile, filePath, fileName, fullFileName;
 
-    getStringParam(ADTimePixDACSFilePath, filePath);
-    getStringParam(ADTimePixDACSFileName, fileName);
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    getStringParam(ADTimePixBPCFileName, fileName);
     fullFileName = filePath + fileName;
 
     printf("Full File Name = %s", fullFileName.c_str());
@@ -133,7 +182,7 @@ asynStatus ADTimePix::readBPCfile() {
     }
 
     // Determine the size of the source file
-    fseek(sourceFile, 0, SEEK_END); // Move to the end of the file
+    fseek(sourceFile, 0, SEEK_END);  // Move to the end of the file
     fileSize = ftell(sourceFile);    // Get the current position (file size)
     rewind(sourceFile);              // Go back to the beginning of the file
 
