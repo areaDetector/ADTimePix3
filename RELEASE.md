@@ -13,6 +13,14 @@ The master branch (under development) is for Serval 3.3.0
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.0
 
 R1-2 (xxx, 2025)
+* Manipulation of the Binary Pixel Configuraiton (BPC), create positive/negative image mask.
+    - Create image rectangular mask
+    - Create image circular mask
+    - Image mask is additive
+    - Image mask is positive or negative
+    - Individual image mask is additive
+    - Number of image masks is not limited
+* Rotate image is working
 * Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file is manageable.
 * Operational ioc: st.cmd delay before writing the preview images.
 * Updated Revision version
