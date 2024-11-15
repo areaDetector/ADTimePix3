@@ -613,14 +613,14 @@ asynStatus ADTimePix::getHealth(){
  * Write detector Layout
  *
  * There are seven possible orientations of the detector
- * TODO: The function does NOT rotate detector - need to confirm with ASI about Serval functionality.
+ * The function rotates detector consistent with Serval URL.
  *    /detector/Layout/DetectorOrientation: only reports orientation
- * Use: GET <server>/detector/layout/rotate?flip=<flip>&direction=<direction>
+ * Use: GET <server>/detector/layout/rotate?reset
  *    flip: horizontal, vertical
  *    direction: left, right, 180
  *    reset: Not applicable
- * Example: /detector/rotate?reset&flip=horizontal&direction=right
- *    {reset layout -> flip horizontal -> rotate right}
+ * Example: /detector/layout/rotate?reset&direction=right&flip=horizontal
+ * TODO: Readback value
  *
  * @return: status
  */
