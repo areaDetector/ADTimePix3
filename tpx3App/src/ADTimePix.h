@@ -217,6 +217,7 @@ using json = nlohmann::json;
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
 // BPC Mask
+#define ADTimePixBPCString               "TPX3_BPC_PEL"               // (asynInt32,         w)      BPC pel for each pixel
 #define ADTimePixMaskBPCString           "TPX3_MASK_ARRAY_BPC"        // (asynInt32,         w)      BPC mask to enable/disable pixel counting
 #define ADTimePixMaskOnOffPelString      "TPX3_MASK_ONOFF_PEL"        // (asynInt32,         w)      BPC mask positive/negative mask (count/not count)
 #define ADTimePixMaskResetString         "TPX3_MASK_RESET"            // (asynInt32,         w)      BPC mask initialize to 0 or 1 OnOffPel value
@@ -280,7 +281,7 @@ class ADTimePix : public ADDriver{
         asynStatus maskReset(epicsInt32 *buf, int OnOff);
         asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
         asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
-        asynStatus readBPCfile(epicsInt32 *buf, int bufSize);
+        asynStatus readBPCfile(char **buf, int *bufSize);
 
         void timePixCallback();
 
@@ -484,6 +485,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixStatus;
 
             // BPC Mask
+        int ADTimePixBPC;
         int ADTimePixMaskBPC;
         int ADTimePixMaskOnOffPel;
         int ADTimePixMaskReset;
