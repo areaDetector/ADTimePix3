@@ -9,13 +9,6 @@
 #define ROWS (YCHIPS * Y_PEL)  // Set the number of horizontal pixels
 #define COLS (XCHIPS * X_PEL)  // Set the number of vertical pixels
 
-/** Called when asyn clients call pasynInt32Array->read().
-  * The base class implementation simply prints an error message.
-  * Derived classes may reimplement this function if required.
-  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
-  * \param[in] value Pointer to the array to read.
-  * \param[in] nElements Number of elements to read.
-  * \param[out] nIn Number of elements actually read. */
 asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                 size_t nElements, size_t *nIn)
 {   
@@ -27,6 +20,10 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
     int pathExists=0;
 
     std::string BPCFilePath, BPCFileName, maskFileName, fullFileName;
+
+    // buffer for reading BPC file
+    char *bufBPC;
+    int bufBPCSize = 0;
  
 	if(reason == ADTimePixMaskBPC){
         getIntegerParam(ADTimePixMaskReset,&maskReset_val);
@@ -48,12 +45,10 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
 
         if (maskReset_val == 1) {            
             printf("The readInt32Array reset 0, %ld\n", nElements);
-
             maskReset(value, maskOnOff_val);              
         }
         else if (maskRectangle_val == 1) {
             printf("The readInt32Array rectangle, %ld\n", nElements);
-
             maskRectangle(value, maskRectangle_MinX, maskRectangle_SizeX, maskRectangle_MinY, maskRectangle_SizeY, maskOnOff_val);
         }
         else if (maskCircle_val == 1) {
@@ -79,8 +74,23 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         }
         else {
             printf("The readInt32Array no mask, %ld\n", nElements);
-        }  
-    }    
+        }
+    }
+    else if (reason == ADTimePixBPC) {
+        printf("The readInt8, nElements=%ld\n", nElements);
+        readBPCfile(&bufBPC, &bufBPCSize);
+        printf("bufPBCSize=%d, strLen_bufBPC=%ld\n",bufBPCSize, strlen(bufBPC));
+        if (bufBPCSize > 0) {
+            for(size_t i = 0; i < nElements; i++){
+                value[i] = bufBPC[i];
+            //    if (i > 262100) {
+            //       printf("%x ",value[i]);
+            //    }
+            }
+        }
+    }
+ 
+    callParamCallbacks();
 
     *nIn=nElements;
 
@@ -155,16 +165,16 @@ int ADTimePix::checkFile(std::string &filePath) {
     return fileStat;
 }
 
-asynStatus ADTimePix::readBPCfile(epicsInt32 *buf, int bufSize) {   
+asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {   
 
-    FILE *sourceFile, *destFile;
+    FILE *sourceFile;
     long fileSize;
     char *buffer;
-    long nMaskedPixels;
-    int OnOffPel=0;
+    int nMaskedPel=0;
+//    int OnOffPel=0;
 
-    // Declare and initialize the 2D mask array
-    int binaryArray[ROWS][COLS] = {0};
+    *bufSize = 0;
+
     // BPC calibration mask file to read, and write new mask.
     std::string maskFile, filePath, fileName, fullFileName;
 
@@ -172,7 +182,7 @@ asynStatus ADTimePix::readBPCfile(epicsInt32 *buf, int bufSize) {
     getStringParam(ADTimePixBPCFileName, fileName);
     fullFileName = filePath + fileName;
 
-    printf("Full File Name = %s", fullFileName.c_str());
+    printf("Full File Name = %s\n", fullFileName.c_str());
 
     // Open the source file for reading
     sourceFile = fopen(fullFileName.c_str(), "rb");
@@ -198,9 +208,16 @@ asynStatus ADTimePix::readBPCfile(epicsInt32 *buf, int bufSize) {
     fread(buffer, 1, fileSize, sourceFile);
     fclose(sourceFile);
 
-    int nMaskedPel = 0;
+    // pass pointer to buffer;
+    *buf = buffer;
+    *bufSize = fileSize;
+    for(int i=0;i<20;i++){
+        printf("%x,",buffer[i]);
+    }
+    printf("\nbufSize=%d, fileSize=%ld, strlen_buf=%ld, strlen_buffer=%ld\n", *bufSize, fileSize, strlen(*buf), strlen(buffer));
+
     for (int i = 0; i < fileSize; i++) {
-        // Check if the bit at position N is set to 1
+        // Check if the bit at position N=0 is set to 1
         if (buffer[i] & (1 << 0)) {
             nMaskedPel += 1;
     //        printf("Bit i=%d, nMaskedPel=%d\n", i, nMaskedPel);
