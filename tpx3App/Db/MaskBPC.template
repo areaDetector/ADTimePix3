@@ -12,6 +12,16 @@
 #
 ##################################################################
 
+record(waveform, "$(P)$(R)BPC"){
+    field(DTYP, "asyn$(TYPE)ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_BPC_PEL")
+  #  field(INP,  [1, 2, 3, 4, 5])
+    field(FTVL, "$(FTVL)")
+    field(NELM, "$(NELEMENTS)")
+  #  field(SCAN, "I/O Intr")
+#    field(autosaveFields, "VAL")
+}
+
 record(waveform, "$(P)$(R)MaskBPC"){
     field(DTYP, "asyn$(TYPE)ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_ARRAY_BPC")

@@ -568,7 +568,6 @@ class ADTimePix : public ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
-    //    asynStatus readBPCfile();
         int checkFile(std::string &fullFileName);
 
 };
