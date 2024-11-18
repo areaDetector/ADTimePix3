@@ -10,20 +10,22 @@ Different branches of ADTimePix3 support differnet Serval versions.
 The master branch (under development) is for Serval 3.3.0
 
 
-Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.0
+Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
 R1-2 (xxx, 2025)
-* Manipulation of the Binary Pixel Configuraiton (BPC), create positive/negative image mask.
+* TODO: computation of AD mask image to the internal BPC file
+* TODO: extract masked pixels from BPC and map to AD mask image.
+* Manipulation of the Binary Pixel Configuraiton (BPC), create positive and negative image mask.
     - Create image rectangular mask
     - Create image circular mask
-    - Image mask is additive
-    - Image mask is positive or negative
+    - Image mask can be positive or negative
     - Individual image mask is additive
     - Number of image masks is not limited
-* Rotate image is working
-* Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file is manageable.
+* Rotate image is working. 
+    - TODO: Readback PV for orientation
+* Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is build by ORNL, and not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file size is manageable.
 * Operational ioc: st.cmd delay before writing the preview images.
-* Updated Revision version
+* Updated driver Revision version in file.
 
 R1-1 (August 18, 2024)
 * Updated documentaiton
