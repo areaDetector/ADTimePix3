@@ -217,8 +217,10 @@ using json = nlohmann::json;
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
 // BPC Mask
-#define ADTimePixBPCString               "TPX3_BPC_PEL"               // (asynInt32,         w)      BPC pel for each pixel
-#define ADTimePixMaskBPCString           "TPX3_MASK_ARRAY_BPC"        // (asynInt32,         w)      BPC mask to enable/disable pixel counting
+#define ADTimePixBPCString               "TPX3_BPC_PEL"               // (asynInt32,         w)      BPC pel for each pixel, read from .bpc file
+#define ADTimePixBPCnString              "TPX3_BPC_PEL_N"             // (asynInt32,         w)      BPC pel number of masked pel from .bpc file
+#define ADTimePixBPCmaskedString         "TPX3_BPC_PEL_MASKED"        // (asynInt32,         w)      BPC array of pel masked in .bpc file (typically 36-44 values)
+#define ADTimePixMaskBPCString           "TPX3_MASK_ARRAY_BPC"        // (asynInt32,         w)      BPC mask to enable/disable pixel counting, AD mask image
 #define ADTimePixMaskOnOffPelString      "TPX3_MASK_ONOFF_PEL"        // (asynInt32,         w)      BPC mask positive/negative mask (count/not count)
 #define ADTimePixMaskResetString         "TPX3_MASK_RESET"            // (asynInt32,         w)      BPC mask initialize to 0 or 1 OnOffPel value
 #define ADTimePixMaskMinXString          "TPX3_MASK_MINX"             // (asynInt32,         w)      BPC mask rectangular/circular X
@@ -486,6 +488,8 @@ class ADTimePix : public ADDriver{
 
             // BPC Mask
         int ADTimePixBPC;
+        int ADTimePixBPCn;
+        int ADTimePixBPCmasked;
         int ADTimePixMaskBPC;
         int ADTimePixMaskOnOffPel;
         int ADTimePixMaskReset;

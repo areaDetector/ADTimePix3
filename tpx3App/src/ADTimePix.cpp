@@ -2199,6 +2199,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     
     // BPC Mask
     createParam(ADTimePixBPCString,                  asynParamInt32, &ADTimePixBPC);
+    createParam(ADTimePixBPCnString,                 asynParamInt32, &ADTimePixBPCn);
+    createParam(ADTimePixBPCmaskedString,            asynParamInt32, &ADTimePixBPCmasked);
     createParam(ADTimePixMaskBPCString,              asynParamInt32, &ADTimePixMaskBPC);
     createParam(ADTimePixMaskOnOffPelString,         asynParamInt32, &ADTimePixMaskOnOffPel);
     createParam(ADTimePixMaskResetString,            asynParamInt32, &ADTimePixMaskReset);

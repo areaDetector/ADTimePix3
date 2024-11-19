@@ -223,7 +223,10 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
     //        printf("Bit i=%d, nMaskedPel=%d\n", i, nMaskedPel);
         }
     }
+    setIntegerParam(ADTimePixBPCn,nMaskedPel);
     printf("Number of masked pixels=%d\n", nMaskedPel);
+
+    callParamCallbacks();
 
     return asynSuccess;
 }
