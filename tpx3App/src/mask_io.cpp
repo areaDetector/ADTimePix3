@@ -77,9 +77,8 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         }
     }
     else if (reason == ADTimePixBPC) {
-        printf("The readInt8, nElements=%ld\n", nElements);
         readBPCfile(&bufBPC, &bufBPCSize);
-        printf("bufPBCSize=%d, strLen_bufBPC=%ld\n",bufBPCSize, strlen(bufBPC));
+//        printf("bufPBCSize=%d, strLen_bufBPC=%ld\n",bufBPCSize, strlen(bufBPC));
         if (bufBPCSize > 0) {
             for(size_t i = 0; i < nElements; i++){
                 value[i] = bufBPC[i];
@@ -211,10 +210,10 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
     // pass pointer to buffer;
     *buf = buffer;
     *bufSize = fileSize;
-    for(int i=0;i<20;i++){
-        printf("%x,",buffer[i]);
-    }
-    printf("\nbufSize=%d, fileSize=%ld, strlen_buf=%ld, strlen_buffer=%ld\n", *bufSize, fileSize, strlen(*buf), strlen(buffer));
+    // for(int i=0;i<20;i++){
+    //     printf("%x,",buffer[i]);
+    // }
+    // printf("\nbufSize=%d, fileSize=%ld, strlen_buf=%ld, strlen_buffer=%ld\n", *bufSize, fileSize, strlen(*buf), strlen(buffer));
 
     for (int i = 0; i < fileSize; i++) {
         // Check if the bit at position N=0 is set to 1
@@ -223,7 +222,7 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
     //        printf("Bit i=%d, nMaskedPel=%d\n", i, nMaskedPel);
         }
     }
-    setIntegerParam(ADTimePixBPCn,nMaskedPel);
+    setIntegerParam(ADTimePixBPCn, nMaskedPel);
     printf("Number of masked pixels=%d\n", nMaskedPel);
 
     callParamCallbacks();

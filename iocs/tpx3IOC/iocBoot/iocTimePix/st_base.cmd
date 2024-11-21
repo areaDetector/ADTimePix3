@@ -86,7 +86,7 @@ dbpf("$(PREFIX)cam1:PrvImg1FilePath","file:/media/nvme/prv")
 dbpf("$(PREFIX)cam1:PrvImg1FileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImg1FileFmt","2")    # png
 dbpf("$(PREFIX)cam1:PrvImg1FileMode","1")   # tot
-dbpf("$(PREFIX)cam1:PrvImg1IntgMode","1")   # average
+dbpf("$(PREFIX)cam1:PrvImg1IntgMode","0")   # sum
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:WritePrvImg1","0")   # Select preview disk write
 

@@ -144,14 +144,14 @@ using json = nlohmann::json;
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRawFilePatString           "TPX3_RAW_FILEPAT"          // (asynOctet,         w)      Raw Destination File Pattern
-#define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"         // (asynOctet,         w)      Raw Destination Split Strategy
+#define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"         // (asynInt32,         w)      Raw Destination Split Strategy
 #define ADTimePixRawQueueSizeString         "TPX3_RAW_QUEUESIZE"        // (asynInt32,         w)      Raw Destination Queue Size
 #define ADTimePixRawFilePathExistsString    "RAW_FILE_PATH_EXISTS"      // (asynInt32,       r/w) File path exists? */
 
     // Server, raw stream or .tpx3 file (Serval 3.3.0)
 #define ADTimePixRaw1BaseString              "TPX3_RAW1_BASE"            // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRaw1FilePatString           "TPX3_RAW1_FILEPAT"         // (asynOctet,         w)      Raw Destination File Pattern
-#define ADTimePixRaw1SplitStrategyString     "TPX3_RAW1_SPLITSTG"        // (asynOctet,         w)      Raw Destination Split Strategy
+#define ADTimePixRaw1SplitStrategyString     "TPX3_RAW1_SPLITSTG"        // (asynInt32,         w)      Raw Destination Split Strategy
 #define ADTimePixRaw1QueueSizeString         "TPX3_RAW1_QUEUESIZE"       // (asynInt32,         w)      Raw Destination Queue Size
 #define ADTimePixRaw1FilePathExistsString    "RAW1_FILE_PATH_EXISTS"     // (asynInt32,       r/w) File path exists? */
 
@@ -160,7 +160,7 @@ using json = nlohmann::json;
 #define ADTimePixImgFilePatString            "TPX3_IMG_IMGPAT"           // (asynOctet,         w)      ImageChannels FilePattern 
 #define ADTimePixImgFormatString             "TPX3_IMG_IMGFORMAT"        // (asynInt32,         w)      ImageChannels Format
 #define ADTimePixImgModeString               "TPX3_IMG_IMGMODE"          // (asynInt32,         w)      ImageChannels Mode
-#define ADTimePixImgThsString                "TPX3_IMG_IMGTHS"           // (asynOctet,         w)      ImageChannels Thresholds
+#define ADTimePixImgThsString                "TPX3_IMG_IMGTHS"           // (asynOctet,         w)      ImageChannels Thresholds (used by MPX3, not used for TPX3)
 #define ADTimePixImgIntSizeString            "TPX3_IMG_INTSIZE"          // (asynInt32,         w)      ImageChannels IntegrationSize
 #define ADTimePixImgIntModeString            "TPX3_IMG_INTMODE"          // (asynInt32,         w)      ImageChannels IntegrationMode
 #define ADTimePixImgStpOnDskLimString        "TPX3_IMG_STPONDSK"         // (asynInt32,         w)      ImageChannels StopMeasurementOnDiskLimit

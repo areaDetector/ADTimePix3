@@ -16,15 +16,20 @@ R1-2 (xxx, 2025)
 * TODO: computation of AD mask image to the internal BPC calibration file
 * TODO: extract masked pixels from BPC and map to AD mask image.
 * Report number of masked pixels in bpc calibration
-* Manipulation of the Binary Pixel Configuraiton (BPC), create positive and negative image mask.
+* Manipulation of the Binary Pixel Configuration (BPC). Allows creation of positive or negative image mask.
     - Create image rectangular mask
     - Create image circular mask
     - Image mask can be positive or negative
     - Individual image mask is additive
     - Number of image masks is not limited
-* Rotate image is working. 
-    - TODO: Update readback PV to report orientaiton correctly
-* Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is build by ORNL, and not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file size is manageable.
+* Rotate image into all 8 posible arrangement.
+    - Update readback PV to report orientation correctly
+* Data collection control added
+    - Raw modes: Queue size
+    - Image mode: Integration Size, Queue Size, Stop Measurement on Disk Limit.
+    - Preview modes: Integration Size, Queue Size, Stop Measurement on Disk Limit.
+* Serval 3.3.2-SNAPSHOT: ORNL assembled detectors do not have voltage bias sensors in detection layer. Detection layer is build by ORNL, and not provided by ASI. The 3.3.2-SNAPSHOT minimizes spam TimePix3 related to missing bias from log file. The log file size is manageable with this change in Serval.
+* Bug fix: Image Integration mode connected to correct PV.
 * Operational ioc: st.cmd delay before writing the preview images.
 * Updated driver Revision version in file.
 

@@ -874,7 +874,7 @@ asynStatus ADTimePix::getDetector(){
     fetchDacs(detector_j, 0);
 
     // Serval3 - Detector Chip Layout
-    setIntegerParam(ADTimePixDetectorOrientation, mDetOrientationMap[detector_j["Layout"]["DetectorOrientation"].dump().c_str()]);
+    setIntegerParam(ADTimePixDetectorOrientation, mDetOrientationMap[strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str())]);
     setStringParam(0, ADTimePixLayout, detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
     callParamCallbacks();
 
@@ -1040,6 +1040,8 @@ asynStatus ADTimePix::fileWriter(){
     json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
     json imgMode = {"count","tot","toa","tof","count_fb"};
     json samplingMode = {"skipOnFrame","skipOnPeriod"};
+    json stopOnDiskLimit = {"false","true"};
+    json integrationMode = {"sum", "average", "last"};
 
     getIntegerParam(ADTimePixWriteRaw, &writeChannel);
     getIntegerParam(ADTimePixRawStream, &rawStream);
@@ -1054,6 +1056,8 @@ asynStatus ADTimePix::fileWriter(){
             getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
             json splitStrategy = {"single_file","frame"};
             server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
+            getIntegerParam(ADTimePixRawQueueSize, &intNum);
+            server_j["Raw"][0]["QueueSize"] = intNum;
         }
     }   
 
@@ -1071,6 +1075,8 @@ asynStatus ADTimePix::fileWriter(){
             getIntegerParam(ADTimePixRaw1SplitStrategy, &intNum);
             json splitStrategy = {"single_file","frame"};
             server_j["Raw"][1]["SplitStrategy"] = splitStrategy[intNum];
+            getIntegerParam(ADTimePixRaw1QueueSize, &intNum);
+            server_j["Raw"][1]["QueueSize"] = intNum;
         }
     }
 
@@ -1087,6 +1093,22 @@ asynStatus ADTimePix::fileWriter(){
 
         getIntegerParam(ADTimePixImgMode, &intNum);
         server_j["Image"][0]["Mode"] = imgMode[intNum];
+
+        getIntegerParam(ADTimePixImgIntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
+        if ((intNum <= 32) && (intNum >= -1)) {
+            server_j["Image"][0]["IntegrationSize"] = intNum;
+        }
+        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
+    //        json integrationMode = {"sum", "average", "last"};
+            getIntegerParam(ADTimePixImgIntMode, &intNum);
+            server_j["Image"][0]["IntegrationMode"] = integrationMode[intNum];
+        }
+
+        getIntegerParam(ADTimePixImgStpOnDskLim, &intNum);
+        server_j["Image"][0]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
+
+        getIntegerParam(ADTimePixImgQueueSize, &intNum);
+        server_j["Image"][0]["QueueSize"] = intNum;
     }
 
     // Preview
@@ -1117,6 +1139,22 @@ asynStatus ADTimePix::fileWriter(){
 
         getIntegerParam(ADTimePixPrvImgMode, &intNum);
         server_j["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
+
+        getIntegerParam(ADTimePixPrvImgIntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
+        if ((intNum <= 32) && (intNum >= -1)) {
+            server_j["Preview"]["ImageChannels"][0]["IntegrationSize"] = intNum;
+        }
+        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
+    //        json integrationMode = {"sum", "average", "last"};
+            getIntegerParam(ADTimePixPrvImgIntMode, &intNum);
+            server_j["Preview"]["ImageChannels"][0]["IntegrationMode"] = integrationMode[intNum];
+        }
+
+        getIntegerParam(ADTimePixPrvImgStpOnDskLim, &intNum);
+        server_j["Preview"]["ImageChannels"][0]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
+
+        getIntegerParam(ADTimePixPrvImgQueueSize, &intNum);
+        server_j["Preview"]["ImageChannels"][0]["QueueSize"] = intNum;
     }
 
     getIntegerParam(ADTimePixWritePrvImg1, &writeChannel);
@@ -1132,6 +1170,22 @@ asynStatus ADTimePix::fileWriter(){
 
         getIntegerParam(ADTimePixPrvImg1Mode, &intNum);
         server_j["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
+
+        getIntegerParam(ADTimePixPrvImg1IntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
+        if ((intNum <= 32) && (intNum >= -1)) {
+            server_j["Preview"]["ImageChannels"][1]["IntegrationSize"] = intNum;
+        }
+        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
+    //        json integrationMode = {"sum", "average", "last"};
+            getIntegerParam(ADTimePixPrvImg1IntMode, &intNum);
+            server_j["Preview"]["ImageChannels"][1]["IntegrationMode"] = integrationMode[intNum];
+        }
+
+        getIntegerParam(ADTimePixPrvImg1StpOnDskLim, &intNum);
+        server_j["Preview"]["ImageChannels"][1]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
+
+        getIntegerParam(ADTimePixPrvImg1QueueSize, &intNum);
+        server_j["Preview"]["ImageChannels"][1]["QueueSize"] = intNum;
     }
 
     getIntegerParam(ADTimePixWritePrvHst, &writeChannel);
