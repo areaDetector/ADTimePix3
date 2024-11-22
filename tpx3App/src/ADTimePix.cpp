@@ -1201,6 +1201,31 @@ asynStatus ADTimePix::fileWriter(){
 
         getIntegerParam(ADTimePixPrvHstMode, &intNum);
         server_j["Preview"]["HistogramChannels"][0]["Mode"] = imgMode[intNum];
+
+        getIntegerParam(ADTimePixPrvHstIntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
+        if ((intNum <= 32) && (intNum >= -1)) {
+            server_j["Preview"]["HistogramChannels"][0]["IntegrationSize"] = intNum;
+        }
+        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
+    //        json integrationMode = {"sum", "average", "last"};
+            getIntegerParam(ADTimePixPrvHstIntMode, &intNum);
+            server_j["Preview"]["HistogramChannels"][0]["IntegrationMode"] = integrationMode[intNum];
+        }
+
+        getIntegerParam(ADTimePixPrvHstStpOnDskLim, &intNum);
+        server_j["Preview"]["HistogramChannels"][0]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
+
+        getIntegerParam(ADTimePixPrvHstQueueSize, &intNum);
+        server_j["Preview"]["HistogramChannels"][0]["QueueSize"] = intNum;
+
+        getIntegerParam(ADTimePixPrvHstNumBins, &intNum);
+        server_j["Preview"]["HistogramChannels"][0]["NumberOfBins"] = intNum;
+
+        getDoubleParam(ADTimePixPrvHstBinWidth, &doubleNum);
+        server_j["Preview"]["HistogramChannels"][0]["BinWidth"] = doubleNum;
+
+        getDoubleParam(ADTimePixPrvHstOffset, &doubleNum);
+        server_j["Preview"]["HistogramChannels"][0]["Offset"] = doubleNum;
     }    
 
     printf("server=%s\n",server_j.dump(3,' ', true).c_str());
@@ -2229,16 +2254,19 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImg1QueueSizeString,           asynParamInt32, &ADTimePixPrvImg1QueueSize);   
     createParam(ADTimePixPrvImg1FilePathExistsString,      asynParamInt32, &ADTimePixPrvImg1FilePathExists); 
     // Server, Preview, HistogramChannels[0]  
-    createParam(ADTimePixPrvHstBaseString,                   asynParamOctet, &ADTimePixPrvHstBase);            
-    createParam(ADTimePixPrvHstFilePatString,                asynParamOctet, &ADTimePixPrvHstFilePat);         
-    createParam(ADTimePixPrvHstFormatString,                 asynParamInt32, &ADTimePixPrvHstFormat);          
-    createParam(ADTimePixPrvHstModeString,                   asynParamInt32, &ADTimePixPrvHstMode);            
-    createParam(ADTimePixPrvHstThsString,                    asynParamOctet, &ADTimePixPrvHstThs);            
-    createParam(ADTimePixPrvHstIntSizeString,                asynParamInt32, &ADTimePixPrvHstIntSize);
-    createParam(ADTimePixPrvHstIntModeString,                asynParamInt32, &ADTimePixPrvHstIntMode);        
-    createParam(ADTimePixPrvHstStpOnDskLimString,            asynParamInt32, &ADTimePixPrvHstStpOnDskLim);    
-    createParam(ADTimePixPrvHstQueueSizeString,              asynParamInt32, &ADTimePixPrvHstQueueSize);
-    createParam(ADTimePixPrvHstFilePathExistsString,         asynParamInt32, &ADTimePixPrvHstFilePathExists);   
+    createParam(ADTimePixPrvHstBaseString,                   asynParamOctet,    &ADTimePixPrvHstBase);
+    createParam(ADTimePixPrvHstFilePatString,                asynParamOctet,    &ADTimePixPrvHstFilePat);
+    createParam(ADTimePixPrvHstFormatString,                 asynParamInt32,    &ADTimePixPrvHstFormat);
+    createParam(ADTimePixPrvHstModeString,                   asynParamInt32,    &ADTimePixPrvHstMode);
+    createParam(ADTimePixPrvHstThsString,                    asynParamOctet,    &ADTimePixPrvHstThs);
+    createParam(ADTimePixPrvHstIntSizeString,                asynParamInt32,    &ADTimePixPrvHstIntSize);
+    createParam(ADTimePixPrvHstIntModeString,                asynParamInt32,    &ADTimePixPrvHstIntMode);
+    createParam(ADTimePixPrvHstStpOnDskLimString,            asynParamInt32,    &ADTimePixPrvHstStpOnDskLim);
+    createParam(ADTimePixPrvHstQueueSizeString,              asynParamInt32,    &ADTimePixPrvHstQueueSize);
+    createParam(ADTimePixPrvHstNumBinsString,                asynParamInt32,    &ADTimePixPrvHstNumBins);
+    createParam(ADTimePixPrvHstBinWidthString,               asynParamFloat64,  &ADTimePixPrvHstBinWidth);
+    createParam(ADTimePixPrvHstOffsetString,                 asynParamFloat64,  &ADTimePixPrvHstOffset);
+    createParam(ADTimePixPrvHstFilePathExistsString,         asynParamInt32,    &ADTimePixPrvHstFilePathExists);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      

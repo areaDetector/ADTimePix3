@@ -203,6 +203,9 @@ using json = nlohmann::json;
 #define ADTimePixPrvHstIntModeString            "TPX3_PRV_HSTINTMODE"       // (asynInt32,         w)      Preview HistogramChannels IntegrationMode
 #define ADTimePixPrvHstStpOnDskLimString        "TPX3_PRV_HSTSTPONDSK"      // (asynInt32,         w)      Preview HistogramChannels StopMeasurementOnDiskLimit
 #define ADTimePixPrvHstQueueSizeString          "TPX3_PRV_HSTQUEUESIZE"     // (asynInt32,         w)      Preview HistogramChannels QueueSize
+#define ADTimePixPrvHstNumBinsString            "TPX3_PRV_HSTNBINS"         // (asynInt32,         w)      Preview HistogramChannels NumberOfBins
+#define ADTimePixPrvHstBinWidthString           "TPX3_PRV_HSTBINWIDTH"      // (asynFloat64,       w)      Preview HistogramChannels BinWidth
+#define ADTimePixPrvHstOffsetString             "TPX3_PRV_HSTOFFSET"        // (asynFloat64,       w)      Preview HistogramChannels Offset
 #define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
     // Measurement
@@ -473,6 +476,9 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstIntMode;      
         int ADTimePixPrvHstStpOnDskLim;   
         int ADTimePixPrvHstQueueSize;
+        int ADTimePixPrvHstNumBins;
+        int ADTimePixPrvHstBinWidth;
+        int ADTimePixPrvHstOffset;
         int ADTimePixPrvHstFilePathExists;    
 
             // Measurement
