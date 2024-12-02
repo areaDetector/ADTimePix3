@@ -508,10 +508,13 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump()).c_str();
         setStringParam(ADTimePixDetType, DetType.c_str());
         setStringParam(ADModel, DetType.c_str());
+        setIntegerParam(ADTimePixDetConnected,1);
+        printf("Detector ?? CONNECTED, Detector=%s, %d\n", Detector.c_str(), strcmp(Detector.c_str(), "null"));
     }
     else {
         printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
         setStringParam(ADTimePixDetType, "null");
+        setIntegerParam(ADTimePixDetConnected,0);
         connected = false;
     }
 
@@ -2091,7 +2094,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixHttpCodeString,        asynParamInt32, &ADTimePixHttpCode);
 
     // API serval version
-    createParam(ADTimePixServerNameString,      asynParamOctet, &ADTimePixServer);
+    createParam(ADTimePixServerNameString,      asynParamOctet, &ADTimePixServerName);
+    createParam(ADTimePixDetConnectedString,    asynParamInt32, &ADTimePixDetConnected);
 
     // Dashboard
     createParam(ADTimePixFreeSpaceString,       asynParamInt64,   &ADTimePixFreeSpace);
@@ -2305,7 +2309,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     char versionString[25];
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d", ADTIMEPIX_VERSION, ADTIMEPIX_REVISION, ADTIMEPIX_MODIFICATION);
     setStringParam(NDDriverVersion, versionString);
-    setStringParam(ADTimePixServer, serverURL);
+    setStringParam(ADTimePixServerName, serverURL);
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 

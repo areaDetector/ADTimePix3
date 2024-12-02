@@ -28,7 +28,7 @@ using json = nlohmann::json;
 #define ADTimePixServerNameString          "TPX3_SERVER_NAME"            // (asynOctet,         r)      Server Name
 #define ADTimePixDetTypeString             "TPX3_DETECTOR_TYPE"          // (asynOctet,         r)      Detector Type, should be binary DetConnected
 #define ADTimePixFWTimeStampString         "TPX3_FW_TIMESTAMP"           // (asynOctet,         r)      Firmware TimeStamp
-//#define ADTimePixDetConnectedString       "TPX3_DETECTOR_CONNECTED"     // (asynOctet,         r)      Detector Connected, TODO
+#define ADTimePixDetConnectedString        "TPX3_DETECTOR_CONNECTED"     // (asynInt32,         r)      Detector Connected,
 #define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             // (asynInt64          r)      Free Space [Bytes]
 #define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)      Hits? [320 Mhits/s]
 #define ADTimePixLowerLimitString          "TPX3_LLIM_SPACE"             // (asynInt64,         w)      Lower limit on available disk space [Bytes]
@@ -305,9 +305,9 @@ class ADTimePix : public ADDriver{
 
         int ADTimePixDetType;
         int ADTimePixFWTimeStamp;
-    //    int ADTimePixDetConnected;    // TODO
+        int ADTimePixDetConnected;
 
-        int ADTimePixServer;
+        int ADTimePixServerName;
 
     // Health
         int ADTimePixLocalTemp;

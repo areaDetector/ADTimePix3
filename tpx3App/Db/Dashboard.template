@@ -3,12 +3,22 @@
 # Serval Dashboard status.
 # Author: K. Gofron
 # Date: 2023/7/6
+# Last update: 2024/12/5
 #=================================================================#
 
 ##################################################################
 # Define dashboard status PV records here.
 #
 ##################################################################
+
+record(bi, "$(P)$(R)DetConnected_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT))TPX3_DETECTOR_CONNECTED")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
 
 record(int64in, "$(P)$(R)FreeSpace_RBV"){
   field(DTYP, "asynInt64")
