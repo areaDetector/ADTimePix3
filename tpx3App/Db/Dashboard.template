@@ -11,6 +11,15 @@
 #
 ##################################################################
 
+record(bi, "$(P)$(R)ServalConnected_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT))TPX3_SERVAL_CONNECTED")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
+
 record(bi, "$(P)$(R)DetConnected_RBV")
 {
     field(DTYP, "asynInt32")
