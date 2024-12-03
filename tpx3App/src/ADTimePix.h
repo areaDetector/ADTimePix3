@@ -25,6 +25,7 @@ using json = nlohmann::json;
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
+#define ADTimePixServalConnectedString     "TPX3_SERVAL_CONNECTED"       // (asynInt32,         r)      Serval Connected,
 #define ADTimePixServerNameString          "TPX3_SERVER_NAME"            // (asynOctet,         r)      Server Name
 #define ADTimePixDetTypeString             "TPX3_DETECTOR_TYPE"          // (asynOctet,         r)      Detector Type, should be binary DetConnected
 #define ADTimePixFWTimeStampString         "TPX3_FW_TIMESTAMP"           // (asynOctet,         r)      Firmware TimeStamp
@@ -306,6 +307,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixDetType;
         int ADTimePixFWTimeStamp;
         int ADTimePixDetConnected;
+        int ADTimePixServalConnected;
 
         int ADTimePixServerName;
 

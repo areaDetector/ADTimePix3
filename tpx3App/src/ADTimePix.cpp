@@ -466,6 +466,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
 
     if(r.status_code == 200) {
         connected = true;
+        setIntegerParam(ADTimePixServalConnected,1);
         printf("\n\nCONNECTED to Welcom URI! (Serval running), http_code = %li\n", r.status_code);
     //    printf("asynSuccess! %d\n\n", asynSuccess);
     }
@@ -509,7 +510,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         setStringParam(ADTimePixDetType, DetType.c_str());
         setStringParam(ADModel, DetType.c_str());
         setIntegerParam(ADTimePixDetConnected,1);
-        printf("Detector ?? CONNECTED, Detector=%s, %d\n", Detector.c_str(), strcmp(Detector.c_str(), "null"));
+        printf("Detector CONNECTED, Detector=%s, %d\n", Detector.c_str(), strcmp(Detector.c_str(), "null"));
     }
     else {
         printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
@@ -2096,6 +2097,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // API serval version
     createParam(ADTimePixServerNameString,      asynParamOctet, &ADTimePixServerName);
     createParam(ADTimePixDetConnectedString,    asynParamInt32, &ADTimePixDetConnected);
+    createParam(ADTimePixServalConnectedString, asynParamInt32, &ADTimePixServalConnected);
 
     // Dashboard
     createParam(ADTimePixFreeSpaceString,       asynParamInt64,   &ADTimePixFreeSpace);
