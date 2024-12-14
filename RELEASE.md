@@ -15,6 +15,10 @@ Driver depends on Serval versions, at this time. The current releases support Se
 R1-2 (xxx, 2025)
 * TODO: computation of AD mask image to the internal BPC calibration file
 * TODO: extract masked pixels from BPC and map to AD mask image.
+* Masked pels in 2nd octet of BPC waveform PV
+* Connection status PVs
+    - Serval connected (URL web interface is up)
+    - Detector is connnected to Serval
 * Report number of masked pixels in bpc calibration
 * Manipulation of the Binary Pixel Configuration (BPC). Allows creation of positive or negative image mask.
     - Create image rectangular mask

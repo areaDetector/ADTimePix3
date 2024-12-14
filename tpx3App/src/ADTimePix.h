@@ -288,6 +288,7 @@ class ADTimePix : public ADDriver{
         asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
         asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
         asynStatus readBPCfile(char **buf, int *bufSize);
+        asynStatus mask2DtoBPC(int *buf, char *bufBPC);
 
         void timePixCallback();
 
@@ -581,7 +582,7 @@ class ADTimePix : public ADDriver{
         asynStatus readImage();
         asynStatus fileWriter();
         int checkFile(std::string &fullFileName);
-
+        asynStatus rowsCols(int *rows, int *cols, int *xChips, int *yChips, int *chipPelWidth);
 };
 
 // Stores number of additional PV parameters are added by the driver
