@@ -17,6 +17,9 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
     // buffer for reading BPC file
     char *bufBPC;
     int bufBPCSize = 0;
+
+    // write new mask
+    int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
  
 	if(reason == ADTimePixMaskBPC){
         getIntegerParam(ADTimePixMaskReset,&maskReset_val);
@@ -50,29 +53,40 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         }
         else if (maskBPCfile_val == 1) {
             fullFileName = BPCFilePath + BPCFileName;
-            printf("The readInt32Array bcp file read, %ld\n", nElements);
+        //    printf("The readInt32Array bcp file read, %ld\n", nElements);
             pathExists = checkFile(fullFileName);
-            printf("mask,BPC file Exists=%d\n",pathExists);
             if (pathExists == 2) {  // BPC file exists, read and process it
+        //        printf("mask,BPC file Exists=%d\n",pathExists);
                 readBPCfile(&bufBPC, &bufBPCSize);
                 if (bufBPCSize > 0) {
                     for(size_t i = 0; i < nElements; i++){
-                    //    value[i] = bufBPC[i];
                         if (bufBPC[i] & (1 << 0)) {
                             value[i] |= 1 << 1;     // masked pel -> 2
-                            printf("mask bufBPC[%ld]=%d\n",i,value[i]);
+                //            printf("mask bufBPC[%ld]=%d\n",i,value[i]);
                         }
                     }
                 }
             }
         }
         else if (maskWrite_val == 1) {
-            fullFileName = BPCFilePath + maskFileName;
-            printf("The readInt32Array write mask, %ld\n", nElements);
-            pathExists = checkFile(BPCFilePath);
-            printf("BPC pathExists=%d\n",pathExists);
+            fullFileName = BPCFilePath + BPCFileName;
             pathExists = checkFile(fullFileName);
-            printf("mask fileExists=%d\n",pathExists);
+            if (pathExists == 2) {  // BPC file exists, read it into bufBPC, and apply mask
+
+                readBPCfile(&bufBPC, &bufBPCSize);
+                rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
+                for (int i = 0; i < ROWS; ++i) {
+                    for (int j = 0; j < COLS; ++j) {
+                        if (value[i*ROWS + j]  & (1 << 0)) {
+                            bufBPC[pelIndex(i, j)] |= (1 << 0);
+                        }
+                    }
+                }
+                writeBPCfile(&bufBPC, &bufBPCSize);
+            }
+            else {
+                    printf("Mask Write: BPC directory does not exist,%d,%s\n", pathExists, BPCFilePath.c_str());
+                }
         }
         else {
             printf("The readInt32Array no mask, %ld\n", nElements);
@@ -83,9 +97,9 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         getStringParam(ADTimePixBPCFileName, BPCFileName);
         fullFileName = BPCFilePath + BPCFileName;
 
-        printf("calib,The readInt32Array bcp file read, %ld\n", nElements);
+    //    printf("calib,The readInt32Array bcp file read, %ld\n", nElements);
         pathExists = checkFile(fullFileName);
-        printf("calibration, BPC file Exists=%d\n",pathExists);
+    //    printf("calibration, BPC file Exists=%d\n",pathExists);
         if (pathExists == 2) {  // BPC file exists, read and process it
             readBPCfile(&bufBPC, &bufBPCSize);
     //        printf("bufPBCSize=%d, strLen_bufBPC=%ld\n",bufBPCSize, strlen(bufBPC));
@@ -94,7 +108,7 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                     value[i] = bufBPC[i];
                     if (bufBPC[i] & (1 << 0)) {
                         value[i] |= 1 << 8;     // masked pel, 31-> 287
-                        printf("bufBPC[%ld]=%d\n",i,value[i]);
+                //        printf("bufBPC[%ld]=%d\n",i,value[i]);
                     }
                 }
             }
@@ -122,7 +136,7 @@ asynStatus ADTimePix::rowsCols(int *rows, int *cols, int *xChips, int *yChips, i
     *rows = numRows;
     *cols = (*yChips) * (*chipPelWidth);
 
-    printf("rows=%d, cols=%d, xChips=%d, yChips=%d, chipPelWidth=%d\n\n", *rows, *cols, *xChips, *yChips, *chipPelWidth);
+//    printf("rows=%d, cols=%d, xChips=%d, yChips=%d, chipPelWidth=%d\n\n", *rows, *cols, *xChips, *yChips, *chipPelWidth);
 
     return asynSuccess;
 }
@@ -184,34 +198,47 @@ asynStatus ADTimePix::maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, in
     return asynSuccess;
 }
 
-// filePath can be a full file path name: directory->1, file->2, !exists-> 0
+/*
+* Check type of filePath, and if it exists
+* Return type if exists
+* directory->1, file->2, !exists-> 0
+*/
 int ADTimePix::checkFile(std::string &filePath) {
     struct stat buff;
-    int istat, isDir=0, isFile=0, fileStat=0;
+    int istat, fileStat=0;
 
     // Return 0 on success, or -1 if unable to get file properties.
     istat = stat(filePath.c_str(), &buff);
-    if (!istat) isDir = (S_IFDIR & buff.st_mode);
-    if (!istat && isDir) {
-        fileStat = 1;
-    //    printf("path success,%s\n", filePath.c_str());
-    }
 
-    if (!istat) isFile = (S_IFMT & buff.st_mode);
-    if (!istat && isFile) {
-        fileStat = 2;
-    //    printf("file success,%s\n", filePath.c_str());
+    if (!istat) {
+        switch (buff.st_mode & S_IFMT) // type of file
+            {
+                case S_IFBLK:  fileStat = 3; break;    // block special
+                case S_IFCHR:  fileStat = 6; break;    // character special
+                case S_IFDIR:  fileStat = 1; break;    // directory
+                case S_IFIFO:  fileStat = 4; break;    // pipe of FIFO
+                case S_IFLNK:  fileStat = 5; break;    // symbolic link
+                case S_IFREG:  fileStat = 2; break;    // regular file
+                case S_IFSOCK: fileStat = 7; break;    // Socket
+                default:       fileStat = 8; break;    // Unknown
+            }
     }
+//    printf("stat,%s,%d,%d,%d,%d\n", filePath.c_str(), istat, fileStat, buff.st_mode, S_IFMT);
+
     return fileStat;
 }
 
+/*
+* buf - bpc file read into char array
+* bufSize - number of bytes / elements / pixels in the bpc file
+*/
 asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {   
 
     FILE *sourceFile;
     long fileSize;
     char *buffer;
-    int nMaskedPel=0, nRead=0;
-//    int OnOffPel=0;
+    int nMaskedPel=0;
+    int nRead=0;
 
     *bufSize = 0;
 
@@ -222,7 +249,7 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
     getStringParam(ADTimePixBPCFileName, fileName);
     fullFileName = filePath + fileName;
 
-    printf("Full File Name = %s\n", fullFileName.c_str());
+//    printf("ReadBCP: name=%s\n", fullFileName.c_str());
 
     // Open the source file for reading
     sourceFile = fopen(fullFileName.c_str(), "rb");
@@ -244,16 +271,13 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
         return asynSuccess;
     }
 
-    // Read the entire file into the buffer
+    // Read the entire BPC file into the buffer
     nRead = fread(buffer, 1, fileSize, sourceFile);
     fclose(sourceFile);
 
     // pass pointer to buffer;
     *buf = buffer;
     *bufSize = fileSize;
-    // for(int i=0;i<20;i++){
-    //     printf("%x,",buffer[i]);
-    // }
     // printf("\nbufSize=%d, fileSize=%ld, strlen_buf=%ld, strlen_buffer=%ld\n", *bufSize, fileSize, strlen(*buf), strlen(buffer));
 
     for (int i = 0; i < fileSize; i++) {
@@ -264,74 +288,134 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
         }
     }
     setIntegerParam(ADTimePixBPCn, nMaskedPel);
-    printf("Number of masked pixels=%d, nRead=%d\n", nMaskedPel, nRead);
+    printf("ReadBPC: Masked pixels=%d, nRead=%d\n", nMaskedPel, nRead);
 
     callParamCallbacks();
 
     return asynSuccess;
 }
 
-// Transcode the 2D mask into the Binary Pixel Configuration 1D mask. Quad 2x2 TimePix3 only
-asynStatus ADTimePix::mask2DtoBPC(int *buf, char *bufBPC) {
-    int index = 0;
+/*
+* Write bpc file containing mask created.
+*/
+asynStatus ADTimePix::writeBPCfile(char **buf, int *bufSize) {
+    int status = asynSuccess;
+    int pathExists = 0, maskExists = 0;
+    FILE *destFile;
+
+    // BPC calibration mask file to write new mask.
+    std::string maskFile, filePath, fileName, fullFileName, bpcFileName;
+
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    getStringParam(ADTimePixMaskFileName, maskFile);
+    fullFileName = filePath + maskFile;
+
+    printf("Mask:%d,%ld,%ld\n",checkFile(filePath), strlen(filePath.c_str()), strlen(maskFile.c_str()));
+
+    pathExists = checkFile(filePath);
+    maskExists = checkFile(fullFileName);
+    if ((maskExists != 2) &&  (strlen(maskFile.c_str()) == 0)) {
+        setStringParam(ADTimePixMaskFileName,"mask.bpc");
+        getStringParam(ADTimePixMaskFileName, maskFile);
+        fullFileName = filePath + maskFile;
+        maskExists = checkFile(fullFileName);
+    }
+
+    if (pathExists == 1) {
+        if (maskExists == 2) {
+            printf("Mask: overwriting=%s,%d,%d\n", fullFileName.c_str(), pathExists, maskExists);
+        }
+        else {
+            printf("Mask: writing new=%s,%d,%d\n", fullFileName.c_str(), pathExists, maskExists);
+        }
+    }
+    else {
+        printf("Mask: Path does not exist, exiting,%d\n", pathExists);
+        return asynSuccess;
+    }
+
+    destFile = fopen(fullFileName.c_str(), "wb");
+    if (destFile == NULL) {
+        perror("Error opening destination file");
+        return asynError;
+    }
+
+    // Write the buffer to the destination file
+    fwrite(*buf, 1, *bufSize, destFile);
+
+    // Clean up
+    fclose(destFile);
+
+//    printf("File copied successfully.\n");
+
+    // Write mask file to TimePix3 chip
+    getStringParam(ADTimePixBPCFileName, bpcFileName);
+    setStringParam(ADTimePixBPCFileName,maskFile.c_str());
+    status = uploadBPC();
+    setStringParam(ADTimePixBPCFileName,bpcFileName.c_str());
+
+    callParamCallbacks();
+
+    if(status){
+        printf("WriteBPC: Unable to uplad BPC\n");
+        return asynError;
+    }
+
+    return asynSuccess;
+}
+
+/*
+* Returns which chip image tile pixel belongs to. Need to convert to TimePix3 chip order.
+* Input: x, y  (pixel coordinate)
+* x - mask x pixel
+* y - mask y pixel
+* Output: xChip, yChip (chip grid)
+* xChip - chip x grid location
+* yChip - chip y grid number
+* (0,0) | (0,1)
+* (1,0) | (1,1)
+*/
+asynStatus ADTimePix::findChip(int x, int y, int *xChip, int *yChip, int *width) {
     int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
     rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
 
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
+    *xChip = x / PelWidth;
+    *yChip = y / PelWidth;
+    *width = PelWidth;
 
-            // Image coordinate
-            if (i < 256) { // chip 2, 3
-            //    printf("Chip2,3\n");
-                if (j < 256) {
-                    index = 3*256*256 + i + j*256;  // chip 3, CORRECT
-                    if ((index > 4*256*256) || (index < 3*256*256)) {
-                        printf("chip3, i=%d, j=%d, index=%d\n", i, j, index);
-                    }
-                    if (buf[i*ROWS + j] & (1 << 0)) {
-                        bufBPC[index] |= (1 << 0);
-                    }
-                }
-                else if ((j >= 256) && (j < 512)) {     // chip 2
-                    index = 2*256*256 + (255 - i) + 256 * (511 - j);
-                    if ((index > 3*256*256) || (index < 2*256*256)) {
-                        printf("chip2, i=%d, j=%d, index=%d\n", i, j, index);
-                    }
-                    if (buf[i*ROWS + j] & (1 << 0)) {
-                        bufBPC[index] |= (1 << 0);
-                    }
-                }
-                else {
-                    printf("image larger than 256 x 512\n");
-                }
-            }
-            else if ((i >= 256) && (i < 512)) {
-                if (j < 256) {
-                    index = (i - 256) + j*256; // chip 0, CORRECT
-                    if ((index > 256*256) || (index < 0)) {
-                        printf("chip0, i=%d, j=%d, index=%d\n", i, j, index);
-                    }
-                    if (buf[i*ROWS + j] & (1 << 0)) {
-                        bufBPC[index] |= (1 << 0);
-                    }
-                }
-                else if ((j >= 256) && (j < 512)) {     // chip 1
-                    index = 2*256*256 + (255 - i) - 256 *(j-256); // chip 1, CORRECT
-                    if ((index > 2*256*256) || (index < 256*256)) {
-                        printf("chip1, i=%d, j=%d, index=%d\n", i, j, index);
-                    }
-                    if (buf[i*ROWS + j] & (1 << 0)) {
-                        bufBPC[index] |= (1 << 0);
-                    }
-                }
-                else {
-                    printf("image larger than 512 x 512\n");
-                }
-            }
-            else {
-                printf("image size larger than 512 x 512\n");
-            }
-        }
-    }
     return asynSuccess;
+}
+
+/*
+* Index of mask vector
+* i,j coordinates of the pixel starting from top left in image mask PV
+*/
+int ADTimePix::pelIndex(int i, int j) {
+    int index=0;
+    int X_CHIP=0, Y_CHIP=0, PelWidth=0;
+
+    findChip(i, i, &X_CHIP, &Y_CHIP, &PelWidth);
+
+    // TODO, one-chip TimePix3 detector
+
+    // Four chip 2x2 TimePix3 detector
+    if ((X_CHIP = 1) && (Y_CHIP = 1)) { // tile (1,1), chip 0
+        index = (i - PelWidth) + j*PelWidth;
+    }
+    if ((X_CHIP = 1) && (Y_CHIP = 0)) { // tile (1,0), chip 1
+        index = 2*PelWidth*PelWidth + (PelWidth - 1 - i) - PelWidth *(j-PelWidth);
+    }
+    if ((X_CHIP = 0) && (Y_CHIP = 0)) { // tile (0,0), chip 2
+        index = 2*PelWidth*PelWidth + (PelWidth - 1 - i) + PelWidth * (2*PelWidth - 1- j);
+    }
+    if ((X_CHIP = 0) && (Y_CHIP = 1)) { // tile (0,1), chip 3
+        index = 3*PelWidth*PelWidth + i + j*PelWidth;
+    }
+
+    if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+        printf("ERROR index: detector larger than 2x2\n");
+        index = -1;
+    }
+
+    return index;
 }
