@@ -125,10 +125,10 @@
     <roi_count>0</roi_count>
     <rules>
       <rule name="Rule" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==512">
+        <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
-        <pv trig="true">$(Sys)$(Dev)Pva1:ArraySize0_RBV</pv>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
       </rule>
     </rules>
     <scale_options>
@@ -234,10 +234,10 @@
     <roi_count>0</roi_count>
     <rules>
       <rule name="Rule" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==256">
+        <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv trig="true">$(Sys)$(Dev)Pva1:ArraySize0_RBV</pv>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
       </rule>
     </rules>
     <scale_options>
@@ -343,10 +343,10 @@
     <roi_count>0</roi_count>
     <rules>
       <rule name="Rule" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==512">
+        <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
-        <pv trig="true">$(Sys)$(Dev)Pva1:ArraySize0_RBV</pv>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
       </rule>
     </rules>
     <scale_options>
@@ -452,10 +452,10 @@
     <roi_count>0</roi_count>
     <rules>
       <rule name="Rule" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==256">
+        <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv trig="true">$(Sys)$(Dev)Pva1:ArraySize0_RBV</pv>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
       </rule>
     </rules>
     <scale_options>
