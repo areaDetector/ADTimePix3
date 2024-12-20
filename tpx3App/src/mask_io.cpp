@@ -394,7 +394,7 @@ int ADTimePix::pelIndex(int i, int j) {
     int index=0;
     int X_CHIP=0, Y_CHIP=0, PelWidth=0;
 
-    findChip(i, i, &X_CHIP, &Y_CHIP, &PelWidth);
+    findChip(i, j, &X_CHIP, &Y_CHIP, &PelWidth);
 
     // TODO, one-chip TimePix3 detector
 
