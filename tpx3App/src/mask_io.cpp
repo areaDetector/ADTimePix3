@@ -401,16 +401,16 @@ int ADTimePix::pelIndex(int i, int j) {
     // Four chip 2x2 TimePix3 UP detector
     ii = i - PelWidth;
     jj = j - PelWidth;
-    if ((X_CHIP = 1) && (Y_CHIP = 1)) { // tile (1,1), chip 0
+    if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 0
         index = ii - (jj - (PelWidth - 1))*PelWidth;
     }
-    if ((X_CHIP = 1) && (Y_CHIP = 0)) { // tile (1,0), chip 1
+    if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 1
         index = PelWidth*PelWidth + ((PelWidth - 1) - ii) + j * PelWidth;
     }
-    if ((X_CHIP = 0) && (Y_CHIP = 0)) { // tile (0,0), chip 2
+    if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 2
         index = 2*PelWidth*PelWidth + ((PelWidth - 1) - i) + j * PelWidth;
     }
-    if ((X_CHIP = 0) && (Y_CHIP = 1)) { // tile (0,1), chip 3
+    if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
         index = 3*PelWidth*PelWidth + i - (jj - (PelWidth - 1))*PelWidth;
     }
 
