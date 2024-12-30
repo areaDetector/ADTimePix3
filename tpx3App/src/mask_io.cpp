@@ -391,25 +391,27 @@ asynStatus ADTimePix::findChip(int x, int y, int *xChip, int *yChip, int *width)
 * i,j coordinates of the pixel starting from top left in image mask PV
 */
 int ADTimePix::pelIndex(int i, int j) {
-    int index=0;
+    int index=0, ii=0,jj=0;
     int X_CHIP=0, Y_CHIP=0, PelWidth=0;
 
     findChip(i, j, &X_CHIP, &Y_CHIP, &PelWidth);
 
     // TODO, one-chip TimePix3 detector
 
-    // Four chip 2x2 TimePix3 detector
+    // Four chip 2x2 TimePix3 UP detector
+    ii = i - PelWidth;
+    jj = j - PelWidth;
     if ((X_CHIP = 1) && (Y_CHIP = 1)) { // tile (1,1), chip 0
-        index = (i - PelWidth) + j*PelWidth;
+        index = ii - (jj - (PelWidth - 1))*PelWidth;
     }
     if ((X_CHIP = 1) && (Y_CHIP = 0)) { // tile (1,0), chip 1
-        index = 2*PelWidth*PelWidth + (PelWidth - 1 - i) - PelWidth *(j-PelWidth);
+        index = PelWidth*PelWidth + ((PelWidth - 1) - ii) + j * PelWidth;
     }
     if ((X_CHIP = 0) && (Y_CHIP = 0)) { // tile (0,0), chip 2
-        index = 2*PelWidth*PelWidth + (PelWidth - 1 - i) + PelWidth * (2*PelWidth - 1- j);
+        index = 2*PelWidth*PelWidth + ((PelWidth - 1) - i) + j * PelWidth;
     }
     if ((X_CHIP = 0) && (Y_CHIP = 1)) { // tile (0,1), chip 3
-        index = 3*PelWidth*PelWidth + i + j*PelWidth;
+        index = 3*PelWidth*PelWidth + i - (jj - (PelWidth - 1))*PelWidth;
     }
 
     if ((X_CHIP > 1) || (Y_CHIP > 1)) {
