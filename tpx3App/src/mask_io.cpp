@@ -75,9 +75,9 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
 
                 readBPCfile(&bufBPC, &bufBPCSize);
                 rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
-                for (int i = 0; i < ROWS; ++i) {
-                    for (int j = 0; j < COLS; ++j) {
-                        if (value[i*ROWS + j]  & (1 << 0)) {
+                for (int j = 0; j < COLS; ++j) {
+                    for (int i = 0; i < ROWS; ++i) {
+                        if (value[j*COLS + i]  & (1 << 0)) {
                             bufBPC[pelIndex(i, j)] |= (1 << 0);
                         }
                     }
@@ -392,31 +392,49 @@ asynStatus ADTimePix::findChip(int x, int y, int *xChip, int *yChip, int *width)
 */
 int ADTimePix::pelIndex(int i, int j) {
     int index=0, ii=0,jj=0;
-    int X_CHIP=0, Y_CHIP=0, PelWidth=0;
+    int X_CHIP=0, Y_CHIP=0, PelWidth=0, detOrientation=0;
 
+    getIntegerParam(ADTimePixDetectorOrientation, &detOrientation);
     findChip(i, j, &X_CHIP, &Y_CHIP, &PelWidth);
 
     // TODO, one-chip TimePix3 detector
 
-    // Four chip 2x2 TimePix3 UP detector
+    // Four chip 2x2 TimePix3 UP/LEFT detector orientation
     ii = i - PelWidth;
     jj = j - PelWidth;
-    if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 0
-        index = ii - (jj - (PelWidth - 1))*PelWidth;
-    }
-    if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 1
-        index = PelWidth*PelWidth + ((PelWidth - 1) - ii) + j * PelWidth;
-    }
-    if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 2
-        index = 2*PelWidth*PelWidth + ((PelWidth - 1) - i) + j * PelWidth;
-    }
-    if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
-        index = 3*PelWidth*PelWidth + i - (jj - (PelWidth - 1))*PelWidth;
-    }
 
-    if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-        printf("ERROR index: detector larger than 2x2\n");
-        index = -1;
+    if (detOrientation == 0) {  // UP detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 0
+            index = ii - (jj - (PelWidth - 1))*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 1
+            index = PelWidth*PelWidth + ((PelWidth - 1) - ii) + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 2
+            index = 2*PelWidth*PelWidth + ((PelWidth - 1) - i) + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
+            index = 3*PelWidth*PelWidth + i - (jj - (PelWidth - 1))*PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("ERROR index: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("UP:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else if (detOrientation == 3) {  // LEFT detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 3
+            index = 3*PelWidth*PelWidth + ((PelWidth - 1) - jj) + ((PelWidth - 1) - ii)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 0
+            index = ((PelWidth - 1) - jj) +  ((PelWidth - 1) - ii) * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 1
+            index = PelWidth*PelWidth + j + i * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 2
+            index = 2*PelWidth*PelWidth + jj + i * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("ERROR index: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("LEFT:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else {
+        printf("TODO: Mask computations are for detector orientation: UP and LEFT only\n");
     }
 
     return index;
