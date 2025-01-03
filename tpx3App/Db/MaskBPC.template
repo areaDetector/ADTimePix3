@@ -33,7 +33,7 @@ record(longin, "$(P)$(R)BPC_N_RBV")
 # Position of masked pel in BPC mask
 record(waveform, "$(P)$(R)BPCmasked"){
     field(DTYP, "asyn$(TYPE)ArrayIn")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_BPC_MASKED")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_BPC_PEL_MASKED")
     field(FTVL, "$(FTVL)")
     field(NELM, "$(NELEMENTS)")
 #    field(autosaveFields, "VAL")
