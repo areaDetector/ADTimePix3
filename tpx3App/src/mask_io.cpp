@@ -413,7 +413,7 @@ int ADTimePix::pelIndex(int i, int j) {
         } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
             index = 3*PelWidth*PelWidth + i - (jj - (PelWidth - 1))*PelWidth;
         } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-            printf("ERROR index: detector larger than 2x2\n");
+            printf("UP index: detector larger than 2x2\n");
             index = -1;
         } else {
             printf("UP:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
@@ -428,13 +428,104 @@ int ADTimePix::pelIndex(int i, int j) {
         } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 2
             index = 2*PelWidth*PelWidth + jj + i * PelWidth;
         } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-            printf("ERROR index: detector larger than 2x2\n");
+            printf("LEFT: detector larger than 2x2\n");
             index = -1;
         } else {
             printf("LEFT:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
         }
+    } else if (detOrientation == 1) {  // RIGHT detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 1
+            index = PelWidth*PelWidth + ((PelWidth - 1) - jj) + ((PelWidth - 1) - ii)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 2
+            index = 2*PelWidth*PelWidth + ((PelWidth - 1) - j) +  ((PelWidth - 1) - ii) * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 3
+            index = 3*PelWidth*PelWidth + j + i * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 0
+            index = jj +  i * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("RIGHT: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("RIGHT:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else if (detOrientation == 2) {  // DOWN detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 2
+            index = 2*PelWidth*PelWidth + ii + ((PelWidth - 1) - jj)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 3
+            index = 3*PelWidth*PelWidth + ((PelWidth - 1) - ii) +  j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 0
+            index =  ((PelWidth - 1) - i) + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 1
+            index = PelWidth*PelWidth + i +  ((PelWidth - 1) - jj) * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("DOWN: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("DOWN:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else if (detOrientation == 4) {  // UP MIRRORED detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 3
+            index = 3*PelWidth*PelWidth + ((PelWidth - 1) - ii) + ((PelWidth - 1) - jj)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 2
+            index = 2*PelWidth*PelWidth + ii + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 1
+            index =  PelWidth*PelWidth + i + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 0
+            index = ((PelWidth - 1) - i) + ((PelWidth - 1) - jj) * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("UP MIRRORED: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("UP MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else if (detOrientation == 5) {  // RIGHT MIRRORED detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 0
+            index = jj + ((PelWidth - 1) - ii)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 3
+            index = 3*PelWidth*PelWidth + j + ((PelWidth - 1) - ii) * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 2
+            index =  2*PelWidth*PelWidth + ((PelWidth - 1) - j) + i * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 1
+            index = PelWidth*PelWidth + ((PelWidth - 1) - jj) + i * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("RIGHT MIRRORED: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("RIGHT MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else if (detOrientation == 6) {  // DOWN MIRRORED detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 1
+            index = PelWidth*PelWidth + ((PelWidth - 1) - ii) + ((PelWidth - 1) - jj)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 0
+            index = ii + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 3
+            index =  3*PelWidth*PelWidth + i + j * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 2
+            index = 2*PelWidth*PelWidth + ((PelWidth - 1) - i) + ((PelWidth - 1) - jj) * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("DOWN MIRRORED: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("DOWN MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+    } else if (detOrientation == 7) {  // LEFT MIRRORED detector orientation
+        if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 2
+            index = 2*PelWidth*PelWidth + jj + ((PelWidth - 1) - ii)*PelWidth;
+        } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 1
+            index = PelWidth*PelWidth + j + ((PelWidth - 1) - ii) * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 0
+            index =  ((PelWidth - 1) - j) + i * PelWidth;
+        } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
+            index = 3*PelWidth*PelWidth + ((PelWidth - 1) - jj) + i * PelWidth;
+        } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
+            printf("LEFT MIRRORED: detector larger than 2x2\n");
+            index = -1;
+        } else {
+            printf("LEFT MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+        }
+
     } else {
-        printf("TODO: Mask computations are for detector orientation: UP and LEFT only\n");
+        printf("Mask computations are for 2x2 detector only\n");
     }
 
     return index;
