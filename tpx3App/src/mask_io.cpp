@@ -399,7 +399,7 @@ int ADTimePix::pelIndex(int i, int j) {
 
     // TODO, one-chip TimePix3 detector
 
-    // Four chip 2x2 TimePix3 UP/LEFT detector orientation
+    // Four chip 2x2 TimePix3 detector orientations
     ii = i - PelWidth;
     jj = j - PelWidth;
 

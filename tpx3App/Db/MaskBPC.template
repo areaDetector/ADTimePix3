@@ -52,8 +52,8 @@ record(waveform, "$(P)$(R)MaskBPC"){
 record(bo, "$(P)$(R)MaskOnOff"){
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_ONOFF_PEL")
-  field(ZNAM, "No")
-  field(ONAM, "Yes")
+  field(ZNAM, "Enable")
+  field(ONAM, "Disable")
   field(VAL,  "0")
 }
 
@@ -189,4 +189,140 @@ record(bo, "$(P)$(R)MaskWrite"){
   field(ZNAM, "No")
   field(ONAM, "Yes")
   field(VAL,  "0")
+}
+
+# Mask: Set flags to default.
+record(sseq, "$(P)$(R)FlagMaskSeq")
+{
+   # Clean flags: read pixels masked in calibration
+   field(DOL1, "0")
+   field(LNK1, "$(P)$(R)MaskPel PP MS")
+   # Clean flags: disable writing to FPGA
+   field(DOL2, "0")
+   field(LNK2, "$(P)$(R)MaskWrite PP MS")
+   # Clean flags: disable rectangular mask
+   field(DOL3, "0")
+   field(LNK3, "$(P)$(R)MaskRectangle PP MS")
+   # Clean flags: disable circular mask
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskCircle PP MS")
+   # Positive mask: enable all pel count
+   field(DOL5, "0")
+   field(LNK5, "$(P)$(R)MaskOnOff PP MS")
+   #field(WAIT1, "$(P)$(R)MaskOnOff PP MS")
+   field(DOL6, "0")
+   field(LNK6, "$(P)$(R)MaskReset PP MS")
+}
+
+# Negative mask: Reset mask PV to block counting for all pel
+record(sseq, "$(P)$(R)ResetPosMaskSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Disable counting, enable reset, create mask PV
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskReset PP MS")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask reset flag
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskReset PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write to FPGA
+   field(DLY6, "0.5")
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask write
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+
+# Negative mask: Reset mask PV to block counting for all pel
+record(sseq, "$(P)$(R)ResetNegMaskSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Disable counting, enable reset, create mask PV
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskOnOff PP MS")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskReset PP MS")
+   field(DOL4, "1")
+   field(LNK4, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask reset flag
+   field(DLY5, "0.5")
+   field(DOL5, "0")
+   field(LNK5, "$(P)$(R)MaskReset PP MS")
+   # Enable mask write to FPGA
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskWrite PP MS")
+   # Write to FPGA
+   field(DLY7, "0.5")
+   field(DOL7, "1")
+   field(LNK7, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask write
+   field(DOL8, "0")
+   field(LNK8, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Positive mask: rectangular pel that will count
+record(sseq, "$(P)$(R)WriteMaskRectSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Enable rectangular mask
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskRectangle PP MS")
+   # Write mask to mask PV
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable rectangular mask creation
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskRectangle PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write mask to mask to FPGA
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable rectangular mask creation
+   field(DLY7, "0.5")
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Positive mask: circular pel that will count
+record(sseq, "$(P)$(R)WriteMaskCircleSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Enable circular mask
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskCircle PP MS")
+   # Write mask to mask PV
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable circular mask creation
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskCircle PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write mask to mask to FPGA
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable rectangular mask creation
+   field(DLY7, "0.5")
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
 }
