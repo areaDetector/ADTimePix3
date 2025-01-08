@@ -299,6 +299,18 @@ record(sseq, "$(P)$(R)WriteMaskRectSeq")
    field(LNK7, "$(P)$(R)MaskWrite PP MS")
 }
 
+# Positive mask: rectangular pel that will count with prior reset
+record(sseq, "$(P)$(R)MaskRectSeq")
+{
+   # Disable counting for all pel
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)ResetNegMaskSeq.PROC PP MS")
+   # Enable rectangular mask counting
+   field(DLY2, "2")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)WriteMaskRectSeq.PROC PP MS")
+}
+
 # Positive mask: circular pel that will count
 record(sseq, "$(P)$(R)WriteMaskCircleSeq")
 {
@@ -325,4 +337,16 @@ record(sseq, "$(P)$(R)WriteMaskCircleSeq")
    field(DLY7, "0.5")
    field(DOL7, "0")
    field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Positive mask: circular pel that will count, with prior negative mask reset
+record(sseq, "$(P)$(R)MaskCircleSeq")
+{
+   # Disable counting for all pel
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)ResetNegMaskSeq.PROC PP MS")
+   # Enable circular mask counting
+   field(DLY2, "2")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)WriteMaskCircleSeq.PROC PP MS")
 }
