@@ -40,6 +40,7 @@ dbLoadRecords("$(ADTIMEPIX)/db/Server.template","P=$(PREFIX),R=cam1:,PORT=$(PORT
 dbLoadRecords("$(ADTIMEPIX)/db/Measurement.template","P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(ADTIMEPIX)/db/Dashboard.template","P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 
+# One chip mask, below 4-chip mask
 #dbLoadRecords("$(ADTIMEPIX)/db/MaskBPC.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=65536")
 dbLoadRecords("$(ADTIMEPIX)/db/MaskBPC.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=262144")
 
@@ -101,10 +102,16 @@ dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 epicsThreadSleep(2)
 dbpf("$(PREFIX)cam1:WriteData","1")   # Write selected data files to disk and stream to socket
 
+# Four chip calibration
 dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")       # load BPC calibration
 dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")     # load DACS calibration
+# One Chip calibration
+#dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support/areaDetector/ADTimePix3/vendor/oneChip")
+#dbpf("$(PREFIX)cam1:BPCFileName","eq.bpc")       # load BPC calibration
+#dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support/areaDetector/ADTimePix3/vendor/oneChip")
+#dbpf("$(PREFIX)cam1:DACSFileName","eq.dacs")     # load DACS calibration
 
 #dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
 
