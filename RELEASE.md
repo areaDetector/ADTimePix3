@@ -13,8 +13,9 @@ The master branch (under development) is for Serval 3.3.0
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
 R1-2 (xxx, 2025)
-* TODO: computation of AD mask image to the internal BPC calibration file
-* TODO: extract masked pixels from BPC and map to AD mask image.
+* Mask generation for one chip, and 2x2 quad chip detectors for all 8 detector orientaitons.
+* AD mask image placed into BPC calibration mask.bpc file.
+* Masked pixels from BPC read into AD mask image.
 * Masked pels in 2nd octet of BPC waveform PV
 * Connection status PVs
     - Serval connected (URL web interface is up)
