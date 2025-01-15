@@ -13,6 +13,7 @@ The master branch (under development) is for Serval 3.3.0
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
 R1-2 (xxx, 2025)
+* Individual chip temperature, and archiver monitoring
 * Mask generation for one chip, and 2x2 quad chip detectors for all 8 detector orientaitons.
 * AD mask image placed into BPC calibration mask.bpc file.
 * Masked pixels from BPC read into AD mask image.
