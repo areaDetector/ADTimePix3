@@ -269,7 +269,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <group_name></group_name>
-    <height>510</height>
+    <height>525</height>
     <macros>
       <include_parent_macros>true</include_parent_macros>
       <Chip>CHIP0</Chip>
@@ -289,7 +289,7 @@ $(pv_value)</tooltip>
     <widget_type>Linking Container</widget_type>
     <width>350</width>
     <wuid>-681b7cb2:1819850d1ce:-378b</wuid>
-    <x>716</x>
+    <x>715</x>
     <y>32</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
@@ -310,7 +310,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <group_name></group_name>
-    <height>510</height>
+    <height>525</height>
     <macros>
       <include_parent_macros>true</include_parent_macros>
       <Chip>CHIP2</Chip>
@@ -330,8 +330,8 @@ $(pv_value)</tooltip>
     <widget_type>Linking Container</widget_type>
     <width>350</width>
     <wuid>-681b7cb2:1819850d1ce:-27da</wuid>
-    <x>718</x>
-    <y>549</y>
+    <x>715</x>
+    <y>560</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
     <actions hook="false" hook_all="false" />
@@ -351,7 +351,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <group_name></group_name>
-    <height>510</height>
+    <height>525</height>
     <macros>
       <include_parent_macros>true</include_parent_macros>
       <Chip>CHIP1</Chip>
@@ -371,7 +371,7 @@ $(pv_value)</tooltip>
     <widget_type>Linking Container</widget_type>
     <width>350</width>
     <wuid>-681b7cb2:1819850d1ce:-2781</wuid>
-    <x>1069</x>
+    <x>1070</x>
     <y>31</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
@@ -392,7 +392,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <group_name></group_name>
-    <height>510</height>
+    <height>525</height>
     <macros>
       <include_parent_macros>true</include_parent_macros>
       <Chip>CHIP3</Chip>
@@ -412,8 +412,8 @@ $(pv_value)</tooltip>
     <widget_type>Linking Container</widget_type>
     <width>350</width>
     <wuid>-681b7cb2:1819850d1ce:-2728</wuid>
-    <x>1074</x>
-    <y>547</y>
+    <x>1070</x>
+    <y>560</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
     <actions hook="false" hook_all="false" />
