@@ -777,6 +777,8 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     setIntegerParam(chip, ADTimePixVthresholdCoarse,   data["Chips"][chip]["DACs"]["Vthreshold_coarse"].get<int>());
     setIntegerParam(chip, ADTimePixVthresholdFine,     data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
 
+    setIntegerParam(chip, ADTimePixChipNTemperature,   data["Health"]["ChipTemperatures"][chip].get<int>());
+
     if (data["Chips"][chip]["Adjust"].is_null()) {
         setIntegerParam(chip, ADTimePixAdjust, -1);
     }
@@ -2190,6 +2192,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
              
     // Detector Chip Layout
     createParam(ADTimePixLayoutString,               asynParamOctet, &ADTimePixLayout);
+    // Detector Chip Temperature
+    createParam(ADTimePixChipNTemperatureString,     asynParamInt32, &ADTimePixChipNTemperature);
 
     // Files BPC, Chip/DACS
     createParam(ADTimePixBPCFilePathString,                asynParamOctet,  &ADTimePixBPCFilePath);            

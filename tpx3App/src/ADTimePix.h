@@ -120,6 +120,8 @@ using json = nlohmann::json;
 // Chip Layout
 #define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"     // (asynInt32,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
 #define ADTimePixLayoutString               "TPX3_LAYOUT"              // (asynOctet,         r)      Chip layout
+// Chip Temperature
+#define ADTimePixChipNTemperatureString     "TPX3_CHIP_TEMP"           // (asynInt32,         r)      Chip N temperature
 
     // Absolute path to the binary pixel configuration, absolute path to the text chips configuration
 #define ADTimePixBPCFilePathString          "BPC_FILE_PATH"             /**< (asynOctet,    r/w) The file path Binary Pixel Configuration */
@@ -398,6 +400,9 @@ class ADTimePix : public ADDriver{
         // Detector Chip layout
         int ADTimePixDetectorOrientation;
         int ADTimePixLayout;
+
+        // Detector Health individual Chip Temperature
+        int ADTimePixChipNTemperature;
 
             // Files BPC, Chip/DACS
         int ADTimePixBPCFilePath;          
