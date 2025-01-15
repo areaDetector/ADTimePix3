@@ -14,11 +14,13 @@ record(longin, "$(P)$(R)PelEvtRate_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PEL_RATE")
   field(SCAN, "I/O Intr")
+  info(archive, "Monitor, 00:00:01, VAL")
 }
 record(longin, "$(P)$(R)Tdc1EvtRate_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TDC1_RATE")
   field(SCAN, "I/O Intr")
+  info(archive, "Monitor, 00:00:01, VAL")
 }
 record(longin, "$(P)$(R)Tdc2EvtRate_RBV"){
   field(DTYP, "asynInt32")
@@ -49,6 +51,7 @@ record(longin, "$(P)$(R)DroppedFrames_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DROPPED_FRAMES")
   field(SCAN, "I/O Intr")
+  info(archive, "Monitor, 00:00:01, VAL")
 }
 record(stringin, "$(P)$(R)Status_RBV"){
   field(DTYP, "asynOctetRead")
