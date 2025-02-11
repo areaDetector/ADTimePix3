@@ -1393,9 +1393,6 @@ asynStatus ADTimePix::initAcquisition(){
         getIntegerParam(ADTimePixBiasVolt, &intNum);
         config_j["BiasVoltage"] = intNum;
 
-    //    getIntegerParam(ADTimePixBiasVolt, &intNum);
-    //    config_j["BiasVoltage"] = intNum;
-
         getIntegerParam(ADTimePixBiasEnable, &intNum);
         json biasEnabled;
         biasEnabled[0] = "false";
