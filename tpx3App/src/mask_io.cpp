@@ -663,7 +663,7 @@ int ADTimePix::pelIndex(int i, int j) {
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 3
                 index = 3*PelWidth*PelWidth + ((PelWidth - 1) - jj) + ((PelWidth - 1) - ii)*PelWidth;
             } else if ((X_CHIP == 1) && (Y_CHIP == 0)) { // tile (1,0), chip 0
-                index = ((PelWidth - 1) - jj) +  ((PelWidth - 1) - ii) * PelWidth;
+                index = ((PelWidth - 1) - j) +  ((PelWidth - 1) - ii) * PelWidth;
             } else if ((X_CHIP == 0) && (Y_CHIP == 0)) { // tile (0,0), chip 1
                 index = PelWidth*PelWidth + j + i * PelWidth;
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 2
