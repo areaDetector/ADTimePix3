@@ -591,6 +591,7 @@ class ADTimePix : public ADDriver{
         asynStatus rowsCols(int *rows, int *cols, int *xChips, int *yChips, int *chipPelWidth);
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
         int pelIndex(int x, int y);
+        int bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
 };
 
 // Stores number of additional PV parameters are added by the driver
