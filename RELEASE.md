@@ -13,8 +13,9 @@ The master branch (under development) is for Serval 3.3.0
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
 R1-2 (xxx, 2025)
-* Links to manuals from DetectorConfig.opi screen
-* The ioc starts even without detector or Serval: detector and serval API status PVs are updated 
+* Compute masked pixels as areaDetector 1D array index (replaces bpc vector index).
+* Links to manuals from DetectorConfig.opi screen.
+* The ioc starts even without detector or Serval: detector and serval API status PVs are updated.
 * Individual chip temperature, and archiver monitoring
 * Mask generation for one chip, and 2x2 quad chip detectors for all 8 detector orientaitons.
 * AD mask image placed into BPC calibration mask.bpc file.
