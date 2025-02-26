@@ -886,6 +886,12 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixExternalReferenceClock, int(detector_j["Config"]["ExternalReferenceClock"]));   // bool->int true->1, falue->0
         setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
 
+        // VDD, AVDD voltages
+        for (int i = 0; i < 3; i++){
+            setDoubleParam(i, ADTimePixChipN_VDD,        detector_j["Health"]["VDD"][i].get<double>());     
+            setDoubleParam(i, ADTimePixChipN_AVDD,       detector_j["Health"]["AVDD"][i].get<double>());
+        }
+
         // Detector Chips: Chip0
         fetchDacs(detector_j, 0);
 
@@ -2200,9 +2206,11 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixAdjustString,             asynParamInt32, &ADTimePixAdjust);
              
     // Detector Chip Layout
-    createParam(ADTimePixLayoutString,               asynParamOctet, &ADTimePixLayout);
-    // Detector Chip Temperature
-    createParam(ADTimePixChipNTemperatureString,     asynParamInt32, &ADTimePixChipNTemperature);
+    createParam(ADTimePixLayoutString,              asynParamOctet, &ADTimePixLayout);
+    // Detector Chip Temperature, VDD, AVDD
+    createParam(ADTimePixChipNTemperatureString,    asynParamInt32, &ADTimePixChipNTemperature);
+    createParam(ADTimePixChipN_VDDString,           asynParamFloat64, &ADTimePixChipN_VDD);
+    createParam(ADTimePixChipN_AVDDString,          asynParamFloat64, &ADTimePixChipN_AVDD);
 
     // Files BPC, Chip/DACS
     createParam(ADTimePixBPCFilePathString,                asynParamOctet,  &ADTimePixBPCFilePath);            
