@@ -15,11 +15,11 @@
     <color red="0" green="0" blue="0" />
   </foreground_color>
   <grid_space>5</grid_space>
-  <height>255</height>
+  <height>180</height>
   <macros>
     <include_parent_macros>true</include_parent_macros>
   </macros>
-  <name>eiger2DetectorStatus</name>
+  <name>TPX3DetectorVoltages</name>
   <rules />
   <scripts />
   <show_close_button>true</show_close_button>
@@ -121,7 +121,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <gradient>false</gradient>
-    <height>255</height>
+    <height>180</height>
     <horizontal_fill>true</horizontal_fill>
     <line_color>
       <color red="0" green="0" blue="0" />
@@ -176,7 +176,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>Detector Health</text>
+    <text>Detector Voltages</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -216,7 +216,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>Local Temperature</text>
+    <text>VDD_0</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -256,7 +256,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>Fan1 Speed</text>
+    <text>VDD_2</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -296,7 +296,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>FPGA Temperature</text>
+    <text>VDD_1</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -330,13 +330,13 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>1</format_type>
+    <format_type>0</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update</name>
-    <precision>3</precision>
+    <precision>4</precision>
     <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)LocalTemp_RBV</pv_name>
+    <pv_name>$(P)$(R)Pwr0_VDD_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -358,7 +358,7 @@ $(pv_value)</tooltip>
     <wrap_words>false</wrap_words>
     <wuid>-51630907:18191c7eb25:-5863</wuid>
     <x>170</x>
-    <y>30</y>
+    <y>31</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
     <actions hook="false" hook_all="false" />
@@ -382,13 +382,13 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>1</format_type>
+    <format_type>0</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update</name>
-    <precision>3</precision>
+    <precision>4</precision>
     <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)Fan1Speed_RBV</pv_name>
+    <pv_name>$(P)$(R)Pwr2_VDD_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -410,7 +410,7 @@ $(pv_value)</tooltip>
     <wrap_words>false</wrap_words>
     <wuid>-51630907:18191c7eb25:-5862</wuid>
     <x>170</x>
-    <y>80</y>
+    <y>81</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
     <actions hook="false" hook_all="false" />
@@ -434,13 +434,13 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>1</format_type>
+    <format_type>0</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update</name>
-    <precision>3</precision>
+    <precision>4</precision>
     <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)FPGATemp_RBV</pv_name>
+    <pv_name>$(P)$(R)Pwr1_VDD_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -462,7 +462,7 @@ $(pv_value)</tooltip>
     <wrap_words>false</wrap_words>
     <wuid>-51630907:18191c7eb25:-5861</wuid>
     <x>170</x>
-    <y>55</y>
+    <y>56</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
     <actions hook="false" hook_all="false" />
@@ -486,13 +486,13 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>1</format_type>
+    <format_type>0</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update</name>
-    <precision>3</precision>
+    <precision>4</precision>
     <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)Fan2Speed_RBV</pv_name>
+    <pv_name>$(P)$(R)Pwr0_AVDD_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -514,7 +514,7 @@ $(pv_value)</tooltip>
     <wrap_words>false</wrap_words>
     <wuid>-51630907:18191c7eb25:-5860</wuid>
     <x>170</x>
-    <y>105</y>
+    <y>106</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
     <actions hook="false" hook_all="false" />
@@ -544,7 +544,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>Fan2 Speed</text>
+    <text>AVDD_0</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -584,7 +584,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>Bias Voltage</text>
+    <text>AVDD_1</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -618,13 +618,13 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color red="10" green="0" blue="184" />
     </foreground_color>
-    <format_type>1</format_type>
+    <format_type>0</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update</name>
-    <precision>7</precision>
+    <precision>4</precision>
     <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)BiasVoltage_RBV</pv_name>
+    <pv_name>$(P)$(R)Pwr1_AVDD_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -646,7 +646,7 @@ $(pv_value)</tooltip>
     <wrap_words>false</wrap_words>
     <wuid>-51630907:18191c7eb25:-585d</wuid>
     <x>170</x>
-    <y>130</y>
+    <y>131</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
     <actions hook="false" hook_all="false" />
@@ -676,7 +676,7 @@ $(pv_value)</tooltip>
       <keep_wh_ratio>false</keep_wh_ratio>
     </scale_options>
     <scripts />
-    <text>Chip Temperatures</text>
+    <text>AVDD_2</text>
     <tooltip></tooltip>
     <transparent>true</transparent>
     <vertical_alignment>1</vertical_alignment>
@@ -685,282 +685,6 @@ $(pv_value)</tooltip>
     <width>140</width>
     <wrap_words>false</wrap_words>
     <wuid>-51630907:18191c7eb25:-5150</wuid>
-    <x>25</x>
-    <y>180</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <alarm_pulsing>false</alarm_pulsing>
-    <auto_size>false</auto_size>
-    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
-    <background_color>
-      <color red="187" green="187" blue="187" />
-    </background_color>
-    <border_alarm_sensitive>true</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
-    </font>
-    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
-    <foreground_color>
-      <color red="10" green="0" blue="184" />
-    </foreground_color>
-    <format_type>4</format_type>
-    <height>18</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>Text Update_5</name>
-    <precision>3</precision>
-    <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)ChipTemps_RBV</pv_name>
-    <pv_value />
-    <rotation_angle>0.0</rotation_angle>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <show_units>false</show_units>
-    <text>######</text>
-    <tooltip>$(pv_name)
-$(pv_value)</tooltip>
-    <transparent>false</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Text Update</widget_type>
-    <width>155</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-51630907:18191c7eb25:-514f</wuid>
-    <x>170</x>
-    <y>180</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <auto_size>false</auto_size>
-    <background_color>
-      <color red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
-    </font>
-    <foreground_color>
-      <color red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>20</height>
-    <horizontal_alignment>2</horizontal_alignment>
-    <name>Label_7</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>VDD</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>140</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-51630907:18191c7eb25:-5148</wuid>
-    <x>25</x>
-    <y>205</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <alarm_pulsing>false</alarm_pulsing>
-    <auto_size>false</auto_size>
-    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
-    <background_color>
-      <color red="187" green="187" blue="187" />
-    </background_color>
-    <border_alarm_sensitive>true</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
-    </font>
-    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
-    <foreground_color>
-      <color red="10" green="0" blue="184" />
-    </foreground_color>
-    <format_type>4</format_type>
-    <height>18</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>Text Update_6</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
-    <pv_name>$(P)$(R)VDD_RBV</pv_name>
-    <pv_value />
-    <rotation_angle>0.0</rotation_angle>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <show_units>false</show_units>
-    <text>######</text>
-    <tooltip>$(pv_name)
-$(pv_value)</tooltip>
-    <transparent>false</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Text Update</widget_type>
-    <width>155</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-51630907:18191c7eb25:-5147</wuid>
-    <x>170</x>
-    <y>205</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <auto_size>false</auto_size>
-    <background_color>
-      <color red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
-    </font>
-    <foreground_color>
-      <color red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>20</height>
-    <horizontal_alignment>2</horizontal_alignment>
-    <name>Label_8</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>AVDD</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>140</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-51630907:18191c7eb25:-5140</wuid>
-    <x>25</x>
-    <y>230</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <alarm_pulsing>false</alarm_pulsing>
-    <auto_size>false</auto_size>
-    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
-    <background_color>
-      <color red="187" green="187" blue="187" />
-    </background_color>
-    <border_alarm_sensitive>true</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
-    </font>
-    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
-    <foreground_color>
-      <color red="10" green="0" blue="184" />
-    </foreground_color>
-    <format_type>4</format_type>
-    <height>18</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>Text Update_7</name>
-    <precision>3</precision>
-    <precision_from_pv>true</precision_from_pv>
-    <pv_name>$(P)$(R)AVDD_RBV</pv_name>
-    <pv_value />
-    <rotation_angle>0.0</rotation_angle>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <show_units>false</show_units>
-    <text>######</text>
-    <tooltip>$(pv_name)
-$(pv_value)</tooltip>
-    <transparent>false</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Text Update</widget_type>
-    <width>155</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-51630907:18191c7eb25:-513f</wuid>
-    <x>170</x>
-    <y>230</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <auto_size>false</auto_size>
-    <background_color>
-      <color red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
-    </font>
-    <foreground_color>
-      <color red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>20</height>
-    <horizontal_alignment>2</horizontal_alignment>
-    <name>Label_9</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>Humidity</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>140</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-6f9d6b0b:18733b0e335:-638e</wuid>
     <x>25</x>
     <y>155</y>
   </widget>
@@ -989,10 +713,10 @@ $(pv_value)</tooltip>
     <format_type>0</format_type>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
-    <name>Text Update_8</name>
-    <precision>3</precision>
+    <name>Text Update_5</name>
+    <precision>4</precision>
     <precision_from_pv>false</precision_from_pv>
-    <pv_name>$(P)$(R)Humidity_RBV</pv_name>
+    <pv_name>$(P)$(R)Pwr2_AVDD_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -1012,63 +736,8 @@ $(pv_value)</tooltip>
     <widget_type>Text Update</widget_type>
     <width>155</width>
     <wrap_words>false</wrap_words>
-    <wuid>-6f9d6b0b:18733b0e335:-638d</wuid>
+    <wuid>-51630907:18191c7eb25:-514f</wuid>
     <x>170</x>
     <y>155</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
-    <actions hook="false" hook_all="false">
-      <action type="OPEN_DISPLAY">
-        <path>TimePixDetectorVoltages.opi</path>
-        <macros>
-          <include_parent_macros>true</include_parent_macros>
-        </macros>
-        <mode>1</mode>
-        <description>Power Voltages</description>
-      </action>
-    </actions>
-    <alarm_pulsing>false</alarm_pulsing>
-    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
-    <background_color>
-      <color red="115" green="223" blue="255" />
-    </background_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
-    </font>
-    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
-    <foreground_color>
-      <color red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>40</height>
-    <image></image>
-    <name>Action Button_4</name>
-    <push_action_index>0</push_action_index>
-    <pv_name></pv_name>
-    <pv_value />
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <style>0</style>
-    <text>Power</text>
-    <toggle_button>false</toggle_button>
-    <tooltip>$(pv_name)
-$(pv_value)</tooltip>
-    <visible>true</visible>
-    <widget_type>Action Button</widget_type>
-    <width>60</width>
-    <wuid>-5ec068d9:1950c925a9d:-7340</wuid>
-    <x>5</x>
-    <y>208</y>
   </widget>
 </display>
