@@ -18,6 +18,7 @@ DB += Server.template
 DB += Measurement.template
 DB += Dashboard.template
 DB += MaskBPC.template
+DB += OperatingVoltage.template
 
 #-------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
