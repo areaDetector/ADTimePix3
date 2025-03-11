@@ -95,11 +95,12 @@ dbpf("$(PREFIX)cam1:PrvImg1IntgMode","0")   # sum
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:WritePrvImg1","0")   # Select preview disk write
 
-dbpf("$(PREFIX)cam1:PrvHstFilePath","tcp://localhost:8451")
+dbpf("$(PREFIX)cam1:PrvHstFilePath","tcp://listen@localhost:8451")
 dbpf("$(PREFIX)cam1:PrvHstFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvHstFileFmt","4")    # jsonhisto
 dbpf("$(PREFIX)cam1:PrvHstFileMode","3")   # tof
-dbpf("$(PREFIX)cam1:PrvHstIntgMode","1")   # average
+dbpf("$(PREFIX)cam1:PrvHstIntgSize","0")   # Size=0, does not work for -1,1..32?
+dbpf("$(PREFIX)cam1:PrvHstIntgMode","0")   # sum
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 
