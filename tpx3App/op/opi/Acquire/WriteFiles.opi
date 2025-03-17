@@ -8833,7 +8833,7 @@ $(pv_value)</tooltip>
     <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>Text Input_30</name>
-    <precision>1</precision>
+    <precision>7</precision>
     <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)PrvHstBinWidth</pv_name>
     <pv_value />
@@ -8885,7 +8885,7 @@ $(pv_value)</tooltip>
     <height>18</height>
     <horizontal_alignment>0</horizontal_alignment>
     <name>Text Update_59</name>
-    <precision>3</precision>
+    <precision>7</precision>
     <precision_from_pv>false</precision_from_pv>
     <pv_name>$(P)$(R)PrvHstBinWidth_RBV</pv_name>
     <pv_value />
