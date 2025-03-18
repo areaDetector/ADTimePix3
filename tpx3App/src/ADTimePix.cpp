@@ -1210,6 +1210,13 @@ asynStatus ADTimePix::fileWriter(){
 
     getIntegerParam(ADTimePixWritePrvHst, &writeChannel);
     if (writeChannel != 0) {
+        // Preview Period and SamplingMode are needed if only HistogramChannels are used.
+        getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
+        server_j["Preview"]["Period"] = doubleNum;
+
+        getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
+        server_j["Preview"]["SamplingMode"] = samplingMode[intNum]; 
+
         // Preview, HistogramChannels[0]
         getStringParam(ADTimePixPrvHstBase, fileStr);
         server_j["Preview"]["HistogramChannels"][0]["Base"] = fileStr;
@@ -1985,8 +1992,10 @@ void ADTimePix::report(FILE* fp, int details){
 asynStatus ADTimePix::readImage()
 {
     Image image;
-    static const string imageEndpoint = "/measurement/image";  // Cache the endpoint
-    static const string URLString = this->serverURL + imageEndpoint;  // Cache the full URL
+//    static const string imageEndpoint = "/measurement/image";  // Cache the endpoint
+//    static const string URLString = this->serverURL + imageEndpoint;  // Cache the full URL
+    static const string URLString = this->serverURL + "/measurement/image";  // Cache the full URL
+//    string URLString=this->serverURL + std::string("/measurement/image");
 
     size_t dims[3];
     int ndims;
