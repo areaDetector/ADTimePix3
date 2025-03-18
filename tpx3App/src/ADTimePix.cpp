@@ -1984,8 +1984,10 @@ void ADTimePix::report(FILE* fp, int details){
 
 asynStatus ADTimePix::readImage()
 {
-//    char URLString[MAX_FILENAME_LEN];
-    string URLString=this->serverURL + std::string("/measurement/image"); 
+    Image image;
+    static const string imageEndpoint = "/measurement/image";  // Cache the endpoint
+    static const string URLString = this->serverURL + imageEndpoint;  // Cache the full URL
+
     size_t dims[3];
     int ndims;
     int nrows, ncols;
