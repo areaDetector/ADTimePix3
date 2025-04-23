@@ -22,6 +22,8 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+#include <thread>
+
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -214,6 +216,10 @@ using json = nlohmann::json;
 #define ADTimePixPrvHstOffsetString             "TPX3_PRV_HSTOFFSET"        // (asynFloat64,       w)      Preview HistogramChannels Offset
 #define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
+    // Read Histogram from TCP socket
+#define ADTimePixHstString          "TPX3_HST_READ"  // (asynInt32,      w)      Read ToF histogram from TCP socket */
+
+
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
 #define ADTimePixTdc1RateString              "TPX3_TDC1_RATE"         // (asynInt32,         w)      Tdc1EventRate
@@ -295,6 +301,9 @@ class ADTimePix : public ADDriver{
         asynStatus readBPCfile(char **buf, int *bufSize);
         asynStatus writeBPCfile(char **buf, int *bufSize);
         asynStatus mask2DtoBPC(int *buf, char *bufBPC);
+
+        asynStatus histogram();
+        std::thread histogramThread;
 
         void timePixCallback();
 
@@ -493,7 +502,9 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstNumBins;
         int ADTimePixPrvHstBinWidth;
         int ADTimePixPrvHstOffset;
-        int ADTimePixPrvHstFilePathExists;    
+        int ADTimePixPrvHstFilePathExists;
+            // Histogram from TCP socket
+        int ADTimePixHst;
 
             // Measurement
         int ADTimePixPelRate;        
@@ -542,6 +553,7 @@ class ADTimePix : public ADDriver{
         Image image;
 
         bool acquiring=false;
+        bool acquiring_histogram=false;
 
         epicsThreadId callbackThreadId;
 
@@ -597,6 +609,9 @@ class ADTimePix : public ADDriver{
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
         int pelIndex(int x, int y);
         int bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
+
+        asynStatus startHistogram();
+        asynStatus stopHistogram();
 };
 
 // Stores number of additional PV parameters are added by the driver

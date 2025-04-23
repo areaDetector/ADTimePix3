@@ -66,4 +66,11 @@ Uncomment following lines in ADCore/iocBoot
   * file "NDFileMagick_settings.req",   P=$(P),  R=Magick1:
   * file "NDPva_settings.req",          P=$(P),  R=Pva1:
 
-  
+Histogram
+------------
+
+* Depends on the json-c 
+	* ubuntu: libjson-c-dev
+	* RHEL9: json-c-devel.x86_64
+* Depends on openmp
+* Uses C++ thread  

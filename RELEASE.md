@@ -13,6 +13,7 @@ The master branch (under development) is for Serval 3.3.0
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
 R1-2 (xxx, 2025)
+* Time of Fligh histogram uses json-c, and openmp dependencies
 * Read VDD and AVDD and set monitor. {Voltage [V], Current [A], Power [W]}
 * Compute masked pixels as areaDetector 1D array index (replaces bpc vector index).
 * Links to manuals from DetectorConfig.opi screen.

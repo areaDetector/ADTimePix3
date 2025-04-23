@@ -7,9 +7,12 @@ ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
 USR_CPPFLAGS += -D__X64
 endif
 
-USR_CPPFLAGS += -std=c++11
-
+#USR_CPPFLAGS += -std=c++11
+USR_CXXFLAGS += -std=c++11
+USR_CXXFLAGS += -O3 -march=native -fopenmp -Wall -Wextra
 USR_CXXFLAGS += -DPREFIX_MAGICK_SYMBOLS
+
+USR_LDFLAGS += -fopenmp -std=c++11
 
 INC += ADTimePix.h
 
@@ -18,8 +21,10 @@ USR_INCLUDES += $(addprefix -I, $(GRAPHICSMAGICK_INCLUDE))
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
 LIB_SRCS += mask_io.cpp
+LIB_SRCS += tpx3-tof.cpp
 
 LIB_SYS_LIBS += cpr curl-d z
+LIB_SYS_LIBS += json-c
 
 DBD += tpx3Support.dbd
 

@@ -1824,12 +1824,14 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
 asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     int function = pasynUser->reason;
     int acquiring;
+    int acquiring_hist;
     int status = asynSuccess;
     static const char* functionName = "writeInt32";
     int addr = 0;
     this->getAddress(pasynUser, &addr);
 
     getIntegerParam(ADAcquire, &acquiring);
+    getIntegerParam(ADTimePixHst, &acquiring_hist);
 
     status = setIntegerParam(addr, function, value);
     // start/stop acquisition
@@ -1883,6 +1885,24 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixDetectorOrientation) {
         status = rotateLayout();
+    }
+
+    else if(function == ADTimePixHst) {
+        printf("SAW ACQUIRE HISTOGRAM CHANGE!, status=%d\n", status);
+        if(value && !this->acquiring_histogram){
+            FLOW("Entering aquire histogram\n");
+            this->acquiring_histogram = true;
+            status = startHistogram();
+            if(status < 0){
+                this->acquiring_histogram = false;
+                return asynError;
+            }
+        }
+        if(!value && acquiring_histogram){
+            FLOW("Entering acquire histogram stop");
+            this->acquiring_histogram = false;
+            stopHistogram();
+        }
     }
 
     else if(function == ADTimePixBiasVolt || ADTimePixBiasEnable || ADTimePixTriggerIn || ADTimePixTriggerOut || ADTimePixLogLevel \
@@ -1991,7 +2011,7 @@ void ADTimePix::report(FILE* fp, int details){
 
 asynStatus ADTimePix::readImage()
 {
-    Image image;
+//    Image image;
 //    static const string imageEndpoint = "/measurement/image";  // Cache the endpoint
 //    static const string URLString = this->serverURL + imageEndpoint;  // Cache the full URL
     static const string URLString = this->serverURL + "/measurement/image";  // Cache the full URL
@@ -2305,6 +2325,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstBinWidthString,               asynParamFloat64,  &ADTimePixPrvHstBinWidth);
     createParam(ADTimePixPrvHstOffsetString,                 asynParamFloat64,  &ADTimePixPrvHstOffset);
     createParam(ADTimePixPrvHstFilePathExistsString,         asynParamInt32,    &ADTimePixPrvHstFilePathExists);
+    // Server, Histogram read from TCP socket
+    createParam(ADTimePixHstString,                         asynParamInt32,    &ADTimePixHst);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
@@ -2347,7 +2369,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
-    if(strlen(serverURL) < 0){
+    if(strlen(serverURL) <= 0){
         ERR("Connection failed, abort");
     }
 // asynSuccess = 0, so use !0 for true/connected    

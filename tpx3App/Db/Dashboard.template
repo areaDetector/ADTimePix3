@@ -11,6 +11,22 @@
 #
 ##################################################################
 
+# Read histogram from TCP socket
+record(bo, "$(P)$(R)ReadHistogram"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HST_READ")
+  field(ZNAM, "false")
+  field(ONAM, "true")  
+}
+record(bi, "$(P)$(R)ReadHistogram_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_HST_READ")
+  field(ZNAM, "false")
+  field(ONAM, "true")    
+  field(SCAN, "I/O Intr")
+}
+
+# Detector and Serval connection status
 record(bi, "$(P)$(R)ServalConnected_RBV")
 {
     field(DTYP, "asynInt32")
