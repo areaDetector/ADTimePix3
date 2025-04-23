@@ -1991,7 +1991,7 @@ void ADTimePix::report(FILE* fp, int details){
 
 asynStatus ADTimePix::readImage()
 {
-    Image image;
+//    Image image;
 //    static const string imageEndpoint = "/measurement/image";  // Cache the endpoint
 //    static const string URLString = this->serverURL + imageEndpoint;  // Cache the full URL
     static const string URLString = this->serverURL + "/measurement/image";  // Cache the full URL
@@ -2347,7 +2347,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
-    if(strlen(serverURL) < 0){
+    if(strlen(serverURL) <= 0){
         ERR("Connection failed, abort");
     }
 // asynSuccess = 0, so use !0 for true/connected    
