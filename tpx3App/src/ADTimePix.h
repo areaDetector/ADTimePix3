@@ -146,6 +146,13 @@ using json = nlohmann::json;
 #define ADTimePixWritePrvImgString         "TPX3_WRITE_PRVIMG"        // (asynInt32,         w)      Write Data output channels (preview->img)
 #define ADTimePixWritePrvImg1String        "TPX3_WRITE_PRVIMG1"       // (asynInt32,         w)      Write Data output channels (preview->img1)
 #define ADTimePixWritePrvHstString         "TPX3_WRITE_PRVHST"        // (asynInt32,         w)      Write Data output channels (preview->hst)
+    // Server, read data channels from Serval
+#define ADTimePixWriteRawReadString            "TPX3_WRITE_RAW_RBV"           // (asynInt32,         w)      Write Data output channels (raw)
+#define ADTimePixWriteRaw1ReadString           "TPX3_WRITE_RAW1_RBV"          // (asynInt32,         w)      Write Data output channels (raw), Serval 3.3.0
+#define ADTimePixWriteImgReadString            "TPX3_WRITE_IMG_RBV"           // (asynInt32,         w)      Write Data output channels (img)
+#define ADTimePixWritePrvImgReadString         "TPX3_WRITE_PRVIMG_RBV"        // (asynInt32,         w)      Write Data output channels (preview->img)
+#define ADTimePixWritePrvImg1ReadString        "TPX3_WRITE_PRVIMG1_RBV"       // (asynInt32,         w)      Write Data output channels (preview->img1)
+#define ADTimePixWritePrvHstReadString         "TPX3_WRITE_PRVHST_RBV"        // (asynInt32,         w)      Write Data output channels (preview->hst)
 
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
@@ -424,10 +431,17 @@ class ADTimePix : public ADDriver{
         int ADTimePixWriteData;
         int ADTimePixWriteRaw;
         int ADTimePixWriteRaw1;      // Serval 3.3.0
-        int ADTimePixWriteImg;      
-        int ADTimePixWritePrvImg;   
-        int ADTimePixWritePrvImg1;  
+        int ADTimePixWriteImg;
+        int ADTimePixWritePrvImg;
+        int ADTimePixWritePrvImg1;
         int ADTimePixWritePrvHst;
+            // Read back channels from Serval
+        int ADTimePixWriteRawRead;
+        int ADTimePixWriteRaw1Read;      // Serval 3.3.0
+        int ADTimePixWriteImgRead;
+        int ADTimePixWritePrvImgRead;
+        int ADTimePixWritePrvImg1Read;
+        int ADTimePixWritePrvHstRead;
 
             // Server, raw
         int ADTimePixRawBase;              

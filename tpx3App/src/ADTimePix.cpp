@@ -922,7 +922,7 @@ asynStatus ADTimePix::getDetector(){
 asynStatus ADTimePix::getServer(){
     const char* functionName = "getServer";
     asynStatus status = asynSuccess;
-    FLOW("Collecting detector information");
+    FLOW("Reading detector streams");
     std::string server;
 
     // Use the vendor library to collect information about the camera format here, and set the appropriate PVs
@@ -949,23 +949,103 @@ asynStatus ADTimePix::getServer(){
         }
     */
 
-    server = this->serverURL + std::string("/server");
+    server = this->serverURL + std::string("/server/destination");
     cpr::Response r = cpr::Get(cpr::Url{server},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
-    printf("getServer1: Status code server: %li\n", r.status_code);
-    printf("Text server: %s\n", r.text.c_str()); 
 
-    json server_j = json::parse(r.text.c_str());
-    server_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
-    printf("Text JSON server: %s\n", server_j.dump(3,' ', true).c_str());    
+    if (r.status_code != 200) {
+    //    printf("Text server: %s\n", r.text.c_str());
+    //    printf("Header server: %s\n", r.header["Content-Type"].c_str());
+    //    printf("Error server: %s\n", r.error.message.c_str());
+    //    printf("Status code server: %li\n", r.status_code);
+    //    printf("Elapsed server: %li\n", r.elapsed);
+    //    printf("Reason server: %s\n", r.reason.c_str());
+    //    printf("Url server: %s\n", r.url.c_str());
 
+        setIntegerParam(ADTimePixDetConnected,0);
+        setStringParam(ADTimePixWriteMsg, r.text.c_str());
+    }
+    else {
+        setIntegerParam(ADTimePixDetConnected,1);
+    //    setStringParam(ADTimePixWriteMsg, r.text.c_str());
 
-    cpr::Response r3 = cpr::Put(cpr::Url{server},
-                           cpr::Body{server_j.dump().c_str()},                      
-                           cpr::Header{{"Content-Type", "text/plain"}});
-    printf("\n\ngetServer3: http_code = %li\n", r3.status_code);
-    printf("Text: %s\n", r3.text.c_str());
+        json server_j = json::parse(r.text.c_str());
+    //    printf("getDetector: Server Destination JSON,%s\n", server_j.dump(3,' ', true).c_str());
+    //    printf("Number of channels: %ld\n", server_j.size());
+    //    printf("Number of Raw channels: %ld\n", server_j["Raw"].size());
+    //    printf("Number of Image channels: %ld\n", server_j["Image"].size());
+    //    printf("Number of Preview channels: %ld\n", server_j["Preview"].size());
+    //    printf("Number of Preview Image channels: %ld\n", server_j["Preview"]["ImageChannels"].size());
+    //    printf("Number of Preview Histogram channels: %ld\n\n", server_j["Preview"]["HistogramChannels"].size());
+
+        switch (server_j["Raw"].size()) {
+            case 0:
+                setIntegerParam(ADTimePixWriteRawRead, 0);
+                setIntegerParam(ADTimePixWriteRaw1Read, 0);
+                break; // No Raw channels
+            case 1:
+                setIntegerParam(ADTimePixWriteRawRead, 1);
+                setIntegerParam(ADTimePixWriteRaw1Read, 0);
+                break; // One Raw channel
+            case 2:
+                setIntegerParam(ADTimePixWriteRawRead, 1);
+                setIntegerParam(ADTimePixWriteRaw1Read, 1);
+                break; // Two Raw channels
+            default:
+                printf("More than two Raw channels\n");
+                setIntegerParam(ADTimePixWriteRawRead, 1);
+                setIntegerParam(ADTimePixWriteRaw1Read, 1);
+                break; // More than two Raw channels
+        }
+
+        switch (server_j["Image"].size()) {
+            case 0:
+                setIntegerParam(ADTimePixWriteImgRead, 0);
+                break; // No Image channels
+            case 1:
+                setIntegerParam(ADTimePixWriteImgRead, 1);
+                break; // One Image channel
+            default:
+                printf("More than two Image channels\n");
+                setIntegerParam(ADTimePixWriteImgRead, 1);
+                break; // More than two Image channels
+        }
+
+        switch (server_j["Preview"]["ImageChannels"].size()) {
+            case 0:
+                setIntegerParam(ADTimePixWritePrvImgRead, 0);
+                setIntegerParam(ADTimePixWritePrvImg1Read, 0);
+                break; // No Preview Image channels
+            case 1:
+                setIntegerParam(ADTimePixWritePrvImgRead, 1);
+                setIntegerParam(ADTimePixWritePrvImg1Read, 0);
+                break; // One Preview Image channel
+            case 2:
+                setIntegerParam(ADTimePixWritePrvImgRead, 1);
+                setIntegerParam(ADTimePixWritePrvImg1Read, 1);
+                break; // Two Preview Image channels
+            default:
+                printf("More than two Preview Image channels\n");
+                setIntegerParam(ADTimePixWritePrvImgRead, 1);
+                setIntegerParam(ADTimePixWritePrvImg1Read, 1);
+                break; // More than two Preview Image channels
+        }
+
+        switch (server_j["Preview"]["HistogramChannels"].size()) {
+            case 0:
+                setIntegerParam(ADTimePixWritePrvHstRead, 0);
+                break; // No Preview Histogram channels
+            case 1:
+                setIntegerParam(ADTimePixWritePrvHstRead, 1);
+                break; // One Preview Histogram channel
+            default:
+                printf("More than one Preview Histogram channels\n");
+                setIntegerParam(ADTimePixWritePrvHstRead, 1);
+                break; // More than one Preview Histogram channels
+        }
+    }
+    callParamCallbacks();
 
     return status;
 }
@@ -1868,6 +1948,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         // status = getHealth();
         status = getDashboard();
         status = getDetector();
+        status = getServer();
     }
     else if(function == ADTimePixWriteBPCFile) { 
         status = uploadBPC();
@@ -2236,12 +2317,19 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
     // Server, File Writer channels
     createParam(ADTimePixWriteDataString,                  asynParamInt32,  &ADTimePixWriteData);
-    createParam(ADTimePixWriteRawString,                   asynParamInt32,  &ADTimePixWriteRaw);         
+    createParam(ADTimePixWriteRawString,                   asynParamInt32,  &ADTimePixWriteRaw);
     createParam(ADTimePixWriteRaw1String,                  asynParamInt32,  &ADTimePixWriteRaw1);   // Serval 3.3.0
-    createParam(ADTimePixWriteImgString,                   asynParamInt32,  &ADTimePixWriteImg);         
-    createParam(ADTimePixWritePrvImgString,                asynParamInt32,  &ADTimePixWritePrvImg);   
-    createParam(ADTimePixWritePrvImg1String,               asynParamInt32,  &ADTimePixWritePrvImg1);     
-    createParam(ADTimePixWritePrvHstString,                asynParamInt32,  &ADTimePixWritePrvHst);     
+    createParam(ADTimePixWriteImgString,                   asynParamInt32,  &ADTimePixWriteImg);
+    createParam(ADTimePixWritePrvImgString,                asynParamInt32,  &ADTimePixWritePrvImg);
+    createParam(ADTimePixWritePrvImg1String,               asynParamInt32,  &ADTimePixWritePrvImg1);
+    createParam(ADTimePixWritePrvHstString,                asynParamInt32,  &ADTimePixWritePrvHst);
+    // Server, Read back channels from Serval
+    createParam(ADTimePixWriteRawReadString,                   asynParamInt32,  &ADTimePixWriteRawRead);
+    createParam(ADTimePixWriteRaw1ReadString,                  asynParamInt32,  &ADTimePixWriteRaw1Read);   // Serval 3.3.0
+    createParam(ADTimePixWriteImgReadString,                   asynParamInt32,  &ADTimePixWriteImgRead);
+    createParam(ADTimePixWritePrvImgReadString,                asynParamInt32,  &ADTimePixWritePrvImgRead);
+    createParam(ADTimePixWritePrvImg1ReadString,               asynParamInt32,  &ADTimePixWritePrvImg1Read);
+    createParam(ADTimePixWritePrvHstReadString,                asynParamInt32,  &ADTimePixWritePrvHstRead);
 
     // Server, Raw
     createParam(ADTimePixRawBaseString,                    asynParamOctet,  &ADTimePixRawBase);               
