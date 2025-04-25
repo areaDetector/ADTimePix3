@@ -972,12 +972,12 @@ asynStatus ADTimePix::getServer(){
 
         json server_j = json::parse(r.text.c_str());
     //    printf("getDetector: Server Destination JSON,%s\n", server_j.dump(3,' ', true).c_str());
-        printf("Number of channels: %ld\n", server_j.size());
-        printf("Number of Raw channels: %ld\n", server_j["Raw"].size());
-        printf("Number of Image channels: %ld\n", server_j["Image"].size());
-        printf("Number of Preview channels: %ld\n", server_j["Preview"].size());
-        printf("Number of Preview Image channels: %ld\n", server_j["Preview"]["ImageChannels"].size());
-        printf("Number of Preview Histogram channels: %ld\n\n", server_j["Preview"]["HistogramChannels"].size());
+    //    printf("Number of channels: %ld\n", server_j.size());
+    //    printf("Number of Raw channels: %ld\n", server_j["Raw"].size());
+    //    printf("Number of Image channels: %ld\n", server_j["Image"].size());
+    //    printf("Number of Preview channels: %ld\n", server_j["Preview"].size());
+    //    printf("Number of Preview Image channels: %ld\n", server_j["Preview"]["ImageChannels"].size());
+    //    printf("Number of Preview Histogram channels: %ld\n\n", server_j["Preview"]["HistogramChannels"].size());
 
         switch (server_j["Raw"].size()) {
             case 0:
