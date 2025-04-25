@@ -972,12 +972,12 @@ asynStatus ADTimePix::getServer(){
 
         json server_j = json::parse(r.text.c_str());
     //    printf("getDetector: Server Destination JSON,%s\n", server_j.dump(3,' ', true).c_str());
-    //    printf("Number of channels: %ld\n", server_j.size());
-    //    printf("Number of Raw channels: %ld\n", server_j["Raw"].size());
-    //    printf("Number of Image channels: %ld\n", server_j["Image"].size());
-    //    printf("Number of Preview channels: %ld\n", server_j["Preview"].size());
-    //    printf("Number of Preview Image channels: %ld\n", server_j["Preview"]["ImageChannels"].size());
-    //    printf("Number of Preview Histogram channels: %ld\n\n", server_j["Preview"]["HistogramChannels"].size());
+        printf("Number of channels: %ld\n", server_j.size());
+        printf("Number of Raw channels: %ld\n", server_j["Raw"].size());
+        printf("Number of Image channels: %ld\n", server_j["Image"].size());
+        printf("Number of Preview channels: %ld\n", server_j["Preview"].size());
+        printf("Number of Preview Image channels: %ld\n", server_j["Preview"]["ImageChannels"].size());
+        printf("Number of Preview Histogram channels: %ld\n\n", server_j["Preview"]["HistogramChannels"].size());
 
         switch (server_j["Raw"].size()) {
             case 0:
@@ -1944,11 +1944,16 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = writeDac(addr, "Vthreshold_coarse", value);
     }
 
+    else if (function == ADTimePixWriteRaw || function == ADTimePixWriteRaw1 || function == ADTimePixWriteImg \
+        || function == ADTimePixWritePrvImg || function == ADTimePixWritePrvImg1 || function == ADTimePixWritePrvHst) {
+       status = getServer();    // Read configured channels from Serval
+    }
+
     else if(function == ADTimePixHealth) { 
         // status = getHealth();
         status = getDashboard();
         status = getDetector();
-        status = getServer();
+    //    status = getServer();
     }
     else if(function == ADTimePixWriteBPCFile) { 
         status = uploadBPC();
@@ -1960,6 +1965,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixWriteData) { 
         status = fileWriter();
+        status = getServer();    // Read configured channels from Serval
     }
 
     else if(function == ADTimePixDetectorOrientation) {
