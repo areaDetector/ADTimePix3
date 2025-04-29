@@ -60,3 +60,24 @@ record(ai, "$(P)$(R)WriteSpeed_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_WRITE_SPEED")
   field(SCAN, "I/O Intr")
 }
+
+# Compare Serval streams and what is in EPICS streams
+record(calcout, "$(P)$(R)FileWriterCalc") {
+    field(DESC, "File writer status")
+    field(CALC, "(A!=B||C!=D||E!=F||G!=H||I!=J||K!=L)?1:0")
+    field(INPA, "$(P)$(R)WriteRaw CP")
+    field(INPB, "$(P)$(R)WriteRaw_RBV CP")
+    field(INPC, "$(P)$(R)WriteRaw1 CP")
+    field(INPD, "$(P)$(R)WriteRaw1_RBV CP")
+    field(INPE, "$(P)$(R)WriteImg CP")
+    field(INPF, "$(P)$(R)WriteImg_RBV CP")
+    field(INPG, "$(P)$(R)WritePrvImg CP")
+    field(INPH, "$(P)$(R)WritePrvImg_RBV CP")
+    field(INPI, "$(P)$(R)WritePrvImg1 CP")
+    field(INPJ, "$(P)$(R)WritePrvImg1_RBV CP")
+    field(INPK, "$(P)$(R)WritePrvHst CP")
+    field(INPL, "$(P)$(R)WritePrvHst_RBV CP")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
+  #  field(OUT, "$(P)$(R)FileWriterStatus PP")
+}
