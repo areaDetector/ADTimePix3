@@ -61,6 +61,18 @@ record(ai, "$(P)$(R)WriteSpeed_RBV"){
   field(SCAN, "I/O Intr")
 }
 
+# # TODO: Detector calibration and initialization completed
+# record(calcout, "$(P)$(R)DetCalibratedCalc") {
+#     field(DESC, "Detector calibration status")
+#   #  field(CALC, "((A=0)||(B=0))?1:0")
+#     field(CALC, "(B=0)?1:0")
+#     field(INPA, "$(P)$(R)ServalConnected_RBV CP")
+#     field(INPB, "$(P)$(R)DetConnected_RBV CP")
+#     field(OOPT, "Transition To Zero")
+#   #  field(OOPT, "When Zero")
+#     field(DOPT, "Use CALC")
+# }
+
 # Compare Serval streams and what is in EPICS streams
 record(calcout, "$(P)$(R)FileWriterCalc") {
     field(DESC, "File writer status")
@@ -80,4 +92,27 @@ record(calcout, "$(P)$(R)FileWriterCalc") {
     field(OOPT, "Every Time")
     field(DOPT, "Use CALC")
   #  field(OUT, "$(P)$(R)FileWriterStatus PP")
+}
+
+# Hot pixel: neutron specific
+record(calcout, "$(P)$(R)HotPixelCalc") {
+    field(DESC, "Hot pixel status")
+    field(CALC, "((A=65535) || (A>(5*B+C)))?1:0")
+    field(INPA, "$(P)$(S)MaxValue_RBV CP")
+    field(INPB, "$(P)$(S)MeanValue_RBV CP")
+    field(INPC, "$(P)$(S)Sigma_RBV CP")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
+}
+
+# Alarms: Tpx3 detector status
+record(calcout, "$(P)$(R)Tpx3StatusCalc") {
+    field(DESC, "Tpx3 status")
+    field(CALC, "((A=0)||(B=0)||(C=1)||(D=1))?1:0")
+    field(INPA, "$(P)$(R)ServalConnected_RBV CP")
+    field(INPB, "$(P)$(R)DetConnected_RBV CP")
+    field(INPC, "$(P)$(R)FileWriterCalc CP")
+    field(INPD, "$(P)$(R)HotPixelCalc CP")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
 }
