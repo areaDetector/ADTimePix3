@@ -515,7 +515,7 @@ $(pv_value)</tooltip>
       <color red="0" green="0" blue="0" />
     </foreground_color>
     <group_name></group_name>
-    <height>150</height>
+    <height>130</height>
     <macros>
       <include_parent_macros>true</include_parent_macros>
       <Chip>CHIP2</Chip>
@@ -577,6 +577,47 @@ $(pv_value)</tooltip>
     <width>350</width>
     <wuid>-3652ee1c:1938cc886f5:-7675</wuid>
     <x>360</x>
-    <y>960</y>
+    <y>955</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <background_color>
+      <color red="187" green="187" blue="187" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <group_name></group_name>
+    <height>80</height>
+    <macros>
+      <include_parent_macros>true</include_parent_macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <name>Linking Container_20</name>
+    <opi_file>TimePix3Alarm.opi</opi_file>
+    <resize_behaviour>2</resize_behaviour>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <tooltip></tooltip>
+    <visible>true</visible>
+    <widget_type>Linking Container</widget_type>
+    <width>350</width>
+    <wuid>-2cb75d2d:19687469993:-7871</wuid>
+    <x>360</x>
+    <y>1040</y>
   </widget>
 </display>
