@@ -116,3 +116,23 @@ record(calcout, "$(P)$(R)Tpx3StatusCalc") {
     field(OOPT, "Every Time")
     field(DOPT, "Use CALC")
 }
+
+#Alarm
+record(bi, "$(P)$(R)AlarmDisable"){
+  field(ZSV, "MINOR")
+  field(OSV, "NO_ALARM")
+  field(PINI, "YES")
+  field(VAL, "1")
+  field(ONAM, "AlarmEnabled")
+  field(ZNAM, "AlarmDisabled")
+  info(archive, "Monitor, 00:00:01, VAL")
+}
+
+record(calc, "$(P)$(R)Alarm"){
+  field(INPA, "$(P)$(R)AlarmDisable CP NMS")
+  field(INPB, "$(P)$(R)Tpx3StatusCalc CP NMS")
+  field(CALC, "A&&(B!=0)")
+  field(HHSV, "MAJOR")
+  field(HIHI, "1")
+  info(archive, "Monitor, 00:00:01, VAL INPB INPC")
+}
