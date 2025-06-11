@@ -13,6 +13,7 @@ The master branch (under development) is for Serval 3.3.0
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
 R1-2 (xxx, 2025)
+* ResetHotPixels PV loads negative then positive mask. Neutron detectors radiation issues.
 * Alarms: stream channels, serval/detector connection, hot pixels detection. 
 * Read back configured channels from Serval
 * Read VDD and AVDD and set monitor. {Voltage [V], Current [A], Power [W]}
