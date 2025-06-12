@@ -105,14 +105,37 @@ record(calcout, "$(P)$(R)HotPixelCalc") {
     field(DOPT, "Use CALC")
 }
 
+# TDC present if TDC1 and TDC2 event rates are 0 and detector is in running state
+record(calcout, "$(P)$(R)TdcCalc") {
+    field(DESC, "TDC present")
+    field(CALC, "(((A+B)=0)&&(C=1))?1:0")
+    field(INPA, "$(P)$(R)Tdc1EvtRate_RBV CP")
+    field(INPB, "$(P)$(R)Tdc2EvtRate_RBV CP")
+    field(INPC, "$(P)$(R)DetectorState_RBV CP")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
+}
+
+# PEL present if PEL event rate is 0 and detector is in running state
+record(calcout, "$(P)$(R)PelEvtCalc") {
+    field(DESC, "Pel Event present")
+    field(CALC, "((A=0)&&(B=1))?1:0")
+    field(INPA, "$(P)$(R)PelEvtRate_RBV CP")
+    field(INPB, "$(P)$(R)DetectorState_RBV CP")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
+}
+
 # Alarms: Tpx3 detector status
 record(calcout, "$(P)$(R)Tpx3StatusCalc") {
     field(DESC, "Tpx3 status")
-    field(CALC, "((A=0)||(B=0)||(C=1)||(D=1))?1:0")
+    field(CALC, "((A=0)||(B=0)||(C=1)||(D=1)||(E=1)||(F=1))?1:0")
     field(INPA, "$(P)$(R)ServalConnected_RBV CP")
     field(INPB, "$(P)$(R)DetConnected_RBV CP")
     field(INPC, "$(P)$(R)FileWriterCalc CP")
     field(INPD, "$(P)$(R)HotPixelCalc CP")
+    field(INPE, "$(P)$(R)TdcCalc CP")
+    field(INPF, "$(P)$(R)PelEvtCalc CP")
     field(OOPT, "Every Time")
     field(DOPT, "Use CALC")
 }
