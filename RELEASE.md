@@ -12,7 +12,7 @@ The master branch (under development) is for Serval 3.3.0
 
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
-R1-2 (xxx, 2025)
+R1-2 (June 24, 2025)
 --------
 
 * Alarms added: TDC not present, NO detector counts.
