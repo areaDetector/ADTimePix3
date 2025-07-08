@@ -3,7 +3,7 @@
 An EPICS areaDetector driver for TimePix3 detector from [ASC](https://www.amscins.com/).
 
 Additional information:
-* [Documentation](https://areadetector.github.io/master/ADTimePix3/timepix3.html)
+* [Documentation](https://areadetector.github.io/areaDetector/ADTimePix3/ADTimePix3.html)
 * [Release notes](RELEASE.md)
 
 Notes:
