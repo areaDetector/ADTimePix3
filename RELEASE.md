@@ -12,11 +12,20 @@ The master branch (under development) is for Serval 3.3.0
 
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
 
-R1-3 (xxx 2025)
+R1-3 (xxx, 2025)
 --------
 
-* Serval 4.1.0 changes required.
-
+* TDC1/TDC2 reporting for serval 4, and Serval 3.
+* The Serval 4.x.y requires {"Content-Type", "application/json"}, instead of "text/plain", as "Content-Type" when using cpr library.
+  * Log Level, ChainMode, Polarity, PeriphClk80, ExternalReferenceClock, etc.
+* Serval 4.1.1/4.1.0 requires changes to the driver.
+  * Server->Detector->Health is an array of kv pairs in Serval v4.1.0, but was kv pairs in Serval v3.3.2.
+* Additional controls
+  * Server->Measurement->Stem
+    * Scan
+    * Virtual Detector
+  * Server->Detector->Health->Pressure
+  * Server->Detector->Info->ChipType
 
 R1-2 (June 24, 2025)
 --------
