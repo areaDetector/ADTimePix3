@@ -15,6 +15,7 @@ Driver depends on Serval versions, at this time. The current releases support Se
 R1-3 (xxx, 2025)
 --------
 
+* Serval 4.x.x: Rotations/mirror operation strict checking, and requires 'reset=true', DOWN->half instead of 180.
 * TDC1/TDC2 reporting for serval 4, and Serval 3.
 * The Serval 4.x.y requires {"Content-Type", "application/json"}, instead of "text/plain", as "Content-Type" when using cpr library.
   * Log Level, ChainMode, Polarity, PeriphClk80, ExternalReferenceClock, etc.
