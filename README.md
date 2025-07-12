@@ -12,11 +12,11 @@ Notes:
 * Depends on the [CPR](https://github.com/libcpr/cpr) verson 1.9.1.
 * Depends on the [json](https://github.com/nlohmann/json) version v3.11.2.
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
-* This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.1 Linux 64-bit machines.
+* This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * This has only been developed for 2 x 2 chips layout and 1 chip tpx3CAM, since that is what I have access to now.
-* This has been tested with serval version 3.3.0, 3.2.0, 3.1.0 and 3.0.0. Only most recent serval version(s) are tested extensivly.
-* Driver is specific to Serval version, since features differ. Driver for Serval 2.x.y is in separate branch, and is not under current development
-* The driver has been developed using TimePix3 Emulator, and real detectors.
+* This has been tested with serval version 4.1.1, 4.1.0, 3.3.2, 3.2.0, 3.1.0 and 3.0.0 extensivly. Only most recent serval version(s) are tested extensivly. However, the master branch is compatible with serval 4.x.x, and attempts are being made to make it compatible with Serval 3.x.x. In the meantime, please use the 3.3.2 branch for serval 3.x.x. The Serval 4.x.x has additional features, which are not yet supported.
+* Driver is specific to Serval version, since RUST features differ. Driver for Serval 2.x.y is in separate branch, and is not under current development. The branch 3.3.2 is compatible with serval 3.x.x only, and will likely not be developed further.
+* The driver has been developed using TimePix3 Emulator, and real detectors. Real detectors are quad-chip, and single chip.
 
 Before compiling:
 -----------------
