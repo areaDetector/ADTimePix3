@@ -16,7 +16,7 @@
 
 // version numbers
 #define ADTIMEPIX_VERSION      1
-#define ADTIMEPIX_REVISION     2
+#define ADTIMEPIX_REVISION     3
 #define ADTIMEPIX_MODIFICATION 0
 
 #include <nlohmann/json.hpp>

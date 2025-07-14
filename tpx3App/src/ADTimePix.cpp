@@ -623,19 +623,20 @@ asynStatus ADTimePix::getHealth(){
  * There are eight possible orientations of the detector
  * The function rotates detector consistent with Serval URL.
  *    /detector/Layout/DetectorOrientation: only reports orientation
- * Use: GET <server>/detector/layout/rotate?reset
+ * Use: GET <server>/detector/layout/rotate?reset=true
  *    flip: horizontal, vertical
- *    direction: left, right, 180
+ *    direction: left, right, 180/half
  *    reset: Not applicable
- * Example: /detector/layout/rotate?reset&direction=right&flip=horizontal
+ * Example: /detector/layout/rotate?reset=true&direction=right&flip=horizontal
  *
  * @return: status
  */
 asynStatus ADTimePix::rotateLayout(){
     asynStatus status = asynSuccess;
     int intNum;
+    std::string API_Ver;
 
-    std::string layout_url = this->serverURL + std::string("/detector/layout/rotate?reset");
+    std::string layout_url = this->serverURL + std::string("/detector/layout/rotate?reset=true");   // Serval 4.1.1
 
     getIntegerParam(ADTimePixDetectorOrientation, &intNum);
     json detectorOrientation;
@@ -654,6 +655,7 @@ asynStatus ADTimePix::rotateLayout(){
 //    std::string json_data = "{\"DetectorOrientation\":\"" + std::string(detectorOrientation[intNum]) + "\"}";
 //    std::string json_data = "{\"" + std::string("DetectorOrientation") + "\":" + std::string(detectorOrientation[intNum]) + "}";
 
+    getStringParam(ADSDKVersion, API_Ver);
     switch (intNum) {
         case 0:
             layout_url += std::string("");
@@ -662,7 +664,11 @@ asynStatus ADTimePix::rotateLayout(){
             layout_url += std::string("&direction=right");
             break;
         case 2:
-            layout_url += std::string("&direction=180");
+            if (API_Ver[0] == '3') {
+                layout_url += std::string("&direction=180");
+            } else { // Serval 4.x.x
+                layout_url += std::string("&direction=half");
+            }
             break;
         case 3:
             layout_url += std::string("&direction=left");
@@ -761,6 +767,10 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
 */
 
 asynStatus ADTimePix::fetchDacs(json& data, int chip) {
+    std::string API_Ver;
+
+    getStringParam(ADSDKVersion, API_Ver);
+
     setIntegerParam(chip, ADTimePixCP_PLL,             data["Chips"][chip]["DACs"]["Ibias_CP_PLL"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1OFF,          data["Chips"][chip]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1ON,           data["Chips"][chip]["DACs"]["Ibias_DiscS1_ON"].get<int>());
@@ -780,16 +790,22 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     setIntegerParam(chip, ADTimePixVthresholdCoarse,   data["Chips"][chip]["DACs"]["Vthreshold_coarse"].get<int>());
     setIntegerParam(chip, ADTimePixVthresholdFine,     data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
 
-    setIntegerParam(chip, ADTimePixChipNTemperature,   data["Health"]["ChipTemperatures"][chip].get<int>());
+    if (API_Ver[0] == '4') {    // Serval version 4, Health is an array
+        setIntegerParam(chip, ADTimePixChipNTemperature,   data["Health"][0]["ChipTemperatures"][chip].get<int>());
+    }
+    else {  // Serval version 3 or 2, Health is a dictionary
+        setIntegerParam(chip, ADTimePixChipNTemperature,   data["Health"]["ChipTemperatures"][chip].get<int>());
+    }
 
-    if (data["Chips"][chip]["Adjust"].is_null()) {
+    if (data["Chips"][chip]["Adjust"].is_null()) {  // Serval version 3, Adjust is typically not present / null.
         setIntegerParam(chip, ADTimePixAdjust, -1);
     }
-    else if (data["Chips"][chip]["Adjust"].is_number_integer()) {
-        setIntegerParam(chip, ADTimePixAdjust, data["Chips"][chip]["Adjust"].get<int>());
+    else if (data["Chips"][chip]["Adjust"].is_array()) {    // Serval version 4, Adjust is an array by default
+    //    setIntegerParam(chip, ADTimePixAdjust, data["Chips"][chip]["Adjust"].get<int>());
+        setIntegerParam(chip, ADTimePixAdjust, -2);
     }
     else {
-        setIntegerParam(chip, ADTimePixAdjust, -2);
+        setIntegerParam(chip, ADTimePixAdjust, -3);
     }
 
     return asynSuccess;
@@ -798,8 +814,11 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
 asynStatus ADTimePix::getDetector(){
     const char* functionName = "getDetector";
     asynStatus status = asynSuccess;
-    FLOW("Reading Detector Health, inof, config, chipcs");
+    FLOW("Reading Detector Health, info, config, layout, chips");
     std::string detector;
+    std::string API_Ver;
+
+    getStringParam(ADSDKVersion, API_Ver);
 
     detector = this->serverURL + std::string("/detector");
     cpr::Response r = cpr::Get(cpr::Url{detector},
@@ -818,15 +837,42 @@ asynStatus ADTimePix::getDetector(){
         // printf("Number of chips=%d\n", detector_j["Info"]["NumberOfChips"].get<int>());
 
         // Detector health PVs
-        setDoubleParam(ADTimePixLocalTemp, detector_j["Health"]["LocalTemperature"].get<double>());
-        setDoubleParam(ADTimePixFPGATemp, detector_j["Health"]["FPGATemperature"].get<double>());
-        setDoubleParam(ADTimePixFan1Speed, detector_j["Health"]["Fan1Speed"].get<double>());
-        setDoubleParam(ADTimePixFan2Speed, detector_j["Health"]["Fan2Speed"].get<double>());
-        setDoubleParam(ADTimePixBiasVoltage, detector_j["Health"]["BiasVoltage"].get<double>());
-        setIntegerParam(ADTimePixHumidity,   detector_j["Health"]["Humidity"].get<int>());
-        setStringParam(ADTimePixChipTemperature, detector_j["Health"]["ChipTemperatures"].dump().c_str());
-        setStringParam(ADTimePixVDD, detector_j["Health"]["VDD"].dump().c_str());
-        setStringParam(ADTimePixAVDD, detector_j["Health"]["AVDD"].dump().c_str());
+        if (API_Ver[0] == '4') {    // Serval version 4
+//            printf("Serval version 4, %s,%s\n", API_Ver.c_str(), detector_j.dump(3,' ', true).c_str());
+            setDoubleParam(ADTimePixLocalTemp, detector_j["Health"][0]["LocalTemperature"].get<double>());
+            setDoubleParam(ADTimePixFPGATemp, detector_j["Health"][0]["FPGATemperature"].get<double>());
+            setDoubleParam(ADTimePixFan1Speed, detector_j["Health"][0]["Fan1Speed"].get<double>());
+            setDoubleParam(ADTimePixFan2Speed, detector_j["Health"][0]["Fan2Speed"].get<double>());
+            setDoubleParam(ADTimePixBiasVoltage, detector_j["Health"][0]["BiasVoltage"].get<double>());
+            setIntegerParam(ADTimePixHumidity,   detector_j["Health"][0]["Humidity"].get<int>());
+            setStringParam(ADTimePixChipTemperature, detector_j["Health"][0]["ChipTemperatures"].dump().c_str());
+            setStringParam(ADTimePixVDD, detector_j["Health"][0]["VDD"].dump().c_str());
+            setStringParam(ADTimePixAVDD, detector_j["Health"][0]["AVDD"].dump().c_str());
+
+            // VDD, AVDD voltages
+            for (int i = 0; i < 3; i++){
+                setDoubleParam(i, ADTimePixChipN_VDD,        detector_j["Health"][0]["VDD"][i].get<double>());
+                setDoubleParam(i, ADTimePixChipN_AVDD,       detector_j["Health"][0]["AVDD"][i].get<double>());
+            }
+
+        }
+        else {  // Serval version 3 or 2
+            setDoubleParam(ADTimePixLocalTemp, detector_j["Health"]["LocalTemperature"].get<double>());
+            setDoubleParam(ADTimePixFPGATemp, detector_j["Health"]["FPGATemperature"].get<double>());
+            setDoubleParam(ADTimePixFan1Speed, detector_j["Health"]["Fan1Speed"].get<double>());
+            setDoubleParam(ADTimePixFan2Speed, detector_j["Health"]["Fan2Speed"].get<double>());
+            setDoubleParam(ADTimePixBiasVoltage, detector_j["Health"]["BiasVoltage"].get<double>());
+            setIntegerParam(ADTimePixHumidity,   detector_j["Health"]["Humidity"].get<int>());
+            setStringParam(ADTimePixChipTemperature, detector_j["Health"]["ChipTemperatures"].dump().c_str());
+            setStringParam(ADTimePixVDD, detector_j["Health"]["VDD"].dump().c_str());
+            setStringParam(ADTimePixAVDD, detector_j["Health"]["AVDD"].dump().c_str());
+
+            // VDD, AVDD voltages
+            for (int i = 0; i < 3; i++){
+                setDoubleParam(i, ADTimePixChipN_VDD,        detector_j["Health"]["VDD"][i].get<double>());
+                setDoubleParam(i, ADTimePixChipN_AVDD,       detector_j["Health"]["AVDD"][i].get<double>());
+            }
+        }
 
         // Detector Info
         setStringParam(ADTimePixIfaceName,   strip_quotes(detector_j["Info"]["IfaceName"].dump().c_str()));
@@ -886,11 +932,6 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixExternalReferenceClock, int(detector_j["Config"]["ExternalReferenceClock"]));   // bool->int true->1, falue->0
         setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
 
-        // VDD, AVDD voltages
-        for (int i = 0; i < 3; i++){
-            setDoubleParam(i, ADTimePixChipN_VDD,        detector_j["Health"]["VDD"][i].get<double>());     
-            setDoubleParam(i, ADTimePixChipN_AVDD,       detector_j["Health"]["AVDD"][i].get<double>());
-        }
 
         // Detector Chips: Chip0
         fetchDacs(detector_j, 0);
@@ -1339,7 +1380,7 @@ asynStatus ADTimePix::fileWriter(){
 
     cpr::Response r = cpr::Put(cpr::Url{server},
                 cpr::Body{server_j.dump().c_str()},                      
-                cpr::Header{{"Content-Type", "text/plain"}});
+                cpr::Header{{"Content-Type", "application/json"}});
 
     setIntegerParam(ADTimePixHttpCode, r.status_code);
     setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
@@ -1400,7 +1441,7 @@ asynStatus ADTimePix::initCamera(){
 
     r = cpr::Put(cpr::Url{config},
                            cpr::Body{config_j.dump().c_str()},                      
-                           cpr::Header{{"Content-Type", "text/plain"}});
+                           cpr::Header{{"Content-Type", "application/json"}});
     printf("\n\ninitCamera4: http_code = %li\n", r.status_code);
     printf("Status code: %li\n", r.status_code);
     printf("Text: %s\n", r.text.c_str());
@@ -1550,7 +1591,7 @@ asynStatus ADTimePix::initAcquisition(){
 
         r = cpr::Put(cpr::Url{det_config},
                     cpr::Body{config_j.dump().c_str()},
-                    cpr::Header{{"Content-Type", "text/plain"}});
+                    cpr::Header{{"Content-Type", "application/json"}});
 
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
     }
@@ -1652,10 +1693,10 @@ void ADTimePix::timePixCallback(){
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
 
     getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0") ||  (API_Ver == "3.3.2-SNAPSHOT")) {
+    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
         setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-    } else if ((API_Ver == "3.1.1") || (API_Ver == "3.0.0")) {
+    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
     } else {
         printf ("Serval Version not compared, event rate not read\n");
@@ -1676,17 +1717,17 @@ void ADTimePix::timePixCallback(){
         getIntegerParam(NDArrayCounter, &imagesAcquired);
         epicsTimeGetCurrent(&startTime);
 
-
+        // Wait for new frame
         while(frameCounter == new_frame_num){
-            r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplicaiton" of sessions
+            r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplication" of sessions
                         
             measurement_j = json::parse(r.text.c_str());
             setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
             
-            if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0") ||  (API_Ver == "3.3.2-SNAPSHOT")) {
+            if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
                 setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-            } else if ((API_Ver == "3.1.0") || (API_Ver == "3.0.0")) {
+            } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
                 setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
             } else {
                 printf ("Serval Version event rate not specified in while loop.\n");
@@ -1813,10 +1854,10 @@ asynStatus ADTimePix::acquireStop(){
     setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
 
     getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver == "3.2.0") || (API_Ver == "3.3.0") || (API_Ver == "3.3.2-SNAPSHOT")) {
+    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
         setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-    } else if ((API_Ver == "3.1.1") || (API_Ver == "3.0.0")) {
+    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
         setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
     } else {
         printf ("Serval Version not compared, event rate not read in acquireStop\n");
