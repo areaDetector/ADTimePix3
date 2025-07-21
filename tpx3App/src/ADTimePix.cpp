@@ -3,9 +3,9 @@
  * 
  * Author: Kazimierz Gofron
  * Created On: June, 2022
- * Last EDited: July 20, 2022
+ * Last Edited: July 20, 2025
  * Copyright (c): 2022 Brookhaven National Laboratory
- * 
+ * Copyright (c): 2025 Oak Ridge National Laboratory
  */
 
 // Standard includes
@@ -398,7 +398,7 @@ asynStatus ADTimePix::checkPrvImg1Path()
     return status;
 }
 
-asynStatus ADTimePix::checkPrvHstPath()
+asynStatus ADTimePix::checkPrvHstPath() // tcp://listen@localhost:8451 format only
 {
     asynStatus status;
     std::string filePath, fileOrStream;
@@ -421,7 +421,7 @@ asynStatus ADTimePix::checkPrvHstPath()
             pathExists = 1;
         }
         else {
-            printf("Prv Hstogram file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
+            printf("Prv Histogram path must be tcp://listen@localhost:8451\n");
             pathExists = 0;
         }
     }
@@ -576,7 +576,7 @@ asynStatus ADTimePix::getDashboard(){
             setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
             setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
             setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
-            setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, falue->0
+            setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, false->0
         }
     } else { // Serval not running
         setIntegerParam(ADTimePixServalConnected,0);
@@ -913,7 +913,7 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixFan1PWM,                detector_j["Config"]["Fan1PWM"].get<int>());
         setIntegerParam(ADTimePixFan2PWM,                detector_j["Config"]["Fan2PWM"].get<int>());
         setIntegerParam(ADTimePixBiasVolt,               detector_j["Config"]["BiasVoltage"].get<int>());
-        setIntegerParam(ADTimePixBiasEnable,             int(detector_j["Config"]["BiasEnabled"]));         // bool->int true->1, falue->0
+        setIntegerParam(ADTimePixBiasEnable,             int(detector_j["Config"]["BiasEnabled"]));         // bool->int true->1, false->0
     //    setStringParam(ADTimePixChainMode,               strip_quotes(detector_j["Config"]["ChainMode"].dump().c_str()));
         setIntegerParam(ADTimePixTriggerIn,              detector_j["Config"]["TriggerIn"].get<int>());
         setIntegerParam(ADTimePixTriggerOut,             detector_j["Config"]["TriggerOut"].get<int>());
@@ -925,11 +925,11 @@ asynStatus ADTimePix::getDetector(){
         setDoubleParam(ADTimePixTriggerPeriod,           detector_j["Config"]["TriggerPeriod"].get<double>());
         setDoubleParam(ADAcquirePeriod,                  detector_j["Config"]["TriggerPeriod"].get<double>());     // Exposure Period RBV
         setIntegerParam(ADTimePixnTriggers,              detector_j["Config"]["nTriggers"].get<int>());
-        setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, falue->0
+        setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, false->0
         setDoubleParam(ADTimePixTriggerDelay,            detector_j["Config"]["TriggerDelay"].get<double>());
         setStringParam(ADTimePixTdc,                     strip_quotes(detector_j["Config"]["Tdc"].dump().c_str()));
         setDoubleParam(ADTimePixGlobalTimestampInterval, detector_j["Config"]["GlobalTimestampInterval"].get<double>());
-        setIntegerParam(ADTimePixExternalReferenceClock, int(detector_j["Config"]["ExternalReferenceClock"]));   // bool->int true->1, falue->0
+        setIntegerParam(ADTimePixExternalReferenceClock, int(detector_j["Config"]["ExternalReferenceClock"]));   // bool->int true->1, false->0
         setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
 
 
@@ -1421,7 +1421,7 @@ asynStatus ADTimePix::initCamera(){
 
     r = cpr::Get(cpr::Url{dacs_file},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
-    printf("\n\ninitCamra2: http_code = %li\n", r.status_code);
+    printf("\n\ninitCamera2: http_code = %li\n", r.status_code);
     printf("Status code dacs_file: %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 
     setIntegerParam(ADTimePixHttpCode, r.status_code);
@@ -1609,7 +1609,7 @@ asynStatus ADTimePix::initAcquisition(){
 /*
 #####################################################################################################################
 #
-# The next two functions can be used when a seperate image acquisition thread is required by the driver. 
+# The next two functions can be used when a separate image acquisition thread is required by the driver. 
 # Some vendor software already creates its own acquisition thread for asynchronous use, but if not this
 # must be used. By default, the acquireStart() function is written to not use these. If they are needed, 
 # find the call to tpx3Callback in acquireStart(), and change it to startImageAcquisitionThread
@@ -1621,7 +1621,7 @@ asynStatus ADTimePix::initAcquisition(){
 
 
 /**
- * Function responsible for starting camera image acqusition. First, check if there is a
+ * Function responsible for starting camera image acquisition. First, check if there is a
  * camera connected. Then, set camera values by reading from PVs. Then, we execute the 
  * Acquire Start command. if this command was successful, image acquisition started.
  * 
@@ -2088,8 +2088,8 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
 
 
 /*
- * Function used for reporting ADUVC device and library information to a external
- * log file. The function first prints all libuvc specific information to the file,
+ * Function used for reporting ADTimePix device and library information to an external
+ * log file. The function first prints all ADTimePix specific information to the file,
  * then continues on to the base ADDriver 'report' function
  * 
  * @params[in]: fp      -> pointer to log file

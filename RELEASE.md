@@ -46,7 +46,7 @@ R1-2 (June 24, 2025)
 * Masked pels in 2nd octet of BPC waveform PV
 * Connection status PVs
   + Serval connected (URL web interface is up)
-  + Detector is connnected to Serval
+  + Detector is connected to Serval
 * Report number of masked pixels in bpc calibration
 * Manipulation of the Binary Pixel Configuration (BPC). Allows creation of positive or negative image mask.
   + Create image rectangular mask
