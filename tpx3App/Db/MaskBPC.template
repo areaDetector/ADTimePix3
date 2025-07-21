@@ -8,7 +8,7 @@
 ##################################################################
 # Build BPC mask array PV records here.
 # Allow positive and negative mask
-# Allow rectangular and circulat masks
+# Allow rectangular and circular masks
 #
 ##################################################################
 
@@ -39,7 +39,7 @@ record(waveform, "$(P)$(R)BPCmasked"){
 #    field(autosaveFields, "VAL")
 }
 
-# AreaDetector Image where maks is created
+# AreaDetector Image where mask is created
 record(waveform, "$(P)$(R)MaskBPC"){
     field(DTYP, "asyn$(TYPE)ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_ARRAY_BPC")
@@ -52,16 +52,16 @@ record(waveform, "$(P)$(R)MaskBPC"){
 record(bo, "$(P)$(R)MaskOnOff"){
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_ONOFF_PEL")
-  field(ZNAM, "Enable")
-  field(ONAM, "Disable")
+  field(ZNAM, "Don't count")
+  field(ONAM, "Count")
   field(VAL,  "0")
 }
 
 record(bo, "$(P)$(R)MaskReset"){
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_RESET")
-  field(ZNAM, "No")
-  field(ONAM, "Yes")
+  field(ZNAM, "No reset")
+  field(ONAM, "Reset")
   field(VAL,  "0")
 }
 
