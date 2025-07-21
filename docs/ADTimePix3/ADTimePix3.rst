@@ -14,7 +14,7 @@ Notes
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.1 Linux 64-bit machines.
 * This has only been developed for 2 x 2 chips layout and 1 chip tpx3CAM, since that is what I have access to now.
-* This has been tested with serval version 3.3.0, 3.2.0, 3.1.0 and 3.0.0. Only most recent serval version(s) are tested extensivly.
+* This has been tested with serval version 3.3.0, 3.2.0, 3.1.0 and 3.0.0. Only most recent serval version(s) are tested extensively.
 * Driver is specific to Serval version, since features differ. Driver for Serval 2.x.y is in separate branch, and is not under current development
 * The driver has been developed using TimePix3 Emulator, and real detectors.
 

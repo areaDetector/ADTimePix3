@@ -468,7 +468,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
     if(r.status_code == 200) {
         connected = true;
         setIntegerParam(ADTimePixServalConnected,1);
-        printf("\n\nCONNECTED to Welcom URI! (Serval running), http_code = %li\n", r.status_code);
+        printf("\n\nCONNECTED to Welcome URI! (Serval running), http_code = %li\n", r.status_code);
 
         // Check if detector is connected to serval from dashboard URL
         // Both serval, and connection to Tpx3 detector must be successful
@@ -1092,7 +1092,7 @@ asynStatus ADTimePix::getServer(){
 }
 
 /**
- * Initialize detector - uplaad Binary Pixel Configuration
+ * Initialize detector - upload Binary Pixel Configuration
  * 
  * serverURL:       the URL of the running SERVAL (string)
  * bpc_file:        an absolute path to the binary pixel configuration file (string), tpx3-demo.bpc
@@ -1121,7 +1121,7 @@ asynStatus ADTimePix::uploadBPC(){
 }
 
 /**
- * Initialize detector - uplaad Chips DACS
+ * Initialize detector - upload Chips DACS
  * 
  * serverURL:       the URL of the running SERVAL (string)
  * dacs_file:       an absolute path to the text chips configuration file (string), tpx3-demo.dacs 
@@ -1957,15 +1957,15 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     if(function == ADAcquire){
         printf("SAW ACQUIRE CHANGE!, status=%d\n", status);
         if(value && !acquiring){
-            FLOW("Entering aquire\n");
-            status = acquireStart();
-            if(status < 0){
+            FLOW("Entering acquire start\n");
+            status = acquireStart();  // Start acquisition
+            if(status < 0) {
                 return asynError;
             }
         }
         if(!value && acquiring){
             FLOW("Entering acquire stop");
-            acquireStop();
+            acquireStop();  // Stop acquisition
         }
     }
 

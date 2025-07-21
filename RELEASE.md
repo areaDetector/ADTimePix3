@@ -7,7 +7,7 @@ The repository was transferred a while back to areaDetector organization.
 
 There are currently only pre-releases for ADTimePix3
 Since Serval features differ the driver is specific to Serval version.
-Different branches of ADTimePix3 support differnet Serval versions.
+Different branches of ADTimePix3 support different Serval versions.
 The master branch (under development) is for Serval 3.3.0
 
 Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
@@ -110,13 +110,13 @@ R0-8 (February 25, 2024)
 * ADCore commonPlugins.cmd settings
 * Preview image loop speed up
 * Preview[0] channel does not need to be enabled; however, prv images are not displayed
-* Driver ensures that for Continous mode ExposureTime (AcquireTime) propagates to TriggerPeriod (AcquirePeriod), must be equal to each other
+* Driver ensures that for Continuous mode ExposureTime (AcquireTime) propagates to TriggerPeriod (AcquirePeriod), must be equal to each other
 * Default reduce readout of preview images to not more than 1 per second
-* Remove disgnostic messages
+* Remove diagnostic messages
 * Dashboard DiskSpace is empty until raw file writing enabled, and acquisition starts
 * Dashboard work updated
 * Startup update with description of channels
-* Allow streamling of raw .tpx3 events, saving of prv images not required, more consistent default chan
+* Allow streaming of raw .tpx3 events, saving of prv images not required, more consistent default channal setting.
 
 R0-7 (June 26, 2023)
 --------
@@ -126,14 +126,14 @@ R0-7 (June 26, 2023)
 * Performance issue resolved for reading preview images. Mulitple connections were opening in callback while loop.
   * Used cpr library object called a Session is now used. Session is the only statful piece of the cpr library.
   * Session object of cpr library is useful to hold on to state while reading preview images.
-* The priview images do not need to be written to disk, and are read from from PrvImg Base [0] channel socket channel.
+* The preview images do not need to be written to disk, and are read from from PrvImg Base [0] channel socket channel.
   * The preview is on Preview [1] channel, which does not have to enabled
 * Allow streaming of raw .tpx3 data.
-  * Streamling: tcp://localhost:8085
+  * Streaming: tcp://localhost:8085
   * Writing to .tpx3 file: file:/media/nvme/raw
 * More consistent settings for file writing and streaming channels in st_base.cmd
 * opi screens for fileWriter streaming enhancement
-* Continous mode: ExposureTime (AcquireTime) used and propagates to TriggerPeriod (AcquirePeriod)
+* Continuous mode: ExposureTime (AcquireTime) used and propagates to TriggerPeriod (AcquirePeriod)
 * Preveiw[0] does not need to be enabled. Preview images are then not displayed.
 
 R0-6 (March 30, 2023)

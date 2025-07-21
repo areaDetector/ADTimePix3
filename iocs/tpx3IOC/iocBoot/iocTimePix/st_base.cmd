@@ -121,8 +121,8 @@ dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support/areaDetector/ADTimePix3/vendor
 dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")     # load DACS calibration
 
 # Simplify startup
-dbpf("$(PREFIX)cam1:ImageMode","2")     # areaDetector Continous
-dbpf("$(PREFIX)cam1:TriggerMode","5")   # Timepix3 CONTINOUS
+dbpf("$(PREFIX)cam1:ImageMode","2")     # areaDetector Continuous
+dbpf("$(PREFIX)cam1:TriggerMode","5")   # Timepix3 CONTINUOUS
 dbpf("$(PREFIX)Pva1:EnableCallbacks","1")     # PVA1 plugin
 dbpf("$(PREFIX)Stats5:EnableCallbacks","1")   # STATS5 plugin
 
