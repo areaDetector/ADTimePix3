@@ -9,7 +9,7 @@ ADTimePix3
 Notes
 -----
 
-* Depends on the CPR verson 1.9.1.
+* Depends on the CPR version 1.9.1.
 * Depends on the json version v3.11.2.
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.1 Linux 64-bit machines.

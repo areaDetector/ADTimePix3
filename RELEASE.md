@@ -40,7 +40,7 @@ R1-2 (June 24, 2025)
 * Links to manuals from DetectorConfig.opi screen.
 * The ioc starts even without detector or Serval: detector and serval API status PVs are updated.
 * Individual chip temperature, and archiver monitoring
-* Mask generation for one chip, and 2x2 quad chip detectors for all 8 detector orientaitons.
+* Mask generation for one chip, and 2x2 quad chip detectors for all 8 detector orientations.
 * AD mask image placed into BPC calibration mask.bpc file.
 * Masked pixels from BPC read into AD mask image.
 * Masked pels in 2nd octet of BPC waveform PV
@@ -54,7 +54,7 @@ R1-2 (June 24, 2025)
   + Image mask can be positive or negative
   + Individual image mask is additive
   + Number of image masks is not limited
-* Rotate image into all 8 posible arrangement.
+* Rotate image into all 8 possible arrangement.
   + Update readback PV to report orientation correctly
 * Data collection control added
   + Raw modes: Queue size
@@ -116,17 +116,17 @@ R0-8 (February 25, 2024)
 * Dashboard DiskSpace is empty until raw file writing enabled, and acquisition starts
 * Dashboard work updated
 * Startup update with description of channels
-* Allow streaming of raw .tpx3 events, saving of prv images not required, more consistent default channal setting.
+* Allow streaming of raw .tpx3 events, saving of prv images not required, more consistent default channel setting.
 
 R0-7 (June 26, 2023)
 --------
 
 * Driver works for Serval 3.2 and Emulator 3.2
   * Separate TDC1 and TDC2 EventRate PVs in Serval 3.2
-* Performance issue resolved for reading preview images. Mulitple connections were opening in callback while loop.
-  * Used cpr library object called a Session is now used. Session is the only statful piece of the cpr library.
+* Performance issue resolved for reading preview images. Multiple connections were opening in callback while loop.
+  * Used cpr library object called a Session is now used. Session is the only stateful piece of the cpr library.
   * Session object of cpr library is useful to hold on to state while reading preview images.
-* The preview images do not need to be written to disk, and are read from from PrvImg Base [0] channel socket channel.
+* The preview images do not need to be written to disk, and are read from PrvImg Base [0] channel socket channel.
   * The preview is on Preview [1] channel, which does not have to enabled
 * Allow streaming of raw .tpx3 data.
   * Streaming: tcp://localhost:8085
@@ -134,7 +134,7 @@ R0-7 (June 26, 2023)
 * More consistent settings for file writing and streaming channels in st_base.cmd
 * opi screens for fileWriter streaming enhancement
 * Continuous mode: ExposureTime (AcquireTime) used and propagates to TriggerPeriod (AcquirePeriod)
-* Preveiw[0] does not need to be enabled. Preview images are then not displayed.
+* Preview[0] does not need to be enabled. Preview images are then not displayed.
 
 R0-6 (March 30, 2023)
 --------
