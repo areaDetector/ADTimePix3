@@ -5,7 +5,7 @@
  *
  * Author:  Kazimierz Gofron
  * Created: June, 2022
- * Last edited: November 11, 2024
+ * Last edited: July 20, 2025
  * Copyright (c) : Oak Ridge National Laboratory
  *
  */
@@ -34,7 +34,7 @@ using json = nlohmann::json;
 #define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)      Hits? [320 Mhits/s]
 #define ADTimePixLowerLimitString          "TPX3_LLIM_SPACE"             // (asynInt64,         w)      Lower limit on available disk space [Bytes]
 #define ADTimePixLLimReachedString         "TPX3_LLIM_REACH"             // (asynInt32,         r)      Reached Lower disk limit
-#define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
+#define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarily, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
 
 // Detector Health
 #define ADTimePixLocalTempString            "TPX3_LOCAL_TEMP"            // (asynFloat64,       r)      Local Temperature
@@ -51,7 +51,7 @@ using json = nlohmann::json;
     // Detector Info
 #define ADTimePixIfaceNameString            "TPX3_IFACE"            // (asynOctet,         r)      IfaceName
 #define ADTimePixSW_versionString           "TPX3_SW_VER"           // (asynOctet,         r)      SW_version
-#define ADTimePixFW_versionString           "TPX3_FW_VER"           // (asynOctet,         r)      FW_versionS
+#define ADTimePixFW_versionString           "TPX3_FW_VER"           // (asynOctet,         r)      FW_version
 #define ADTimePixPixCountString             "TPX3_PEL_CNT"          // (asynInt32,         r)      PixCount
 #define ADTimePixRowLenString               "TPX3_ROWLEN"           // (asynInt32,         r)      RowLen
 #define ADTimePixNumberOfChipsString        "TPX3_NUM_CHIPS"        // (asynInt32,         r)      NumberOfChip
@@ -68,7 +68,7 @@ using json = nlohmann::json;
 #define ADTimePixSuppAcqModesString         "TPX3_ACQ_MODES"        // (asynInt32,         r)      SuppAcqModes
 #define ADTimePixClockReadoutString         "TPX3_CLOCK_READ"       // (asynFloat64,       r)      ClockReadout
 #define ADTimePixMaxPulseCountString        "TPX3_PULSE_CNT"        // (asynInt32,         r)      MaxPulseCount
-#define ADTimePixMaxPulseHeightString       "TPX3_PULSE_HIGHT"      // (asynFloat64,       r)      MaxPulseHeight
+#define ADTimePixMaxPulseHeightString       "TPX3_PULSE_HEIGHT"     // (asynFloat64,       r)      MaxPulseHeight
 #define ADTimePixMaxPulsePeriodString       "TPX3_PULSE_PERIOD"     // (asynFloat64,       r)      MaxPulsePeriod
 #define ADTimePixTimerMaxValString          "TPX3_TIME_MAX"         // (asynFloat64,       r)      TimerMaxVal
 #define ADTimePixTimerMinValString          "TPX3_TIME_MIN"         // (asynFloat64,       r)      TimerMinVal
@@ -245,7 +245,7 @@ using json = nlohmann::json;
 #define ADTimePixMaskSizeYString         "TPX3_MASK_SIZEY"            // (asynInt32,         w)      BPC mask rectangular SizeY
 #define ADTimePixMaskRadiusString        "TPX3_MASK_RADIUS"           // (asynInt32,         w)      BPC mask circular Radius
 #define ADTimePixMaskRectangleString     "TPX3_MASK_RECTANGLE"        // (asynInt32,         w)      BPC mask rectangle mask write to array
-#define ADTimePixMaskCircleString        "TPX3_MASK_CIRCLE"           // (asynInt32,         w)      BPC mask circule mask write to array
+#define ADTimePixMaskCircleString        "TPX3_MASK_CIRCLE"           // (asynInt32,         w)      BPC mask circular mask write to array
 #define ADTimePixMaskFileNameString      "TPX3_MASK_FILENAME"         // (asynOctet,         w)      BPC mask FileName, file written to original location of .bpc
 #define ADTimePixMaskPelString           "TPX3_MASK_PEL"              // (asynInt32,         w)      BPC extract masked pel in vendor calibration .bpc File
 #define ADTimePixMaskWriteString         "TPX3_MASK_WRITE"            // (asynInt32,         w)      BPC write mask to new calibration .bpc File and push to TimePix3 FPGA
@@ -254,7 +254,7 @@ using json = nlohmann::json;
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
 
-// Place any required inclues here
+// Place any required includes here
 
 #include "ADDriver.h"
 #include "cpr/cpr.h"
@@ -275,14 +275,14 @@ using namespace Magick;
 /*
  * Class definition of the ADTimePix driver. It inherits from the base ADDriver class
  *
- * Includes constructor/destructor, PV params, function defs and variable defs
+ * Includes constructor/destructor, PV params, function definitions and variable definitions
  *
  */
 class ADTimePix : public ADDriver{
 
     public:
 
-        // Constructor - NOTE THERE IS A CHANCE THAT YOUR CAMERA DOESNT CONNECT WITH SERIAL # AND THIS MUST BE CHANGED
+        // Constructor - NOTE THERE IS A CHANCE THAT YOUR CAMERA DOES NOT CONNECT WITH SERVAL # AND THIS MUST BE CHANGED
         ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize);
 
 
@@ -578,10 +578,10 @@ class ADTimePix : public ADDriver{
 
         void printConnectedDeviceInfo();
 
-        //function that begins image aquisition
+        //function that starts image acquisition
         asynStatus acquireStart();
 
-        //function that stops aquisition
+        //function that stops image acquisition
         asynStatus acquireStop();
 
         // TimePix3 specific functions

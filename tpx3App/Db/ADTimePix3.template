@@ -178,7 +178,7 @@ record(longin, "$(P)$(R)MaxPulseCnt_RBV"){
 }
 record(ai, "$(P)$(R)MaxPulseHgt_RBV"){
   field(DTYP, "asynFloat64")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PULSE_HIGHT")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PULSE_HEIGHT")
   field(SCAN, "I/O Intr")
 }
 record(ai, "$(P)$(R)MaxPulsePeriod_RBV"){
