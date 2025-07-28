@@ -1,0 +1,397 @@
+#=================================================================#
+# Template file: MaskBPC.template
+# Detector Binary Pixel Configuration Mask.
+# Author: K. Gofron
+# Date: 2024/10/23
+#=================================================================#
+
+##################################################################
+# Build BPC mask array PV records here.
+# Allow positive and negative mask
+# Allow rectangular and circular masks
+#
+##################################################################
+
+# BPC file
+record(waveform, "$(P)$(R)BPC"){
+    field(DTYP, "asyn$(TYPE)ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_BPC_PEL")
+    field(FTVL, "$(FTVL)")
+    field(NELM, "$(NELEMENTS)")
+#    field(autosaveFields, "VAL")
+}
+
+# Number of masked picture elements
+record(longin, "$(P)$(R)BPC_N_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_BPC_PEL_N")
+   field(VAL, "0")
+   field(SCAN, "I/O Intr")
+}
+
+# Position of masked pel in BPC mask
+record(waveform, "$(P)$(R)BPCmasked"){
+    field(DTYP, "asyn$(TYPE)ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_BPC_PEL_MASKED")
+    field(FTVL, "$(FTVL)")
+    field(NELM, "$(NELEMENTS)")
+#    field(autosaveFields, "VAL")
+}
+
+# AreaDetector Image where mask is created
+record(waveform, "$(P)$(R)MaskBPC"){
+    field(DTYP, "asyn$(TYPE)ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_ARRAY_BPC")
+  #  field(INP,  [1, 2, 3, 4, 5])
+    field(FTVL, "$(FTVL)")
+    field(NELM, "$(NELEMENTS)")
+  #  field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)MaskOnOff"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_ONOFF_PEL")
+  field(ZNAM, "Don't count")
+  field(ONAM, "Count")
+  field(VAL,  "0")
+}
+
+record(bo, "$(P)$(R)MaskReset"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_RESET")
+  field(ZNAM, "No reset")
+  field(ONAM, "Reset")
+  field(VAL,  "0")
+}
+
+record(longout, "$(P)$(R)MaskMinX")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINX")
+   field(VAL,  "60")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskMinX_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINX")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskSizeX")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEX")
+   field(VAL,  "25")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskSizeX_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEX")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskMinY")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINY")
+   field(VAL,  "90")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskMinY_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_MINY")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskSizeY")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEY")
+   field(VAL,  "40")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskSizeY_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_SIZEY")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)MaskRadius")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_RADIUS")
+   field(VAL,  "10")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)MaskRadius_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_RADIUS")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)MaskRectangle"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_RECTANGLE")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+record(bo, "$(P)$(R)MaskCircle"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_CIRCLE")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+# BPC mask file name  "_maskBPC". Probably write it to same FilePath as BPC file exists
+record(waveform, "$(P)$(R)MaskBPCFileName")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_FILENAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)MaskBPCFileName_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_FILENAME")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)MaskPel"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_PEL")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+record(bo, "$(P)$(R)MaskWrite"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_WRITE")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL,  "0")
+}
+
+# Mask: Set flags to default.
+record(sseq, "$(P)$(R)FlagMaskSeq")
+{
+   # Clean flags: read pixels masked in calibration
+   field(DOL1, "0")
+   field(LNK1, "$(P)$(R)MaskPel PP MS")
+   # Clean flags: disable writing to FPGA
+   field(DOL2, "0")
+   field(LNK2, "$(P)$(R)MaskWrite PP MS")
+   # Clean flags: disable rectangular mask
+   field(DOL3, "0")
+   field(LNK3, "$(P)$(R)MaskRectangle PP MS")
+   # Clean flags: disable circular mask
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskCircle PP MS")
+   # Positive mask: enable all pel count
+   field(DOL5, "0")
+   field(LNK5, "$(P)$(R)MaskOnOff PP MS")
+   #field(WAIT1, "$(P)$(R)MaskOnOff PP MS")
+   field(DOL6, "0")
+   field(LNK6, "$(P)$(R)MaskReset PP MS")
+}
+
+# Negative mask: Reset mask PV to block counting for all pel
+record(sseq, "$(P)$(R)ResetPosMaskSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Disable counting, enable mask reset, create positive mask
+   field(DLY2, "0.2")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskReset PP MS")
+   field(DLY3, "0.2")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask reset flag
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskReset PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write to FPGA
+   field(DLY6, "0.5")
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask write
+   field(DLY7, "0.5")
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+
+# Negative mask: Reset mask PV to block counting for all pel
+record(sseq, "$(P)$(R)ResetNegMaskSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Disable counting, enable mask reset, create negative mask
+   field(DLY2, "0.2")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskOnOff PP MS")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskReset PP MS")
+   field(DLY4, "0.2")
+   field(DOL4, "1")
+   field(LNK4, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask reset flag, OnOff=0
+   field(DLY5, "0.5")
+   field(DOL5, "0")
+   field(LNK5, "$(P)$(R)MaskReset PP MS")
+   field(DOL6, "0")
+   field(LNK6, "$(P)$(R)MaskOnOff PP MS")
+   # Enable mask write to FPGA
+   field(DOL7, "1")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+   # Write to FPGA
+   field(DLY8, "0.5")
+   field(DOL8, "1")
+   field(LNK8, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask write
+   field(DLY9, "0.5")
+   field(DOL9, "0")
+   field(LNK9, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Hot pixel clear: Negative mask, then calibration.
+record(sseq, "$(P)$(R)ResetHotPelSeq")
+{
+   # Write Negative mask to FPGA: pixels do not count events
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)ResetNegMaskSeq PP MS")
+   # Create Positive mask
+   # Enable mask reset, create positive mask
+   field(DLY2, "2.0")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskReset PP MS")
+   field(DLY3, "0.2")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask reset flag
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskReset PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write to FPGA
+   field(DLY6, "0.5")
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable mask write
+   field(DLY7, "0.5")
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Positive mask: rectangular pel that will count
+record(sseq, "$(P)$(R)WriteMaskRectSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Enable rectangular mask
+   field(DLY2, "0.2")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskRectangle PP MS")
+   # Write mask to mask PV
+   field(DLY3, "0.2")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable rectangular mask creation
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskRectangle PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write mask to mask to FPGA
+   field(DLY6, "0.2")
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable rectangular mask creation
+   field(DLY7, "0.5")
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Positive mask: rectangular pel that will count with prior reset
+record(sseq, "$(P)$(R)MaskRectSeq")
+{
+   # Disable counting for all pel
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)ResetNegMaskSeq.PROC PP MS")
+   # Enable rectangular mask counting
+   field(DLY2, "0.5")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)WriteMaskRectSeq.PROC PP MS")
+}
+
+# Positive mask: circular pel that will count
+record(sseq, "$(P)$(R)WriteMaskCircleSeq")
+{
+   # Default flags
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)FlagMaskSeq PP MS")
+   # Enable circular mask
+   field(DLY2, "0.2")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)MaskCircle PP MS")
+   # Write mask to mask PV
+   field(DLY3, "0.2")
+   field(DOL3, "1")
+   field(LNK3, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable circular mask creation
+   field(DLY4, "0.5")
+   field(DOL4, "0")
+   field(LNK4, "$(P)$(R)MaskCircle PP MS")
+   # Enable mask write to FPGA
+   field(DOL5, "1")
+   field(LNK5, "$(P)$(R)MaskWrite PP MS")
+   # Write mask to mask to FPGA
+   field(DLY6, "0.2")
+   field(DOL6, "1")
+   field(LNK6, "$(P)$(R)MaskBPC.PROC PP MS")
+   # Disable rectangular mask creation
+   field(DLY7, "0.5")
+   field(DOL7, "0")
+   field(LNK7, "$(P)$(R)MaskWrite PP MS")
+}
+
+# Positive mask: circular pel that will count, with prior negative mask reset
+record(sseq, "$(P)$(R)MaskCircleSeq")
+{
+   # Disable counting for all pel
+   field(DOL1, "1")
+   field(LNK1, "$(P)$(R)ResetNegMaskSeq.PROC PP MS")
+   # Enable circular mask counting
+   field(DLY2, "0.5")
+   field(DOL2, "1")
+   field(LNK2, "$(P)$(R)WriteMaskCircleSeq.PROC PP MS")
+}

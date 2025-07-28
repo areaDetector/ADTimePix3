@@ -178,7 +178,7 @@ record(longin, "$(P)$(R)MaxPulseCnt_RBV"){
 }
 record(ai, "$(P)$(R)MaxPulseHgt_RBV"){
   field(DTYP, "asynFloat64")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PULSE_HIGHT")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PULSE_HEIGHT")
   field(SCAN, "I/O Intr")
 }
 record(ai, "$(P)$(R)MaxPulsePeriod_RBV"){
@@ -395,6 +395,7 @@ record(bo, "$(P)$(R)PeriphClk80"){
   field(ZNAM, "false")
   field(ONAM, "true")  
   info(autosaveFields, "VAL")
+  info(archive, "Monitor, 00:00:01, VAL")
 }
 record(bi, "$(P)$(R)PeriphClk80_RBV"){
   field(DTYP, "asynInt32")
@@ -592,5 +593,6 @@ record(mbbi, "$(P)$(R)DetOrient_RBV")
    field(SVST, "LEFT_MIRRORED")
    field(SVVL, "7")
    field(SCAN, "I/O Intr")
+   info(archive, "Monitor, 00:00:01, VAL")
 }
 

@@ -5,7 +5,7 @@
  *
  * Author:  Kazimierz Gofron
  * Created: June, 2022
- * Last edited: February 25, 2023
+ * Last edited: July 20, 2025
  * Copyright (c) : Oak Ridge National Laboratory
  *
  */
@@ -15,8 +15,8 @@
 #define ADTIMEPIX_H
 
 // version numbers
-#define ADTIMEPIX_VERSION      0
-#define ADTIMEPIX_REVISION     1
+#define ADTIMEPIX_VERSION      1
+#define ADTIMEPIX_REVISION     3
 #define ADTIMEPIX_MODIFICATION 0
 
 #include <nlohmann/json.hpp>
@@ -25,15 +25,16 @@ using json = nlohmann::json;
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
+#define ADTimePixServalConnectedString     "TPX3_SERVAL_CONNECTED"       // (asynInt32,         r)      Serval Connected,
 #define ADTimePixServerNameString          "TPX3_SERVER_NAME"            // (asynOctet,         r)      Server Name
 #define ADTimePixDetTypeString             "TPX3_DETECTOR_TYPE"          // (asynOctet,         r)      Detector Type, should be binary DetConnected
 #define ADTimePixFWTimeStampString         "TPX3_FW_TIMESTAMP"           // (asynOctet,         r)      Firmware TimeStamp
-//#define ADTimePixDetConnectedString       "TPX3_DETECTOR_CONNECTED"     // (asynOctet,         r)      Detector Connected, TODO
+#define ADTimePixDetConnectedString        "TPX3_DETECTOR_CONNECTED"     // (asynInt32,         r)      Detector Connected,
 #define ADTimePixFreeSpaceString           "TPX3_FREE_SPACE"             // (asynInt64          r)      Free Space [Bytes]
 #define ADTimePixWriteSpeedString          "TPX3_WRITE_SPEED"            // (asynFloat64,       r)      Hits? [320 Mhits/s]
 #define ADTimePixLowerLimitString          "TPX3_LLIM_SPACE"             // (asynInt64,         w)      Lower limit on available disk space [Bytes]
 #define ADTimePixLLimReachedString         "TPX3_LLIM_REACH"             // (asynInt32,         r)      Reached Lower disk limit
-#define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarly, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
+#define ADTimePixHttpCodeString            "TPX3_HTTP_CODE"              // (asynInt32,         r)      200/OK, 204/NoContent, 302/MovedTemporarily, 400/BadRequest, 404/NotFound, 409/Conflict, 500/InternalError, 503/ServiceUnavailable
 
 // Detector Health
 #define ADTimePixLocalTempString            "TPX3_LOCAL_TEMP"            // (asynFloat64,       r)      Local Temperature
@@ -50,7 +51,7 @@ using json = nlohmann::json;
     // Detector Info
 #define ADTimePixIfaceNameString            "TPX3_IFACE"            // (asynOctet,         r)      IfaceName
 #define ADTimePixSW_versionString           "TPX3_SW_VER"           // (asynOctet,         r)      SW_version
-#define ADTimePixFW_versionString           "TPX3_FW_VER"           // (asynOctet,         r)      FW_versionS
+#define ADTimePixFW_versionString           "TPX3_FW_VER"           // (asynOctet,         r)      FW_version
 #define ADTimePixPixCountString             "TPX3_PEL_CNT"          // (asynInt32,         r)      PixCount
 #define ADTimePixRowLenString               "TPX3_ROWLEN"           // (asynInt32,         r)      RowLen
 #define ADTimePixNumberOfChipsString        "TPX3_NUM_CHIPS"        // (asynInt32,         r)      NumberOfChip
@@ -67,7 +68,7 @@ using json = nlohmann::json;
 #define ADTimePixSuppAcqModesString         "TPX3_ACQ_MODES"        // (asynInt32,         r)      SuppAcqModes
 #define ADTimePixClockReadoutString         "TPX3_CLOCK_READ"       // (asynFloat64,       r)      ClockReadout
 #define ADTimePixMaxPulseCountString        "TPX3_PULSE_CNT"        // (asynInt32,         r)      MaxPulseCount
-#define ADTimePixMaxPulseHeightString       "TPX3_PULSE_HIGHT"      // (asynFloat64,       r)      MaxPulseHeight
+#define ADTimePixMaxPulseHeightString       "TPX3_PULSE_HEIGHT"     // (asynFloat64,       r)      MaxPulseHeight
 #define ADTimePixMaxPulsePeriodString       "TPX3_PULSE_PERIOD"     // (asynFloat64,       r)      MaxPulsePeriod
 #define ADTimePixTimerMaxValString          "TPX3_TIME_MAX"         // (asynFloat64,       r)      TimerMaxVal
 #define ADTimePixTimerMinValString          "TPX3_TIME_MIN"         // (asynFloat64,       r)      TimerMinVal
@@ -119,6 +120,11 @@ using json = nlohmann::json;
 // Chip Layout
 #define ADTimePixDetectorOrientationString  "TPX3_DET_ORIENTATION"     // (asynInt32,         r)      DetectorOrientation, in Detector/Layout since 3.0.0
 #define ADTimePixLayoutString               "TPX3_LAYOUT"              // (asynOctet,         r)      Chip layout
+// Chip Temperature
+#define ADTimePixChipNTemperatureString     "TPX3_CHIP_TEMP"           // (asynInt32,         r)      Chip N temperature
+// Chip VDD, AVDD
+#define ADTimePixChipN_VDDString     "TPX3_CHIP_VDD"           // (asynFloat64,         r)      Chip N VDD
+#define ADTimePixChipN_AVDDString     "TPX3_CHIP_AVDD"          // (asynFloat64,         r)      Chip N AVDD
 
     // Absolute path to the binary pixel configuration, absolute path to the text chips configuration
 #define ADTimePixBPCFilePathString          "BPC_FILE_PATH"             /**< (asynOctet,    r/w) The file path Binary Pixel Configuration */
@@ -140,18 +146,25 @@ using json = nlohmann::json;
 #define ADTimePixWritePrvImgString         "TPX3_WRITE_PRVIMG"        // (asynInt32,         w)      Write Data output channels (preview->img)
 #define ADTimePixWritePrvImg1String        "TPX3_WRITE_PRVIMG1"       // (asynInt32,         w)      Write Data output channels (preview->img1)
 #define ADTimePixWritePrvHstString         "TPX3_WRITE_PRVHST"        // (asynInt32,         w)      Write Data output channels (preview->hst)
+    // Server, read data channels from Serval
+#define ADTimePixWriteRawReadString            "TPX3_WRITE_RAW_RBV"           // (asynInt32,         w)      Write Data output channels (raw)
+#define ADTimePixWriteRaw1ReadString           "TPX3_WRITE_RAW1_RBV"          // (asynInt32,         w)      Write Data output channels (raw), Serval 3.3.0
+#define ADTimePixWriteImgReadString            "TPX3_WRITE_IMG_RBV"           // (asynInt32,         w)      Write Data output channels (img)
+#define ADTimePixWritePrvImgReadString         "TPX3_WRITE_PRVIMG_RBV"        // (asynInt32,         w)      Write Data output channels (preview->img)
+#define ADTimePixWritePrvImg1ReadString        "TPX3_WRITE_PRVIMG1_RBV"       // (asynInt32,         w)      Write Data output channels (preview->img1)
+#define ADTimePixWritePrvHstReadString         "TPX3_WRITE_PRVHST_RBV"        // (asynInt32,         w)      Write Data output channels (preview->hst)
 
     // Server, raw
 #define ADTimePixRawBaseString              "TPX3_RAW_BASE"             // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRawFilePatString           "TPX3_RAW_FILEPAT"          // (asynOctet,         w)      Raw Destination File Pattern
-#define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"         // (asynOctet,         w)      Raw Destination Split Strategy
+#define ADTimePixRawSplitStrategyString     "TPX3_RAW_SPLITSTG"         // (asynInt32,         w)      Raw Destination Split Strategy
 #define ADTimePixRawQueueSizeString         "TPX3_RAW_QUEUESIZE"        // (asynInt32,         w)      Raw Destination Queue Size
 #define ADTimePixRawFilePathExistsString    "RAW_FILE_PATH_EXISTS"      // (asynInt32,       r/w) File path exists? */
 
     // Server, raw stream or .tpx3 file (Serval 3.3.0)
 #define ADTimePixRaw1BaseString              "TPX3_RAW1_BASE"            // (asynOctet,         w)      Raw Destination Base
 #define ADTimePixRaw1FilePatString           "TPX3_RAW1_FILEPAT"         // (asynOctet,         w)      Raw Destination File Pattern
-#define ADTimePixRaw1SplitStrategyString     "TPX3_RAW1_SPLITSTG"        // (asynOctet,         w)      Raw Destination Split Strategy
+#define ADTimePixRaw1SplitStrategyString     "TPX3_RAW1_SPLITSTG"        // (asynInt32,         w)      Raw Destination Split Strategy
 #define ADTimePixRaw1QueueSizeString         "TPX3_RAW1_QUEUESIZE"       // (asynInt32,         w)      Raw Destination Queue Size
 #define ADTimePixRaw1FilePathExistsString    "RAW1_FILE_PATH_EXISTS"     // (asynInt32,       r/w) File path exists? */
 
@@ -160,7 +173,7 @@ using json = nlohmann::json;
 #define ADTimePixImgFilePatString            "TPX3_IMG_IMGPAT"           // (asynOctet,         w)      ImageChannels FilePattern 
 #define ADTimePixImgFormatString             "TPX3_IMG_IMGFORMAT"        // (asynInt32,         w)      ImageChannels Format
 #define ADTimePixImgModeString               "TPX3_IMG_IMGMODE"          // (asynInt32,         w)      ImageChannels Mode
-#define ADTimePixImgThsString                "TPX3_IMG_IMGTHS"           // (asynOctet,         w)      ImageChannels Thresholds
+#define ADTimePixImgThsString                "TPX3_IMG_IMGTHS"           // (asynOctet,         w)      ImageChannels Thresholds (used by MPX3, not used for TPX3)
 #define ADTimePixImgIntSizeString            "TPX3_IMG_INTSIZE"          // (asynInt32,         w)      ImageChannels IntegrationSize
 #define ADTimePixImgIntModeString            "TPX3_IMG_INTMODE"          // (asynInt32,         w)      ImageChannels IntegrationMode
 #define ADTimePixImgStpOnDskLimString        "TPX3_IMG_STPONDSK"         // (asynInt32,         w)      ImageChannels StopMeasurementOnDiskLimit
@@ -203,6 +216,9 @@ using json = nlohmann::json;
 #define ADTimePixPrvHstIntModeString            "TPX3_PRV_HSTINTMODE"       // (asynInt32,         w)      Preview HistogramChannels IntegrationMode
 #define ADTimePixPrvHstStpOnDskLimString        "TPX3_PRV_HSTSTPONDSK"      // (asynInt32,         w)      Preview HistogramChannels StopMeasurementOnDiskLimit
 #define ADTimePixPrvHstQueueSizeString          "TPX3_PRV_HSTQUEUESIZE"     // (asynInt32,         w)      Preview HistogramChannels QueueSize
+#define ADTimePixPrvHstNumBinsString            "TPX3_PRV_HSTNBINS"         // (asynInt32,         w)      Preview HistogramChannels NumberOfBins
+#define ADTimePixPrvHstBinWidthString           "TPX3_PRV_HSTBINWIDTH"      // (asynFloat64,       w)      Preview HistogramChannels BinWidth
+#define ADTimePixPrvHstOffsetString             "TPX3_PRV_HSTOFFSET"        // (asynFloat64,       w)      Preview HistogramChannels Offset
 #define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
 
     // Measurement
@@ -216,11 +232,29 @@ using json = nlohmann::json;
 #define ADTimePixDroppedFramesString         "TPX3_DROPPED_FRAMES"    // (asynInt32,         w)      DroppedFrames
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
+// BPC Mask
+#define ADTimePixBPCString               "TPX3_BPC_PEL"               // (asynInt32,         w)      BPC pel for each pixel, read from .bpc file
+#define ADTimePixBPCnString              "TPX3_BPC_PEL_N"             // (asynInt32,         w)      BPC pel number of masked pel from .bpc file
+#define ADTimePixBPCmaskedString         "TPX3_BPC_PEL_MASKED"        // (asynInt32,         w)      BPC array of pel masked in .bpc file (typically 36-44 values)
+#define ADTimePixMaskBPCString           "TPX3_MASK_ARRAY_BPC"        // (asynInt32,         w)      BPC mask to enable/disable pixel counting, AD mask image
+#define ADTimePixMaskOnOffPelString      "TPX3_MASK_ONOFF_PEL"        // (asynInt32,         w)      BPC mask positive/negative mask (count/not count)
+#define ADTimePixMaskResetString         "TPX3_MASK_RESET"            // (asynInt32,         w)      BPC mask initialize to 0 or 1 OnOffPel value
+#define ADTimePixMaskMinXString          "TPX3_MASK_MINX"             // (asynInt32,         w)      BPC mask rectangular/circular X
+#define ADTimePixMaskSizeXString         "TPX3_MASK_SIZEX"            // (asynInt32,         w)      BPC mask rectangular SizeX
+#define ADTimePixMaskMinYString          "TPX3_MASK_MINY"             // (asynInt32,         w)      BPC mask rectangular/circular Y
+#define ADTimePixMaskSizeYString         "TPX3_MASK_SIZEY"            // (asynInt32,         w)      BPC mask rectangular SizeY
+#define ADTimePixMaskRadiusString        "TPX3_MASK_RADIUS"           // (asynInt32,         w)      BPC mask circular Radius
+#define ADTimePixMaskRectangleString     "TPX3_MASK_RECTANGLE"        // (asynInt32,         w)      BPC mask rectangle mask write to array
+#define ADTimePixMaskCircleString        "TPX3_MASK_CIRCLE"           // (asynInt32,         w)      BPC mask circular mask write to array
+#define ADTimePixMaskFileNameString      "TPX3_MASK_FILENAME"         // (asynOctet,         w)      BPC mask FileName, file written to original location of .bpc
+#define ADTimePixMaskPelString           "TPX3_MASK_PEL"              // (asynInt32,         w)      BPC extract masked pel in vendor calibration .bpc File
+#define ADTimePixMaskWriteString         "TPX3_MASK_WRITE"            // (asynInt32,         w)      BPC write mask to new calibration .bpc File and push to TimePix3 FPGA
+
 // Control
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
 
-// Place any required inclues here
+// Place any required includes here
 
 #include "ADDriver.h"
 #include "cpr/cpr.h"
@@ -241,14 +275,14 @@ using namespace Magick;
 /*
  * Class definition of the ADTimePix driver. It inherits from the base ADDriver class
  *
- * Includes constructor/destructor, PV params, function defs and variable defs
+ * Includes constructor/destructor, PV params, function definitions and variable definitions
  *
  */
-class ADTimePix : ADDriver{
+class ADTimePix : public ADDriver{
 
     public:
 
-        // Constructor - NOTE THERE IS A CHANCE THAT YOUR CAMERA DOESNT CONNECT WITH SERIAL # AND THIS MUST BE CHANGED
+        // Constructor - NOTE THERE IS A CHANCE THAT YOUR CAMERA DOES NOT CONNECT WITH SERVAL # AND THIS MUST BE CHANGED
         ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize);
 
 
@@ -257,6 +291,17 @@ class ADTimePix : ADDriver{
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
 
+        asynStatus rotateLayout();
+
+        // Declaration for the new function in the driver class
+        virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn);
+
+        asynStatus maskReset(epicsInt32 *buf, int OnOff);
+        asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
+        asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
+        asynStatus readBPCfile(char **buf, int *bufSize);
+        asynStatus writeBPCfile(char **buf, int *bufSize);
+        asynStatus mask2DtoBPC(int *buf, char *bufBPC);
 
         void timePixCallback();
 
@@ -275,9 +320,10 @@ class ADTimePix : ADDriver{
 
         int ADTimePixDetType;
         int ADTimePixFWTimeStamp;
-    //    int ADTimePixDetConnected;    // TODO
+        int ADTimePixDetConnected;
+        int ADTimePixServalConnected;
 
-        int ADTimePixServer;
+        int ADTimePixServerName;
 
     // Health
         int ADTimePixLocalTemp;
@@ -365,6 +411,11 @@ class ADTimePix : ADDriver{
         int ADTimePixDetectorOrientation;
         int ADTimePixLayout;
 
+        // Detector Health individual Chip Temperature, VDD, AVDD
+        int ADTimePixChipNTemperature;
+        int ADTimePixChipN_VDD;
+        int ADTimePixChipN_AVDD;
+
             // Files BPC, Chip/DACS
         int ADTimePixBPCFilePath;          
         int ADTimePixBPCFilePathExists;    
@@ -380,10 +431,17 @@ class ADTimePix : ADDriver{
         int ADTimePixWriteData;
         int ADTimePixWriteRaw;
         int ADTimePixWriteRaw1;      // Serval 3.3.0
-        int ADTimePixWriteImg;      
-        int ADTimePixWritePrvImg;   
-        int ADTimePixWritePrvImg1;  
+        int ADTimePixWriteImg;
+        int ADTimePixWritePrvImg;
+        int ADTimePixWritePrvImg1;
         int ADTimePixWritePrvHst;
+            // Read back channels from Serval
+        int ADTimePixWriteRawRead;
+        int ADTimePixWriteRaw1Read;      // Serval 3.3.0
+        int ADTimePixWriteImgRead;
+        int ADTimePixWritePrvImgRead;
+        int ADTimePixWritePrvImg1Read;
+        int ADTimePixWritePrvHstRead;
 
             // Server, raw
         int ADTimePixRawBase;              
@@ -446,6 +504,9 @@ class ADTimePix : ADDriver{
         int ADTimePixPrvHstIntMode;      
         int ADTimePixPrvHstStpOnDskLim;   
         int ADTimePixPrvHstQueueSize;
+        int ADTimePixPrvHstNumBins;
+        int ADTimePixPrvHstBinWidth;
+        int ADTimePixPrvHstOffset;
         int ADTimePixPrvHstFilePathExists;    
 
             // Measurement
@@ -458,7 +519,25 @@ class ADTimePix : ADDriver{
         int ADTimePixFrameCount;     
         int ADTimePixDroppedFrames;  
         int ADTimePixStatus;
-  
+
+            // BPC Mask
+        int ADTimePixBPC;
+        int ADTimePixBPCn;
+        int ADTimePixBPCmasked;
+        int ADTimePixMaskBPC;
+        int ADTimePixMaskOnOffPel;
+        int ADTimePixMaskReset;
+        int ADTimePixMaskMinX;
+        int ADTimePixMaskSizeX;
+        int ADTimePixMaskMinY;
+        int ADTimePixMaskSizeY;
+        int ADTimePixMaskRadius;
+        int ADTimePixMaskRectangle;
+        int ADTimePixMaskCircle;
+        int ADTimePixMaskFileName;
+        int ADTimePixMaskPel;
+        int ADTimePixMaskWrite;
+
             // Controls
         int ADTimePixRawStream;
         int ADTimePixRaw1Stream;
@@ -499,10 +578,10 @@ class ADTimePix : ADDriver{
 
         void printConnectedDeviceInfo();
 
-        //function that begins image aquisition
+        //function that starts image acquisition
         asynStatus acquireStart();
 
-        //function that stops aquisition
+        //function that stops image acquisition
         asynStatus acquireStop();
 
         // TimePix3 specific functions
@@ -527,8 +606,11 @@ class ADTimePix : ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
-        asynStatus writeLayout();
-
+        int checkFile(std::string &fullFileName);
+        asynStatus rowsCols(int *rows, int *cols, int *xChips, int *yChips, int *chipPelWidth);
+        asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
+        int pelIndex(int x, int y);
+        int bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
 };
 
 // Stores number of additional PV parameters are added by the driver

@@ -1,0 +1,26 @@
+# Author: K. Gofron
+# Date: 2025/2/25
+
+##################################################################
+# VDD: operating Voltage, power supply into the chip
+# AVDD: an analog voltage or analog positive supply, powered from the chip to the outside.
+# Detector : { Health : {
+#   "VDD" :  [ 1.5, 4.0E-4, 0.6 ],
+#   "AVDD" : [ 1.5, 4.0E-4, 0.6 ],
+##################################################################
+
+# Detector Chip VDD
+record(ai, "$(P)$(R)$(C)_VDD_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP_VDD")
+  field(SCAN, "I/O Intr")
+  info(archive, "Monitor, 00:00:01, VAL")
+}
+
+# Detector Chip AVDD
+record(ai, "$(P)$(R)$(C)_AVDD_RBV"){
+  field(DTYP, "asynFloat64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP_AVDD")
+  field(SCAN, "I/O Intr")
+  info(archive, "Monitor, 00:00:01, VAL")
+}

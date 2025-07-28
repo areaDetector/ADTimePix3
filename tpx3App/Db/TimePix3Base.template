@@ -25,7 +25,7 @@ record(mbbo, "$(P)$(R)TriggerMode")
    field(ONVL, "1")
    field(TWST, "PexSt_TmrSp")     #  PEXSTART_TIMERSTOP
    field(TWVL, "2")
-   field(THST, "NexSt_TmrRSp")    #  NEXSTART_TIMERSTOP
+   field(THST, "NexSt_TmrSp")    #  NEXSTART_TIMERSTOP
    field(THVL, "3")
    field(FRST, "AutoTrgSt_TmrSp") #  AUTOTRIGSTART_TIMERSTOP
    field(FRVL, "4")
@@ -45,7 +45,7 @@ record(mbbi, "$(P)$(R)TriggerMode_RBV")
    field(ONVL, "1")
    field(TWST, "PexSt_TmrSp")           #  PEXSTART_TIMERSTOP
    field(TWVL, "2")
-   field(THST, "NexSt_TmrRSp")          #  NEXSTART_TIMERSTOP
+   field(THST, "NexSt_TmrSp")          #  NEXSTART_TIMERSTOP
    field(THVL, "3")
    field(FRST, "AutoTrgSt_TmrSp")       #  AUTOTRIGSTART_TIMERSTOP
    field(FRVL, "4")

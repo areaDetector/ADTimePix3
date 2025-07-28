@@ -1,0 +1,591 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display typeId="org.csstudio.opibuilder.Display" version="1.0.0">
+  <actions hook="false" hook_all="false" />
+  <auto_scale_widgets>
+    <auto_scale_widgets>false</auto_scale_widgets>
+    <min_width>-1</min_width>
+    <min_height>-1</min_height>
+  </auto_scale_widgets>
+  <auto_zoom_to_fit_all>false</auto_zoom_to_fit_all>
+  <background_color>
+    <color red="240" green="240" blue="240" />
+  </background_color>
+  <boy_version>5.1.0</boy_version>
+  <foreground_color>
+    <color red="192" green="192" blue="192" />
+  </foreground_color>
+  <grid_space>6</grid_space>
+  <height>610</height>
+  <macros>
+    <include_parent_macros>true</include_parent_macros>
+  </macros>
+  <name>Mask</name>
+  <rules />
+  <scripts />
+  <show_close_button>true</show_close_button>
+  <show_edit_range>true</show_edit_range>
+  <show_grid>true</show_grid>
+  <show_ruler>true</show_ruler>
+  <snap_to_geometry>true</snap_to_geometry>
+  <widget_type>Display</widget_type>
+  <width>710</width>
+  <wuid>-2802883b:149c5edc664:-6edf</wuid>
+  <x>-1</x>
+  <y>-1</y>
+  <widget typeId="org.csstudio.opibuilder.widgets.linkingContainer" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <background_color>
+      <color red="240" green="240" blue="240" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>3</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <foreground_color>
+      <color red="192" green="192" blue="192" />
+    </foreground_color>
+    <group_name></group_name>
+    <height>600</height>
+    <macros>
+      <include_parent_macros>true</include_parent_macros>
+    </macros>
+    <name>Mask BPC</name>
+    <opi_file>MaskStatus.opi</opi_file>
+    <resize_behaviour>0</resize_behaviour>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <tooltip></tooltip>
+    <visible>true</visible>
+    <widget_type>Linking Container</widget_type>
+    <width>700</width>
+    <wuid>-71494800:192c350d9b7:-74e9</wuid>
+    <x>5</x>
+    <y>5</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.intensityGraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="240" green="240" blue="240" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <color_map>
+      <interpolate>true</interpolate>
+      <autoscale>true</autoscale>
+      <map>2</map>
+    </color_map>
+    <crop_bottom>0</crop_bottom>
+    <crop_left>0</crop_left>
+    <crop_right>0</crop_right>
+    <crop_top>0</crop_top>
+    <data_height>512</data_height>
+    <data_width>512</data_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <graph_area_height>512</graph_area_height>
+    <graph_area_width>512</graph_area_width>
+    <height>563</height>
+    <horizon_profile_x_pv_name></horizon_profile_x_pv_name>
+    <horizon_profile_x_pv_value />
+    <horizon_profile_y_pv_name></horizon_profile_y_pv_name>
+    <horizon_profile_y_pv_value />
+    <maximum>4.0</maximum>
+    <minimum>0.0</minimum>
+    <name>Intensity Graph_2</name>
+    <pixel_info_pv_name></pixel_info_pv_name>
+    <pixel_info_pv_value />
+    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <pv_value />
+    <rgb_mode>false</rgb_mode>
+    <roi_color>
+      <color red="0" green="255" blue="255" />
+    </roi_color>
+    <roi_count>0</roi_count>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
+      </rule>
+    </rules>
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>true</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_ramp>true</show_ramp>
+    <single_line_profiling>false</single_line_profiling>
+    <tooltip>$(pv_name)</tooltip>
+    <vertial_profile_x_pv_value />
+    <vertial_profile_y_pv_value />
+    <vertical_profile_x_pv_name></vertical_profile_x_pv_name>
+    <vertical_profile_y_pv_name></vertical_profile_y_pv_name>
+    <visible>false</visible>
+    <widget_type>Intensity Graph</widget_type>
+    <width>617</width>
+    <wuid>7aa44ada:192beb9fa22:-7e4f</wuid>
+    <x>720</x>
+    <x_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </x_axis_axis_color>
+    <x_axis_axis_title>X Axis</x_axis_axis_title>
+    <x_axis_major_tick_step_hint>50</x_axis_major_tick_step_hint>
+    <x_axis_maximum>512.0</x_axis_maximum>
+    <x_axis_minimum>0.0</x_axis_minimum>
+    <x_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </x_axis_scale_font>
+    <x_axis_show_minor_ticks>true</x_axis_show_minor_ticks>
+    <x_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </x_axis_title_font>
+    <x_axis_visible>true</x_axis_visible>
+    <y>5</y>
+    <y_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </y_axis_axis_color>
+    <y_axis_axis_title>Y Axis</y_axis_axis_title>
+    <y_axis_major_tick_step_hint>50</y_axis_major_tick_step_hint>
+    <y_axis_maximum>0.0</y_axis_maximum>
+    <y_axis_minimum>512.0</y_axis_minimum>
+    <y_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </y_axis_scale_font>
+    <y_axis_show_minor_ticks>true</y_axis_show_minor_ticks>
+    <y_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </y_axis_title_font>
+    <y_axis_visible>true</y_axis_visible>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.intensityGraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="240" green="240" blue="240" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <color_map>
+      <interpolate>true</interpolate>
+      <autoscale>true</autoscale>
+      <map>2</map>
+    </color_map>
+    <crop_bottom>0</crop_bottom>
+    <crop_left>0</crop_left>
+    <crop_right>0</crop_right>
+    <crop_top>0</crop_top>
+    <data_height>256</data_height>
+    <data_width>256</data_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <graph_area_height>256</graph_area_height>
+    <graph_area_width>256</graph_area_width>
+    <height>307</height>
+    <horizon_profile_x_pv_name></horizon_profile_x_pv_name>
+    <horizon_profile_x_pv_value />
+    <horizon_profile_y_pv_name></horizon_profile_y_pv_name>
+    <horizon_profile_y_pv_value />
+    <maximum>4.0</maximum>
+    <minimum>0.0</minimum>
+    <name>Intensity Graph_1</name>
+    <pixel_info_pv_name></pixel_info_pv_name>
+    <pixel_info_pv_value />
+    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <pv_value />
+    <rgb_mode>false</rgb_mode>
+    <roi_color>
+      <color red="0" green="255" blue="255" />
+    </roi_color>
+    <roi_count>0</roi_count>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
+      </rule>
+    </rules>
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>true</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_ramp>true</show_ramp>
+    <single_line_profiling>false</single_line_profiling>
+    <tooltip>$(pv_name)</tooltip>
+    <vertial_profile_x_pv_value />
+    <vertial_profile_y_pv_value />
+    <vertical_profile_x_pv_name></vertical_profile_x_pv_name>
+    <vertical_profile_y_pv_name></vertical_profile_y_pv_name>
+    <visible>false</visible>
+    <widget_type>Intensity Graph</widget_type>
+    <width>361</width>
+    <wuid>-1b428cc:1930c1c5dd2:-7c85</wuid>
+    <x>5</x>
+    <x_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </x_axis_axis_color>
+    <x_axis_axis_title>X Axis</x_axis_axis_title>
+    <x_axis_major_tick_step_hint>50</x_axis_major_tick_step_hint>
+    <x_axis_maximum>256.0</x_axis_maximum>
+    <x_axis_minimum>0.0</x_axis_minimum>
+    <x_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </x_axis_scale_font>
+    <x_axis_show_minor_ticks>true</x_axis_show_minor_ticks>
+    <x_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </x_axis_title_font>
+    <x_axis_visible>true</x_axis_visible>
+    <y>624</y>
+    <y_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </y_axis_axis_color>
+    <y_axis_axis_title>Y Axis</y_axis_axis_title>
+    <y_axis_major_tick_step_hint>50</y_axis_major_tick_step_hint>
+    <y_axis_maximum>0.0</y_axis_maximum>
+    <y_axis_minimum>256.0</y_axis_minimum>
+    <y_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </y_axis_scale_font>
+    <y_axis_show_minor_ticks>true</y_axis_show_minor_ticks>
+    <y_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </y_axis_title_font>
+    <y_axis_visible>true</y_axis_visible>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.intensityGraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="240" green="240" blue="240" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <color_map>
+      <interpolate>true</interpolate>
+      <autoscale>true</autoscale>
+      <map>2</map>
+    </color_map>
+    <crop_bottom>0</crop_bottom>
+    <crop_left>0</crop_left>
+    <crop_right>0</crop_right>
+    <crop_top>0</crop_top>
+    <data_height>512</data_height>
+    <data_width>512</data_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <graph_area_height>512</graph_area_height>
+    <graph_area_width>516</graph_area_width>
+    <height>563</height>
+    <horizon_profile_x_pv_name></horizon_profile_x_pv_name>
+    <horizon_profile_x_pv_value />
+    <horizon_profile_y_pv_name></horizon_profile_y_pv_name>
+    <horizon_profile_y_pv_value />
+    <maximum>32.0</maximum>
+    <minimum>0.0</minimum>
+    <name>Intensity Graph_2</name>
+    <pixel_info_pv_name></pixel_info_pv_name>
+    <pixel_info_pv_value />
+    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <pv_value />
+    <rgb_mode>false</rgb_mode>
+    <roi_color>
+      <color red="0" green="255" blue="255" />
+    </roi_color>
+    <roi_count>0</roi_count>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
+      </rule>
+    </rules>
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>true</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_ramp>true</show_ramp>
+    <single_line_profiling>false</single_line_profiling>
+    <tooltip>$(pv_name)</tooltip>
+    <vertial_profile_x_pv_value />
+    <vertial_profile_y_pv_value />
+    <vertical_profile_x_pv_name></vertical_profile_x_pv_name>
+    <vertical_profile_y_pv_name></vertical_profile_y_pv_name>
+    <visible>false</visible>
+    <widget_type>Intensity Graph</widget_type>
+    <width>617</width>
+    <wuid>-289f6697:1932b149e4d:-7963</wuid>
+    <x>720</x>
+    <x_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </x_axis_axis_color>
+    <x_axis_axis_title>X Axis</x_axis_axis_title>
+    <x_axis_major_tick_step_hint>50</x_axis_major_tick_step_hint>
+    <x_axis_maximum>512.0</x_axis_maximum>
+    <x_axis_minimum>0.0</x_axis_minimum>
+    <x_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </x_axis_scale_font>
+    <x_axis_show_minor_ticks>true</x_axis_show_minor_ticks>
+    <x_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </x_axis_title_font>
+    <x_axis_visible>true</x_axis_visible>
+    <y>580</y>
+    <y_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </y_axis_axis_color>
+    <y_axis_axis_title>Y Axis</y_axis_axis_title>
+    <y_axis_major_tick_step_hint>50</y_axis_major_tick_step_hint>
+    <y_axis_maximum>0.0</y_axis_maximum>
+    <y_axis_minimum>512.0</y_axis_minimum>
+    <y_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </y_axis_scale_font>
+    <y_axis_show_minor_ticks>true</y_axis_show_minor_ticks>
+    <y_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </y_axis_title_font>
+    <y_axis_visible>true</y_axis_visible>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.intensityGraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="240" green="240" blue="240" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <color_map>
+      <interpolate>true</interpolate>
+      <autoscale>true</autoscale>
+      <map>2</map>
+    </color_map>
+    <crop_bottom>0</crop_bottom>
+    <crop_left>0</crop_left>
+    <crop_right>0</crop_right>
+    <crop_top>0</crop_top>
+    <data_height>256</data_height>
+    <data_width>256</data_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <graph_area_height>256</graph_area_height>
+    <graph_area_width>260</graph_area_width>
+    <height>307</height>
+    <horizon_profile_x_pv_name></horizon_profile_x_pv_name>
+    <horizon_profile_x_pv_value />
+    <horizon_profile_y_pv_name></horizon_profile_y_pv_name>
+    <horizon_profile_y_pv_value />
+    <maximum>32.0</maximum>
+    <minimum>0.0</minimum>
+    <name>Intensity Graph_3</name>
+    <pixel_info_pv_name></pixel_info_pv_name>
+    <pixel_info_pv_value />
+    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <pv_value />
+    <rgb_mode>false</rgb_mode>
+    <roi_color>
+      <color red="0" green="255" blue="255" />
+    </roi_color>
+    <roi_count>0</roi_count>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv trig="true">$(Sys)$(Dev)$(Cam)PixCount_RBV</pv>
+      </rule>
+    </rules>
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>true</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_ramp>true</show_ramp>
+    <single_line_profiling>false</single_line_profiling>
+    <tooltip>$(pv_name)</tooltip>
+    <vertial_profile_x_pv_value />
+    <vertial_profile_y_pv_value />
+    <vertical_profile_x_pv_name></vertical_profile_x_pv_name>
+    <vertical_profile_y_pv_name></vertical_profile_y_pv_name>
+    <visible>false</visible>
+    <widget_type>Intensity Graph</widget_type>
+    <width>361</width>
+    <wuid>-26855532:193302e7f4d:-763b</wuid>
+    <x>378</x>
+    <x_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </x_axis_axis_color>
+    <x_axis_axis_title>X Axis</x_axis_axis_title>
+    <x_axis_major_tick_step_hint>50</x_axis_major_tick_step_hint>
+    <x_axis_maximum>256.0</x_axis_maximum>
+    <x_axis_minimum>0.0</x_axis_minimum>
+    <x_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </x_axis_scale_font>
+    <x_axis_show_minor_ticks>true</x_axis_show_minor_ticks>
+    <x_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </x_axis_title_font>
+    <x_axis_visible>true</x_axis_visible>
+    <y>624</y>
+    <y_axis_axis_color>
+      <color red="0" green="0" blue="0" />
+    </y_axis_axis_color>
+    <y_axis_axis_title>Y Axis</y_axis_axis_title>
+    <y_axis_major_tick_step_hint>50</y_axis_major_tick_step_hint>
+    <y_axis_maximum>0.0</y_axis_maximum>
+    <y_axis_minimum>256.0</y_axis_minimum>
+    <y_axis_scale_font>
+      <opifont.name fontName="Ubuntu" height="11" style="0" pixels="false">Default</opifont.name>
+    </y_axis_scale_font>
+    <y_axis_show_minor_ticks>true</y_axis_show_minor_ticks>
+    <y_axis_title_font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </y_axis_title_font>
+    <y_axis_visible>true</y_axis_visible>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="255" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>Label_22</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Pixel Mask</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>141</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-26855532:193302e7f4d:-75f7</wuid>
+    <x>740</x>
+    <y>548</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Ubuntu" height="11" style="1" pixels="false">Default Bold</opifont.name>
+    </font>
+    <foreground_color>
+      <color red="255" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>Label_1</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Binary Pixel Configuration</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>200</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-26855532:193302e7f4d:-74b6</wuid>
+    <x>740</x>
+    <y>1130</y>
+  </widget>
+</display>

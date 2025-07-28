@@ -17,6 +17,7 @@ USR_INCLUDES += $(addprefix -I, $(GRAPHICSMAGICK_INCLUDE))
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
+LIB_SRCS += mask_io.cpp
 
 LIB_SYS_LIBS += cpr curl-d z
 

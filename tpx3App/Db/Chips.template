@@ -136,3 +136,11 @@ record(stringin, "$(P)$(R)$(C)_Layout_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_LAYOUT")
   field(SCAN, "I/O Intr")
 }
+
+# Detector Chip Temperature
+record(longin, "$(P)$(R)$(C)_Temp_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP_TEMP")
+  field(SCAN, "I/O Intr")
+  info(archive, "Monitor, 00:00:01, VAL")
+}

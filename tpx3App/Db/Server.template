@@ -38,7 +38,7 @@ record(bo, "$(P)$(R)WriteRaw")
 record(bi, "$(P)$(R)WriteRaw_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_RAW")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_RAW_RBV")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
@@ -56,7 +56,7 @@ record(bo, "$(P)$(R)WriteRaw1")
 record(bi, "$(P)$(R)WriteRaw1_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_RAW1")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_RAW1_RBV")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
@@ -75,7 +75,7 @@ record(bo, "$(P)$(R)WriteImg")
 record(bi, "$(P)$(R)WriteImg_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_IMG")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_IMG_RBV")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
@@ -94,7 +94,7 @@ record(bo, "$(P)$(R)WritePrvImg")
 record(bi, "$(P)$(R)WritePrvImg_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_PRVIMG")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_PRVIMG_RBV")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
@@ -113,7 +113,7 @@ record(bo, "$(P)$(R)WritePrvImg1")
 record(bi, "$(P)$(R)WritePrvImg1_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_PRVIMG1")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_PRVIMG1_RBV")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
@@ -132,7 +132,7 @@ record(bo, "$(P)$(R)WritePrvHst")
 record(bi, "$(P)$(R)WritePrvHst_RBV")
 {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_PRVHST")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_PRVHST_RBV")
     field(ZNAM, "false")
     field(ONAM, "true")
     field(SCAN, "I/O Intr")
@@ -464,7 +464,7 @@ record(mbbo, "$(P)$(R)ImgIntgMode")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGMODE")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_INTMODE")
    field(ZRST, "sum") 
    field(ZRVL, "0")
    field(ONST, "average") 
@@ -476,7 +476,7 @@ record(mbbo, "$(P)$(R)ImgIntgMode")
 record(mbbi, "$(P)$(R)ImgIntgMode_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGMODE")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_INTMODE")
    field(ZRST, "sum") 
    field(ZRVL, "0")
    field(ONST, "average") 
@@ -1143,12 +1143,57 @@ record(longout, "$(P)$(R)PrvHstQueueSize")
    field(PINI, "YES")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTQUEUESIZE")
-   field(VAL,  "16")
+   field(VAL,  "1024")
    info(autosaveFields, "VAL")
 }
 record(longin, "$(P)$(R)PrvHstQueueSize_RBV")
 {
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTQUEUESIZE")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)PrvHstNumBins")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTNBINS")
+   field(VAL,  "1")
+   info(autosaveFields, "VAL")
+}
+record(longin, "$(P)$(R)PrvHstNumBins_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTNBINS")
+   field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)PrvHstBinWidth")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTBINWIDTH")
+   field(VAL,  "1.0")
+   info(autosaveFields, "VAL")
+}
+record(ai, "$(P)$(R)PrvHstBinWidth_RBV")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTBINWIDTH")
+   field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)PrvHstOffset")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTOFFSET")
+   field(VAL,  "0.0")
+   info(autosaveFields, "VAL")
+}
+record(ai, "$(P)$(R)PrvHstOffset_RBV")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTOFFSET")
    field(SCAN, "I/O Intr")
 }
