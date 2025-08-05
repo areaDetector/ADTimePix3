@@ -2010,7 +2010,7 @@ asynStatus ADTimePix::acquireStop(){
     std::string API_Ver;
 
     this->acquiring=false;
-    if(this->callbackThreadId != NULL)
+    if(this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf())
         epicsThreadMustJoin(this->callbackThreadId);
 
     this->callbackThreadId = NULL;
