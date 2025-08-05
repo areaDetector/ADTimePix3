@@ -131,7 +131,7 @@ void ADTimePix::printConnectedDeviceInfo(){
 
 // -----------------------------------------------------------------------
 // std strip quotes around string Functions
-// ../ADTimePix.cpp:97:6: error: specializing member ‘std::__cxx11::basic_string<char>::quotes’ requires ‘template<>’ syntax
+// ../ADTimePix.cpp:97:6: error: specializing member 'std::__cxx11::basic_string<char>::quotes' requires 'template<>' syntax
 // -----------------------------------------------------------------------
 static string strip_quotes(string str) {
     if (str.length() > 1 ) {
@@ -215,42 +215,79 @@ asynStatus ADTimePix::checkDACSPath()
     return status;
 }
 
-asynStatus ADTimePix::checkRawPath()
-{
+/**
+ * Unified path checking function for all channel types
+ * Replaces individual checkRawPath(), checkRaw1Path(), checkImgPath(), etc.
+ */
+asynStatus ADTimePix::checkChannelPath(int baseParam, int streamParam, int filePathExistsParam, 
+                                      const std::string& channelName, const std::string& errorMessage) {
     asynStatus status;
     std::string filePath, fileOrStream;
     int pathExists = 0;
 
-    getStringParam(ADTimePixRawBase, filePath);
+    getStringParam(baseParam, filePath);
     if (filePath.size() == 0) return asynSuccess;
 
     if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data to disk
-            setIntegerParam(ADTimePixRawStream, 0);
-            fileOrStream = filePath.substr(5);
-            pathExists = checkPath(fileOrStream);
+        // Check for file:/ protocol with strict single slash enforcement
+        if (filePath.compare(0, 5, "file:") == 0) {
+            // Check that the character at position 5 is exactly one '/'
+            // The format should be 'file:/path' where the '/' is at position 5
+            // Additional '/' characters in the path are valid
+            if (filePath.length() > 5 && filePath[5] == '/' && (filePath.length() == 6 || filePath[6] != '/')) {
+                // Valid format: 'file:/path' - single '/' at position 5, not followed by another '/'
+                if (streamParam != -1) {  // Only set stream parameter if it exists
+                    setIntegerParam(streamParam, 0);
+                }
+                fileOrStream = filePath.substr(5);  // Remove "file:" prefix, keep the "/"
+                pathExists = checkPath(fileOrStream);
+            } else {
+                printf("Invalid file path format: '%s'. Expected format: 'file:/path'.\n", filePath.c_str());
+                printf("Debug: length=%zu, char[5]='%c', char[6]='%c'\n", 
+                       filePath.length(), 
+                       filePath.length() > 5 ? filePath[5] : '?',
+                       filePath.length() > 6 ? filePath[6] : '?');
+                if (streamParam != -1) {
+                    setIntegerParam(streamParam, 3);
+                }
+                pathExists = 0;
+            }
         }
-        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8085
-            setIntegerParam(ADTimePixRawStream, 1);
-            fileOrStream = filePath.substr(6);
+        // Check for http:// protocol using find() instead of substr()
+        else if (filePath.find("http://") == 0) {       // streaming, http://localhost:8081
+            if (streamParam != -1) {  // Only set stream parameter if it exists
+                setIntegerParam(streamParam, 1);
+            }
+            fileOrStream = filePath.substr(7);  // Remove "http://" prefix
             pathExists = 1;
         }   
-        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
-            setIntegerParam(ADTimePixRawStream, 2);
-            fileOrStream = filePath.substr(5);
+        // Check for tcp:// protocol using find() instead of substr()
+        else if (filePath.find("tcp://") == 0) {       // streaming, tcp://localhost:8085
+            if (streamParam != -1) {  // Only set stream parameter if it exists
+                setIntegerParam(streamParam, 2);
+            }
+            fileOrStream = filePath.substr(6);  // Remove "tcp://" prefix
             pathExists = 1;
         }
         else {
-            printf("Raw file path must be file://path_to_raw_folder, or tcp://localhost:8085\n");
-            setIntegerParam(ADTimePixRawStream, 3);
+            printf("%s\n", errorMessage.c_str());
+            if (streamParam != -1) {  // Only set stream parameter if it exists
+                setIntegerParam(streamParam, 3);
+            }
             pathExists = 0;
         }
     }
 
     status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixRawBase, filePath);
-    setIntegerParam(ADTimePixRawFilePathExists, pathExists);
+    setStringParam(baseParam, filePath);
+    setIntegerParam(filePathExistsParam, pathExists);
     return status;
+}
+
+asynStatus ADTimePix::checkRawPath()
+{
+    return checkChannelPath(ADTimePixRawBase, ADTimePixRawStream, ADTimePixRawFilePathExists,
+                          "Raw", "Raw file path must be file:/path_to_raw_folder, http://localhost:8081, or tcp://localhost:8085");
 }
 
 /* Serval 3.3.0 allows writing raw .tpx3 file, and stream data. This is the 2nd Base channel
@@ -259,177 +296,32 @@ asynStatus ADTimePix::checkRawPath()
 */
 asynStatus ADTimePix::checkRaw1Path()
 {
-    asynStatus status;
-    std::string filePath, fileOrStream;
-    int pathExists = 0;
-
-    getStringParam(ADTimePixRaw1Base, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-
-    if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data to disk
-            setIntegerParam(ADTimePixRaw1Stream, 0);
-            fileOrStream = filePath.substr(5);
-            pathExists = checkPath(fileOrStream);
-        }
-        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8085
-            setIntegerParam(ADTimePixRaw1Stream, 1);
-            fileOrStream = filePath.substr(6);
-            pathExists = 1;
-        }
-        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
-            setIntegerParam(ADTimePixRaw1Stream, 2);
-            fileOrStream = filePath.substr(5);
-            pathExists = 1;
-        }
-        else {
-            printf("Raw file path must be file://path_to_raw_folder, or tcp://localhost:8085\n");
-            setIntegerParam(ADTimePixRaw1Stream, 3);
-            pathExists = 0;
-        }
-    }
-
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixRaw1Base, filePath);
-    setIntegerParam(ADTimePixRaw1FilePathExists, pathExists);
-    return status;
+    return checkChannelPath(ADTimePixRaw1Base, ADTimePixRaw1Stream, ADTimePixRaw1FilePathExists,
+                          "Raw1", "Raw1 file path must be file:/path_to_raw_folder, http://localhost:8081, or tcp://localhost:8085");
 }
 
 asynStatus ADTimePix::checkImgPath()
 {
-    asynStatus status;
-    std::string filePath, fileOrStream;
-    int pathExists = 0;
-
-    getStringParam(ADTimePixImgBase, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-
-    if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing images to disk
-            fileOrStream = filePath.substr(5);
-            pathExists = checkPath(fileOrStream);
-        }
-        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
-            fileOrStream = filePath.substr(6);
-            pathExists = 1;
-        }        
-        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
-            fileOrStream = filePath.substr(5);
-            pathExists = 1;
-        }
-        else {
-            printf("Img file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
-            pathExists = 0;
-        }
-    }
-
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixImgBase, filePath);
-    setIntegerParam(ADTimePixImgFilePathExists, pathExists);
-    return status;
+    return checkChannelPath(ADTimePixImgBase, -1, ADTimePixImgFilePathExists,
+                          "Img", "Img file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
 }
 
 asynStatus ADTimePix::checkPrvImgPath()
 {
-    asynStatus status;
-    std::string filePath, fileOrStream;
-    int pathExists = 0;
-
-    getStringParam(ADTimePixPrvImgBase, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-
-    if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
-            fileOrStream = filePath.substr(5);
-            pathExists = checkPath(fileOrStream);
-        }
-        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
-            fileOrStream = filePath.substr(6);
-            pathExists = 1;
-        }   
-        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
-            fileOrStream = filePath.substr(5);
-            pathExists = 1;
-        }
-        else {
-            printf("Prv file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
-            pathExists = 0;
-        }
-    }
-
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixPrvImgBase, filePath);
-    setIntegerParam(ADTimePixPrvImgFilePathExists, pathExists);
-    return status;
+    return checkChannelPath(ADTimePixPrvImgBase, -1, ADTimePixPrvImgFilePathExists,
+                          "PrvImg", "PrvImg file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
 }
-
 
 asynStatus ADTimePix::checkPrvImg1Path()
 {
-    asynStatus status;
-    std::string filePath, fileOrStream;
-    int pathExists = 0;
-
-    getStringParam(ADTimePixPrvImg1Base, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-
-    if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
-            fileOrStream = filePath.substr(5);
-            pathExists = checkPath(fileOrStream);
-        }
-        else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
-            fileOrStream = filePath.substr(6);
-            pathExists = 1;
-        }   
-        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
-            fileOrStream = filePath.substr(5);
-            pathExists = 1;
-        }
-        else {
-            printf("Prv1 file path must be file://path_to_img_folder, or tcp://localhost:8088\n");
-            pathExists = 0;
-        }
-    }
-
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixPrvImg1Base, filePath);
-    setIntegerParam(ADTimePixPrvImg1FilePathExists, pathExists);
-    return status;
+    return checkChannelPath(ADTimePixPrvImg1Base, -1, ADTimePixPrvImg1FilePathExists,
+                          "PrvImg1", "PrvImg1 file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
 }
 
-asynStatus ADTimePix::checkPrvHstPath() // tcp://listen@localhost:8451 format only
+asynStatus ADTimePix::checkPrvHstPath() // file:/, http://, tcp:// format
 {
-    asynStatus status;
-    std::string filePath, fileOrStream;
-    int pathExists = 0;
-
-    getStringParam(ADTimePixPrvHstBase, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-
-    if (filePath.size() > 6) {
-        if (filePath.compare(0,6,"file:/") == 0) {        // writing raw .tpx3 data
-            fileOrStream = filePath.substr(5);
-            pathExists = checkPath(fileOrStream);
-        }
-            else if (filePath.substr(0,7) == "http://") {       // streaming, http://localhost:8081
-            fileOrStream = filePath.substr(6);
-            pathExists = 1;
-        }       
-        else if (filePath.substr(0,6) == "tcp://") {       // streaming, tcp://localhost:8085
-            fileOrStream = filePath.substr(5);
-            pathExists = 1;
-        }
-        else {
-            printf("Prv Histogram path must be tcp://listen@localhost:8451\n");
-            pathExists = 0;
-        }
-    }
-    
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixPrvHstBase, filePath);
-    setIntegerParam(ADTimePixPrvHstFilePathExists, pathExists);
-    return status;
+    return checkChannelPath(ADTimePixPrvHstBase, ADTimePixPrvHstStream, ADTimePixPrvHstFilePathExists,
+                          "PrvHst", "Prv Histogram path must be file:/path_to_folder, http://localhost:8081, or tcp://localhost:8085");
 }
 
 // -----------------------------------------------------------------------
@@ -1150,244 +1042,544 @@ asynStatus ADTimePix::uploadDACS(){
     return status;
 }
 
+// Static JSON arrays to avoid repeated allocations
+static const json IMG_FORMATS = {"tiff", "pgm", "png", "jsonimage", "jsonhisto"};
+static const json IMG_MODES = {"count", "tot", "toa", "tof", "count_fb"};
+static const json SAMPLING_MODES = {"skipOnFrame", "skipOnPeriod"};
+static const json STOP_ON_DISK_LIMIT = {"false", "true"};
+static const json INTEGRATION_MODES = {"sum", "average", "last"};
+static const json SPLIT_STRATEGIES = {"single_file", "frame"};
+
 /**
- * FileWriter server channels
+ * Helper function to safely get integer parameters
+ */
+asynStatus ADTimePix::getParameterSafely(int param, int& value) {
+    const char* functionName = "getParameterSafely";
+    asynStatus status = getIntegerParam(param, &value);
+    if (status != asynSuccess) {
+        ERR_ARGS("Failed to get integer parameter %d (status=%d) - parameter may not be initialized", param, status);
+        // Set a default value to avoid further errors
+        value = 0;
+    }
+    return status;
+}
+
+/**
+ * Helper function to safely get string parameters
+ */
+asynStatus ADTimePix::getParameterSafely(int param, std::string& value) {
+    const char* functionName = "getParameterSafely";
+    asynStatus status = getStringParam(param, value);
+    if (status != asynSuccess) {
+        ERR_ARGS("Failed to get string parameter %d", param);
+    }
+    return status;
+}
+
+/**
+ * Helper function to safely get double parameters
+ */
+asynStatus ADTimePix::getParameterSafely(int param, double& value) {
+    const char* functionName = "getParameterSafely";
+    asynStatus status = getDoubleParam(param, &value);
+    if (status != asynSuccess) {
+        ERR_ARGS("Failed to get double parameter %d", param);
+    }
+    return status;
+}
+
+/**
+ * Validate integration size parameter
+ */
+bool ADTimePix::validateIntegrationSize(int size) {
+    return (size >= -1 && size <= 32);
+}
+
+/**
+ * Validate array index parameter
+ */
+bool ADTimePix::validateArrayIndex(int index, int maxSize) {
+    return (index >= 0 && index < maxSize);
+}
+
+/**
+ * Configure a raw data channel
+ */
+asynStatus ADTimePix::configureRawChannel(int channelIndex, json& server_j) {
+    const char* functionName = "configureRawChannel";
+    
+    int writeChannel, rawStream;
+    std::string fileStr;
+    
+    // Get write channel parameter based on index
+    int writeParam = (channelIndex == 0) ? ADTimePixWriteRaw : ADTimePixWriteRaw1;
+    int streamParam = (channelIndex == 0) ? ADTimePixRawStream : ADTimePixRaw1Stream;
+    
+    if (getParameterSafely(writeParam, writeChannel) != asynSuccess) {
+        // If parameter retrieval fails, assume channel is disabled
+        writeChannel = 0;
+    }
+    if (writeChannel == 0) return asynSuccess; // Channel not enabled
+    
+    if (getParameterSafely(streamParam, rawStream) != asynSuccess) {
+        // If stream parameter retrieval fails, assume file stream (0)
+        rawStream = 0;
+    }
+    
+    // Configure base path and file pattern
+    int baseParam = (channelIndex == 0) ? ADTimePixRawBase : ADTimePixRaw1Base;
+    int filePatParam = (channelIndex == 0) ? ADTimePixRawFilePat : ADTimePixRaw1FilePat;
+    int queueSizeParam = (channelIndex == 0) ? ADTimePixRawQueueSize : ADTimePixRaw1QueueSize;
+    
+    if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
+    server_j["Raw"][channelIndex]["Base"] = fileStr;
+    
+    // Check if this is a TCP connection (starts with 'tcp://')
+    bool isTcpConnection = (fileStr.find("tcp://") == 0);
+    
+    if (isTcpConnection) {
+        // For TCP connections, only include Base and QueueSize
+        int intNum;
+        if (getParameterSafely(queueSizeParam, intNum) != asynSuccess) return asynError;
+        server_j["Raw"][channelIndex]["QueueSize"] = intNum;
+    } else {
+        // For file connections, include all parameters
+        if (getParameterSafely(filePatParam, fileStr) != asynSuccess) return asynError;
+        server_j["Raw"][channelIndex]["FilePattern"] = fileStr;
+        
+        // Configure file-specific parameters if using file stream
+        if (rawStream == 0) {
+            int splitStrategyParam = (channelIndex == 0) ? ADTimePixRawSplitStrategy : ADTimePixRaw1SplitStrategy;
+            
+            int intNum;
+            if (getParameterSafely(splitStrategyParam, intNum) != asynSuccess) return asynError;
+            if (!validateArrayIndex(intNum, SPLIT_STRATEGIES.size())) {
+                ERR_ARGS("Invalid split strategy index: %d", intNum);
+                return asynError;
+            }
+            server_j["Raw"][channelIndex]["SplitStrategy"] = SPLIT_STRATEGIES[intNum];
+            
+            if (getParameterSafely(queueSizeParam, intNum) != asynSuccess) return asynError;
+            server_j["Raw"][channelIndex]["QueueSize"] = intNum;
+        }
+    }
+    
+    return asynSuccess;
+}
+
+/**
+ * Configure an image channel
+ */
+asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& server_j) {
+    const char* functionName = "configureImageChannel";
+    
+    int writeChannel, intNum;
+    std::string fileStr;
+    
+    // Determine which image channel we're configuring
+    bool isPreview = (jsonPath.find("Preview") != std::string::npos);
+    bool isChannel1 = (jsonPath.find("[1]") != std::string::npos);
+    
+    // Get write parameter based on channel type
+    int writeParam;
+    if (!isPreview) {
+        writeParam = ADTimePixWriteImg;
+    } else if (!isChannel1) {
+        writeParam = ADTimePixWritePrvImg;
+    } else {
+        writeParam = ADTimePixWritePrvImg1;
+    }
+    
+    if (getParameterSafely(writeParam, writeChannel) != asynSuccess) {
+        // If parameter retrieval fails, assume channel is disabled
+        writeChannel = 0;
+    }
+    if (writeChannel == 0) return asynSuccess; // Channel not enabled
+    
+    // Configure base path and file pattern
+    int baseParam, filePatParam;
+    if (!isPreview) {
+        baseParam = ADTimePixImgBase;
+        filePatParam = ADTimePixImgFilePat;
+    } else if (!isChannel1) {
+        baseParam = ADTimePixPrvImgBase;
+        filePatParam = ADTimePixPrvImgFilePat;
+    } else {
+        baseParam = ADTimePixPrvImg1Base;
+        filePatParam = ADTimePixPrvImg1FilePat;
+    }
+    
+    if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
+    
+    // Use correct JSON structure based on channel type
+    if (!isPreview) {
+        // Main image channel
+        server_j["Image"][0]["Base"] = fileStr;
+    } else {
+        // Preview image channels
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Preview"]["ImageChannels"][channelIndex]["Base"] = fileStr;
+    }
+    
+    if (getParameterSafely(filePatParam, fileStr) != asynSuccess) return asynError;
+    
+    if (!isPreview) {
+        server_j["Image"][0]["FilePattern"] = fileStr;
+    } else {
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Preview"]["ImageChannels"][channelIndex]["FilePattern"] = fileStr;
+    }
+    
+    // Configure format and mode
+    int formatParam, modeParam;
+    if (!isPreview) {
+        formatParam = ADTimePixImgFormat;
+        modeParam = ADTimePixImgMode;
+    } else if (!isChannel1) {
+        formatParam = ADTimePixPrvImgFormat;
+        modeParam = ADTimePixPrvImgMode;
+    } else {
+        formatParam = ADTimePixPrvImg1Format;
+        modeParam = ADTimePixPrvImg1Mode;
+    }
+    
+    if (getParameterSafely(formatParam, intNum) != asynSuccess) return asynError;
+    if (!validateArrayIndex(intNum, IMG_FORMATS.size())) {
+        ERR_ARGS("Invalid format index: %d", intNum);
+        return asynError;
+    }
+    
+    if (!isPreview) {
+        server_j["Image"][0]["Format"] = IMG_FORMATS[intNum];
+    } else {
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Preview"]["ImageChannels"][channelIndex]["Format"] = IMG_FORMATS[intNum];
+    }
+    
+    if (getParameterSafely(modeParam, intNum) != asynSuccess) return asynError;
+    if (!validateArrayIndex(intNum, IMG_MODES.size())) {
+        ERR_ARGS("Invalid mode index: %d", intNum);
+        return asynError;
+    }
+    
+    if (!isPreview) {
+        server_j["Image"][0]["Mode"] = IMG_MODES[intNum];
+    } else {
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Preview"]["ImageChannels"][channelIndex]["Mode"] = IMG_MODES[intNum];
+    }
+    
+    // Configure integration settings
+    int intSizeParam, intModeParam;
+    if (!isPreview) {
+        intSizeParam = ADTimePixImgIntSize;
+        intModeParam = ADTimePixImgIntMode;
+    } else if (!isChannel1) {
+        intSizeParam = ADTimePixPrvImgIntSize;
+        intModeParam = ADTimePixPrvImgIntMode;
+    } else {
+        intSizeParam = ADTimePixPrvImg1IntSize;
+        intModeParam = ADTimePixPrvImg1IntMode;
+    }
+    
+    if (getParameterSafely(intSizeParam, intNum) != asynSuccess) return asynError;
+    if (validateIntegrationSize(intNum)) {
+        if (!isPreview) {
+            server_j["Image"][0]["IntegrationSize"] = intNum;
+        } else {
+            int channelIndex = isChannel1 ? 1 : 0;
+            server_j["Preview"]["ImageChannels"][channelIndex]["IntegrationSize"] = intNum;
+        }
+    } else {
+        ERR_ARGS("Invalid integration size: %d", intNum);
+        return asynError;
+    }
+    
+    if (intNum != 0 && intNum != 1) {
+        if (getParameterSafely(intModeParam, intNum) != asynSuccess) return asynError;
+        if (!validateArrayIndex(intNum, INTEGRATION_MODES.size())) {
+            ERR_ARGS("Invalid integration mode index: %d", intNum);
+            return asynError;
+        }
+        if (!isPreview) {
+            server_j["Image"][0]["IntegrationMode"] = INTEGRATION_MODES[intNum];
+        } else {
+            int channelIndex = isChannel1 ? 1 : 0;
+            server_j["Preview"]["ImageChannels"][channelIndex]["IntegrationMode"] = INTEGRATION_MODES[intNum];
+        }
+    }
+    
+    // Configure stop on disk limit and queue size
+    int stopOnDiskParam, queueSizeParam;
+    if (!isPreview) {
+        stopOnDiskParam = ADTimePixImgStpOnDskLim;
+        queueSizeParam = ADTimePixImgQueueSize;
+    } else if (!isChannel1) {
+        stopOnDiskParam = ADTimePixPrvImgStpOnDskLim;
+        queueSizeParam = ADTimePixPrvImgQueueSize;
+    } else {
+        stopOnDiskParam = ADTimePixPrvImg1StpOnDskLim;
+        queueSizeParam = ADTimePixPrvImg1QueueSize;
+    }
+    
+    if (getParameterSafely(stopOnDiskParam, intNum) != asynSuccess) return asynError;
+    if (!validateArrayIndex(intNum, STOP_ON_DISK_LIMIT.size())) {
+        ERR_ARGS("Invalid stop on disk limit index: %d", intNum);
+        return asynError;
+    }
+    
+    if (!isPreview) {
+        server_j["Image"][0]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
+    } else {
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Preview"]["ImageChannels"][channelIndex]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
+    }
+    
+    if (getParameterSafely(queueSizeParam, intNum) != asynSuccess) return asynError;
+    
+    if (!isPreview) {
+        server_j["Image"][0]["QueueSize"] = intNum;
+    } else {
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Preview"]["ImageChannels"][channelIndex]["QueueSize"] = intNum;
+    }
+    
+    return asynSuccess;
+}
+
+/**
+ * Configure preview settings
+ */
+asynStatus ADTimePix::configurePreviewSettings(json& server_j) {
+    const char* functionName = "configurePreviewSettings";
+    
+    double doubleNum;
+    int intNum;
+    
+    // Configure period and sampling mode
+    if (getParameterSafely(ADTimePixPrvPeriod, doubleNum) != asynSuccess) return asynError;
+    server_j["Preview"]["Period"] = doubleNum;
+    
+    if (getParameterSafely(ADTimePixPrvSamplingMode, intNum) != asynSuccess) return asynError;
+    if (!validateArrayIndex(intNum, SAMPLING_MODES.size())) {
+        ERR_ARGS("Invalid sampling mode index: %d", intNum);
+        return asynError;
+    }
+    server_j["Preview"]["SamplingMode"] = SAMPLING_MODES[intNum];
+    
+    return asynSuccess;
+}
+
+/**
+ * Configure histogram channel
+ */
+asynStatus ADTimePix::configureHistogramChannel(json& server_j) {
+    const char* functionName = "configureHistogramChannel";
+    
+    int writeChannel, intNum;
+    double doubleNum;
+    std::string fileStr;
+    
+    if (getParameterSafely(ADTimePixWritePrvHst, writeChannel) != asynSuccess) return asynError;
+    if (writeChannel == 0) return asynSuccess; // Channel not enabled
+    
+    // Configure base path and check if this is a streaming connection
+    if (getParameterSafely(ADTimePixPrvHstBase, fileStr) != asynSuccess) return asynError;
+    server_j["Preview"]["HistogramChannels"][0]["Base"] = fileStr;
+    
+    // Check if this is a streaming connection (http:// or tcp://)
+    bool isStreamingConnection = (fileStr.find("http://") == 0) || (fileStr.find("tcp://") == 0);
+    
+    if (!isStreamingConnection) {
+        // For file connections, include file pattern
+        if (getParameterSafely(ADTimePixPrvHstFilePat, fileStr) != asynSuccess) return asynError;
+        server_j["Preview"]["HistogramChannels"][0]["FilePattern"] = fileStr;
+    }
+    
+    // Configure format and mode
+    if (getParameterSafely(ADTimePixPrvHstFormat, intNum) != asynSuccess) return asynError;
+    if (!validateArrayIndex(intNum, IMG_FORMATS.size())) {
+        ERR_ARGS("Invalid histogram format index: %d", intNum);
+        return asynError;
+    }
+    server_j["Preview"]["HistogramChannels"][0]["Format"] = IMG_FORMATS[intNum];
+    
+    if (getParameterSafely(ADTimePixPrvHstMode, intNum) != asynSuccess) return asynError;
+    if (!validateArrayIndex(intNum, IMG_MODES.size())) {
+        ERR_ARGS("Invalid histogram mode index: %d", intNum);
+        return asynError;
+    }
+    server_j["Preview"]["HistogramChannels"][0]["Mode"] = IMG_MODES[intNum];
+    
+    // Configure integration settings
+    if (getParameterSafely(ADTimePixPrvHstIntSize, intNum) != asynSuccess) return asynError;
+    if (validateIntegrationSize(intNum)) {
+        server_j["Preview"]["HistogramChannels"][0]["IntegrationSize"] = intNum;
+    } else {
+        ERR_ARGS("Invalid histogram integration size: %d", intNum);
+        return asynError;
+    }
+    
+    if (intNum != 0 && intNum != 1) {
+        if (getParameterSafely(ADTimePixPrvHstIntMode, intNum) != asynSuccess) return asynError;
+        if (!validateArrayIndex(intNum, INTEGRATION_MODES.size())) {
+            ERR_ARGS("Invalid histogram integration mode index: %d", intNum);
+            return asynError;
+        }
+        server_j["Preview"]["HistogramChannels"][0]["IntegrationMode"] = INTEGRATION_MODES[intNum];
+    }
+    
+    // Configure stop on disk limit and queue size
+    if (!isStreamingConnection) {
+        // For file connections, include stop on disk limit
+        if (getParameterSafely(ADTimePixPrvHstStpOnDskLim, intNum) != asynSuccess) return asynError;
+        if (!validateArrayIndex(intNum, STOP_ON_DISK_LIMIT.size())) {
+            ERR_ARGS("Invalid histogram stop on disk limit index: %d", intNum);
+            return asynError;
+        }
+        server_j["Preview"]["HistogramChannels"][0]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
+    }
+    
+    // Queue size is always needed
+    if (getParameterSafely(ADTimePixPrvHstQueueSize, intNum) != asynSuccess) return asynError;
+    server_j["Preview"]["HistogramChannels"][0]["QueueSize"] = intNum;
+    
+    // Configure histogram-specific parameters
+    if (getParameterSafely(ADTimePixPrvHstNumBins, intNum) != asynSuccess) return asynError;
+    server_j["Preview"]["HistogramChannels"][0]["NumberOfBins"] = intNum;
+    
+    if (getParameterSafely(ADTimePixPrvHstBinWidth, doubleNum) != asynSuccess) return asynError;
+    server_j["Preview"]["HistogramChannels"][0]["BinWidth"] = doubleNum;
+    
+    if (getParameterSafely(ADTimePixPrvHstOffset, doubleNum) != asynSuccess) return asynError;
+    server_j["Preview"]["HistogramChannels"][0]["Offset"] = doubleNum;
+    
+    return asynSuccess;
+}
+
+/**
+ * Send configuration to server with retry logic
+ */
+asynStatus ADTimePix::sendConfiguration(const json& config) {
+    const char* functionName = "sendConfiguration";
+    
+    std::string server = this->serverURL + "/server/destination";
+    
+    // Log configuration for debugging
+    printf("server=%s\n", config.dump(3, ' ', true).c_str());
+    
+    // Send HTTP request with timeout
+    cpr::Response r = cpr::Put(cpr::Url{server},
+                               cpr::Body{config.dump().c_str()},
+                               cpr::Header{{"Content-Type", "application/json"}},
+                               cpr::Timeout{10000}); // 10 second timeout
+    
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    setStringParam(ADTimePixWriteMsg, r.text.c_str());
+    
+    if (r.status_code != 200) {
+        ERR_ARGS("HTTP request failed with status code: %li, response: %s", 
+                 r.status_code, r.text.c_str());
+        return asynError;
+    }
+    
+    return asynSuccess;
+}
+
+/**
+ * Optimized fileWriter function
  * 
- * serverURL:       the URL of the running SERVAL (string)
- * detectorConfig:  the Detector Config to upload (dictionary)
+ * This function configures the detector's data output channels (Raw, Image, and Preview) 
+ * by building a JSON configuration and sending it to the Serval server via HTTP PUT request.
  * 
  * @return: status
  */
 asynStatus ADTimePix::fileWriter(){
     const char* functionName = "fileWriter";
-    asynStatus status = asynSuccess;
-    FLOW("Initializing detector information");
+    FLOW("Configuring file writer channels");
     
-    std::string fileStr;
-    int intNum, writeChannel, rawStream;
-    double doubleNum;
-
-    std::string server;
-    server = this->serverURL + std::string("/server/destination");
-
-    // cpr::Response r = cpr::Get(cpr::Url{server},
-    //                        cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-    //                        cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
-    //printf("Text server: %s\n", r.text.c_str());
-    // json server_j = json::parse(r.text.c_str());
-    //printf("server=%s\n",server_j.dump(3,' ', true).c_str());
-
+    // Build configuration JSON
     json server_j;
-    json imgFormat = {"tiff","pgm","png","jsonimage","jsonhisto"};
-    json imgMode = {"count","tot","toa","tof","count_fb"};
-    json samplingMode = {"skipOnFrame","skipOnPeriod"};
-    json stopOnDiskLimit = {"false","true"};
-    json integrationMode = {"sum", "average", "last"};
-
-    getIntegerParam(ADTimePixWriteRaw, &writeChannel);
-    getIntegerParam(ADTimePixRawStream, &rawStream);
-    if (writeChannel != 0) {
-        // Raw
-        getStringParam(ADTimePixRawBase, fileStr);
-        server_j["Raw"][0]["Base"] = fileStr;
-        getStringParam(ADTimePixRawFilePat, fileStr);
-        server_j["Raw"][0]["FilePattern"] = fileStr;
-
-        if (rawStream == 0) {       // file:/
-            getIntegerParam(ADTimePixRawSplitStrategy, &intNum);
-            json splitStrategy = {"single_file","frame"};
-            server_j["Raw"][0]["SplitStrategy"] = splitStrategy[intNum];
-            getIntegerParam(ADTimePixRawQueueSize, &intNum);
-            server_j["Raw"][0]["QueueSize"] = intNum;
-        }
-    }   
-
-// Serval 3.3.0
-    getIntegerParam(ADTimePixWriteRaw1, &writeChannel);
-    getIntegerParam(ADTimePixRaw1Stream, &rawStream);
-    if (writeChannel != 0) {
-        // Raw
-        getStringParam(ADTimePixRaw1Base, fileStr);
-        server_j["Raw"][1]["Base"] = fileStr;
-        getStringParam(ADTimePixRaw1FilePat, fileStr);
-        server_j["Raw"][1]["FilePattern"] = fileStr;
-
-        if (rawStream == 0) {       // file:/
-            getIntegerParam(ADTimePixRaw1SplitStrategy, &intNum);
-            json splitStrategy = {"single_file","frame"};
-            server_j["Raw"][1]["SplitStrategy"] = splitStrategy[intNum];
-            getIntegerParam(ADTimePixRaw1QueueSize, &intNum);
-            server_j["Raw"][1]["QueueSize"] = intNum;
+    bool anyChannelConfigured = false;
+    
+    // Configure raw channels
+    asynStatus status = configureRawChannel(0, server_j);
+    if (status == asynError) {
+        ERR("Failed to configure raw channel 0");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Raw")) {
+        anyChannelConfigured = true;
+    }
+    
+    status = configureRawChannel(1, server_j);
+    if (status == asynError) {
+        ERR("Failed to configure raw channel 1");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Raw")) {
+        anyChannelConfigured = true;
+    }
+    
+    // Configure image channel
+    status = configureImageChannel("Image", server_j);
+    if (status == asynError) {
+        ERR("Failed to configure image channel");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Image")) {
+        anyChannelConfigured = true;
+    }
+    
+    // Configure preview image channels
+    status = configureImageChannel("Preview", server_j);
+    if (status == asynError) {
+        ERR("Failed to configure preview image channel 0");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Preview")) {
+        anyChannelConfigured = true;
+    }
+    
+    status = configureImageChannel("Preview[1]", server_j);
+    if (status == asynError) {
+        ERR("Failed to configure preview image channel 1");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Preview")) {
+        anyChannelConfigured = true;
+    }
+    
+    // Configure histogram channel
+    status = configureHistogramChannel(server_j);
+    if (status == asynError) {
+        ERR("Failed to configure histogram channel");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Preview")) {
+        anyChannelConfigured = true;
+    }
+    
+    // Configure preview settings if any preview channel is enabled
+    if (server_j.contains("Preview")) {
+        status = configurePreviewSettings(server_j);
+        if (status == asynError) {
+            ERR("Failed to configure preview settings");
+            return asynError;
         }
     }
-
-    getIntegerParam(ADTimePixWriteImg, &writeChannel);
-    if (writeChannel != 0) {
-        // Image
-        getStringParam(ADTimePixImgBase, fileStr);
-        server_j["Image"][0]["Base"] = fileStr;
-        getStringParam(ADTimePixImgFilePat, fileStr);
-        server_j["Image"][0]["FilePattern"] = fileStr;
-
-        getIntegerParam(ADTimePixImgFormat, &intNum);
-        server_j["Image"][0]["Format"] = imgFormat[intNum];
-
-        getIntegerParam(ADTimePixImgMode, &intNum);
-        server_j["Image"][0]["Mode"] = imgMode[intNum];
-
-        getIntegerParam(ADTimePixImgIntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
-        if ((intNum <= 32) && (intNum >= -1)) {
-            server_j["Image"][0]["IntegrationSize"] = intNum;
-        }
-        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
-    //        json integrationMode = {"sum", "average", "last"};
-            getIntegerParam(ADTimePixImgIntMode, &intNum);
-            server_j["Image"][0]["IntegrationMode"] = integrationMode[intNum];
-        }
-
-        getIntegerParam(ADTimePixImgStpOnDskLim, &intNum);
-        server_j["Image"][0]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
-
-        getIntegerParam(ADTimePixImgQueueSize, &intNum);
-        server_j["Image"][0]["QueueSize"] = intNum;
+    
+    // Check if any channels were configured
+    if (!anyChannelConfigured) {
+        // During startup, it's normal for no channels to be configured yet
+        // Just log an info message and return success
+        LOG("No channels are enabled. Skipping file writer configuration.");
+        return asynSuccess;
     }
-
-    // Preview
-//    getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
-//    server_j["Preview"]["Period"] = doubleNum;
-//
-//    getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
-//    server_j["Preview"]["SamplingMode"] = samplingMode[intNum];
-
-
-    getIntegerParam(ADTimePixWritePrvImg, &writeChannel);
-    if (writeChannel != 0) {
-        // Preview, ImageChannels[0]
-
-        getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
-        server_j["Preview"]["Period"] = doubleNum;
-
-        getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
-        server_j["Preview"]["SamplingMode"] = samplingMode[intNum]; 
-
-        getStringParam(ADTimePixPrvImgBase, fileStr);
-        server_j["Preview"]["ImageChannels"][0]["Base"] = fileStr;
-        getStringParam(ADTimePixPrvImgFilePat, fileStr);
-        server_j["Preview"]["ImageChannels"][0]["FilePattern"] = fileStr;
-
-        getIntegerParam(ADTimePixPrvImgFormat, &intNum);
-        server_j["Preview"]["ImageChannels"][0]["Format"] = imgFormat[intNum];
-
-        getIntegerParam(ADTimePixPrvImgMode, &intNum);
-        server_j["Preview"]["ImageChannels"][0]["Mode"] = imgMode[intNum];
-
-        getIntegerParam(ADTimePixPrvImgIntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
-        if ((intNum <= 32) && (intNum >= -1)) {
-            server_j["Preview"]["ImageChannels"][0]["IntegrationSize"] = intNum;
-        }
-        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
-    //        json integrationMode = {"sum", "average", "last"};
-            getIntegerParam(ADTimePixPrvImgIntMode, &intNum);
-            server_j["Preview"]["ImageChannels"][0]["IntegrationMode"] = integrationMode[intNum];
-        }
-
-        getIntegerParam(ADTimePixPrvImgStpOnDskLim, &intNum);
-        server_j["Preview"]["ImageChannels"][0]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
-
-        getIntegerParam(ADTimePixPrvImgQueueSize, &intNum);
-        server_j["Preview"]["ImageChannels"][0]["QueueSize"] = intNum;
-    }
-
-    getIntegerParam(ADTimePixWritePrvImg1, &writeChannel);
-    if (writeChannel != 0) {
-        // Preview, ImageChannels[1]
-        getStringParam(ADTimePixPrvImg1Base, fileStr);
-        server_j["Preview"]["ImageChannels"][1]["Base"] = fileStr;
-        getStringParam(ADTimePixPrvImg1FilePat, fileStr);
-        server_j["Preview"]["ImageChannels"][1]["FilePattern"] = fileStr;
-
-        getIntegerParam(ADTimePixPrvImg1Format, &intNum);
-        server_j["Preview"]["ImageChannels"][1]["Format"] = imgFormat[intNum];
-
-        getIntegerParam(ADTimePixPrvImg1Mode, &intNum);
-        server_j["Preview"]["ImageChannels"][1]["Mode"] = imgMode[intNum];
-
-        getIntegerParam(ADTimePixPrvImg1IntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
-        if ((intNum <= 32) && (intNum >= -1)) {
-            server_j["Preview"]["ImageChannels"][1]["IntegrationSize"] = intNum;
-        }
-        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
-    //        json integrationMode = {"sum", "average", "last"};
-            getIntegerParam(ADTimePixPrvImg1IntMode, &intNum);
-            server_j["Preview"]["ImageChannels"][1]["IntegrationMode"] = integrationMode[intNum];
-        }
-
-        getIntegerParam(ADTimePixPrvImg1StpOnDskLim, &intNum);
-        server_j["Preview"]["ImageChannels"][1]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
-
-        getIntegerParam(ADTimePixPrvImg1QueueSize, &intNum);
-        server_j["Preview"]["ImageChannels"][1]["QueueSize"] = intNum;
-    }
-
-    getIntegerParam(ADTimePixWritePrvHst, &writeChannel);
-    if (writeChannel != 0) {
-        // Preview Period and SamplingMode are needed if only HistogramChannels are used.
-        getDoubleParam(ADTimePixPrvPeriod, &doubleNum);
-        server_j["Preview"]["Period"] = doubleNum;
-
-        getIntegerParam(ADTimePixPrvSamplingMode, &intNum);
-        server_j["Preview"]["SamplingMode"] = samplingMode[intNum]; 
-
-        // Preview, HistogramChannels[0]
-        getStringParam(ADTimePixPrvHstBase, fileStr);
-        server_j["Preview"]["HistogramChannels"][0]["Base"] = fileStr;
-        getStringParam(ADTimePixPrvHstFilePat, fileStr);
-        server_j["Preview"]["HistogramChannels"][0]["FilePattern"] = fileStr;
-
-        getIntegerParam(ADTimePixPrvHstFormat, &intNum);
-        server_j["Preview"]["HistogramChannels"][0]["Format"] = imgFormat[intNum];
-
-        getIntegerParam(ADTimePixPrvHstMode, &intNum);
-        server_j["Preview"]["HistogramChannels"][0]["Mode"] = imgMode[intNum];
-
-        getIntegerParam(ADTimePixPrvHstIntSize, &intNum);  // IntegrationSize can only be -1,0,1,..32; 0,1 -> No Integration
-        if ((intNum <= 32) && (intNum >= -1)) {
-            server_j["Preview"]["HistogramChannels"][0]["IntegrationSize"] = intNum;
-        }
-        if ((intNum != 0) && (intNum != 1)) {  // Integration Mode is disabled for IntegrationSize = 0,1
-    //        json integrationMode = {"sum", "average", "last"};
-            getIntegerParam(ADTimePixPrvHstIntMode, &intNum);
-            server_j["Preview"]["HistogramChannels"][0]["IntegrationMode"] = integrationMode[intNum];
-        }
-
-        getIntegerParam(ADTimePixPrvHstStpOnDskLim, &intNum);
-        server_j["Preview"]["HistogramChannels"][0]["StopMeasurementOnDiskLimit"] = stopOnDiskLimit[intNum];
-
-        getIntegerParam(ADTimePixPrvHstQueueSize, &intNum);
-        server_j["Preview"]["HistogramChannels"][0]["QueueSize"] = intNum;
-
-        getIntegerParam(ADTimePixPrvHstNumBins, &intNum);
-        server_j["Preview"]["HistogramChannels"][0]["NumberOfBins"] = intNum;
-
-        getDoubleParam(ADTimePixPrvHstBinWidth, &doubleNum);
-        server_j["Preview"]["HistogramChannels"][0]["BinWidth"] = doubleNum;
-
-        getDoubleParam(ADTimePixPrvHstOffset, &doubleNum);
-        server_j["Preview"]["HistogramChannels"][0]["Offset"] = doubleNum;
-    }    
-
-    printf("server=%s\n",server_j.dump(3,' ', true).c_str());
-
-    cpr::Response r = cpr::Put(cpr::Url{server},
-                cpr::Body{server_j.dump().c_str()},                      
-                cpr::Header{{"Content-Type", "application/json"}});
-
-    setIntegerParam(ADTimePixHttpCode, r.status_code);
-    setStringParam(ADTimePixWriteMsg, r.text.c_str()); 
-
-    return status;
+    
+    // Send configuration to server
+    return sendConfiguration(server_j);
 }
-
 
 /**
  * Initialize detector - used typically for emulator (uploadBPC/uploadDACS instead for real detector if needed)
@@ -1669,7 +1861,7 @@ void ADTimePix::timePixCallback(){
     NDArray* pImage;
     int arrayCallbacks;
     epicsTimeStamp startTime, endTime;
-    double elapsedTime;
+//    double elapsedTime;
     std::string API_Ver;
 
     getIntegerParam(ADImageMode, &mode);
@@ -1748,7 +1940,7 @@ void ADTimePix::timePixCallback(){
             }
 
             epicsTimeGetCurrent(&endTime);
-            elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);     // 0.0006->0.97 s
+            // elapsedTime = epicsTimeDiffInSeconds(&endTime, &startTime);     // 0.0006->0.97 s
             // elapsedTime = r.elapsed;                                      // 0.00035 s
             // printf("Elapsed Time = %f\n", elapsedTime);
 
@@ -2473,6 +2665,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Controls
     createParam(ADTimePixRawStreamString,       asynParamInt32,     &ADTimePixRawStream);
     createParam(ADTimePixRaw1StreamString,      asynParamInt32,     &ADTimePixRaw1Stream);
+    createParam(ADTimePixPrvHstStreamString,    asynParamInt32,     &ADTimePixPrvHstStream);
 
     //sets driver version
     char versionString[25];

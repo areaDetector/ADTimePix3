@@ -5,16 +5,16 @@ The repository was transferred a while back to areaDetector organization.
 
 * see https://github.com/areaDetector/ADTimePix3
 
-There are currently only pre-releases for ADTimePix3
 Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
-The master branch (under development) is for Serval 3.3.0
+The master branch (under development) is tested with Serval 4.1.1 and 3.3.2
 
-Driver depends on Serval versions, at this time. The current releases support Serval 3.0.0-3.3.2
+Driver depends on Serval versions, at this time. The current releases support Serval 4.1.1 and 3.0.0-3.3.2
 
 R1-3 (xxx, 2025)
 --------
 
+* The `fileWriter()` function in the ADTimePix3 driver has been successfully optimized to improve maintainability, performance, and reliability. The original 200+ line monolithic function has been refactored into a modular, well-structured implementation.
 * Serval 4.x.x: Rotations/mirror operation strict checking, and requires 'reset=true', DOWN->half instead of 180.
 * TDC1/TDC2 reporting for serval 4, and Serval 3.
 * The Serval 4.x.y requires {"Content-Type", "application/json"}, instead of "text/plain", as "Content-Type" when using cpr library.

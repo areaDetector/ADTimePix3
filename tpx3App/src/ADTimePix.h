@@ -253,6 +253,7 @@ using json = nlohmann::json;
 // Control
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
+#define ADTimePixPrvHstStreamString           "TPX3_PRV_HST_STREAM"    // (asynInt32,         w)      file:/, http://, tcp://
 
 // Place any required includes here
 
@@ -541,8 +542,9 @@ class ADTimePix : public ADDriver{
             // Controls
         int ADTimePixRawStream;
         int ADTimePixRaw1Stream;
+        int ADTimePixPrvHstStream;
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixRaw1Stream
+        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvHstStream
 
     private:
 
@@ -599,6 +601,8 @@ class ADTimePix : public ADDriver{
         asynStatus checkPrvImgPath();
         asynStatus checkPrvImg1Path();
         asynStatus checkPrvHstPath();
+        asynStatus checkChannelPath(int baseParam, int streamParam, int filePathExistsParam, 
+                                   const std::string& channelName, const std::string& errorMessage);
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
@@ -606,6 +610,19 @@ class ADTimePix : public ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
+        
+        // Helper functions for fileWriter optimization
+        asynStatus getParameterSafely(int param, int& value);
+        asynStatus getParameterSafely(int param, std::string& value);
+        asynStatus getParameterSafely(int param, double& value);
+        bool validateIntegrationSize(int size);
+        bool validateArrayIndex(int index, int maxSize);
+        asynStatus configureRawChannel(int channelIndex, json& server_j);
+        asynStatus configureImageChannel(const std::string& jsonPath, json& server_j);
+        asynStatus configurePreviewSettings(json& server_j);
+        asynStatus configureHistogramChannel(json& server_j);
+        asynStatus sendConfiguration(const json& config);
+        
         int checkFile(std::string &fullFileName);
         asynStatus rowsCols(int *rows, int *cols, int *xChips, int *yChips, int *chipPelWidth);
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
