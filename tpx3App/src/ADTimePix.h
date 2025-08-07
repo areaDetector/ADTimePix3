@@ -19,9 +19,11 @@
 #define ADTIMEPIX_REVISION     3
 #define ADTIMEPIX_MODIFICATION 0
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
 
+#include "ADDriver.h"
+#include "cpr/cpr.h"
+#include <Magick++.h>
+#include <json.hpp>
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -255,13 +257,9 @@ using json = nlohmann::json;
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
 #define ADTimePixPrvHstStreamString           "TPX3_PRV_HST_STREAM"    // (asynInt32,         w)      file:/, http://, tcp://
 
-// Place any required includes here
 
-#include "ADDriver.h"
-#include "cpr/cpr.h"
-#include "nlohmann/json.hpp"
-#include <Magick++.h>
 using namespace Magick;
+using json = nlohmann::json;
 
 
 

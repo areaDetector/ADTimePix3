@@ -8,8 +8,6 @@ dbd/
 include/
 .vscode/
 TemplateReadme.md
-cpr
-json/
 autosave/
 envPaths
 mask.bpc

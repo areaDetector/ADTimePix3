@@ -5,14 +5,20 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-SRC_DIRS += ../cprSrc
-#SRC_DIRS += ../cprSrc/cpr/build/cpr_generated_includes
-SRC_DIRS += ../cprSrc/cpr/include
-SRC_DIRS += ../jsonSrc/json/include
+SRC_DIRS += ../json
 
+INC += json.hpp
+INC += json_fwd.hpp
 
-# C++ request:  Curl for people
-INC += cpr/cprver.h
+SRC_DIRS += ../cpr
+
+ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
+USR_CPPFLAGS += -D__X64
+endif
+
+USR_CPPFLAGS += -std=c++11
+
+LIBRARY_IOC = cpr
 
 INC += cpr/accept_encoding.h
 INC += cpr/api.h
@@ -27,6 +33,7 @@ INC += cpr/connect_timeout.h
 INC += cpr/cookies.h
 INC += cpr/cpr.h
 INC += cpr/cprtypes.h
+INC += cpr/cprver.h
 INC += cpr/curl_container.h
 INC += cpr/curlholder.h
 INC += cpr/error.h
@@ -58,72 +65,36 @@ INC += cpr/unix_socket.h
 INC += cpr/user_agent.h
 INC += cpr/util.h
 INC += cpr/verbose.h
-# C++ request end
 
-# json parser
-INC += nlohmann/adl_serializer.hpp
-INC += nlohmann/byte_container_with_subtype.hpp
-INC += nlohmann/json_fwd.hpp
-INC += nlohmann/json.hpp
-INC += nlohmann/ordered_map.hpp
+LIB_SRCS += accept_encoding.cpp
+LIB_SRCS += async.cpp
+LIB_SRCS += auth.cpp
+LIB_SRCS += bearer.cpp
+LIB_SRCS += cert_info.cpp
+LIB_SRCS += cookies.cpp
+LIB_SRCS += cprtypes.cpp
+LIB_SRCS += curl_container.cpp
+LIB_SRCS += curlholder.cpp
+LIB_SRCS += error.cpp
+LIB_SRCS += interceptor.cpp
+LIB_SRCS += multipart.cpp
+LIB_SRCS += parameters.cpp
+LIB_SRCS += payload.cpp
+LIB_SRCS += proxies.cpp
+LIB_SRCS += proxyauth.cpp
+LIB_SRCS += redirect.cpp
+LIB_SRCS += response.cpp
+LIB_SRCS += session.cpp
+LIB_SRCS += ssl_ctx.cpp
+LIB_SRCS += threadpool.cpp
+LIB_SRCS += timeout.cpp
+LIB_SRCS += unix_socket.cpp
+LIB_SRCS += util.cpp
 
-INC += nlohmann/detail/abi_macros.hpp
-INC += nlohmann/detail/exceptions.hpp
-INC += nlohmann/detail/hash.hpp
-INC += nlohmann/detail/json_pointer.hpp
-INC += nlohmann/detail/json_ref.hpp
-INC += nlohmann/detail/macro_scope.hpp
-INC += nlohmann/detail/macro_unscope.hpp
-INC += nlohmann/detail/string_concat.hpp
-INC += nlohmann/detail/string_escape.hpp
-INC += nlohmann/detail/value_t.hpp
-
-INC += nlohmann/detail/conversions/from_json.hpp
-INC += nlohmann/detail/conversions/to_chars.hpp
-INC += nlohmann/detail/conversions/to_json.hpp
-
-INC += nlohmann/detail/input/binary_reader.hpp
-INC += nlohmann/detail/input/input_adapters.hpp
-INC += nlohmann/detail/input/json_sax.hpp
-INC += nlohmann/detail/input/lexer.hpp
-INC += nlohmann/detail/input/parser.hpp
-INC += nlohmann/detail/input/position_t.hpp
-
-INC += nlohmann/detail/iterators/internal_iterator.hpp
-INC += nlohmann/detail/iterators/iteration_proxy.hpp
-INC += nlohmann/detail/iterators/iterator_traits.hpp
-INC += nlohmann/detail/iterators/iter_impl.hpp
-INC += nlohmann/detail/iterators/json_reverse_iterator.hpp
-INC += nlohmann/detail/iterators/primitive_iterator.hpp
-
-INC += nlohmann/detail/meta/cpp_future.hpp
-INC += nlohmann/detail/meta/detected.hpp
-INC += nlohmann/detail/meta/identity_tag.hpp
-INC += nlohmann/detail/meta/is_sax.hpp
-INC += nlohmann/detail/meta/std_fs.hpp
-INC += nlohmann/detail/meta/type_traits.hpp
-INC += nlohmann/detail/meta/void_t.hpp
-
-INC += nlohmann/detail/meta/call_std/begin.hpp
-INC += nlohmann/detail/meta/call_std/end.hpp
-
-INC += nlohmann/detail/output/binary_writer.hpp
-INC += nlohmann/detail/output/output_adapters.hpp
-INC += nlohmann/detail/output/serializer.hpp
-
-INC += nlohmann/thirdparty/hedley/hedley.hpp
-INC += nlohmann/thirdparty/hedley/hedley_undef.hpp
-# json parser end
-
-
-LIB_INSTALLS_Linux +=  ../cprSrc/cpr/build/lib/libcpr.so
-LIB_INSTALLS_Linux +=  ../cprSrc/cpr/build/lib/libcurl-d.so
-LIB_INSTALLS_Linux +=  ../cprSrc/cpr/build/lib/libz.so
+LIB_SYS_LIBS += curl z
 
 #=============================
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
-
