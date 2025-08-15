@@ -54,5 +54,67 @@ gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-44)
     * export CPLUS_INCLUDE_PATH=/opt/puppetlabs/puppet/include
 
 
+## cpr 1.9.1->1.12.1
 
+#### Dependencies
+
+* sudo apt-get install meson
+* sudo apt install libpsl-dev
+* sudo apt instal libidn2-dev
+* sudo apt instal libunistring-dev
+
+#### library changes
+
+* cpr/build/lib/libcurl-d.so {1.12.1}
+* cpr/build/lib/libcpr.so.1.9.1 {1.9.1}
+
+* lib {V1.9.1}
+
+```
+kg1@lap133454:/epics/support/areaDetector/ADTimePix3$ ls tpx3Support/cprSrc/cpr/build/lib/ -l
+lrwxrwxrwx 1 kg1 users      11 Aug 15 12:57 libcpr.so -> libcpr.so.1
+lrwxrwxrwx 1 kg1 users      15 Aug 15 12:57 libcpr.so.1 -> libcpr.so.1.9.1
+-rwxr-xr-x 1 kg1 users 4386640 Aug 15 12:57 libcpr.so.1.9.1
+-rwxr-xr-x 1 kg1 users 2700712 Aug 15 12:57 libcurl-d.so
+lrwxrwxrwx 1 kg1 users       9 Aug 15 12:57 libz.so -> libz.so.1
+lrwxrwxrwx 1 kg1 users      22 Aug 15 12:57 libz.so.1 -> libz.so.1.2.11.zlib-ng
+-rwxr-xr-x 1 kg1 users  395736 Aug 15 12:57 libz.so.1.2.11.zlib-ng
+```
+
+* lib {V1.12.1}
+
+```
+kg1@lap133454:~/Documents/SNS/BL10/cpr$ ls cpr/build/lib/ -l
+lrwxrwxrwx 1 kg1 users     11 Aug 15 12:19 libcpr.so -> libcpr.so.1
+lrwxrwxrwx 1 kg1 users     16 Aug 15 12:19 libcpr.so.1 -> libcpr.so.1.12.1
+-rwxr-xr-x 1 kg1 users 578672 Aug 15 12:19 libcpr.so.1.12.1
+lrwxrwxrwx 1 kg1 users     12 Aug 15 12:18 libcurl.so -> libcurl.so.4
+lrwxrwxrwx 1 kg1 users     16 Aug 15 12:18 libcurl.so.4 -> libcurl.so.4.8.0
+-rwxr-xr-x 1 kg1 users 871304 Aug 15 12:18 libcurl.so.4.8.0
+-rw-r--r-- 1 kg1 users 245094 Aug 15 12:18 libz.a
+lrwxrwxrwx 1 kg1 users      9 Aug 15 12:18 libz.so -> libz.so.1
+lrwxrwxrwx 1 kg1 users     22 Aug 15 12:18 libz.so.1 -> libz.so.1.2.13.zlib-ng
+-rwxr-xr-x 1 kg1 users 169616 Aug 15 12:18 libz.so.1.2.13.zlib-ng
+```
+
+* Compiling cpr-1.12.1
+```
+make[2]: *** No rule to make target '../cprSrc/cpr/build/lib/libcurl-d.so', needed by '../../lib/linux-x86_64/libcurl-d.so'.  Stop.
+make[2]: *** Waiting for unfinished jobs....
+```
+
+#### installCPR.sh {V1.12.1}
+
+```
+#!/bin/bash
+
+git clone https://github.com/libcpr/cpr
+cd cpr
+git checkout tags/1.12.1 -b v1.12.1-branch
+mkdir build
+cd build
+cmake ..
+cmake --build .
+cp cpr_generated_includes/cpr/cprver.h ../include/cpr/.
+```
 
