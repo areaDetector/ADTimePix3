@@ -1944,7 +1944,7 @@ void ADTimePix::timePixCallback(){
             // elapsedTime = r.elapsed;                                      // 0.00035 s
             // printf("Elapsed Time = %f\n", elapsedTime);
 
-            epicsThreadSleep(0.1);
+            epicsThreadSleep(0.01);
         //    epicsThreadSleep(0);
         }
         frameCounter = new_frame_num;
