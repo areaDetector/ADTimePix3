@@ -14,6 +14,7 @@ Driver depends on Serval versions, at this time. The current releases support Se
 R1-3 (xxx, 2025)
 --------
 
+* Prevew readout of tiff (50 fsp) is faster than png (37 fps).
 * Resolved "Warning: timePixCallback thread self-join of unjoinable"
 * The `fileWriter()` function in the ADTimePix3 driver has been successfully optimized to improve maintainability, performance, and reliability. The original 200+ line monolithic function has been refactored into a modular, well-structured implementation.
 * Serval 4.x.x: Rotations/mirror operation strict checking, and requires 'reset=true', DOWN->half instead of 180.
