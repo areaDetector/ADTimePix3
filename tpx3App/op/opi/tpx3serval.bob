@@ -2,7 +2,6 @@
 <display version="2.0.0">
   <name>tpx3Serval</name>
   <macros>
-    <P>TPX3-TEST:</P>
     <R>Serval:</R>
   </macros>
   <widget type="group" version="3.0.0">
