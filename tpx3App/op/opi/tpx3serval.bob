@@ -660,7 +660,7 @@
         <label>Experimental</label>
         <x>660</x>
         <y>5</y>
-        <width>120</width>
+        <width>150</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>Text Entry_4</name>
