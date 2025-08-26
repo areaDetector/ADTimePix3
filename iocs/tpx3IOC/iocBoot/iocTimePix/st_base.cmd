@@ -80,7 +80,7 @@ dbpf("$(PREFIX)cam1:WriteImg","0")   # Select img disk write
 
 dbpf("$(PREFIX)cam1:PrvImgFilePath","http://localhost")
 dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
-dbpf("$(PREFIX)cam1:PrvImgFileFmt","0")    # 0->tiff (50 fps), 2->png (37 fps)
+dbpf("$(PREFIX)cam1:PrvImgFileFmt","2")    # 0: tiff (50 fps), 2: png (37 fps)
 dbpf("$(PREFIX)cam1:PrvImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","1")   # average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
