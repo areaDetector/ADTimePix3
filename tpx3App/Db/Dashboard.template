@@ -97,7 +97,7 @@ record(calcout, "$(P)$(R)FileWriterCalc") {
 # Hot pixel: neutron specific
 record(calcout, "$(P)$(R)HotPixelCalc") {
     field(DESC, "Hot pixel status")
-    field(CALC, "((A=65535)||((A>20)&&(A>(5*B+C))))?1:0")
+    field(CALC, "((A>65534)||((A>1000)&&(A>(30*B+C))))?1:0")
     field(INPA, "$(P)$(S)MaxValue_RBV CP")
     field(INPB, "$(P)$(S)MeanValue_RBV CP")
     field(INPC, "$(P)$(S)Sigma_RBV CP")
