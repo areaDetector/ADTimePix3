@@ -18,12 +18,6 @@ Notes:
 * Driver is specific to Serval version, since Rust features differ. Driver for Serval 2.x.y is in separate branch, and is not under current development. The branch 3.3.2 is compatible with serval 3.x.x only, and will likely not be developed further.
 * The driver has been developed using TimePix3 Emulator, and real detectors. Real detectors are quad-chip, and single chip.
 
-Before compiling:
------------------
-
-* Compile cpr
-* Clone json
-
 How to run:
 -----------
 
