@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Saved on 2025-02-19 10:12:58 by kg1-->
+<display version="2.0.0">
+  <name>$(BL) Mask</name>
+  <width>710</width>
+  <height>610</height>
+  <background_color>
+    <color red="240" green="240" blue="240">
+    </color>
+  </background_color>
+  <actions>
+  </actions>
+  <grid_step_x>6</grid_step_x>
+  <grid_step_y>6</grid_step_y>
+  <widget type="embedded" version="2.0.0">
+    <name>Mask BPC</name>
+    <file>MaskStatus.opi</file>
+    <x>5</x>
+    <y>5</y>
+    <width>700</width>
+    <height>600</height>
+    <resize>1</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Intensity Graph_2</name>
+    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <x>720</x>
+    <y>5</y>
+    <width>617</width>
+    <height>563</height>
+    <visible>false</visible>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X Axis</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y Axis</title>
+      <minimum>512.0</minimum>
+      <maximum>0.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <actions>
+    </actions>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+    <autoscale>false</autoscale>
+    <maximum>4.0</maximum>
+    <rois>
+      <roi>
+        <name>ROI 0</name>
+        <color>
+          <color red="255" green="0" blue="0">
+          </color>
+        </color>
+        <visible>true</visible>
+        <interactive>true</interactive>
+        <x_pv>$(Sys)$(Dev)$(Cam)MaskMinX</x_pv>
+        <y_pv>$(Sys)$(Dev)$(Cam)MaskMinY</y_pv>
+        <width_pv>$(Sys)$(Dev)$(Cam)MaskSizeX</width_pv>
+        <height_pv>$(Sys)$(Dev)$(Cam)MaskSizeY</height_pv>
+        <file></file>
+      </roi>
+    </rois>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Intensity Graph_1</name>
+    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <x>5</x>
+    <y>624</y>
+    <width>361</width>
+    <height>307</height>
+    <visible>false</visible>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X Axis</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y Axis</title>
+      <minimum>256.0</minimum>
+      <maximum>0.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <actions>
+    </actions>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <data_width>256</data_width>
+    <data_height>256</data_height>
+    <autoscale>false</autoscale>
+    <maximum>4.0</maximum>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Intensity Graph_2</name>
+    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <x>720</x>
+    <y>580</y>
+    <width>617</width>
+    <height>563</height>
+    <visible>false</visible>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X Axis</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y Axis</title>
+      <minimum>512.0</minimum>
+      <maximum>0.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <actions>
+    </actions>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+    <autoscale>false</autoscale>
+    <maximum>32.0</maximum>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Intensity Graph_3</name>
+    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <x>378</x>
+    <y>624</y>
+    <width>361</width>
+    <height>307</height>
+    <visible>false</visible>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X Axis</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y Axis</title>
+      <minimum>256.0</minimum>
+      <maximum>0.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <actions>
+    </actions>
+    <rules>
+      <rule name="Rule" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <data_width>256</data_width>
+    <data_height>256</data_height>
+    <autoscale>false</autoscale>
+    <maximum>32.0</maximum>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_22</name>
+    <text>Pixel Mask</text>
+    <x>740</x>
+    <y>548</y>
+    <width>141</width>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </foreground_color>
+    <vertical_alignment>1</vertical_alignment>
+    <wrap_words>false</wrap_words>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label_1</name>
+    <text>Binary Pixel Configuration</text>
+    <x>740</x>
+    <y>1130</y>
+    <width>200</width>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="255" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <vertical_alignment>1</vertical_alignment>
+    <wrap_words>false</wrap_words>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+</display>
