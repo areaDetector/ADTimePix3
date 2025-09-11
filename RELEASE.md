@@ -11,6 +11,15 @@ The master branch (under development) is tested with Serval 4.1.1 and 3.3.2
 
 Driver depends on Serval versions, at this time. The current releases support Serval 4.1.1 and 3.0.0-3.3.2
 
+
+
+
+R1-4 (xxx, 2025)
+--------
+
+* cpr (1.9.1) and nlohmann/json (3.12.0) sources embeded in this ioc (Jakub Wlodek)
+* documentation folder created
+
 R1-3 (September 7, 2025)
 --------
 
