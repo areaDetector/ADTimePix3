@@ -4,10 +4,12 @@
   <macros>
     <R>Histogram:</R>
   </macros>
+  <width>1400</width>
+  <height>1000</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
     <width>1400</width>
-    <height>1200</height>
+    <height>1000</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>Timepix3 Histogram IOC Control Panel</text>
@@ -15,6 +17,10 @@
       <y>20</y>
       <width>1300</width>
       <height>40</height>
+      <font>
+        <font family="Liberation Sans" style="BOLD" size="28.0">
+        </font>
+      </font>
       <foreground_color>
         <color red="255" green="255" blue="255">
         </color>
@@ -23,6 +29,7 @@
         <color red="30" green="144" blue="255">
         </color>
       </background_color>
+      <transparent>false</transparent>
     </widget>
     <widget type="group" version="3.0.0">
       <name>ConnectionControl</name>
@@ -180,29 +187,29 @@
       <widget type="label" version="2.0.0">
         <name>FilenameLabel</name>
         <text>Filename:</text>
-        <x>470</x>
-        <y>45</y>
+        <x>300</x>
+        <y>15</y>
         <width>80</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>FilenameInput</name>
         <pv_name>$(P)$(R)FILENAME</pv_name>
-        <x>550</x>
-        <y>40</y>
-        <width>200</width>
+        <x>370</x>
+        <y>10</y>
+        <width>380</width>
         <height>30</height>
       </widget>
       <widget type="label" version="2.0.0">
         <name>ErrorCountLabel</name>
         <text>Errors:</text>
-        <x>770</x>
+        <x>800</x>
         <y>45</y>
         <width>60</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ErrorCountDisplay</name>
         <pv_name>$(P)$(R)ERROR_COUNT</pv_name>
-        <x>830</x>
+        <x>880</x>
         <y>40</y>
         <width>80</width>
         <height>30</height>
@@ -210,12 +217,19 @@
           <color red="255" green="200" blue="200">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
           <color red="255" green="0" blue="0">
           </color>
         </border_color>
+      </widget>
+      <widget type="fileselector" version="2.0.0">
+        <name>File Selector</name>
+        <pv_name>$(P)$(R)FILENAME</pv_name>
+        <x>750</x>
+        <y>10</y>
+        <width>30</width>
+        <height>30</height>
       </widget>
     </widget>
     <widget type="group" version="3.0.0">
@@ -223,6 +237,7 @@
       <x>10</x>
       <y>360</y>
       <width>1350</width>
+      <height>160</height>
       <widget type="label" version="2.0.0">
         <name>DataDisplayLabel</name>
         <text>Data Display</text>
@@ -256,7 +271,6 @@
           <color red="255" green="255" blue="200">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="128" blue="0">
@@ -272,7 +286,7 @@
       <widget type="textupdate" version="2.0.0">
         <name>TotalCountsDisplay</name>
         <pv_name>$(P)$(R)TOTAL_COUNTS</pv_name>
-        <x>360</x>
+        <x>380</x>
         <y>40</y>
         <width>120</width>
         <height>30</height>
@@ -280,7 +294,6 @@
           <color red="255" green="255" blue="200">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="128" blue="0">
@@ -288,94 +301,22 @@
         </border_color>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>AcquisitionRateLabel</name>
-        <text>Acquisition Rate:</text>
-        <x>500</x>
-        <y>45</y>
-        <width>120</width>
-      </widget>
-      <widget type="textupdate" version="2.0.0">
-        <name>AcquisitionRateDisplay</name>
-        <pv_name>$(P)$(R)ACQUISITION_RATE</pv_name>
-        <x>620</x>
-        <y>40</y>
-        <height>30</height>
-        <background_color>
-          <color red="200" green="255" blue="255">
-          </color>
-        </background_color>
-        <format>6</format>
-        <border_width>1</border_width>
-        <border_color>
-          <color red="0" green="128" blue="128">
-          </color>
-        </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>ProcessingTimeLabel</name>
-        <text>Processing Time (ms):</text>
-        <x>740</x>
-        <y>45</y>
-        <width>140</width>
-      </widget>
-      <widget type="textupdate" version="2.0.0">
-        <name>ProcessingTimeDisplay</name>
-        <pv_name>$(P)$(R)PROCESSING_TIME_MS</pv_name>
-        <x>880</x>
-        <y>40</y>
-        <height>30</height>
-        <background_color>
-          <color red="200" green="255" blue="255">
-          </color>
-        </background_color>
-        <format>6</format>
-        <border_width>1</border_width>
-        <border_color>
-          <color red="0" green="128" blue="128">
-          </color>
-        </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>MemoryUsageLabel</name>
-        <text>Memory Usage (MB):</text>
-        <x>1000</x>
-        <y>45</y>
-        <width>140</width>
-      </widget>
-      <widget type="textupdate" version="2.0.0">
-        <name>MemoryUsageDisplay</name>
-        <pv_name>$(P)$(R)MEMORY_USAGE_MB</pv_name>
-        <x>1140</x>
-        <y>40</y>
-        <height>30</height>
-        <background_color>
-          <color red="200" green="255" blue="255">
-          </color>
-        </background_color>
-        <format>6</format>
-        <border_width>1</border_width>
-        <border_color>
-          <color red="0" green="128" blue="128">
-          </color>
-        </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
         <name>BinWidthLabel</name>
-        <text>Bin Width (ps):</text>
+        <text>Bin Width (ms):</text>
         <x>20</x>
         <y>85</y>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>BinWidthDisplay</name>
-        <pv_name>$(P)$(R)BIN_WIDTH_PS</pv_name>
+        <pv_name>$(P)$(R)BIN_WIDTH_MS</pv_name>
         <x>120</x>
         <y>80</y>
+        <width>120</width>
         <height>30</height>
         <background_color>
           <color red="255" green="200" blue="255">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="0" blue="128">
@@ -384,22 +325,45 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>TotalTimeLabel</name>
-        <text>Total Time (ns):</text>
-        <x>240</x>
+        <text>Total Time (ms):</text>
+        <x>260</x>
         <y>85</y>
         <width>120</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>TotalTimeDisplay</name>
-        <pv_name>$(P)$(R)TOTAL_TIME_NS</pv_name>
-        <x>360</x>
+        <pv_name>$(P)$(R)TOTAL_TIME_MS</pv_name>
+        <x>380</x>
         <y>80</y>
+        <width>120</width>
         <height>30</height>
         <background_color>
           <color red="255" green="200" blue="255">
           </color>
         </background_color>
-        <format>6</format>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>BinWidthLabel_1</name>
+        <text>Bin Offset (ms):</text>
+        <x>540</x>
+        <y>85</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>BinWidthDisplay_1</name>
+        <pv_name>$(P)$(R)BIN_OFFSET_MS</pv_name>
+        <x>640</x>
+        <y>80</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="0" blue="128">
@@ -408,13 +372,14 @@
       </widget>
     </widget>
     <widget type="group" version="3.0.0">
-      <name>HistogramBins</name>
+      <name>FrameData</name>
       <x>10</x>
-      <y>580</y>
+      <y>540</y>
       <width>1350</width>
+      <height>120</height>
       <widget type="label" version="2.0.0">
-        <name>HistogramBinsLabel</name>
-        <text>Histogram Bins (First 5)</text>
+        <name>FrameDataLabel</name>
+        <text>Frame Data from JSON</text>
         <x>10</x>
         <y>10</y>
         <width>200</width>
@@ -429,127 +394,123 @@
         </border_color>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>Bin0Label</name>
-        <text>Bin 0:</text>
+        <name>TimeAtFrameLabel</name>
+        <text>Time at Frame (ns):</text>
         <x>20</x>
         <y>45</y>
-        <width>60</width>
+        <width>140</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
-        <name>Bin0Display</name>
-        <pv_name>$(P)$(R)BIN_0</pv_name>
-        <x>80</x>
+        <name>TimeAtFrameDisplay</name>
+        <pv_name>$(P)$(R)TIME_AT_FRAME_NS</pv_name>
+        <x>160</x>
         <y>40</y>
-        <width>120</width>
+        <width>180</width>
         <height>30</height>
         <background_color>
-          <color red="255" green="255" blue="200">
+          <color red="255" green="220" blue="220">
           </color>
         </background_color>
-        <format>6</format>
+        <format>3</format>
+        <precision>9</precision>
         <border_width>1</border_width>
         <border_color>
-          <color red="128" green="128" blue="0">
+          <color red="128" green="0" blue="0">
           </color>
         </border_color>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>Bin1Label</name>
-        <text>Bin 1:</text>
-        <x>220</x>
+        <name>FrameBinSizeLabel</name>
+        <text>Frame Bin Size:</text>
+        <x>360</x>
         <y>45</y>
-        <width>60</width>
-      </widget>
-      <widget type="textupdate" version="2.0.0">
-        <name>Bin1Display</name>
-        <pv_name>$(P)$(R)BIN_1</pv_name>
-        <x>280</x>
-        <y>40</y>
         <width>120</width>
-        <height>30</height>
-        <background_color>
-          <color red="255" green="255" blue="200">
-          </color>
-        </background_color>
-        <format>6</format>
-        <border_width>1</border_width>
-        <border_color>
-          <color red="128" green="128" blue="0">
-          </color>
-        </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>Bin2Label</name>
-        <text>Bin 2:</text>
-        <x>420</x>
-        <y>45</y>
-        <width>60</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
-        <name>Bin2Display</name>
-        <pv_name>$(P)$(R)BIN_2</pv_name>
+        <name>FrameBinSizeDisplay</name>
+        <pv_name>$(P)$(R)FRAME_BIN_SIZE</pv_name>
         <x>480</x>
         <y>40</y>
         <width>120</width>
         <height>30</height>
         <background_color>
-          <color red="255" green="255" blue="200">
+          <color red="220" green="255" blue="220">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
-          <color red="128" green="128" blue="0">
+          <color red="0" green="128" blue="0">
           </color>
         </border_color>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>Bin3Label</name>
-        <text>Bin 3:</text>
+        <name>FrameBinWidthLabel</name>
+        <text>Frame Bin Width:</text>
         <x>620</x>
         <y>45</y>
-        <width>60</width>
+        <width>130</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
-        <name>Bin3Display</name>
-        <pv_name>$(P)$(R)BIN_3</pv_name>
-        <x>680</x>
+        <name>FrameBinWidthDisplay</name>
+        <pv_name>$(P)$(R)FRAME_BIN_WIDTH</pv_name>
+        <x>750</x>
         <y>40</y>
         <width>120</width>
         <height>30</height>
         <background_color>
-          <color red="255" green="255" blue="200">
+          <color red="220" green="220" blue="255">
           </color>
         </background_color>
-        <format>6</format>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameBinOffsetLabel</name>
+        <text>Frame Bin Offset:</text>
+        <x>890</x>
+        <y>45</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameBinOffsetDisplay</name>
+        <pv_name>$(P)$(R)FRAME_BIN_OFFSET</pv_name>
+        <x>1020</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="220">
+          </color>
+        </background_color>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="128" blue="0">
           </color>
         </border_color>
       </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>HistogramBins</name>
+      <x>10</x>
+      <y>680</y>
+      <width>1350</width>
+      <height>150</height>
       <widget type="label" version="2.0.0">
-        <name>Bin4Label</name>
-        <text>Bin 4:</text>
-        <x>820</x>
-        <y>45</y>
-        <width>60</width>
-      </widget>
-      <widget type="textupdate" version="2.0.0">
-        <name>Bin4Display</name>
-        <pv_name>$(P)$(R)BIN_4</pv_name>
-        <x>880</x>
-        <y>40</y>
-        <width>120</width>
-        <height>30</height>
+        <name>HistogramBinsLabel</name>
+        <text>Histogram Data Arrays</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
         <background_color>
-          <color red="255" green="255" blue="200">
+          <color red="240" green="240" blue="240">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
-          <color red="128" green="128" blue="0">
+          <color red="0" green="128" blue="255">
           </color>
         </border_color>
       </widget>
@@ -557,24 +518,48 @@
         <name>HistogramDataLabel</name>
         <text>Full Histogram Data (1000 bins):</text>
         <x>20</x>
-        <y>85</y>
+        <y>40</y>
         <width>200</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>HistogramDataDisplay</name>
         <pv_name>$(P)$(R)HISTOGRAM_DATA</pv_name>
         <x>220</x>
-        <y>80</y>
-        <width>400</width>
+        <y>40</y>
+        <width>1080</width>
         <height>30</height>
         <background_color>
           <color red="200" green="200" blue="255">
           </color>
         </background_color>
-        <format>6</format>
         <border_width>1</border_width>
         <border_color>
           <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>HistogramTimeLabel</name>
+        <text>Histogram Time Axis (ms):</text>
+        <x>20</x>
+        <y>80</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>HistogramTimeDisplay</name>
+        <pv_name>$(P)$(R)HISTOGRAM_TIME_MS</pv_name>
+        <x>220</x>
+        <y>80</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="200">
+          </color>
+        </background_color>
+        <precision>6</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="0">
           </color>
         </border_color>
       </widget>
@@ -582,9 +567,9 @@
     <widget type="group" version="3.0.0">
       <name>PerformanceMonitoring</name>
       <x>10</x>
-      <y>800</y>
+      <y>850</y>
       <width>1350</width>
-      <height>150</height>
+      <height>120</height>
       <widget type="label" version="2.0.0">
         <name>PerformanceMonitoringLabel</name>
         <text>Performance Monitoring</text>
@@ -604,8 +589,8 @@
       <widget type="label" version="2.0.0">
         <name>InfoLabel</name>
         <text>Real-time monitoring of acquisition rate, processing time, and memory usage</text>
-        <x>20</x>
-        <y>50</y>
+        <x>320</x>
+        <y>10</y>
         <width>600</width>
         <height>30</height>
         <foreground_color>
@@ -613,18 +598,104 @@
           </color>
         </foreground_color>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>AcquisitionRateLabel</name>
+        <text>Acquisition Rate (Hz):</text>
+        <x>40</x>
+        <y>55</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>AcquisitionRateDisplay</name>
+        <pv_name>$(P)$(R)ACQUISITION_RATE</pv_name>
+        <x>190</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ProcessingTimeLabel</name>
+        <text>Processing Time (ms):</text>
+        <x>360</x>
+        <y>55</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ProcessingTimeDisplay</name>
+        <pv_name>$(P)$(R)PROCESSING_TIME_MS</pv_name>
+        <x>520</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>MemoryUsageLabel</name>
+        <text>Memory Usage (MB):</text>
+        <x>720</x>
+        <y>55</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>MemoryUsageDisplay</name>
+        <pv_name>$(P)$(R)MEMORY_USAGE_MB</pv_name>
+        <x>860</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
     </widget>
   </widget>
   <widget type="xyplot" version="3.0.0">
-    <name>X/Y Plot</name>
+    <name>X/Y Plot_1</name>
     <x>1410</x>
     <y>20</y>
-    <width>1010</width>
-    <height>840</height>
+    <width>800</width>
+    <height>500</height>
+    <x_axis>
+      <title>ToF [ms]</title>
+      <autoscale>true</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>25.0</maximum>
+      <show_grid>false</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
     <y_axes>
       <y_axis>
-        <title>Y</title>
-        <autoscale>false</autoscale>
+        <title>Counts [Sum]</title>
+        <autoscale>true</autoscale>
         <log_scale>false</log_scale>
         <minimum>0.0</minimum>
         <maximum>600.0</maximum>
@@ -648,8 +719,75 @@
     <traces>
       <trace>
         <name>$(traces[0].y_pv)</name>
-        <x_pv></x_pv>
+        <x_pv>$(P)$(R)HISTOGRAM_TIME_MS</x_pv>
         <y_pv>$(P)$(R)HISTOGRAM_DATA</y_pv>
+        <err_pv></err_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="0" green="0" blue="255">
+          </color>
+        </color>
+        <line_width>1</line_width>
+        <line_style>0</line_style>
+        <point_type>0</point_type>
+        <point_size>10</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="xyplot" version="3.0.0">
+    <name>X/Y Plot_2</name>
+    <x>1410</x>
+    <y>530</y>
+    <width>800</width>
+    <height>500</height>
+    <x_axis>
+      <title>ToF [ms]</title>
+      <autoscale>true</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>25.0</maximum>
+      <show_grid>false</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
+    <y_axes>
+      <y_axis>
+        <title>Counts [Frame]</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>600.0</maximum>
+        <show_grid>false</show_grid>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+        <on_right>false</on_right>
+        <visible>true</visible>
+        <color>
+          <color name="Text" red="0" green="0" blue="0">
+          </color>
+        </color>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>$(traces[0].y_pv)</name>
+        <x_pv>$(P)$(R)HISTOGRAM_TIME_MS</x_pv>
+        <y_pv>$(P)$(R)HISTOGRAM_FRAME</y_pv>
         <err_pv></err_pv>
         <axis>0</axis>
         <trace_type>1</trace_type>

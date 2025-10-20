@@ -716,19 +716,6 @@
         <width>80</width>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>JarFilePathLabel</name>
-        <text>JAR File Path:</text>
-        <x>20</x>
-        <y>75</y>
-      </widget>
-      <widget type="fileselector" version="2.0.0">
-        <name>JarFilePathInput</name>
-        <pv_name>$(P)$(R)JarFilePath</pv_name>
-        <x>1000</x>
-        <y>70</y>
-        <height>30</height>
-      </widget>
-      <widget type="label" version="2.0.0">
         <name>FullPathLabel</name>
         <text>Full Path:</text>
         <x>300</x>
@@ -752,15 +739,6 @@
         <pv_name>$(P)$(R)JarFileName</pv_name>
         <x>130</x>
         <y>35</y>
-        <width>870</width>
-        <height>30</height>
-        <format>6</format>
-      </widget>
-      <widget type="textentry" version="3.0.0">
-        <name>Text Entry_3</name>
-        <pv_name>$(P)$(R)JarFilePath</pv_name>
-        <x>130</x>
-        <y>70</y>
         <width>870</width>
         <height>30</height>
         <format>6</format>

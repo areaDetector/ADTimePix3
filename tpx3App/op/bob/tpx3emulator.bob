@@ -344,109 +344,95 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>JarFileLabel</name>
-        <text>JAR File:</text>
+        <text>JAR File (Full Path):</text>
         <x>20</x>
         <y>40</y>
-        <width>80</width>
+        <width>150</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>JarFileNameInput</name>
+        <pv_name>$(P)$(R)JarFileName</pv_name>
+        <x>180</x>
+        <y>35</y>
+        <width>730</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="fileselector" version="2.0.0">
+        <name>JarFileSelector</name>
+        <pv_name>$(P)$(R)JarFileName</pv_name>
+        <x>920</x>
+        <y>35</y>
+        <height>30</height>
       </widget>
       <widget type="slide_button" version="2.0.0">
         <name>JarFileEnable</name>
         <pv_name>$(P)$(R)JAR_FILE_ENABLE</pv_name>
         <label>Enable</label>
-        <x>970</x>
+        <x>980</x>
         <y>35</y>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>JarPathLabel</name>
-        <text>JAR Path:</text>
+        <name>JarFileRBVLabel</name>
+        <text>JAR File (Readback):</text>
         <x>20</x>
         <y>75</y>
-        <width>80</width>
+        <width>150</width>
       </widget>
-      <widget type="label" version="2.0.0">
-        <name>FullPathLabel</name>
-        <text>Full Path:</text>
-        <x>20</x>
-        <y>110</y>
-        <width>80</width>
+      <widget type="textupdate" version="2.0.0">
+        <name>JarFileRBV</name>
+        <pv_name>$(P)$(R)JarFile_RBV</pv_name>
+        <x>180</x>
+        <y>70</y>
+        <width>870</width>
+        <height>30</height>
+        <format>6</format>
       </widget>
       <widget type="label" version="2.0.0">
         <name>ReplayFileLabel</name>
-        <text>Replay File:</text>
+        <text>Replay File (Full Path):</text>
         <x>20</x>
-        <y>145</y>
-        <width>80</width>
+        <y>115</y>
+        <width>150</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>ReplayFileNameInput</name>
+        <pv_name>$(P)$(R)ReplayFileName</pv_name>
+        <x>180</x>
+        <y>110</y>
+        <width>730</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="fileselector" version="2.0.0">
+        <name>ReplayFileSelector</name>
+        <pv_name>$(P)$(R)ReplayFileName</pv_name>
+        <x>920</x>
+        <y>110</y>
+        <height>30</height>
       </widget>
       <widget type="slide_button" version="2.0.0">
         <name>ReplayFileEnable</name>
         <pv_name>$(P)$(R)REPLAY_FILE_ENABLE</pv_name>
         <label>Enable</label>
-        <x>970</x>
-        <y>140</y>
+        <x>980</x>
+        <y>110</y>
       </widget>
-      <widget type="textentry" version="3.0.0">
-        <name>Text Entry_2</name>
-        <pv_name>$(P)$(R)JarFileName</pv_name>
-        <x>110</x>
-        <y>35</y>
-        <width>800</width>
+      <widget type="label" version="2.0.0">
+        <name>ReplayFileRBVLabel</name>
+        <text>Replay File (Readback):</text>
+        <x>20</x>
+        <y>150</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ReplayFileRBV</name>
+        <pv_name>$(P)$(R)ReplayFile_RBV</pv_name>
+        <x>180</x>
+        <y>145</y>
+        <width>870</width>
         <height>30</height>
         <format>6</format>
-      </widget>
-      <widget type="fileselector" version="2.0.0">
-        <name>JarFileNameInput_1</name>
-        <pv_name>$(P)$(R)JarFileName</pv_name>
-        <x>910</x>
-        <y>35</y>
-        <height>30</height>
-      </widget>
-      <widget type="textentry" version="3.0.0">
-        <name>Text Entry_3</name>
-        <pv_name>$(P)$(R)JarFilePath</pv_name>
-        <x>110</x>
-        <y>70</y>
-        <width>800</width>
-        <height>30</height>
-        <format>6</format>
-      </widget>
-      <widget type="fileselector" version="2.0.0">
-        <name>JarFilePathInput_1</name>
-        <pv_name>$(P)$(R)JarFilePath</pv_name>
-        <x>910</x>
-        <y>70</y>
-        <height>30</height>
-      </widget>
-      <widget type="textentry" version="3.0.0">
-        <name>Text Entry_4</name>
-        <pv_name>$(P)$(R)ReplayFilePath</pv_name>
-        <x>110</x>
-        <y>105</y>
-        <width>800</width>
-        <height>30</height>
-        <format>6</format>
-      </widget>
-      <widget type="textentry" version="3.0.0">
-        <name>Text Entry_5</name>
-        <pv_name>$(P)$(R)ReplayFileName</pv_name>
-        <x>110</x>
-        <y>140</y>
-        <width>800</width>
-        <height>30</height>
-        <format>6</format>
-      </widget>
-      <widget type="fileselector" version="2.0.0">
-        <name>JarFileNameInput_2</name>
-        <pv_name>$(P)$(R)ReplayFilePath</pv_name>
-        <x>910</x>
-        <y>105</y>
-        <height>30</height>
-      </widget>
-      <widget type="fileselector" version="2.0.0">
-        <name>JarFilePathInput_2</name>
-        <pv_name>$(P)$(R)ReplayFileName</pv_name>
-        <x>910</x>
-        <y>140</y>
-        <height>30</height>
       </widget>
     </widget>
   </widget>
