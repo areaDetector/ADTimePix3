@@ -1174,12 +1174,16 @@ record(ao, "$(P)$(R)PrvHstBinWidth")
    field(DTYP, "asynFloat64")
    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTBINWIDTH")
    field(VAL,  "1.0")
+   field(EGU,  "s")
+   field(PREC, "9")
    info(autosaveFields, "VAL")
 }
 record(ai, "$(P)$(R)PrvHstBinWidth_RBV")
 {
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTBINWIDTH")
+   field(EGU,  "s")
+   field(PREC, "9")
    field(SCAN, "I/O Intr")
 }
 
@@ -1189,11 +1193,15 @@ record(ao, "$(P)$(R)PrvHstOffset")
    field(DTYP, "asynFloat64")
    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTOFFSET")
    field(VAL,  "0.0")
+   field(EGU,  "s")
+   field(PREC, "9")
    info(autosaveFields, "VAL")
 }
 record(ai, "$(P)$(R)PrvHstOffset_RBV")
 {
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTOFFSET")
+   field(EGU,  "s")
+   field(PREC, "9")
    field(SCAN, "I/O Intr")
 }
