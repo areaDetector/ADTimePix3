@@ -4,12 +4,12 @@
   <macros>
     <R>Histogram:</R>
   </macros>
-  <width>1400</width>
-  <height>1000</height>
+  <width>2220</width>
+  <height>1350</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
     <width>1400</width>
-    <height>1000</height>
+    <height>1070</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>Timepix3 Histogram IOC Control Panel</text>
@@ -184,6 +184,15 @@
         <width>120</width>
         <height>60</height>
       </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>SaveSumDataButton</name>
+        <pv_name>$(P)$(R)SAVE_SUM_DATA</pv_name>
+        <label>Save Sum Data</label>
+        <x>460</x>
+        <y>40</y>
+        <width>120</width>
+        <height>60</height>
+      </widget>
       <widget type="label" version="2.0.0">
         <name>FilenameLabel</name>
         <text>Filename:</text>
@@ -196,21 +205,23 @@
         <pv_name>$(P)$(R)FILENAME</pv_name>
         <x>370</x>
         <y>10</y>
-        <width>380</width>
+        <width>780</width>
         <height>30</height>
+        <format>6</format>
+        <show_units>false</show_units>
       </widget>
       <widget type="label" version="2.0.0">
         <name>ErrorCountLabel</name>
         <text>Errors:</text>
         <x>800</x>
-        <y>45</y>
+        <y>55</y>
         <width>60</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ErrorCountDisplay</name>
         <pv_name>$(P)$(R)ERROR_COUNT</pv_name>
         <x>880</x>
-        <y>40</y>
+        <y>50</y>
         <width>80</width>
         <height>30</height>
         <background_color>
@@ -226,7 +237,7 @@
       <widget type="fileselector" version="2.0.0">
         <name>File Selector</name>
         <pv_name>$(P)$(R)FILENAME</pv_name>
-        <x>750</x>
+        <x>1150</x>
         <y>10</y>
         <width>30</width>
         <height>30</height>
@@ -370,6 +381,46 @@
           </color>
         </border_color>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>FramesToSumLabel</name>
+        <text>Frames to Sum:</text>
+        <x>810</x>
+        <y>85</y>
+        <width>110</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>FramesToSumSpinner</name>
+        <pv_name>$(P)$(R)FRAMES_TO_SUM</pv_name>
+        <x>920</x>
+        <y>80</y>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>100000.0</maximum>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>SumUpdateIntervalLabel</name>
+        <text>Sum Update Interval (frames):</text>
+        <x>720</x>
+        <y>45</y>
+        <width>200</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>SumUpdateIntervalSpinner</name>
+        <pv_name>$(P)$(R)SUM_UPDATE_INTERVAL_FRAMES</pv_name>
+        <x>920</x>
+        <y>40</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>10000.0</maximum>
+      </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>FrameData</name>
@@ -497,7 +548,6 @@
       <x>10</x>
       <y>680</y>
       <width>1350</width>
-      <height>150</height>
       <widget type="label" version="2.0.0">
         <name>HistogramBinsLabel</name>
         <text>Histogram Data Arrays</text>
@@ -516,7 +566,7 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>HistogramDataLabel</name>
-        <text>Full Histogram Data (1000 bins):</text>
+        <text>Full Histogram Data (Accumulated):</text>
         <x>20</x>
         <y>40</y>
         <width>200</width>
@@ -539,17 +589,41 @@
         </border_color>
       </widget>
       <widget type="label" version="2.0.0">
+        <name>HistogramSumNFramesLabel</name>
+        <text>Sum of Last N Frames:</text>
+        <x>20</x>
+        <y>80</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>HistogramSumNFramesDisplay</name>
+        <pv_name>$(P)$(R)HISTOGRAM_SUM_N_FRAMES</pv_name>
+        <x>220</x>
+        <y>80</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
         <name>HistogramTimeLabel</name>
         <text>Histogram Time Axis (ms):</text>
         <x>20</x>
-        <y>80</y>
+        <y>120</y>
         <width>200</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>HistogramTimeDisplay</name>
         <pv_name>$(P)$(R)HISTOGRAM_TIME_MS</pv_name>
         <x>220</x>
-        <y>80</y>
+        <y>120</y>
         <width>1080</width>
         <height>30</height>
         <background_color>
@@ -567,7 +641,7 @@
     <widget type="group" version="3.0.0">
       <name>PerformanceMonitoring</name>
       <x>10</x>
-      <y>850</y>
+      <y>900</y>
       <width>1350</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
@@ -672,7 +746,7 @@
   <widget type="xyplot" version="3.0.0">
     <name>X/Y Plot_1</name>
     <x>1410</x>
-    <y>20</y>
+    <y>1240</y>
     <width>800</width>
     <height>500</height>
     <x_axis>
@@ -739,9 +813,9 @@
   <widget type="xyplot" version="3.0.0">
     <name>X/Y Plot_2</name>
     <x>1410</x>
-    <y>530</y>
+    <y>830</y>
     <width>800</width>
-    <height>500</height>
+    <height>400</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
@@ -793,6 +867,73 @@
         <trace_type>1</trace_type>
         <color>
           <color red="0" green="0" blue="255">
+          </color>
+        </color>
+        <line_width>1</line_width>
+        <line_style>0</line_style>
+        <point_type>0</point_type>
+        <point_size>10</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="xyplot" version="3.0.0">
+    <name>X/Y Plot_3</name>
+    <x>1410</x>
+    <y>20</y>
+    <width>800</width>
+    <height>800</height>
+    <x_axis>
+      <title>ToF [ms]</title>
+      <autoscale>true</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>25.0</maximum>
+      <show_grid>false</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
+    <y_axes>
+      <y_axis>
+        <title>Counts [Sum N Frames]</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>600.0</maximum>
+        <show_grid>false</show_grid>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+        <on_right>false</on_right>
+        <visible>true</visible>
+        <color>
+          <color name="Text" red="0" green="0" blue="0">
+          </color>
+        </color>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>$(traces[0].y_pv)</name>
+        <x_pv>$(P)$(R)HISTOGRAM_TIME_MS</x_pv>
+        <y_pv>$(P)$(R)HISTOGRAM_SUM_N_FRAMES</y_pv>
+        <err_pv></err_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="0" green="128" blue="0">
           </color>
         </color>
         <line_width>1</line_width>
