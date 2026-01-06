@@ -306,6 +306,12 @@ asynStatus ADTimePix::checkImgPath()
                           "Img", "Img file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
 }
 
+asynStatus ADTimePix::checkImg1Path()
+{
+    return checkChannelPath(ADTimePixImg1Base, -1, ADTimePixImg1FilePathExists,
+                          "Img1", "Img1 file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
+}
+
 asynStatus ADTimePix::checkPrvImgPath()
 {
     return checkChannelPath(ADTimePixPrvImgBase, -1, ADTimePixPrvImgFilePathExists,
@@ -935,13 +941,20 @@ asynStatus ADTimePix::getServer(){
         switch (server_j["Image"].size()) {
             case 0:
                 setIntegerParam(ADTimePixWriteImgRead, 0);
+                setIntegerParam(ADTimePixWriteImg1Read, 0);
                 break; // No Image channels
             case 1:
                 setIntegerParam(ADTimePixWriteImgRead, 1);
+                setIntegerParam(ADTimePixWriteImg1Read, 0);
                 break; // One Image channel
+            case 2:
+                setIntegerParam(ADTimePixWriteImgRead, 1);
+                setIntegerParam(ADTimePixWriteImg1Read, 1);
+                break; // Two Image channels
             default:
                 printf("More than two Image channels\n");
                 setIntegerParam(ADTimePixWriteImgRead, 1);
+                setIntegerParam(ADTimePixWriteImg1Read, 1);
                 break; // More than two Image channels
         }
 
@@ -1183,7 +1196,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     // Get write parameter based on channel type
     int writeParam;
     if (!isPreview) {
-        writeParam = ADTimePixWriteImg;
+        writeParam = isChannel1 ? ADTimePixWriteImg1 : ADTimePixWriteImg;
     } else if (!isChannel1) {
         writeParam = ADTimePixWritePrvImg;
     } else {
@@ -1199,8 +1212,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     // Configure base path and file pattern
     int baseParam, filePatParam;
     if (!isPreview) {
-        baseParam = ADTimePixImgBase;
-        filePatParam = ADTimePixImgFilePat;
+        if (isChannel1) {
+            baseParam = ADTimePixImg1Base;
+            filePatParam = ADTimePixImg1FilePat;
+        } else {
+            baseParam = ADTimePixImgBase;
+            filePatParam = ADTimePixImgFilePat;
+        }
     } else if (!isChannel1) {
         baseParam = ADTimePixPrvImgBase;
         filePatParam = ADTimePixPrvImgFilePat;
@@ -1214,7 +1232,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     // Use correct JSON structure based on channel type
     if (!isPreview) {
         // Main image channel
-        server_j["Image"][0]["Base"] = fileStr;
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Image"][channelIndex]["Base"] = fileStr;
     } else {
         // Preview image channels
         int channelIndex = isChannel1 ? 1 : 0;
@@ -1224,7 +1243,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     if (getParameterSafely(filePatParam, fileStr) != asynSuccess) return asynError;
     
     if (!isPreview) {
-        server_j["Image"][0]["FilePattern"] = fileStr;
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Image"][channelIndex]["FilePattern"] = fileStr;
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["FilePattern"] = fileStr;
@@ -1233,8 +1253,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     // Configure format and mode
     int formatParam, modeParam;
     if (!isPreview) {
-        formatParam = ADTimePixImgFormat;
-        modeParam = ADTimePixImgMode;
+        if (isChannel1) {
+            formatParam = ADTimePixImg1Format;
+            modeParam = ADTimePixImg1Mode;
+        } else {
+            formatParam = ADTimePixImgFormat;
+            modeParam = ADTimePixImgMode;
+        }
     } else if (!isChannel1) {
         formatParam = ADTimePixPrvImgFormat;
         modeParam = ADTimePixPrvImgMode;
@@ -1250,7 +1275,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
     
     if (!isPreview) {
-        server_j["Image"][0]["Format"] = IMG_FORMATS[intNum];
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Image"][channelIndex]["Format"] = IMG_FORMATS[intNum];
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["Format"] = IMG_FORMATS[intNum];
@@ -1263,7 +1289,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
     
     if (!isPreview) {
-        server_j["Image"][0]["Mode"] = IMG_MODES[intNum];
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Image"][channelIndex]["Mode"] = IMG_MODES[intNum];
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["Mode"] = IMG_MODES[intNum];
@@ -1272,8 +1299,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     // Configure integration settings
     int intSizeParam, intModeParam;
     if (!isPreview) {
-        intSizeParam = ADTimePixImgIntSize;
-        intModeParam = ADTimePixImgIntMode;
+        if (isChannel1) {
+            intSizeParam = ADTimePixImg1IntSize;
+            intModeParam = ADTimePixImg1IntMode;
+        } else {
+            intSizeParam = ADTimePixImgIntSize;
+            intModeParam = ADTimePixImgIntMode;
+        }
     } else if (!isChannel1) {
         intSizeParam = ADTimePixPrvImgIntSize;
         intModeParam = ADTimePixPrvImgIntMode;
@@ -1285,7 +1317,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     if (getParameterSafely(intSizeParam, intNum) != asynSuccess) return asynError;
     if (validateIntegrationSize(intNum)) {
         if (!isPreview) {
-            server_j["Image"][0]["IntegrationSize"] = intNum;
+            int channelIndex = isChannel1 ? 1 : 0;
+            server_j["Image"][channelIndex]["IntegrationSize"] = intNum;
         } else {
             int channelIndex = isChannel1 ? 1 : 0;
             server_j["Preview"]["ImageChannels"][channelIndex]["IntegrationSize"] = intNum;
@@ -1302,7 +1335,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
             return asynError;
         }
         if (!isPreview) {
-            server_j["Image"][0]["IntegrationMode"] = INTEGRATION_MODES[intNum];
+            int channelIndex = isChannel1 ? 1 : 0;
+            server_j["Image"][channelIndex]["IntegrationMode"] = INTEGRATION_MODES[intNum];
         } else {
             int channelIndex = isChannel1 ? 1 : 0;
             server_j["Preview"]["ImageChannels"][channelIndex]["IntegrationMode"] = INTEGRATION_MODES[intNum];
@@ -1312,8 +1346,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     // Configure stop on disk limit and queue size
     int stopOnDiskParam, queueSizeParam;
     if (!isPreview) {
-        stopOnDiskParam = ADTimePixImgStpOnDskLim;
-        queueSizeParam = ADTimePixImgQueueSize;
+        if (isChannel1) {
+            stopOnDiskParam = ADTimePixImg1StpOnDskLim;
+            queueSizeParam = ADTimePixImg1QueueSize;
+        } else {
+            stopOnDiskParam = ADTimePixImgStpOnDskLim;
+            queueSizeParam = ADTimePixImgQueueSize;
+        }
     } else if (!isChannel1) {
         stopOnDiskParam = ADTimePixPrvImgStpOnDskLim;
         queueSizeParam = ADTimePixPrvImgQueueSize;
@@ -1329,7 +1368,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
     
     if (!isPreview) {
-        server_j["Image"][0]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Image"][channelIndex]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
@@ -1338,7 +1378,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     if (getParameterSafely(queueSizeParam, intNum) != asynSuccess) return asynError;
     
     if (!isPreview) {
-        server_j["Image"][0]["QueueSize"] = intNum;
+        int channelIndex = isChannel1 ? 1 : 0;
+        server_j["Image"][channelIndex]["QueueSize"] = intNum;
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["QueueSize"] = intNum;
@@ -1525,6 +1566,15 @@ asynStatus ADTimePix::fileWriter(){
     status = configureImageChannel("Image", server_j);
     if (status == asynError) {
         ERR("Failed to configure image channel");
+        return asynError;
+    }
+    if (status == asynSuccess && server_j.contains("Image")) {
+        anyChannelConfigured = true;
+    }
+    
+    status = configureImageChannel("Image[1]", server_j);
+    if (status == asynError) {
+        ERR("Failed to configure image channel 1");
         return asynError;
     }
     if (status == asynSuccess && server_j.contains("Image")) {
@@ -2106,6 +2156,8 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkRaw1Path();
     } else if (function == ADTimePixImgBase) {
         status = this->checkImgPath();      
+    } else if (function == ADTimePixImg1Base) {
+        status = this->checkImg1Path();      
     } else if (function == ADTimePixPrvImgBase) {
         status = this->checkPrvImgPath();
     } else if (function == ADTimePixPrvImg1Base) {
@@ -2178,7 +2230,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if (function == ADTimePixWriteRaw || function == ADTimePixWriteRaw1 || function == ADTimePixWriteImg \
-        || function == ADTimePixWritePrvImg || function == ADTimePixWritePrvImg1 || function == ADTimePixWritePrvHst) {
+        || function == ADTimePixWriteImg1 || function == ADTimePixWritePrvImg || function == ADTimePixWritePrvImg1 || function == ADTimePixWritePrvHst) {
        status = getServer();    // Read configured channels from Serval
     }
 
@@ -2559,6 +2611,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixWriteRawString,                   asynParamInt32,  &ADTimePixWriteRaw);
     createParam(ADTimePixWriteRaw1String,                  asynParamInt32,  &ADTimePixWriteRaw1);   // Serval 3.3.0
     createParam(ADTimePixWriteImgString,                   asynParamInt32,  &ADTimePixWriteImg);
+    createParam(ADTimePixWriteImg1String,                  asynParamInt32,  &ADTimePixWriteImg1);
     createParam(ADTimePixWritePrvImgString,                asynParamInt32,  &ADTimePixWritePrvImg);
     createParam(ADTimePixWritePrvImg1String,               asynParamInt32,  &ADTimePixWritePrvImg1);
     createParam(ADTimePixWritePrvHstString,                asynParamInt32,  &ADTimePixWritePrvHst);
@@ -2566,6 +2619,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixWriteRawReadString,                   asynParamInt32,  &ADTimePixWriteRawRead);
     createParam(ADTimePixWriteRaw1ReadString,                  asynParamInt32,  &ADTimePixWriteRaw1Read);   // Serval 3.3.0
     createParam(ADTimePixWriteImgReadString,                   asynParamInt32,  &ADTimePixWriteImgRead);
+    createParam(ADTimePixWriteImg1ReadString,                  asynParamInt32,  &ADTimePixWriteImg1Read);
     createParam(ADTimePixWritePrvImgReadString,                asynParamInt32,  &ADTimePixWritePrvImgRead);
     createParam(ADTimePixWritePrvImg1ReadString,               asynParamInt32,  &ADTimePixWritePrvImg1Read);
     createParam(ADTimePixWritePrvHstReadString,                asynParamInt32,  &ADTimePixWritePrvHstRead);
@@ -2593,6 +2647,17 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixImgStpOnDskLimString,            asynParamInt32,    &ADTimePixImgStpOnDskLim);        
     createParam(ADTimePixImgQueueSizeString,              asynParamInt32,    &ADTimePixImgQueueSize);         
     createParam(ADTimePixImgFilePathExistsString,         asynParamInt32,    &ADTimePixImgFilePathExists);    
+    // Server, Image, ImageChannels[1]
+    createParam(ADTimePixImg1BaseString,                  asynParamOctet,    &ADTimePixImg1Base);              
+    createParam(ADTimePixImg1FilePatString,               asynParamOctet,    &ADTimePixImg1FilePat);            
+    createParam(ADTimePixImg1FormatString,                asynParamInt32,    &ADTimePixImg1Format);            
+    createParam(ADTimePixImg1ModeString,                  asynParamInt32,    &ADTimePixImg1Mode);              
+    createParam(ADTimePixImg1ThsString,                   asynParamOctet,    &ADTimePixImg1Ths);             
+    createParam(ADTimePixImg1IntSizeString,               asynParamInt32,    &ADTimePixImg1IntSize); 
+    createParam(ADTimePixImg1IntModeString,               asynParamInt32,    &ADTimePixImg1IntMode);            
+    createParam(ADTimePixImg1StpOnDskLimString,           asynParamInt32,    &ADTimePixImg1StpOnDskLim);        
+    createParam(ADTimePixImg1QueueSizeString,             asynParamInt32,    &ADTimePixImg1QueueSize);         
+    createParam(ADTimePixImg1FilePathExistsString,        asynParamInt32,    &ADTimePixImg1FilePathExists);    
     // Server, Preview   
     createParam(ADTimePixPrvPeriodString,                  asynParamFloat64,  &ADTimePixPrvPeriod);        
     createParam(ADTimePixPrvSamplingModeString,            asynParamInt32,    &ADTimePixPrvSamplingMode);  

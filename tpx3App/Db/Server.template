@@ -81,6 +81,25 @@ record(bi, "$(P)$(R)WriteImg_RBV")
     field(SCAN, "I/O Intr")
 }
 
+record(bo, "$(P)$(R)WriteImg1")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_IMG1")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(VAL,  "0")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)WriteImg1_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_WRITE_IMG1_RBV")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
+
 record(bo, "$(P)$(R)WritePrvImg")
 {
     field(PINI, "YES")
@@ -518,6 +537,199 @@ record(longin, "$(P)$(R)ImgQueueSize_RBV")
 {
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_QUEUESIZE")
+   field(SCAN, "I/O Intr")
+}
+
+# Image Channels[1] file path.
+record(waveform, "$(P)$(R)Img1FilePath")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1BASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)Img1FilePath_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1BASE")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+record(bi, "$(P)$(R)Img1FilePathExists_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))IMG1_FILE_PATH_EXISTS")
+    field(ZNAM, "No")
+    field(ZSV,  "MAJOR")
+    field(ONAM, "Yes")
+    field(OSV,  "NO_ALARM")
+    field(SCAN, "I/O Intr")
+}
+
+# Image1 file template/pattern "f%Hms_"
+record(waveform, "$(P)$(R)Img1FileTemplate")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1PAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)Img1FileTemplate_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1PAT")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)Img1FileFmt")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1FORMAT")  
+   field(ZRST, "tiff") 
+   field(ZRVL, "0")
+   field(ONST, "pgm") 
+   field(ONVL, "1")
+   field(TWST, "png")    
+   field(TWVL, "2")
+   field(THST, "jsonimage")    
+   field(THVL, "3")
+   field(FRST, "jsonhisto") 
+   field(FRVL, "4")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)Img1FileFmt_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1FORMAT")  
+   field(ZRST, "tiff") 
+   field(ZRVL, "0")
+   field(ONST, "pgm") 
+   field(ONVL, "1")
+   field(TWST, "png")    
+   field(TWVL, "2")
+   field(THST, "jsonimage")    
+   field(THVL, "3")
+   field(FRST, "jsonhisto") 
+   field(FRVL, "4")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)Img1FileMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1MODE")
+   field(ZRST, "count") 
+   field(ZRVL, "0")
+   field(ONST, "tot") 
+   field(ONVL, "1")
+   field(TWST, "toa")    
+   field(TWVL, "2")
+   field(THST, "tof")    
+   field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)Img1FileMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1MODE")
+   field(ZRST, "count") 
+   field(ZRVL, "0")
+   field(ONST, "tot") 
+   field(ONVL, "1")
+   field(TWST, "toa")    
+   field(TWVL, "2")
+   field(THST, "tof")    
+   field(THVL, "3")
+   field(FRST, "count_fb")
+   field(FRVL, "4")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)Img1IntgSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1INTSIZE")
+   field(VAL,  "1")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)Img1IntgSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1INTSIZE")
+   field(SCAN, "I/O Intr")
+}
+
+record(mbbo, "$(P)$(R)Img1IntgMode")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1INTMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   info(autosaveFields, "VAL")
+}
+record(mbbi, "$(P)$(R)Img1IntgMode_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1INTMODE")
+   field(ZRST, "sum") 
+   field(ZRVL, "0")
+   field(ONST, "average") 
+   field(ONVL, "1")
+   field(TWST, "last")    
+   field(TWVL, "2")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)Img1StpOnDskLim")
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(VAL,  "0")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)Img1StpOnDskLim_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1STPONDSK")
+    field(ZNAM, "false")
+    field(ONAM, "true")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)Img1QueueSize")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1QUEUESIZE")
+   field(VAL,  "1024")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)Img1QueueSize_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1QUEUESIZE")
    field(SCAN, "I/O Intr")
 }
 

@@ -74,7 +74,7 @@ record(ai, "$(P)$(R)WriteSpeed_RBV"){
 # }
 
 # Compare Serval streams and what is in EPICS streams
-record(calcout, "$(P)$(R)FileWriterCalc") {
+record(calcout, "$(P)$(R)FileWriterCalc1") {
     field(DESC, "File writer status")
     field(CALC, "(A!=B||C!=D||E!=F||G!=H||I!=J||K!=L)?1:0")
     field(INPA, "$(P)$(R)WriteRaw CP")
@@ -83,15 +83,34 @@ record(calcout, "$(P)$(R)FileWriterCalc") {
     field(INPD, "$(P)$(R)WriteRaw1_RBV CP")
     field(INPE, "$(P)$(R)WriteImg CP")
     field(INPF, "$(P)$(R)WriteImg_RBV CP")
-    field(INPG, "$(P)$(R)WritePrvImg CP")
-    field(INPH, "$(P)$(R)WritePrvImg_RBV CP")
-    field(INPI, "$(P)$(R)WritePrvImg1 CP")
-    field(INPJ, "$(P)$(R)WritePrvImg1_RBV CP")
-    field(INPK, "$(P)$(R)WritePrvHst CP")
-    field(INPL, "$(P)$(R)WritePrvHst_RBV CP")
+    field(INPG, "$(P)$(R)WriteImg1 CP")
+    field(INPH, "$(P)$(R)WriteImg1_RBV CP")
+    field(INPI, "$(P)$(R)WritePrvImg CP")
+    field(INPJ, "$(P)$(R)WritePrvImg_RBV CP")
+    field(INPK, "$(P)$(R)WritePrvImg1 CP")
+    field(INPL, "$(P)$(R)WritePrvImg1_RBV CP")
     field(OOPT, "Every Time")
     field(DOPT, "Use CALC")
-  #  field(OUT, "$(P)$(R)FileWriterStatus PP")
+  #  field(OUT, "$(P)$(R)FileWriterCalc PP")
+}
+
+# Additional file writer status for Preview Histogram
+record(calcout, "$(P)$(R)FileWriterCalc2") {
+    field(DESC, "File writer status 2")
+    field(CALC, "(A!=B)?1:0")
+    field(INPA, "$(P)$(R)WritePrvHst CP")
+    field(INPB, "$(P)$(R)WritePrvHst_RBV CP")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
+}
+
+# Combined file writer status
+record(calc, "$(P)$(R)FileWriterCalc") {
+    field(DESC, "Combined file writer status")
+    field(CALC, "A||B")
+    field(INPA, "$(P)$(R)FileWriterCalc1 CP")
+    field(INPB, "$(P)$(R)FileWriterCalc2 CP")
+    field(OOPT, "Every Time")
 }
 
 # Hot pixel: neutron specific

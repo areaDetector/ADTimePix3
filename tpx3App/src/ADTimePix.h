@@ -145,6 +145,7 @@
 #define ADTimePixWriteRawString            "TPX3_WRITE_RAW"           // (asynInt32,         w)      Write Data output channels (raw)
 #define ADTimePixWriteRaw1String           "TPX3_WRITE_RAW1"          // (asynInt32,         w)      Write Data output channels (raw), Serval 3.3.0
 #define ADTimePixWriteImgString            "TPX3_WRITE_IMG"           // (asynInt32,         w)      Write Data output channels (img)
+#define ADTimePixWriteImg1String            "TPX3_WRITE_IMG1"          // (asynInt32,         w)      Write Data output channels (img1)
 #define ADTimePixWritePrvImgString         "TPX3_WRITE_PRVIMG"        // (asynInt32,         w)      Write Data output channels (preview->img)
 #define ADTimePixWritePrvImg1String        "TPX3_WRITE_PRVIMG1"       // (asynInt32,         w)      Write Data output channels (preview->img1)
 #define ADTimePixWritePrvHstString         "TPX3_WRITE_PRVHST"        // (asynInt32,         w)      Write Data output channels (preview->hst)
@@ -152,6 +153,7 @@
 #define ADTimePixWriteRawReadString            "TPX3_WRITE_RAW_RBV"           // (asynInt32,         w)      Write Data output channels (raw)
 #define ADTimePixWriteRaw1ReadString           "TPX3_WRITE_RAW1_RBV"          // (asynInt32,         w)      Write Data output channels (raw), Serval 3.3.0
 #define ADTimePixWriteImgReadString            "TPX3_WRITE_IMG_RBV"           // (asynInt32,         w)      Write Data output channels (img)
+#define ADTimePixWriteImg1ReadString           "TPX3_WRITE_IMG1_RBV"          // (asynInt32,         w)      Write Data output channels (img1)
 #define ADTimePixWritePrvImgReadString         "TPX3_WRITE_PRVIMG_RBV"        // (asynInt32,         w)      Write Data output channels (preview->img)
 #define ADTimePixWritePrvImg1ReadString        "TPX3_WRITE_PRVIMG1_RBV"       // (asynInt32,         w)      Write Data output channels (preview->img1)
 #define ADTimePixWritePrvHstReadString         "TPX3_WRITE_PRVHST_RBV"        // (asynInt32,         w)      Write Data output channels (preview->hst)
@@ -181,6 +183,18 @@
 #define ADTimePixImgStpOnDskLimString        "TPX3_IMG_STPONDSK"         // (asynInt32,         w)      ImageChannels StopMeasurementOnDiskLimit
 #define ADTimePixImgQueueSizeString          "TPX3_IMG_QUEUESIZE"        // (asynInt32,         w)      ImageChannels QueueSize
 #define ADTimePixImgFilePathExistsString     "IMG_FILE_PATH_EXISTS"      // (asynInt32,       r/w)      File path exists? */
+
+    // Server, Image, ImageChannels[1]
+#define ADTimePixImg1BaseString              "TPX3_IMG_IMG1BASE"          // (asynOctet,         w)      ImageChannels Base file (Place raw files) 
+#define ADTimePixImg1FilePatString           "TPX3_IMG_IMG1PAT"           // (asynOctet,         w)      ImageChannels FilePattern 
+#define ADTimePixImg1FormatString            "TPX3_IMG_IMG1FORMAT"        // (asynInt32,         w)      ImageChannels Format
+#define ADTimePixImg1ModeString              "TPX3_IMG_IMG1MODE"          // (asynInt32,         w)      ImageChannels Mode
+#define ADTimePixImg1ThsString               "TPX3_IMG_IMG1THS"           // (asynOctet,         w)      ImageChannels Thresholds (used by MPX3, not used for TPX3)
+#define ADTimePixImg1IntSizeString           "TPX3_IMG_IMG1INTSIZE"       // (asynInt32,         w)      ImageChannels IntegrationSize
+#define ADTimePixImg1IntModeString           "TPX3_IMG_IMG1INTMODE"       // (asynInt32,         w)      ImageChannels IntegrationMode
+#define ADTimePixImg1StpOnDskLimString       "TPX3_IMG_IMG1STPONDSK"      // (asynInt32,         w)      ImageChannels StopMeasurementOnDiskLimit
+#define ADTimePixImg1QueueSizeString         "TPX3_IMG_IMG1QUEUESIZE"     // (asynInt32,         w)      ImageChannels QueueSize
+#define ADTimePixImg1FilePathExistsString     "IMG1_FILE_PATH_EXISTS"     // (asynInt32,       r/w)      File path exists? */
 
     // Server, Preview
 #define ADTimePixPrvPeriodString            "TPX3_PRV_PERIOD"           // (asynFloat64,       w)      Preview Period
@@ -431,6 +445,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixWriteRaw;
         int ADTimePixWriteRaw1;      // Serval 3.3.0
         int ADTimePixWriteImg;
+        int ADTimePixWriteImg1;
         int ADTimePixWritePrvImg;
         int ADTimePixWritePrvImg1;
         int ADTimePixWritePrvHst;
@@ -438,6 +453,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixWriteRawRead;
         int ADTimePixWriteRaw1Read;      // Serval 3.3.0
         int ADTimePixWriteImgRead;
+        int ADTimePixWriteImg1Read;
         int ADTimePixWritePrvImgRead;
         int ADTimePixWritePrvImg1Read;
         int ADTimePixWritePrvHstRead;
@@ -467,6 +483,18 @@ class ADTimePix : public ADDriver{
         int ADTimePixImgStpOnDskLim;    
         int ADTimePixImgQueueSize;      
         int ADTimePixImgFilePathExists; 
+
+            // Server, Image, ImageChannels[1]
+        int ADTimePixImg1Base;           
+        int ADTimePixImg1FilePat;        
+        int ADTimePixImg1Format;         
+        int ADTimePixImg1Mode;           
+        int ADTimePixImg1Ths;            
+        int ADTimePixImg1IntSize; 
+        int ADTimePixImg1IntMode;       
+        int ADTimePixImg1StpOnDskLim;    
+        int ADTimePixImg1QueueSize;      
+        int ADTimePixImg1FilePathExists; 
 
             // Server, Preview
         int ADTimePixPrvPeriod;            
@@ -596,6 +624,7 @@ class ADTimePix : public ADDriver{
         asynStatus checkRawPath();
         asynStatus checkRaw1Path();
         asynStatus checkImgPath();
+        asynStatus checkImg1Path();
         asynStatus checkPrvImgPath();
         asynStatus checkPrvImg1Path();
         asynStatus checkPrvHstPath();
