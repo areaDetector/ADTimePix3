@@ -1598,4 +1598,76 @@ $(pv_value)</tooltip>
     <tooltip>$(actions)</tooltip>
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_8</name>
+    <actions>
+      <action type="open_display">
+        <description>Image</description>
+        <file>../tpx3image.bob</file>
+        <macros>
+          <R>Emulator:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Image</text>
+    <x>1030</x>
+    <y>330</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>$(actions)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_9</name>
+    <actions>
+      <action type="open_display">
+        <description>ADimage</description>
+        <file>../ADtpx3stream.bob</file>
+        <macros>
+          <R>Emulator:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>ADimage</text>
+    <x>940</x>
+    <y>410</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>$(actions)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_10</name>
+    <actions>
+      <action type="open_display">
+        <description>ADhistogram</description>
+        <file>../ADtpx3streamHistogram.bob</file>
+        <macros>
+          <R>Emulator:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>ADhistogram</text>
+    <x>940</x>
+    <y>440</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>$(actions)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
 </display>

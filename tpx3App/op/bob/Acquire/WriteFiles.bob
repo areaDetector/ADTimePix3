@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
-  <name>NDFileBase</name>
+  <name>FileWriter</name>
   <x>839</x>
   <y>153</y>
   <width>675</width>
@@ -20,7 +20,7 @@
     </macros>
     <x>680</x>
     <width>675</width>
-    <height>810</height>
+    <height>850</height>
     <line_width>0</line_width>
     <line_color>
       <color red="0" green="128" blue="255">
@@ -38,7 +38,7 @@ $(pv_value)</tooltip>
       <pv_name></pv_name>
     </macros>
     <width>675</width>
-    <height>810</height>
+    <height>960</height>
     <line_width>0</line_width>
     <line_color>
       <color red="0" green="128" blue="255">
@@ -55,7 +55,6 @@ $(pv_value)</tooltip>
     <text>Raw file pattern</text>
     <x>2</x>
     <y>80</y>
-    <width>132</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -73,7 +72,7 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input</name>
     <pv_name>$(P)$(R)RawFileTemplate</pv_name>
-    <x>140</x>
+    <x>110</x>
     <y>80</y>
     <width>530</width>
     <font>
@@ -97,7 +96,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update</name>
     <pv_name>$(P)$(R)RawFileTemplate_RBV</pv_name>
-    <x>140</x>
+    <x>110</x>
     <y>60</y>
     <width>400</width>
     <height>18</height>
@@ -129,7 +128,6 @@ $(pv_value)</tooltip>
     <text>Raw file path</text>
     <x>2</x>
     <y>30</y>
-    <width>132</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -147,7 +145,7 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input</name>
     <pv_name>$(P)$(R)RawFilePath</pv_name>
-    <x>140</x>
+    <x>110</x>
     <y>30</y>
     <width>530</width>
     <font>
@@ -218,80 +216,10 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>Label</name>
-    <text>Write status code</text>
-    <x>6</x>
-    <y>710</y>
-    <width>140</width>
-    <font>
-      <font family="Sans" style="REGULAR" size="10.891089108910892">
-      </font>
-    </font>
-    <horizontal_alignment>2</horizontal_alignment>
-    <vertical_alignment>1</vertical_alignment>
-    <wrap_words>false</wrap_words>
-    <actions>
-    </actions>
-    <border_color>
-      <color red="0" green="128" blue="255">
-      </color>
-    </border_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Text Update</name>
-    <pv_name>$(P)$(R)HttpCode_RBV</pv_name>
-    <x>165</x>
-    <y>710</y>
-    <width>120</width>
-    <font>
-      <font family="Sans" style="REGULAR" size="10.891089108910892">
-      </font>
-    </font>
-    <foreground_color>
-      <color name="OK" red="0" green="255" blue="0">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-    <show_units>false</show_units>
-    <vertical_alignment>1</vertical_alignment>
-    <wrap_words>false</wrap_words>
-    <actions>
-    </actions>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255">
-      </color>
-    </border_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Label</name>
-    <text>Write message</text>
-    <x>6</x>
-    <y>730</y>
-    <width>140</width>
-    <font>
-      <font family="Sans" style="REGULAR" size="10.891089108910892">
-      </font>
-    </font>
-    <horizontal_alignment>2</horizontal_alignment>
-    <vertical_alignment>1</vertical_alignment>
-    <wrap_words>false</wrap_words>
-    <actions>
-    </actions>
-    <border_color>
-      <color red="0" green="128" blue="255">
-      </color>
-    </border_color>
-  </widget>
-  <widget type="label" version="2.0.0">
     <name>Label_7</name>
     <text>Img file pattern</text>
     <x>684</x>
-    <y>176</y>
-    <width>132</width>
+    <y>170</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -309,8 +237,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_2</name>
     <pv_name>$(P)$(R)PrvImgFileTemplate</pv_name>
-    <x>822</x>
-    <y>176</y>
+    <x>790</x>
+    <y>170</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -333,8 +261,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_7</name>
     <pv_name>$(P)$(R)PrvImgFileTemplate_RBV</pv_name>
-    <x>819</x>
-    <y>156</y>
+    <x>790</x>
+    <y>150</y>
     <width>400</width>
     <height>18</height>
     <font>
@@ -363,8 +291,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_8</name>
     <pv_name>$(P)$(R)PrvImgFilePath_RBV</pv_name>
-    <x>819</x>
-    <y>106</y>
+    <x>790</x>
+    <y>100</y>
     <width>410</width>
     <height>18</height>
     <font>
@@ -394,8 +322,7 @@ $(pv_value)</tooltip>
     <name>Label_8</name>
     <text>Img file path</text>
     <x>684</x>
-    <y>126</y>
-    <width>132</width>
+    <y>120</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -413,8 +340,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_3</name>
     <pv_name>$(P)$(R)PrvImgFilePath</pv_name>
-    <x>822</x>
-    <y>126</y>
+    <x>790</x>
+    <y>120</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -438,7 +365,7 @@ $(pv_value)</tooltip>
     <name>Label_9</name>
     <text>Exists:</text>
     <x>1235</x>
-    <y>106</y>
+    <y>100</y>
     <width>70</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -457,7 +384,7 @@ $(pv_value)</tooltip>
     <name>Text Update_9</name>
     <pv_name>$(P)$(R)PrvImgFilePathExists_RBV</pv_name>
     <x>1310</x>
-    <y>106</y>
+    <y>100</y>
     <width>40</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
@@ -486,7 +413,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_11</name>
     <pv_name>$(P)$(R)RawFilePath_RBV</pv_name>
-    <x>140</x>
+    <x>110</x>
     <y>10</y>
     <width>410</width>
     <height>18</height>
@@ -513,41 +440,11 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Text Update</name>
-    <pv_name>$(P)$(R)WriteFileMessage</pv_name>
-    <x>10</x>
-    <y>750</y>
-    <width>660</width>
-    <height>50</height>
-    <font>
-      <font family="Sans" style="REGULAR" size="7.920792079207921">
-      </font>
-    </font>
-    <foreground_color>
-      <color red="253" green="0" blue="0">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="218" green="218" blue="218">
-      </color>
-    </background_color>
-    <format>6</format>
-    <show_units>false</show_units>
-    <vertical_alignment>1</vertical_alignment>
-    <actions>
-    </actions>
-    <border_color>
-      <color red="0" green="128" blue="255">
-      </color>
-    </border_color>
-  </widget>
   <widget type="label" version="2.0.0">
     <name>Label_11</name>
     <text>raw%Hms_</text>
     <x>10</x>
     <y>60</y>
-    <width>120</width>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -567,8 +464,7 @@ $(pv_value)</tooltip>
     <name>Label_12</name>
     <text>f%Hms_</text>
     <x>692</x>
-    <y>156</y>
-    <width>120</width>
+    <y>150</y>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -588,7 +484,7 @@ $(pv_value)</tooltip>
     <name>Label_13</name>
     <text>Preview/ sampling mode</text>
     <x>689</x>
-    <y>53</y>
+    <y>55</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -608,7 +504,7 @@ $(pv_value)</tooltip>
     <name>Menu Button</name>
     <pv_name>$(P)$(R)PrvSmplgMode</pv_name>
     <x>890</x>
-    <y>53</y>
+    <y>55</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -621,7 +517,7 @@ $(pv_value)</tooltip>
     <name>Text Update_13</name>
     <pv_name>$(P)$(R)PrvSmplgMode_RBV</pv_name>
     <x>1015</x>
-    <y>53</y>
+    <y>55</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -651,7 +547,7 @@ $(pv_value)</tooltip>
     <name>Label_10</name>
     <text>Preview period</text>
     <x>688</x>
-    <y>28</y>
+    <y>30</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -671,7 +567,7 @@ $(pv_value)</tooltip>
     <name>Text Update_14</name>
     <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
     <x>1082</x>
-    <y>28</y>
+    <y>30</y>
     <width>190</width>
     <height>18</height>
     <font>
@@ -701,7 +597,7 @@ $(pv_value)</tooltip>
     <name>Text Input_10</name>
     <pv_name>$(P)$(R)PrvPeriod</pv_name>
     <x>888</x>
-    <y>28</y>
+    <y>30</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -726,7 +622,7 @@ $(pv_value)</tooltip>
     <name>Label_15</name>
     <text>Image format</text>
     <x>687</x>
-    <y>201</y>
+    <y>200</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -746,7 +642,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_1</name>
     <pv_name>$(P)$(R)PrvImgFileFmt</pv_name>
     <x>888</x>
-    <y>201</y>
+    <y>200</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -759,7 +655,7 @@ $(pv_value)</tooltip>
     <name>Text Update_15</name>
     <pv_name>$(P)$(R)PrvImgFileFmt_RBV</pv_name>
     <x>1013</x>
-    <y>201</y>
+    <y>200</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -789,7 +685,7 @@ $(pv_value)</tooltip>
     <name>Label_16</name>
     <text>Image mode</text>
     <x>687</x>
-    <y>222</y>
+    <y>225</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -809,7 +705,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_2</name>
     <pv_name>$(P)$(R)PrvImgFileMode</pv_name>
     <x>888</x>
-    <y>222</y>
+    <y>225</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -822,7 +718,7 @@ $(pv_value)</tooltip>
     <name>Text Update_16</name>
     <pv_name>$(P)$(R)PrvImgFileMode_RBV</pv_name>
     <x>1013</x>
-    <y>222</y>
+    <y>225</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -851,7 +747,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_17</name>
     <pv_name>$(P)$(R)PrvImg1FilePath_RBV</pv_name>
-    <x>820</x>
+    <x>790</x>
     <y>380</y>
     <width>410</width>
     <height>18</height>
@@ -883,7 +779,6 @@ $(pv_value)</tooltip>
     <text>Prv Img1 file path</text>
     <x>685</x>
     <y>400</y>
-    <width>132</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -901,7 +796,7 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_11</name>
     <pv_name>$(P)$(R)PrvImg1FilePath</pv_name>
-    <x>820</x>
+    <x>790</x>
     <y>400</y>
     <width>530</width>
     <font>
@@ -989,7 +884,7 @@ $(pv_value)</tooltip>
     <name>Label_21</name>
     <text>Preview/ Img1 mode</text>
     <x>692</x>
-    <y>506</y>
+    <y>510</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1009,7 +904,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_5</name>
     <pv_name>$(P)$(R)PrvImg1FileMode</pv_name>
     <x>893</x>
-    <y>506</y>
+    <y>510</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -1022,7 +917,7 @@ $(pv_value)</tooltip>
     <name>Text Update_21</name>
     <pv_name>$(P)$(R)PrvImg1FileMode_RBV</pv_name>
     <x>1018</x>
-    <y>507</y>
+    <y>510</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -1184,33 +1079,11 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Action Button</name>
-    <actions>
-      <action type="write_pv">
-        <description>Write PV</description>
-        <pv_name>$(P)$(R)WriteData</pv_name>
-        <value>1</value>
-      </action>
-    </actions>
-    <pv_name>$(P)$(R)WriteData</pv_name>
-    <text>Write</text>
-    <x>590</x>
-    <y>710</y>
-    <width>60</width>
-    <height>20</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-  </widget>
   <widget type="label" version="2.0.0">
     <name>Label_24</name>
     <text>Img file pattern</text>
     <x>7</x>
-    <y>507</y>
-    <width>132</width>
+    <y>490</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -1228,8 +1101,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_13</name>
     <pv_name>$(P)$(R)ImgFileTemplate</pv_name>
-    <x>140</x>
-    <y>507</y>
+    <x>110</x>
+    <y>490</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1252,8 +1125,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_24</name>
     <pv_name>$(P)$(R)ImgFileTemplate_RBV</pv_name>
-    <x>140</x>
-    <y>487</y>
+    <x>110</x>
+    <y>470</y>
     <width>400</width>
     <height>18</height>
     <font>
@@ -1282,8 +1155,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_25</name>
     <pv_name>$(P)$(R)ImgFilePath_RBV</pv_name>
-    <x>140</x>
-    <y>437</y>
+    <x>110</x>
+    <y>420</y>
     <width>410</width>
     <height>18</height>
     <font>
@@ -1313,8 +1186,7 @@ $(pv_value)</tooltip>
     <name>Label_25</name>
     <text>Img file path</text>
     <x>7</x>
-    <y>457</y>
-    <width>132</width>
+    <y>440</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -1332,8 +1204,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_14</name>
     <pv_name>$(P)$(R)ImgFilePath</pv_name>
-    <x>140</x>
-    <y>457</y>
+    <x>110</x>
+    <y>440</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1357,7 +1229,7 @@ $(pv_value)</tooltip>
     <name>Label_26</name>
     <text>Exists:</text>
     <x>557</x>
-    <y>437</y>
+    <y>420</y>
     <width>70</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1376,7 +1248,7 @@ $(pv_value)</tooltip>
     <name>Text Update_26</name>
     <pv_name>$(P)$(R)ImgFilePathExists_RBV</pv_name>
     <x>630</x>
-    <y>437</y>
+    <y>420</y>
     <width>40</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
@@ -1406,8 +1278,7 @@ $(pv_value)</tooltip>
     <name>Label_27</name>
     <text>f%Hms_</text>
     <x>15</x>
-    <y>487</y>
-    <width>120</width>
+    <y>470</y>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1427,7 +1298,7 @@ $(pv_value)</tooltip>
     <name>Label_28</name>
     <text>Img format</text>
     <x>8</x>
-    <y>532</y>
+    <y>520</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1447,7 +1318,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_7</name>
     <pv_name>$(P)$(R)ImgFileFmt</pv_name>
     <x>208</x>
-    <y>532</y>
+    <y>520</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -1460,7 +1331,7 @@ $(pv_value)</tooltip>
     <name>Text Update_27</name>
     <pv_name>$(P)$(R)ImgFileFmt_RBV</pv_name>
     <x>333</x>
-    <y>532</y>
+    <y>520</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -1490,7 +1361,7 @@ $(pv_value)</tooltip>
     <name>Label_29</name>
     <text>Img mode</text>
     <x>8</x>
-    <y>553</y>
+    <y>545</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1510,7 +1381,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_8</name>
     <pv_name>$(P)$(R)ImgFileMode</pv_name>
     <x>208</x>
-    <y>553</y>
+    <y>545</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -1523,7 +1394,7 @@ $(pv_value)</tooltip>
     <name>Text Update_28</name>
     <pv_name>$(P)$(R)ImgFileMode_RBV</pv_name>
     <x>333</x>
-    <y>553</y>
+    <y>545</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -1583,7 +1454,7 @@ $(pv_value)</tooltip>
       <pv_name></pv_name>
     </macros>
     <x>730</x>
-    <y>350</y>
+    <y>370</y>
     <width>580</width>
     <height>2</height>
     <points>
@@ -1609,7 +1480,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_9</name>
     <pv_name>$(P)$(R)StpOnDskLim</pv_name>
     <x>208</x>
-    <y>627</y>
+    <y>620</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -1622,7 +1493,7 @@ $(pv_value)</tooltip>
     <name>Text Update_29</name>
     <pv_name>$(P)$(R)StpOnDskLim_RBV</pv_name>
     <x>333</x>
-    <y>627</y>
+    <y>620</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -1682,7 +1553,7 @@ $(pv_value)</tooltip>
       <pv_name></pv_name>
     </macros>
     <x>720</x>
-    <y>100</y>
+    <y>90</y>
     <width>580</width>
     <height>2</height>
     <points>
@@ -1708,7 +1579,7 @@ $(pv_value)</tooltip>
     <name>Label_30</name>
     <text>Stop On Disk Lim</text>
     <x>8</x>
-    <y>627</y>
+    <y>620</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1728,7 +1599,7 @@ $(pv_value)</tooltip>
     <name>Text Update_30</name>
     <pv_name>$(P)$(R)ImgIntgSize_RBV</pv_name>
     <x>333</x>
-    <y>577</y>
+    <y>570</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -1758,7 +1629,7 @@ $(pv_value)</tooltip>
     <name>Label_31</name>
     <text>Integration Size</text>
     <x>8</x>
-    <y>577</y>
+    <y>570</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1778,7 +1649,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_11</name>
     <pv_name>$(P)$(R)ImgIntgMode</pv_name>
     <x>208</x>
-    <y>601</y>
+    <y>595</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -1791,7 +1662,7 @@ $(pv_value)</tooltip>
     <name>Text Update_31</name>
     <pv_name>$(P)$(R)ImgIntgMode_RBV</pv_name>
     <x>333</x>
-    <y>601</y>
+    <y>595</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -1821,7 +1692,7 @@ $(pv_value)</tooltip>
     <name>Label_32</name>
     <text>Itegration Mode</text>
     <x>8</x>
-    <y>601</y>
+    <y>595</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1841,7 +1712,7 @@ $(pv_value)</tooltip>
     <name>Label_33</name>
     <text>Queue size</text>
     <x>8</x>
-    <y>653</y>
+    <y>645</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1861,7 +1732,7 @@ $(pv_value)</tooltip>
     <name>Text Input_15</name>
     <pv_name>$(P)$(R)ImgQueueSize</pv_name>
     <x>208</x>
-    <y>654</y>
+    <y>645</y>
     <width>60</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -1885,7 +1756,7 @@ $(pv_value)</tooltip>
     <name>Text Update_32</name>
     <pv_name>$(P)$(R)ImgQueueSize_RBV</pv_name>
     <x>284</x>
-    <y>655</y>
+    <y>645</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -1941,7 +1812,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_61</name>
     <pv_name>$(P)$(R)Img1FilePath_RBV</pv_name>
-    <x>140</x>
+    <x>110</x>
     <y>700</y>
     <width>410</width>
     <height>18</height>
@@ -1973,7 +1844,6 @@ $(pv_value)</tooltip>
     <text>Img1 file path</text>
     <x>7</x>
     <y>720</y>
-    <width>132</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -1991,7 +1861,7 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_32</name>
     <pv_name>$(P)$(R)Img1FilePath</pv_name>
-    <x>140</x>
+    <x>110</x>
     <y>720</y>
     <width>530</width>
     <font>
@@ -2065,8 +1935,7 @@ $(pv_value)</tooltip>
     <name>Label_72</name>
     <text>f%Hms_</text>
     <x>15</x>
-    <y>770</y>
-    <width>120</width>
+    <y>750</y>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2086,8 +1955,7 @@ $(pv_value)</tooltip>
     <name>Label_73</name>
     <text>Img1 file pattern</text>
     <x>7</x>
-    <y>790</y>
-    <width>132</width>
+    <y>770</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -2105,8 +1973,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_33</name>
     <pv_name>$(P)$(R)Img1FileTemplate</pv_name>
-    <x>140</x>
-    <y>790</y>
+    <x>110</x>
+    <y>770</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2129,8 +1997,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_63</name>
     <pv_name>$(P)$(R)Img1FileTemplate_RBV</pv_name>
-    <x>140</x>
-    <y>770</y>
+    <x>110</x>
+    <y>750</y>
     <width>400</width>
     <height>18</height>
     <font>
@@ -2160,7 +2028,7 @@ $(pv_value)</tooltip>
     <name>Label_74</name>
     <text>Img1 format</text>
     <x>8</x>
-    <y>815</y>
+    <y>800</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2180,7 +2048,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_22</name>
     <pv_name>$(P)$(R)Img1FileFmt</pv_name>
     <x>208</x>
-    <y>815</y>
+    <y>800</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2193,7 +2061,7 @@ $(pv_value)</tooltip>
     <name>Text Update_64</name>
     <pv_name>$(P)$(R)Img1FileFmt_RBV</pv_name>
     <x>333</x>
-    <y>815</y>
+    <y>800</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2223,7 +2091,7 @@ $(pv_value)</tooltip>
     <name>Label_75</name>
     <text>Img1 mode</text>
     <x>8</x>
-    <y>836</y>
+    <y>825</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2243,7 +2111,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_23</name>
     <pv_name>$(P)$(R)Img1FileMode</pv_name>
     <x>208</x>
-    <y>836</y>
+    <y>825</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2256,7 +2124,7 @@ $(pv_value)</tooltip>
     <name>Text Update_65</name>
     <pv_name>$(P)$(R)Img1FileMode_RBV</pv_name>
     <x>333</x>
-    <y>836</y>
+    <y>825</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2286,7 +2154,7 @@ $(pv_value)</tooltip>
     <name>Label_76</name>
     <text>Integration Size</text>
     <x>8</x>
-    <y>860</y>
+    <y>850</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2306,7 +2174,7 @@ $(pv_value)</tooltip>
     <name>Text Input_34</name>
     <pv_name>$(P)$(R)Img1IntgSize</pv_name>
     <x>208</x>
-    <y>860</y>
+    <y>850</y>
     <width>90</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2330,7 +2198,7 @@ $(pv_value)</tooltip>
     <name>Text Update_66</name>
     <pv_name>$(P)$(R)Img1IntgSize_RBV</pv_name>
     <x>333</x>
-    <y>860</y>
+    <y>850</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2360,7 +2228,7 @@ $(pv_value)</tooltip>
     <name>Label_77</name>
     <text>Itegration Mode</text>
     <x>8</x>
-    <y>884</y>
+    <y>875</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2380,7 +2248,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_24</name>
     <pv_name>$(P)$(R)Img1IntgMode</pv_name>
     <x>208</x>
-    <y>884</y>
+    <y>875</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2393,7 +2261,7 @@ $(pv_value)</tooltip>
     <name>Text Update_67</name>
     <pv_name>$(P)$(R)Img1IntgMode_RBV</pv_name>
     <x>333</x>
-    <y>884</y>
+    <y>875</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2423,7 +2291,7 @@ $(pv_value)</tooltip>
     <name>Label_78</name>
     <text>Stop On Disk Lim</text>
     <x>8</x>
-    <y>910</y>
+    <y>900</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2443,7 +2311,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_25</name>
     <pv_name>$(P)$(R)Img1StpOnDskLim</pv_name>
     <x>208</x>
-    <y>910</y>
+    <y>900</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2456,7 +2324,7 @@ $(pv_value)</tooltip>
     <name>Text Update_68</name>
     <pv_name>$(P)$(R)Img1StpOnDskLim_RBV</pv_name>
     <x>333</x>
-    <y>910</y>
+    <y>900</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2486,7 +2354,7 @@ $(pv_value)</tooltip>
     <name>Label_79</name>
     <text>Queue size</text>
     <x>8</x>
-    <y>936</y>
+    <y>925</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2506,7 +2374,7 @@ $(pv_value)</tooltip>
     <name>Text Input_35</name>
     <pv_name>$(P)$(R)Img1QueueSize</pv_name>
     <x>208</x>
-    <y>936</y>
+    <y>925</y>
     <width>60</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2530,7 +2398,7 @@ $(pv_value)</tooltip>
     <name>Text Update_69</name>
     <pv_name>$(P)$(R)Img1QueueSize_RBV</pv_name>
     <x>284</x>
-    <y>937</y>
+    <y>925</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -2558,9 +2426,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label_80</name>
     <text>Write img1</text>
-    <x>428</x>
-    <y>939</y>
-    <width>132</width>
+    <x>440</x>
+    <y>925</y>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -2580,7 +2448,7 @@ $(pv_value)</tooltip>
     <pv_name>$(P)$(R)WriteImg1</pv_name>
     <bit>-1</bit>
     <x>566</x>
-    <y>936</y>
+    <y>925</y>
     <height>26</height>
     <off_color>
       <color red="0" green="100" blue="0">
@@ -2601,7 +2469,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_12</name>
     <pv_name>$(P)$(R)PrvStpOnDskLim</pv_name>
     <x>888</x>
-    <y>293</y>
+    <y>300</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2614,7 +2482,7 @@ $(pv_value)</tooltip>
     <name>Text Update_33</name>
     <pv_name>$(P)$(R)PrvStpOnDskLim_RBV</pv_name>
     <x>1013</x>
-    <y>293</y>
+    <y>300</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2644,7 +2512,7 @@ $(pv_value)</tooltip>
     <name>Label_34</name>
     <text>Stop On Disk Lim</text>
     <x>688</x>
-    <y>293</y>
+    <y>300</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2664,7 +2532,7 @@ $(pv_value)</tooltip>
     <name>Label_35</name>
     <text>Integration Size</text>
     <x>688</x>
-    <y>243</y>
+    <y>250</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2684,7 +2552,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_14</name>
     <pv_name>$(P)$(R)PrvImgIntgMode</pv_name>
     <x>888</x>
-    <y>267</y>
+    <y>275</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2697,7 +2565,7 @@ $(pv_value)</tooltip>
     <name>Text Update_35</name>
     <pv_name>$(P)$(R)PrvImgIntgMode_RBV</pv_name>
     <x>1013</x>
-    <y>267</y>
+    <y>275</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2727,7 +2595,7 @@ $(pv_value)</tooltip>
     <name>Label_36</name>
     <text>Itegration Mode</text>
     <x>688</x>
-    <y>267</y>
+    <y>275</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2747,7 +2615,7 @@ $(pv_value)</tooltip>
     <name>Label_37</name>
     <text>Queue size</text>
     <x>688</x>
-    <y>319</y>
+    <y>325</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2767,7 +2635,7 @@ $(pv_value)</tooltip>
     <name>Text Input_16</name>
     <pv_name>$(P)$(R)PrvImgQueueSize</pv_name>
     <x>888</x>
-    <y>320</y>
+    <y>325</y>
     <width>60</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2791,7 +2659,7 @@ $(pv_value)</tooltip>
     <name>Text Update_36</name>
     <pv_name>$(P)$(R)PrvImgQueueSize_RBV</pv_name>
     <x>964</x>
-    <y>321</y>
+    <y>325</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -2820,7 +2688,7 @@ $(pv_value)</tooltip>
     <name>Text Input_17</name>
     <pv_name>$(P)$(R)ImgIntgSize</pv_name>
     <x>208</x>
-    <y>577</y>
+    <y>570</y>
     <width>90</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2844,7 +2712,7 @@ $(pv_value)</tooltip>
     <name>Text Update_37</name>
     <pv_name>$(P)$(R)PrvImgIntgSize_RBV</pv_name>
     <x>1015</x>
-    <y>245</y>
+    <y>250</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2874,7 +2742,7 @@ $(pv_value)</tooltip>
     <name>Text Input_18</name>
     <pv_name>$(P)$(R)PrvImgIntgSize</pv_name>
     <x>890</x>
-    <y>245</y>
+    <y>250</y>
     <width>90</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2898,7 +2766,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_15</name>
     <pv_name>$(P)$(R)Prv1StpOnDskLim</pv_name>
     <x>896</x>
-    <y>584</y>
+    <y>585</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -2911,7 +2779,7 @@ $(pv_value)</tooltip>
     <name>Text Update_38</name>
     <pv_name>$(P)$(R)Prv1StpOnDskLim_RBV</pv_name>
     <x>1021</x>
-    <y>584</y>
+    <y>585</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2941,7 +2809,7 @@ $(pv_value)</tooltip>
     <name>Label_38</name>
     <text>Stop On Disk Lim</text>
     <x>696</x>
-    <y>584</y>
+    <y>585</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -2961,7 +2829,7 @@ $(pv_value)</tooltip>
     <name>Text Update_39</name>
     <pv_name>$(P)$(R)PrvImg1IntgSize_RBV</pv_name>
     <x>1021</x>
-    <y>534</y>
+    <y>535</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -2991,7 +2859,7 @@ $(pv_value)</tooltip>
     <name>Label_39</name>
     <text>Integration Size</text>
     <x>696</x>
-    <y>534</y>
+    <y>535</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3011,7 +2879,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_16</name>
     <pv_name>$(P)$(R)PrvImg1IntgMode</pv_name>
     <x>896</x>
-    <y>558</y>
+    <y>560</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -3024,7 +2892,7 @@ $(pv_value)</tooltip>
     <name>Text Update_40</name>
     <pv_name>$(P)$(R)PrvImg1IntgMode_RBV</pv_name>
     <x>1021</x>
-    <y>558</y>
+    <y>560</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -3054,7 +2922,7 @@ $(pv_value)</tooltip>
     <name>Label_40</name>
     <text>Itegration Mode</text>
     <x>696</x>
-    <y>558</y>
+    <y>560</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3094,7 +2962,7 @@ $(pv_value)</tooltip>
     <name>Text Input_19</name>
     <pv_name>$(P)$(R)PrvImg1QueueSize</pv_name>
     <x>896</x>
-    <y>611</y>
+    <y>610</y>
     <width>60</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3118,7 +2986,7 @@ $(pv_value)</tooltip>
     <name>Text Update_41</name>
     <pv_name>$(P)$(R)PrvImg1QueueSize_RBV</pv_name>
     <x>972</x>
-    <y>612</y>
+    <y>610</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -3147,7 +3015,7 @@ $(pv_value)</tooltip>
     <name>Text Input_20</name>
     <pv_name>$(P)$(R)PrvImg1IntgSize</pv_name>
     <x>896</x>
-    <y>534</y>
+    <y>535</y>
     <width>90</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3194,7 +3062,7 @@ $(pv_value)</tooltip>
     <pv_name>$(P)$(R)WriteImg</pv_name>
     <bit>-1</bit>
     <x>566</x>
-    <y>651</y>
+    <y>645</y>
     <height>26</height>
     <off_color>
       <color red="0" green="100" blue="0">
@@ -3238,7 +3106,7 @@ $(pv_value)</tooltip>
     <pv_name>$(P)$(R)WritePrvImg1</pv_name>
     <bit>-1</bit>
     <x>1240</x>
-    <y>644</y>
+    <y>610</y>
     <height>26</height>
     <off_color>
       <color red="0" green="100" blue="0">
@@ -3258,9 +3126,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label_42</name>
     <text>Write raw</text>
-    <x>429</x>
-    <y>139</y>
-    <width>132</width>
+    <x>440</x>
+    <y>135</y>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -3278,9 +3146,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label_43</name>
     <text>Write image</text>
-    <x>428</x>
-    <y>656</y>
-    <width>132</width>
+    <x>440</x>
+    <y>645</y>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -3319,7 +3187,7 @@ $(pv_value)</tooltip>
     <name>Label_45</name>
     <text>Write prev image1</text>
     <x>1095</x>
-    <y>644</y>
+    <y>610</y>
     <width>140</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3335,94 +3203,6 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED</name>
-    <pv_name>$(P)$(R)WriteRaw1</pv_name>
-    <x>482</x>
-    <y>712</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
-  </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_1</name>
-    <pv_name>$(P)$(R)WriteImg</pv_name>
-    <x>502</x>
-    <y>712</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
-  </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_2</name>
-    <pv_name>$(P)$(R)WritePrvImg</pv_name>
-    <x>522</x>
-    <y>712</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
-  </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_3</name>
-    <pv_name>$(P)$(R)WritePrvHst</pv_name>
-    <x>562</x>
-    <y>712</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
-  </widget>
   <widget type="rectangle" version="2.0.0">
     <name>Rectangle_2</name>
     <macros>
@@ -3430,7 +3210,7 @@ $(pv_value)</tooltip>
     </macros>
     <x>1360</x>
     <width>675</width>
-    <height>810</height>
+    <height>510</height>
     <line_width>0</line_width>
     <line_color>
       <color red="0" green="128" blue="255">
@@ -3446,8 +3226,7 @@ $(pv_value)</tooltip>
     <name>Label_46</name>
     <text>Hst file pattern</text>
     <x>1361</x>
-    <y>177</y>
-    <width>132</width>
+    <y>170</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -3465,8 +3244,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_21</name>
     <pv_name>$(P)$(R)PrvHstFileTemplate</pv_name>
-    <x>1499</x>
-    <y>177</y>
+    <x>1470</x>
+    <y>170</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3489,8 +3268,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_42</name>
     <pv_name>$(P)$(R)PrvHstFileTemplate_RBV</pv_name>
-    <x>1496</x>
-    <y>157</y>
+    <x>1470</x>
+    <y>150</y>
     <width>400</width>
     <height>18</height>
     <font>
@@ -3519,8 +3298,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_43</name>
     <pv_name>$(P)$(R)PrvHstFilePath_RBV</pv_name>
-    <x>1496</x>
-    <y>107</y>
+    <x>1470</x>
+    <y>100</y>
     <width>410</width>
     <height>18</height>
     <font>
@@ -3550,8 +3329,7 @@ $(pv_value)</tooltip>
     <name>Label_47</name>
     <text>Hst file path</text>
     <x>1361</x>
-    <y>127</y>
-    <width>132</width>
+    <y>120</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -3569,8 +3347,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_22</name>
     <pv_name>$(P)$(R)PrvHstFilePath</pv_name>
-    <x>1499</x>
-    <y>127</y>
+    <x>1470</x>
+    <y>120</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3594,7 +3372,7 @@ $(pv_value)</tooltip>
     <name>Label_48</name>
     <text>Exists:</text>
     <x>1911</x>
-    <y>107</y>
+    <y>100</y>
     <width>70</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3613,7 +3391,7 @@ $(pv_value)</tooltip>
     <name>Text Update_44</name>
     <pv_name>$(P)$(R)PrvHstFilePathExists_RBV</pv_name>
     <x>1986</x>
-    <y>107</y>
+    <y>100</y>
     <width>40</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
@@ -3643,8 +3421,7 @@ $(pv_value)</tooltip>
     <name>Label_49</name>
     <text>f%Hms_</text>
     <x>1369</x>
-    <y>157</y>
-    <width>120</width>
+    <y>150</y>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3664,7 +3441,7 @@ $(pv_value)</tooltip>
     <name>Label_50</name>
     <text>Histogram format</text>
     <x>1364</x>
-    <y>210</y>
+    <y>200</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3684,7 +3461,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_17</name>
     <pv_name>$(P)$(R)PrvHstFileFmt</pv_name>
     <x>1565</x>
-    <y>210</y>
+    <y>200</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -3697,7 +3474,7 @@ $(pv_value)</tooltip>
     <name>Text Update_45</name>
     <pv_name>$(P)$(R)PrvHstFileFmt_RBV</pv_name>
     <x>1690</x>
-    <y>210</y>
+    <y>200</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -3727,7 +3504,7 @@ $(pv_value)</tooltip>
     <name>Label_51</name>
     <text>Histogram mode</text>
     <x>1364</x>
-    <y>235</y>
+    <y>225</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3747,7 +3524,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_18</name>
     <pv_name>$(P)$(R)PrvHstFileMode</pv_name>
     <x>1565</x>
-    <y>235</y>
+    <y>225</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -3760,7 +3537,7 @@ $(pv_value)</tooltip>
     <name>Text Update_46</name>
     <pv_name>$(P)$(R)PrvHstFileMode_RBV</pv_name>
     <x>1690</x>
-    <y>235</y>
+    <y>225</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -3820,7 +3597,7 @@ $(pv_value)</tooltip>
       <pv_name></pv_name>
     </macros>
     <x>1400</x>
-    <y>100</y>
+    <y>90</y>
     <width>580</width>
     <height>2</height>
     <points>
@@ -3846,7 +3623,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_19</name>
     <pv_name>$(P)$(R)PrvHstStpOnDskLim</pv_name>
     <x>1565</x>
-    <y>310</y>
+    <y>300</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -3859,7 +3636,7 @@ $(pv_value)</tooltip>
     <name>Text Update_47</name>
     <pv_name>$(P)$(R)PrvHstStpOnDskLim_RBV</pv_name>
     <x>1690</x>
-    <y>310</y>
+    <y>300</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -3889,7 +3666,7 @@ $(pv_value)</tooltip>
     <name>Label_52</name>
     <text>Stop On Disk Lim</text>
     <x>1365</x>
-    <y>310</y>
+    <y>300</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3909,7 +3686,7 @@ $(pv_value)</tooltip>
     <name>Label_53</name>
     <text>Integration Size</text>
     <x>1365</x>
-    <y>260</y>
+    <y>250</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3929,7 +3706,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_20</name>
     <pv_name>$(P)$(R)PrvHstIntgMode</pv_name>
     <x>1565</x>
-    <y>285</y>
+    <y>275</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -3942,7 +3719,7 @@ $(pv_value)</tooltip>
     <name>Text Update_48</name>
     <pv_name>$(P)$(R)PrvHstIntgMode_RBV</pv_name>
     <x>1690</x>
-    <y>285</y>
+    <y>275</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -3972,7 +3749,7 @@ $(pv_value)</tooltip>
     <name>Label_54</name>
     <text>Itegration Mode</text>
     <x>1365</x>
-    <y>285</y>
+    <y>275</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -3992,7 +3769,7 @@ $(pv_value)</tooltip>
     <name>Label_55</name>
     <text>Queue size</text>
     <x>1365</x>
-    <y>335</y>
+    <y>325</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4012,7 +3789,7 @@ $(pv_value)</tooltip>
     <name>Text Input_23</name>
     <pv_name>$(P)$(R)PrvHstQueueSize</pv_name>
     <x>1565</x>
-    <y>335</y>
+    <y>325</y>
     <width>110</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4036,7 +3813,7 @@ $(pv_value)</tooltip>
     <name>Text Update_49</name>
     <pv_name>$(P)$(R)PrvHstQueueSize_RBV</pv_name>
     <x>1690</x>
-    <y>335</y>
+    <y>325</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -4065,7 +3842,7 @@ $(pv_value)</tooltip>
     <name>Text Update_50</name>
     <pv_name>$(P)$(R)PrvHstIntgSize_RBV</pv_name>
     <x>1692</x>
-    <y>260</y>
+    <y>250</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -4095,7 +3872,7 @@ $(pv_value)</tooltip>
     <name>Text Input_24</name>
     <pv_name>$(P)$(R)PrvHstIntgSize</pv_name>
     <x>1565</x>
-    <y>260</y>
+    <y>250</y>
     <width>90</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4157,28 +3934,6 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_4</name>
-    <pv_name>$(P)$(R)WritePrvImg1</pv_name>
-    <x>542</x>
-    <y>712</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
-  </widget>
   <widget type="label" version="2.0.0">
     <name>Label_57</name>
     <text>Exists:</text>
@@ -4232,8 +3987,7 @@ $(pv_value)</tooltip>
     <name>Label_58</name>
     <text>Img file pattern</text>
     <x>681</x>
-    <y>451</y>
-    <width>132</width>
+    <y>450</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -4251,8 +4005,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_25</name>
     <pv_name>$(P)$(R)PrvImg1FileTemplate</pv_name>
-    <x>820</x>
-    <y>451</y>
+    <x>790</x>
+    <y>450</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4275,7 +4029,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_52</name>
     <pv_name>$(P)$(R)PrvImg1FileTemplate_RBV</pv_name>
-    <x>820</x>
+    <x>790</x>
     <y>431</y>
     <width>400</width>
     <height>18</height>
@@ -4307,7 +4061,6 @@ $(pv_value)</tooltip>
     <text>f%Hms_</text>
     <x>689</x>
     <y>431</y>
-    <width>120</width>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4327,8 +4080,7 @@ $(pv_value)</tooltip>
     <name>Label_60</name>
     <text>Raw1 file pattern</text>
     <x>3</x>
-    <y>276</y>
-    <width>132</width>
+    <y>270</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -4346,8 +4098,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_26</name>
     <pv_name>$(P)$(R)Raw1FileTemplate</pv_name>
-    <x>140</x>
-    <y>276</y>
+    <x>110</x>
+    <y>270</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4370,8 +4122,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_53</name>
     <pv_name>$(P)$(R)Raw1FileTemplate_RBV</pv_name>
-    <x>140</x>
-    <y>256</y>
+    <x>110</x>
+    <y>250</y>
     <width>400</width>
     <height>18</height>
     <font>
@@ -4401,8 +4153,7 @@ $(pv_value)</tooltip>
     <name>Label_61</name>
     <text>Raw1 file path</text>
     <x>3</x>
-    <y>226</y>
-    <width>132</width>
+    <y>220</y>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -4420,8 +4171,8 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_27</name>
     <pv_name>$(P)$(R)Raw1FilePath</pv_name>
-    <x>140</x>
-    <y>226</y>
+    <x>110</x>
+    <y>220</y>
     <width>530</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4445,7 +4196,7 @@ $(pv_value)</tooltip>
     <name>Label_62</name>
     <text>Exists:</text>
     <x>556</x>
-    <y>206</y>
+    <y>200</y>
     <width>70</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4464,7 +4215,7 @@ $(pv_value)</tooltip>
     <name>Text Update_54</name>
     <pv_name>$(P)$(R)Raw1FilePathExists_RBV</pv_name>
     <x>630</x>
-    <y>206</y>
+    <y>200</y>
     <width>40</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
@@ -4493,8 +4244,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_55</name>
     <pv_name>$(P)$(R)Raw1FilePath_RBV</pv_name>
-    <x>140</x>
-    <y>206</y>
+    <x>110</x>
+    <y>200</y>
     <width>410</width>
     <height>18</height>
     <font>
@@ -4524,8 +4275,7 @@ $(pv_value)</tooltip>
     <name>Label_63</name>
     <text>raw%Hms_</text>
     <x>11</x>
-    <y>256</y>
-    <width>120</width>
+    <y>250</y>
     <height>18</height>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4545,7 +4295,7 @@ $(pv_value)</tooltip>
     <name>Menu Button_21</name>
     <pv_name>$(P)$(R)Raw1SplitStg</pv_name>
     <x>208</x>
-    <y>307</y>
+    <y>300</y>
     <width>120</width>
     <height>20</height>
     <background_color>
@@ -4558,7 +4308,7 @@ $(pv_value)</tooltip>
     <name>Label_64</name>
     <text>Raw1 split strategy</text>
     <x>47</x>
-    <y>306</y>
+    <y>300</y>
     <width>156</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4578,7 +4328,7 @@ $(pv_value)</tooltip>
     <name>Label_65</name>
     <text>Raw1 queue size</text>
     <x>9</x>
-    <y>329</y>
+    <y>330</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4622,7 +4372,7 @@ $(pv_value)</tooltip>
     <name>Text Update_56</name>
     <pv_name>$(P)$(R)Raw1QueueSize_RBV</pv_name>
     <x>272</x>
-    <y>331</y>
+    <y>330</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -4651,7 +4401,7 @@ $(pv_value)</tooltip>
     <name>Text Update_57</name>
     <pv_name>$(P)$(R)Raw1SplitStg_RBV</pv_name>
     <x>331</x>
-    <y>308</y>
+    <y>300</y>
     <width>80</width>
     <height>18</height>
     <font>
@@ -4682,7 +4432,7 @@ $(pv_value)</tooltip>
     <pv_name>$(P)$(R)WriteRaw1</pv_name>
     <bit>-1</bit>
     <x>566</x>
-    <y>328</y>
+    <y>330</y>
     <height>26</height>
     <off_color>
       <color red="0" green="100" blue="0">
@@ -4701,10 +4451,10 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Label_66</name>
-    <text>Write raw</text>
-    <x>429</x>
-    <y>332</y>
-    <width>132</width>
+    <text>Write raw1</text>
+    <x>440</x>
+    <y>330</y>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -4747,33 +4497,11 @@ $(pv_value)</tooltip>
     <tooltip>$(pv_name)
 $(pv_value)</tooltip>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_5</name>
-    <pv_name>$(P)$(R)WriteRaw</pv_name>
-    <x>462</x>
-    <y>712</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
-  </widget>
   <widget type="label" version="2.0.0">
     <name>Label_67</name>
     <text>Number of Bins</text>
     <x>1367</x>
-    <y>360</y>
+    <y>350</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4793,7 +4521,7 @@ $(pv_value)</tooltip>
     <name>Text Input_29</name>
     <pv_name>$(P)$(R)PrvHstNumBins</pv_name>
     <x>1565</x>
-    <y>360</y>
+    <y>350</y>
     <width>110</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4817,7 +4545,7 @@ $(pv_value)</tooltip>
     <name>Text Update_58</name>
     <pv_name>$(P)$(R)PrvHstNumBins_RBV</pv_name>
     <x>1690</x>
-    <y>360</y>
+    <y>350</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -4846,7 +4574,7 @@ $(pv_value)</tooltip>
     <name>Label_68</name>
     <text>Bin Width</text>
     <x>1369</x>
-    <y>385</y>
+    <y>375</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4866,7 +4594,7 @@ $(pv_value)</tooltip>
     <name>Text Input_30</name>
     <pv_name>$(P)$(R)PrvHstBinWidth</pv_name>
     <x>1565</x>
-    <y>385</y>
+    <y>375</y>
     <width>110</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4890,7 +4618,7 @@ $(pv_value)</tooltip>
     <name>Text Update_59</name>
     <pv_name>$(P)$(R)PrvHstBinWidth_RBV</pv_name>
     <x>1690</x>
-    <y>385</y>
+    <y>375</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -4919,7 +4647,7 @@ $(pv_value)</tooltip>
     <name>Label_69</name>
     <text>Offset</text>
     <x>1369</x>
-    <y>410</y>
+    <y>400</y>
     <width>190</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4939,7 +4667,7 @@ $(pv_value)</tooltip>
     <name>Text Input_31</name>
     <pv_name>$(P)$(R)PrvHstOffset</pv_name>
     <x>1565</x>
-    <y>410</y>
+    <y>400</y>
     <width>110</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -4963,7 +4691,7 @@ $(pv_value)</tooltip>
     <name>Text Update_60</name>
     <pv_name>$(P)$(R)PrvHstOffset_RBV</pv_name>
     <x>1690</x>
-    <y>410</y>
+    <y>400</y>
     <width>130</width>
     <height>18</height>
     <font>
@@ -4988,212 +4716,152 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_6</name>
-    <pv_name>$(P)$(R)WriteRaw1_RBV</pv_name>
-    <x>482</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="embedded" version="2.0.0">
+    <name>Embedded Display</name>
+    <file>FileStatus.bob</file>
+    <x>680</x>
+    <y>680</y>
+    <width>675</width>
+    <height>160</height>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_7</name>
-    <pv_name>$(P)$(R)WriteImg_RBV</pv_name>
-    <x>502</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
+  <widget type="polyline" version="2.0.0">
+    <name>Polyline_3</name>
+    <macros>
+      <pv_name></pv_name>
+    </macros>
+    <x>730</x>
+    <y>660</y>
+    <width>580</width>
+    <height>2</height>
+    <points>
+      <point x="0.0" y="1.0">
+      </point>
+      <point x="579.0" y="0.0">
+      </point>
+      <point x="579.0" y="0.0">
+      </point>
+      <point x="579.0" y="0.0">
+      </point>
+    </points>
     <line_color>
-      <color red="150" green="150" blue="150">
+      <color red="30" green="144" blue="255">
       </color>
     </line_color>
     <actions>
     </actions>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_13</name>
-    <pv_name>$(P)$(R)WriteImg1_RBV</pv_name>
-    <x>522</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector</name>
+    <pv_name>$(P)$(R)PrvHstFilePath</pv_name>
+    <x>2000</x>
+    <y>120</y>
+    <width>1</width>
+    <height>10</height>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_8</name>
-    <pv_name>$(P)$(R)WritePrvImg_RBV</pv_name>
-    <x>522</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_1</name>
+    <pv_name>$(P)$(R)PrvHstFileTemplate</pv_name>
+    <x>2000</x>
+    <y>170</y>
+    <width>1</width>
+    <height>10</height>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_9</name>
-    <pv_name>$(P)$(R)WritePrvHst_RBV</pv_name>
-    <x>562</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_2</name>
+    <pv_name>$(P)$(R)PrvImgFilePath</pv_name>
+    <x>1320</x>
+    <y>120</y>
+    <width>1</width>
+    <height>10</height>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_10</name>
-    <pv_name>$(P)$(R)WritePrvImg1_RBV</pv_name>
-    <x>542</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_3</name>
+    <pv_name>$(P)$(R)PrvImgFileTemplate</pv_name>
+    <x>1320</x>
+    <y>170</y>
+    <width>1</width>
+    <height>10</height>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_11</name>
-    <pv_name>$(P)$(R)WriteRaw_RBV</pv_name>
-    <x>462</x>
-    <y>735</y>
-    <width>16</width>
-    <height>16</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_4</name>
+    <pv_name>$(P)$(R)PrvImg1FilePath</pv_name>
+    <x>1320</x>
+    <y>400</y>
+    <width>1</width>
+    <height>10</height>
   </widget>
-  <widget type="led" version="2.0.0">
-    <name>LED_12</name>
-    <pv_name>$(P)$(R)FileWriterCalc</pv_name>
-    <x>327</x>
-    <y>712</y>
-    <width>26</width>
-    <height>26</height>
-    <off_color>
-      <color red="0" green="100" blue="0">
-      </color>
-    </off_color>
-    <on_color>
-      <color red="255" green="0" blue="0">
-      </color>
-    </on_color>
-    <foreground_color>
-      <color red="192" green="192" blue="192">
-      </color>
-    </foreground_color>
-    <line_color>
-      <color red="150" green="150" blue="150">
-      </color>
-    </line_color>
-    <actions>
-    </actions>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_5</name>
+    <pv_name>$(P)$(R)PrvImg1FileTemplate</pv_name>
+    <x>1320</x>
+    <y>450</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_6</name>
+    <pv_name>$(P)$(R)RawFilePath</pv_name>
+    <x>640</x>
+    <y>30</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_7</name>
+    <pv_name>$(P)$(R)RawFileTemplate</pv_name>
+    <x>640</x>
+    <y>80</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_8</name>
+    <pv_name>$(P)$(R)Raw1FilePath</pv_name>
+    <x>640</x>
+    <y>220</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_9</name>
+    <pv_name>$(P)$(R)Raw1FileTemplate</pv_name>
+    <x>640</x>
+    <y>270</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_10</name>
+    <pv_name>$(P)$(R)ImgFilePath</pv_name>
+    <x>640</x>
+    <y>440</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_11</name>
+    <pv_name>$(P)$(R)ImgFileTemplate</pv_name>
+    <x>640</x>
+    <y>490</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_12</name>
+    <pv_name>$(P)$(R)Img1FilePath</pv_name>
+    <x>640</x>
+    <y>720</y>
+    <width>1</width>
+    <height>10</height>
+  </widget>
+  <widget type="fileselector" version="2.0.0">
+    <name>File Selector_13</name>
+    <pv_name>$(P)$(R)Img1FileTemplate</pv_name>
+    <x>640</x>
+    <y>770</y>
+    <width>1</width>
+    <height>10</height>
   </widget>
 </display>
