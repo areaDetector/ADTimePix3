@@ -24,6 +24,19 @@
 #include "cpr/cpr.h"
 #include <Magick++.h>
 #include <json.hpp>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <cstring>
+#include <memory>
+#include <vector>
+#include <deque>
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -275,13 +288,73 @@
 using namespace Magick;
 using json = nlohmann::json;
 
+// Forward declarations
+class NetworkClient;
+
 
 
 // ----------------------------------------
 // ADTimePix3 Data Structures
 //-----------------------------------------
 
-// Place any in use Data structures here
+/**
+ * @brief Network client for TCP socket communication
+ */
+class NetworkClient {
+public:
+    NetworkClient();
+    ~NetworkClient();
+
+    // Disable copy
+    NetworkClient(const NetworkClient&) = delete;
+    NetworkClient& operator=(const NetworkClient&) = delete;
+
+    // Allow move
+    NetworkClient(NetworkClient&& other) noexcept;
+    NetworkClient& operator=(NetworkClient&& other) noexcept;
+
+    /**
+     * @brief Connect to server
+     * @param host Server hostname/IP
+     * @param port Server port
+     * @return true if successful, false otherwise
+     */
+    bool connect(const std::string& host, int port);
+
+    /**
+     * @brief Disconnect from server
+     */
+    void disconnect();
+
+    /**
+     * @brief Check if connected
+     * @return true if connected
+     */
+    bool is_connected() const { return connected_; }
+
+    /**
+     * @brief Receive data from socket
+     * @param buffer Buffer to store received data
+     * @param max_size Maximum size to receive
+     * @return Number of bytes received, -1 on error, 0 on connection closed
+     */
+    ssize_t receive(char* buffer, size_t max_size);
+
+    /**
+     * @brief Receive exact amount of data
+     * @param buffer Buffer to store received data
+     * @param size Exact size to receive
+     * @return true if successful, false otherwise
+     */
+    bool receive_exact(char* buffer, size_t size);
+
+private:
+    int socket_fd_;
+    bool connected_;
+};
+
+// Constants for TCP streaming
+constexpr size_t MAX_BUFFER_SIZE = 32768;
 
 
 
@@ -586,6 +659,18 @@ class ADTimePix : public ADDriver{
         bool acquiring=false;
 
         epicsThreadId callbackThreadId;
+        
+        // TCP streaming for PrvImg channel
+        std::unique_ptr<NetworkClient> prvImgNetworkClient_;
+        std::string prvImgHost_;
+        int prvImgPort_;
+        bool prvImgConnected_;
+        bool prvImgRunning_;
+        epicsThreadId prvImgWorkerThreadId_;
+        epicsMutexId prvImgMutex_;
+        std::vector<char> prvImgLineBuffer_;
+        size_t prvImgTotalRead_;
+        int prvImgFormat_;  // Cache format to determine if jsonimage (3)
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
@@ -637,6 +722,15 @@ class ADTimePix : public ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         asynStatus readImage();
         asynStatus fileWriter();
+        
+        // TCP streaming methods for PrvImg channel
+        asynStatus readImageFromTCP();
+        bool processPrvImgDataLine(char* line_buffer, char* newline_pos, size_t total_read);
+        void prvImgWorkerThread();
+        static void prvImgWorkerThreadC(void *pPvt);
+        void prvImgConnect();
+        void prvImgDisconnect();
+        bool parseTcpPath(const std::string& filePath, std::string& host, int& port);
         
         // Helper functions for fileWriter optimization
         asynStatus getParameterSafely(int param, int& value);

@@ -90,9 +90,9 @@ dbpf("$(PREFIX)cam1:Img1IntgMode","1")   # average
 dbpf("$(PREFIX)cam1:Img1StpOnDskLim","1")   # true
 dbpf("$(PREFIX)cam1:WriteImg1","0")   # Select img disk write
 
-dbpf("$(PREFIX)cam1:PrvImgFilePath","http://localhost")
+dbpf("$(PREFIX)cam1:PrvImgFilePath","tcp://listen@localhost:8089")
 dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
-dbpf("$(PREFIX)cam1:PrvImgFileFmt","0")    # 0: tiff (60 fps), 2: png (37 fps)
+dbpf("$(PREFIX)cam1:PrvImgFileFmt","3")    # 3: jsonimage (TCP streaming)
 dbpf("$(PREFIX)cam1:PrvImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:PrvImgIntgSize","5")   # Sum 5 frames, -1,0,1,..,32
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","0")   # 0=sum, 1=average

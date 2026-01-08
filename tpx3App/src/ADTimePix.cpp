@@ -69,6 +69,171 @@ using namespace Magick;
 
 // Add any additional namespaces here
 
+// NetworkClient class implementation
+NetworkClient::NetworkClient() : socket_fd_(-1), connected_(false) {}
+
+NetworkClient::~NetworkClient() {
+    disconnect();
+}
+
+// Move constructor
+NetworkClient::NetworkClient(NetworkClient&& other) noexcept
+    : socket_fd_(other.socket_fd_), connected_(other.connected_) {
+    other.socket_fd_ = -1;
+    other.connected_ = false;
+}
+
+NetworkClient& NetworkClient::operator=(NetworkClient&& other) noexcept {
+    if (this != &other) {
+        disconnect();
+        socket_fd_ = other.socket_fd_;
+        connected_ = other.connected_;
+        other.socket_fd_ = -1;
+        other.connected_ = false;
+    }
+    return *this;
+}
+
+bool NetworkClient::connect(const std::string& host, int port) {
+    // Close existing connection if any
+    if (socket_fd_ >= 0) {
+        ::close(socket_fd_);
+        socket_fd_ = -1;
+    }
+    connected_ = false;
+    
+    socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (socket_fd_ < 0) {
+        std::cerr << "Socket creation failed: " << strerror(errno) << std::endl;
+        return false;
+    }
+
+    // Enable TCP keepalive
+    int opt = 1;
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt)) < 0) {
+        std::cerr << "Failed to set SO_KEEPALIVE: " << strerror(errno) << std::endl;
+    }
+    
+    // Configure TCP keepalive parameters
+    int keepidle = 60;
+    int keepintvl = 10;
+    int keepcnt = 3;
+    
+    if (setsockopt(socket_fd_, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle)) < 0) {
+        // Not critical
+    }
+    if (setsockopt(socket_fd_, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl)) < 0) {
+        // Not critical
+    }
+    if (setsockopt(socket_fd_, IPPROTO_TCP, TCP_KEEPCNT, &keepcnt, sizeof(keepcnt)) < 0) {
+        // Not critical
+    }
+
+    // Set socket buffers
+    int rcvbuf = 64 * 1024;
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) < 0) {
+        std::cerr << "Failed to set receive buffer size: " << strerror(errno) << std::endl;
+    }
+    
+    // Set SO_LINGER
+    struct linger linger_opt;
+    linger_opt.l_onoff = 1;
+    linger_opt.l_linger = 5;
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_LINGER, &linger_opt, sizeof(linger_opt)) < 0) {
+        // Not critical
+    }
+
+    struct sockaddr_in server_addr{};
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    
+    // Try to parse as IP address first
+    if (inet_pton(AF_INET, host.c_str(), &server_addr.sin_addr) <= 0) {
+        // If not an IP address, try to resolve as hostname using getaddrinfo
+        struct addrinfo hints;
+        struct addrinfo *result = NULL;
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        
+        char port_str[16];
+        snprintf(port_str, sizeof(port_str), "%d", port);
+        
+        int err = getaddrinfo(host.c_str(), port_str, &hints, &result);
+        if (err != 0 || result == NULL) {
+            std::cerr << "Invalid address or hostname: " << host;
+            if (err != 0) {
+                std::cerr << " (" << gai_strerror(err) << ")";
+            }
+            std::cerr << std::endl;
+            ::close(socket_fd_);
+            socket_fd_ = -1;
+            return false;
+        }
+        
+        // Use the first result (IPv4 address)
+        struct sockaddr_in *addr_in = (struct sockaddr_in *)result->ai_addr;
+        server_addr.sin_addr = addr_in->sin_addr;
+        
+        freeaddrinfo(result);
+    }
+    
+    if (::connect(socket_fd_, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        std::cerr << "Connection failed: " << strerror(errno) << std::endl;
+        ::close(socket_fd_);
+        socket_fd_ = -1;
+        return false;
+    }
+    
+    connected_ = true;
+    return true;
+}
+
+void NetworkClient::disconnect() {
+    if (socket_fd_ >= 0) {
+        ::close(socket_fd_);
+        socket_fd_ = -1;
+    }
+    connected_ = false;
+}
+
+ssize_t NetworkClient::receive(char* buffer, size_t max_size) {
+    if (!connected_ || socket_fd_ < 0) {
+        return -1;
+    }
+    
+    ssize_t bytes_read = recv(socket_fd_, buffer, max_size, 0);
+    
+    if (bytes_read == 0) {
+        std::cout << "Connection closed by peer" << std::endl;
+        connected_ = false;
+    } else if (bytes_read < 0) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            std::cerr << "Socket error: " << strerror(errno) << std::endl;
+            connected_ = false;
+        }
+    }
+    
+    return bytes_read;
+}
+
+bool NetworkClient::receive_exact(char* buffer, size_t size) {
+    size_t total_received = 0;
+    
+    while (total_received < size) {
+        ssize_t bytes = receive(buffer + total_received, size - total_received);
+        
+        if (bytes <= 0) {
+            return false;
+        }
+        
+        total_received += bytes;
+    }
+    
+    return true;
+}
+
 
 const char* driverName = "ADTimePix";
 
@@ -314,8 +479,73 @@ asynStatus ADTimePix::checkImg1Path()
 
 asynStatus ADTimePix::checkPrvImgPath()
 {
-    return checkChannelPath(ADTimePixPrvImgBase, -1, ADTimePixPrvImgFilePathExists,
-                          "PrvImg", "PrvImg file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
+    static const char* functionName = "checkPrvImgPath";
+    asynStatus status = checkChannelPath(ADTimePixPrvImgBase, -1, ADTimePixPrvImgFilePathExists,
+                          "PrvImg", "PrvImg file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://listen@hostname:port");
+    
+    // If TCP path, parse host and port
+    if (status == asynSuccess) {
+        std::string filePath;
+        getStringParam(ADTimePixPrvImgBase, filePath);
+        if (filePath.find("tcp://") == 0) {
+            std::string host;
+            int port;
+            if (parseTcpPath(filePath, host, port)) {
+                epicsMutexLock(prvImgMutex_);
+                prvImgHost_ = host;
+                prvImgPort_ = port;
+                getIntegerParam(ADTimePixPrvImgFormat, &prvImgFormat_);
+                epicsMutexUnlock(prvImgMutex_);
+                LOG_ARGS("Parsed PrvImg TCP path: host=%s, port=%d", host.c_str(), port);
+            } else {
+                ERR_ARGS("Failed to parse PrvImg TCP path: %s", filePath.c_str());
+                setIntegerParam(ADTimePixPrvImgFilePathExists, 0);
+                return asynError;
+            }
+        }
+    }
+    
+    return status;
+}
+
+bool ADTimePix::parseTcpPath(const std::string& filePath, std::string& host, int& port) {
+    static const char* functionName = "parseTcpPath";
+    // Parse tcp://listen@hostname:port or tcp://hostname:port
+    // Examples: tcp://listen@localhost:8089, tcp://127.0.0.1:8089
+    
+    if (filePath.find("tcp://") != 0) {
+        return false;
+    }
+    
+    std::string remaining = filePath.substr(6); // Remove "tcp://"
+    
+    // Handle "listen@hostname:port" format
+    size_t at_pos = remaining.find('@');
+    if (at_pos != std::string::npos) {
+        remaining = remaining.substr(at_pos + 1); // Skip "listen@"
+    }
+    
+    // Parse hostname:port
+    size_t colon_pos = remaining.find(':');
+    if (colon_pos == std::string::npos) {
+        return false;
+    }
+    
+    host = remaining.substr(0, colon_pos);
+    std::string port_str = remaining.substr(colon_pos + 1);
+    
+    try {
+        port = std::stoi(port_str);
+        if (port < 1 || port > 65535) {
+            ERR_ARGS("Invalid port number: %d (must be 1-65535)", port);
+            return false;
+        }
+    } catch (const std::exception& e) {
+        ERR_ARGS("Failed to parse port: %s", port_str.c_str());
+        return false;
+    }
+    
+    return true;
 }
 
 asynStatus ADTimePix::checkPrvImg1Path()
@@ -1870,26 +2100,124 @@ asynStatus ADTimePix::initAcquisition(){
  * @return: status  -> error if no device, camera values not set, or execute command fails. Otherwise, success
  */
 asynStatus ADTimePix::acquireStart(){
-    const char* functionName = "acquireStart";
+    static const char* functionName = "acquireStart";
     asynStatus status = asynSuccess;
+
+    // Ensure any existing PrvImg TCP connection is disconnected before starting new measurement
+    // This prevents port conflicts
+    if (prvImgMutex_) {
+        epicsMutexLock(prvImgMutex_);
+        prvImgRunning_ = false;
+        epicsMutexUnlock(prvImgMutex_);
+    }
+    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+    prvImgDisconnect();
 
     setIntegerParam(ADStatus, ADStatusAcquire);
 
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.joinable = 1;
 
+    // Check if measurement is already running and stop it first to free ports
+    string measurementURL = this->serverURL + std::string("/measurement");
+    cpr::Response r = cpr::Get(cpr::Url{measurementURL},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    
+    if (r.status_code == 200 && !r.text.empty()) {
+        try {
+            json measurement_j;
+            try {
+                measurement_j = json::parse(r.text.c_str());
+            } catch (const json::parse_error& e) {
+                WARN_ARGS("Failed to parse measurement JSON: %s, continuing anyway", e.what());
+                // Continue without checking status
+                measurement_j = json::object();
+            }
+            // Safely check if Info and Status exist and are not null
+            if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
+                if (measurement_j["Info"].contains("Status") && measurement_j["Info"]["Status"].is_string()) {
+                    std::string status = measurement_j["Info"]["Status"].get<std::string>();
+                    if (status != "DA_IDLE" && status != "DA_STOPPED") {
+                        LOG_ARGS("Measurement is running (status: %s), stopping it first", status.c_str());
+                        string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
+                        cpr::Response stop_r = cpr::Get(cpr::Url{stopMeasurementURL},
+                                                   cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                                                   cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+                        if (stop_r.status_code == 200) {
+                            // Wait a bit for Serval to release ports
+                            epicsThreadSleep(0.5);
+                        } else {
+                            WARN_ARGS("Failed to stop existing measurement (status: %ld), continuing anyway", stop_r.status_code);
+                        }
+                    }
+                } else {
+                    // Status field is missing or null, assume measurement is not running
+                    LOG("Measurement status field is missing or null, assuming not running");
+                }
+            } else {
+                // Info field is missing or not an object
+                LOG("Measurement Info field is missing or invalid, assuming not running");
+            }
+        } catch (const json::parse_error& e) {
+            WARN_ARGS("Failed to parse measurement JSON: %s, continuing anyway", e.what());
+        } catch (const json::type_error& e) {
+            WARN_ARGS("JSON type error when checking measurement status: %s, continuing anyway", e.what());
+        } catch (const std::exception& e) {
+            WARN_ARGS("Failed to check measurement status: %s, continuing anyway", e.what());
+        }
+    }
+
     string startMeasurementURL = this->serverURL + std::string("/measurement/start");
-    cpr::Response r = cpr::Get(cpr::Url{startMeasurementURL},
+    r = cpr::Get(cpr::Url{startMeasurementURL},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                            cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
     if (r.status_code != 200){
-        ERR("Failed to start measurement!");
+        ERR_ARGS("Failed to start measurement! Status code: %ld", r.status_code);
+        // Ensure any partially started worker thread is stopped
+        epicsMutexLock(prvImgMutex_);
+        prvImgRunning_ = false;
+        epicsMutexUnlock(prvImgMutex_);
+        if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+            epicsThreadMustJoin(prvImgWorkerThreadId_);
+            prvImgWorkerThreadId_ = NULL;
+        }
+        prvImgDisconnect();
         return asynError;
     }
 
     this->callbackThreadId = epicsThreadCreateOpt("timePixCallback", timePixCallbackC, this, &opts);
     this->acquiring = true;
+    
+    // Start PrvImg TCP streaming worker thread if WritePrvImg is enabled and path is TCP
+    // Wait a bit for Serval to bind to the port before trying to connect
+    int writePrvImg;
+    getIntegerParam(ADTimePixWritePrvImg, &writePrvImg);
+    if (writePrvImg != 0) {
+        std::string prvImgPath;
+        getStringParam(ADTimePixPrvImgBase, prvImgPath);
+        if (prvImgPath.find("tcp://") == 0) {
+            // Give Serval time to bind to the TCP port
+            epicsThreadSleep(0.5); // Wait 500ms for Serval to start TCP server
+            
+            epicsMutexLock(prvImgMutex_);
+            if (!prvImgRunning_ && !prvImgWorkerThreadId_) {
+                prvImgRunning_ = true;
+                prvImgWorkerThreadId_ = epicsThreadCreateOpt("prvImgWorker", prvImgWorkerThreadC, this, &opts);
+                if (!prvImgWorkerThreadId_) {
+                    ERR("Failed to create PrvImg worker thread");
+                    prvImgRunning_ = false;
+                } else {
+                    LOG("Started PrvImg TCP worker thread in acquireStart");
+                }
+            }
+            epicsMutexUnlock(prvImgMutex_);
+        }
+    }
     
     return status;
 }
@@ -1932,24 +2260,48 @@ void ADTimePix::timePixCallback(){
 
     json measurement_j = json::parse(r.text.c_str());
 
-    setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
+    // Safely extract measurement info with null checks
+    if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
+        if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
+            setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
+        }
 
-    getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
-        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
-        setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
-        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
-    } else {
-        printf ("Serval Version not compared, event rate not read\n");
-    }
+        getStringParam(ADSDKVersion, API_Ver);
+        if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
+            if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
+                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
+            }
+            if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
+                setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
+            }
+        } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
+            if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
+                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
+            }
+        } else {
+            printf ("Serval Version not compared, event rate not read\n");
+        }
 
-    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
-    setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
-    setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
-    setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
-    setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
-    setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());   
+        if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
+            setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
+        }
+        if (measurement_j["Info"].contains("ElapsedTime") && measurement_j["Info"]["ElapsedTime"].is_number()) {
+            setDoubleParam(ADTimePixElapsedTime, measurement_j["Info"]["ElapsedTime"].get<double>());
+        }
+        if (measurement_j["Info"].contains("TimeLeft") && measurement_j["Info"]["TimeLeft"].is_number()) {
+            setDoubleParam(ADTimePixTimeLeft, measurement_j["Info"]["TimeLeft"].get<double>());
+        }
+        if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
+            setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
+        }
+        if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
+            setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
+        }
+        if (measurement_j["Info"].contains("Status")) {
+            // Status might be null, so use dump() which handles null safely
+            setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
+        }
+    }   
     callParamCallbacks();
 
     while(this->acquiring){
@@ -1964,28 +2316,57 @@ void ADTimePix::timePixCallback(){
             r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplication" of sessions
                         
             measurement_j = json::parse(r.text.c_str());
-            setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
             
-            if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
-                setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
-                setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-            } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
-                setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
-            } else {
-                printf ("Serval Version event rate not specified in while loop.\n");
-            }
+            // Safely extract measurement info with null checks
+            if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
+                if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
+                    setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
+                }
+                
+                if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
+                    if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
+                        setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
+                    }
+                    if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
+                        setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
+                    }
+                } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
+                    if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
+                        setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
+                    }
+                } else {
+                    printf ("Serval Version event rate not specified in while loop.\n");
+                }
 
-            setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
-            setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
-            setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
-            setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
-            setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
-            setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());
+                if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
+                    setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
+                }
+                if (measurement_j["Info"].contains("ElapsedTime") && measurement_j["Info"]["ElapsedTime"].is_number()) {
+                    setDoubleParam(ADTimePixElapsedTime, measurement_j["Info"]["ElapsedTime"].get<double>());
+                }
+                if (measurement_j["Info"].contains("TimeLeft") && measurement_j["Info"]["TimeLeft"].is_number()) {
+                    setDoubleParam(ADTimePixTimeLeft, measurement_j["Info"]["TimeLeft"].get<double>());
+                }
+                if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
+                    setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
+                    new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
+                }
+                if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
+                    setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
+                }
+                if (measurement_j["Info"].contains("Status")) {
+                    // Status might be null, so use dump() which handles null safely
+                    setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
+                    // Check if status is "DA_IDLE" (only if it's a string)
+                    if (measurement_j["Info"]["Status"].is_string() && 
+                        measurement_j["Info"]["Status"].get<std::string>() == "DA_IDLE") {
+                        isIdle = true;
+                    }
+                }
+            }
             callParamCallbacks();
             
-            new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
-            if (measurement_j["Info"]["Status"] == "DA_IDLE" || this->acquiring == false) {
-                isIdle = true;
+            if (isIdle || this->acquiring == false) {
                 break;
             }
 
@@ -2004,39 +2385,59 @@ void ADTimePix::timePixCallback(){
             // Preview, ImageChannels[0]
 
             if(this->acquiring){
-                asynStatus imageStatus = readImage();
+                // Check if we're using TCP streaming
+                std::string prvImgPath;
+                getStringParam(ADTimePixPrvImgBase, prvImgPath);
+                bool usingTcp = (prvImgPath.find("tcp://") == 0);
+                
+                if (usingTcp) {
+                    // For TCP streaming, the worker thread handles everything
+                    // Just ensure it's running - no need to process image here
+                    readImageFromTCP(); // Worker thread handles image processing
+                    // Worker thread will update pArrays[0] and trigger callbacks asynchronously
+                    // We just update counters based on frame count from measurement endpoint
+                    setIntegerParam(ADNumImagesCounter, frameCounter);
+                    callParamCallbacks();
+                } else {
+                    // Use GraphicsMagick HTTP method
+                    asynStatus imageStatus = readImage();
     
-                callParamCallbacks();
+                    callParamCallbacks();
     
-                if (imageStatus == asynSuccess) {
-                    imageCounter++;
-                    imagesAcquired++;
-                    pImage = this->pArrays[0];
+                    if (imageStatus == asynSuccess) {
+                        imageCounter++;
+                        imagesAcquired++;
+                        if (this->pArrays && this->pArrays[0]) {
+                            pImage = this->pArrays[0];
     
-                    /* Put the frame number and time stamp into the buffer */
-                    pImage->uniqueId = imageCounter;
-                    pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
-                    updateTimeStamp(&pImage->epicsTS);
+                            /* Put the frame number and time stamp into the buffer */
+                            pImage->uniqueId = imageCounter;
+                            pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+                            updateTimeStamp(&pImage->epicsTS);
     
-                    /* Get any attributes that have been defined for this driver */
-                     this->getAttributes(pImage->pAttributeList);
+                            /* Get any attributes that have been defined for this driver */
+                            if (pImage->pAttributeList) {
+                                this->getAttributes(pImage->pAttributeList);
+                            }
     
-                     if (arrayCallbacks) {
-                         /* Call the NDArray callback */
-                         FLOW("calling imageData callback");
-                         doCallbacksGenericPointer(pImage, NDArrayData, 0);
-                     }
-                     if(mode == 0){
-                         acquireStop();
-                     }
-                     else if(mode == 1){
-                         if (numImages == imageCounter){
-                             acquireStop();
-                         }
-                     }
-                     setIntegerParam(ADNumImagesCounter, frameCounter);
-                     setIntegerParam(NDArrayCounter, imagesAcquired);
-                     callParamCallbacks();
+                            if (arrayCallbacks) {
+                                /* Call the NDArray callback */
+                                FLOW("calling imageData callback");
+                                doCallbacksGenericPointer(pImage, NDArrayData, 0);
+                            }
+                        }
+                        if(mode == 0){
+                            acquireStop();
+                        }
+                        else if(mode == 1){
+                            if (numImages == imageCounter){
+                                acquireStop();
+                            }
+                        }
+                        setIntegerParam(ADNumImagesCounter, frameCounter);
+                        setIntegerParam(NDArrayCounter, imagesAcquired);
+                        callParamCallbacks();
+                    }
                 }
             }
         }
@@ -2055,11 +2456,26 @@ void ADTimePix::timePixCallback(){
  * @return: status  -> error if no camera or command fails to execute, success otherwise
  */ 
 asynStatus ADTimePix::acquireStop(){
-    const char* functionName = "acquireStop";
+    static const char* functionName = "acquireStop";
     asynStatus status;
     std::string API_Ver;
 
     this->acquiring=false;
+    
+    // Stop PrvImg TCP streaming worker thread FIRST before stopping Serval measurement
+    // This ensures clean disconnection before Serval releases the port
+    if (prvImgMutex_) {
+        epicsMutexLock(prvImgMutex_);
+        prvImgRunning_ = false;
+        epicsMutexUnlock(prvImgMutex_);
+    }
+    
+    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+    prvImgDisconnect();
+    
     if(this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf())
         epicsThreadMustJoin(this->callbackThreadId);
 
@@ -2093,24 +2509,48 @@ asynStatus ADTimePix::acquireStop(){
 
     json measurement_j = json::parse(r.text.c_str());
 
-    setIntegerParam(ADTimePixPelRate,           measurement_j["Info"]["PixelEventRate"].get<int>());
+    // Safely extract measurement info with null checks
+    if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
+        if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
+            setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
+        }
 
-    getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
-        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["Tdc1EventRate"].get<int>());
-        setIntegerParam(ADTimePixTdc2Rate,           measurement_j["Info"]["Tdc2EventRate"].get<int>());
-    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
-        setIntegerParam(ADTimePixTdc1Rate,           measurement_j["Info"]["TdcEventRate"].get<int>());
-    } else {
-        printf ("Serval Version not compared, event rate not read in acquireStop\n");
+        getStringParam(ADSDKVersion, API_Ver);
+        if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
+            if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
+                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
+            }
+            if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
+                setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
+            }
+        } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
+            if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
+                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
+            }
+        } else {
+            printf ("Serval Version not compared, event rate not read in acquireStop\n");
+        }
+
+        if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
+            setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
+        }
+        if (measurement_j["Info"].contains("ElapsedTime") && measurement_j["Info"]["ElapsedTime"].is_number()) {
+            setDoubleParam(ADTimePixElapsedTime, measurement_j["Info"]["ElapsedTime"].get<double>());
+        }
+        if (measurement_j["Info"].contains("TimeLeft") && measurement_j["Info"]["TimeLeft"].is_number()) {
+            setDoubleParam(ADTimePixTimeLeft, measurement_j["Info"]["TimeLeft"].get<double>());
+        }
+        if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
+            setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
+        }
+        if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
+            setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
+        }
+        if (measurement_j["Info"].contains("Status")) {
+            // Status might be null, so use dump() which handles null safely
+            setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
+        }
     }
-
-    setInteger64Param(ADTimePixStartTime,       measurement_j["Info"]["StartDateTime"].get<long>());
-    setDoubleParam(ADTimePixElapsedTime,        measurement_j["Info"]["ElapsedTime"].get<double>());
-    setDoubleParam(ADTimePixTimeLeft,           measurement_j["Info"]["TimeLeft"].get<double>());
-    setIntegerParam(ADTimePixFrameCount,        measurement_j["Info"]["FrameCount"].get<int>());
-    setIntegerParam(ADTimePixDroppedFrames,     measurement_j["Info"]["DroppedFrames"].get<int>());
-    setStringParam(ADTimePixStatus,             measurement_j["Info"]["Status"].dump().c_str());
     callParamCallbacks();
 
     return status;
@@ -2454,7 +2894,475 @@ asynStatus ADTimePix::readImage()
     return(asynSuccess);
 }
 
+//----------------------------------------------------------------------------
+// TCP Streaming Implementation for PrvImg Channel
+//----------------------------------------------------------------------------
 
+void ADTimePix::prvImgWorkerThreadC(void *pPvt) {
+    ADTimePix *pPvtClass = (ADTimePix *)pPvt;
+    pPvtClass->prvImgWorkerThread();
+}
+
+void ADTimePix::prvImgWorkerThread() {
+    static const char* functionName = "prvImgWorkerThread";
+    constexpr double RECONNECT_DELAY_SEC = 1.0;
+    
+    if (!prvImgMutex_) {
+        ERR("PrvImg worker thread: Mutex not initialized");
+        return;
+    }
+    
+    prvImgLineBuffer_.resize(MAX_BUFFER_SIZE);
+    prvImgTotalRead_ = 0;
+    
+    while (prvImgRunning_) {
+        epicsMutexLock(prvImgMutex_);
+        bool should_connect = prvImgRunning_ && !prvImgConnected_;
+        std::string host = prvImgHost_;
+        int port = prvImgPort_;
+        epicsMutexUnlock(prvImgMutex_);
+        
+        if (should_connect && !host.empty() && port > 0) {
+            prvImgConnect();
+        }
+        
+        if (!prvImgRunning_) {
+            break;
+        }
+        
+        epicsMutexLock(prvImgMutex_);
+        bool connected = prvImgConnected_;
+        epicsMutexUnlock(prvImgMutex_);
+        
+        if (connected && prvImgNetworkClient_) {
+            try {
+                epicsMutexLock(prvImgMutex_);
+                ssize_t bytes_read = prvImgNetworkClient_->receive(
+                    prvImgLineBuffer_.data() + prvImgTotalRead_,
+                    MAX_BUFFER_SIZE - prvImgTotalRead_ - 1
+                );
+                epicsMutexUnlock(prvImgMutex_);
+                
+                if (bytes_read <= 0) {
+                    if (bytes_read == 0) {
+                        epicsMutexLock(prvImgMutex_);
+                        prvImgConnected_ = false;
+                        prvImgRunning_ = false;
+                        epicsMutexUnlock(prvImgMutex_);
+                        LOG("PrvImg TCP connection closed by peer");
+                        break;
+                    } else {
+                        epicsMutexLock(prvImgMutex_);
+                        if (prvImgConnected_) {
+                            prvImgConnected_ = false;
+                            prvImgRunning_ = false;
+                            LOG_ARGS("PrvImg TCP socket error: %s", strerror(errno));
+                        }
+                        epicsMutexUnlock(prvImgMutex_);
+                        break;
+                    }
+                }
+                
+                epicsMutexLock(prvImgMutex_);
+                prvImgTotalRead_ += bytes_read;
+                prvImgLineBuffer_[prvImgTotalRead_] = '\0';
+                
+                // Look for newline to find complete JSON line
+                char* newline_pos = static_cast<char*>(memchr(prvImgLineBuffer_.data(), '\n', prvImgTotalRead_));
+                
+                if (newline_pos) {
+                    // Found a newline - check if there's valid JSON before it
+                    char* json_start = nullptr;
+                    
+                    // Try to find {" pattern (most reliable indicator of JSON)
+                    for (char* p = prvImgLineBuffer_.data(); p < newline_pos - 1; ++p) {
+                        if (*p == '{' && p[1] == '"') {
+                            json_start = p;
+                            break;
+                        }
+                    }
+                    
+                    // If we didn't find {", try finding { followed by valid JSON structure
+                    if (!json_start) {
+                        for (char* p = prvImgLineBuffer_.data(); p < newline_pos - 2; ++p) {
+                            if (*p == '{') {
+                                bool looks_like_json = false;
+                                size_t check_len = std::min(size_t(newline_pos - p - 1), size_t(100));
+                                
+                                int json_chars = 0;
+                                for (size_t i = 1; i < check_len; ++i) {
+                                    char c = p[i];
+                                    if (c == '"' || c == ':' || c == ',' || c == '}' || c == '[' || c == ']') {
+                                        looks_like_json = true;
+                                        break;
+                                    }
+                                    if (std::isalnum(c) || c == ' ' || c == '_' || c == '-' || c == '.') {
+                                        json_chars++;
+                                    } else if (c < 32 && c != '\n' && c != '\r' && c != '\t') {
+                                        break;
+                                    }
+                                }
+                                
+                                if (looks_like_json || json_chars > 5) {
+                                    json_start = p;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    bool valid_json_start = (json_start != nullptr);
+                    
+                    if (valid_json_start) {
+                        // Try to parse the JSON to verify it's valid
+                        bool is_valid_json = false;
+                        try {
+                            std::string json_str(json_start, newline_pos - json_start);
+                            json test_json = json::parse(json_str);
+                            if (test_json.contains("width") || test_json.contains("frameNumber") ||
+                                test_json.contains("height") || test_json.contains("timeAtFrame")) {
+                                is_valid_json = true;
+                            }
+                        } catch (...) {
+                            is_valid_json = false;
+                        }
+                        
+                        if (is_valid_json) {
+                            *newline_pos = '\0';
+                            
+                            // Process the JSON line
+                            if (!processPrvImgDataLine(json_start, newline_pos, prvImgTotalRead_)) {
+                                epicsMutexUnlock(prvImgMutex_);
+                                break;
+                            }
+                            
+                            // Move remaining data to start of buffer
+                            size_t remaining = prvImgTotalRead_ - (newline_pos - prvImgLineBuffer_.data() + 1);
+                            if (remaining > 0) {
+                                memmove(prvImgLineBuffer_.data(), newline_pos + 1, remaining);
+                            }
+                            prvImgTotalRead_ = remaining;
+                        } else {
+                            // Found { but it's not valid JSON - skip this newline
+                            size_t remaining = prvImgTotalRead_ - (newline_pos - prvImgLineBuffer_.data() + 1);
+                            if (remaining > 0) {
+                                memmove(prvImgLineBuffer_.data(), newline_pos + 1, remaining);
+                            }
+                            prvImgTotalRead_ = remaining;
+                        }
+                    } else {
+                        // Found newline but no valid JSON - might be binary data
+                        size_t remaining = prvImgTotalRead_ - (newline_pos - prvImgLineBuffer_.data() + 1);
+                        if (remaining > 0) {
+                            memmove(prvImgLineBuffer_.data(), newline_pos + 1, remaining);
+                        }
+                        prvImgTotalRead_ = remaining;
+                    }
+                } else {
+                    // No newline found yet - check if buffer is getting too full
+                    if (prvImgTotalRead_ >= MAX_BUFFER_SIZE - 1) {
+                        LOG("PrvImg TCP buffer full without finding newline, resetting");
+                        prvImgTotalRead_ = 0;
+                    }
+                }
+                
+                if (prvImgTotalRead_ >= MAX_BUFFER_SIZE - 1) {
+                    LOG("PrvImg TCP buffer full, resetting");
+                    prvImgTotalRead_ = 0;
+                }
+                
+                epicsMutexUnlock(prvImgMutex_);
+                
+            } catch (const std::exception& e) {
+                epicsMutexUnlock(prvImgMutex_);
+                ERR_ARGS("Error in PrvImg worker thread: %s", e.what());
+            }
+        } else {
+            epicsThreadSleep(RECONNECT_DELAY_SEC);
+        }
+    }
+    
+    prvImgDisconnect();
+    LOG("PrvImg worker thread exiting");
+}
+
+bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
+    const char* functionName = "processPrvImgDataLine";
+    
+    // Skip any leading whitespace or binary data
+    char* json_start = line_buffer;
+    
+    // Skip non-printable characters until we find '{'
+    while (*json_start != '\0' && *json_start != '{' &&
+           (*json_start < 32 || *json_start > 126)) {
+        json_start++;
+    }
+    
+    if (*json_start == '\0' || *json_start != '{') {
+        return true;
+    }
+    
+    json j;
+    try {
+        j = json::parse(json_start);
+    } catch (const json::parse_error& e) {
+        if (*json_start == '{') {
+            ERR_ARGS("JSON parse error: %s", e.what());
+        }
+        return true;
+    }
+    
+    try {
+        // Extract header information for jsonimage
+        int width = j["width"];
+        int height = j["height"];
+        std::string pixel_format_str = j.value("pixelFormat", "uint16");
+        
+        // Extract additional frame data
+        int frame_number = j.value("frameNumber", 0);
+        
+        // Determine pixel format
+        bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
+        NDDataType_t dataType = is_uint32 ? NDUInt32 : NDUInt16;
+        
+        // Calculate pixel data size
+        size_t pixel_count = width * height;
+        size_t bytes_per_pixel = is_uint32 ? sizeof(uint32_t) : sizeof(uint16_t);
+        size_t binary_needed = pixel_count * bytes_per_pixel;
+        
+        // Validate dimensions
+        if (width <= 0 || height <= 0 || width > 100000 || height > 100000) {
+            ERR_ARGS("Invalid image dimensions: width=%d, height=%d", width, height);
+            return false;
+        }
+        
+        // Create NDArray - check if pool is available
+        if (!this->pNDArrayPool) {
+            ERR("NDArray pool is not available");
+            return false;
+        }
+        
+        size_t dims[3];
+        dims[0] = width;
+        dims[1] = height;
+        dims[2] = 0;
+        
+        NDArray *pImage = nullptr;
+        if (this->pArrays && this->pArrays[0]) {
+            pImage = this->pArrays[0];
+            pImage->release();
+        }
+        
+        this->pArrays[0] = this->pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
+        pImage = this->pArrays[0];
+        
+        if (!pImage || !pImage->pData) {
+            ERR("Failed to allocate NDArray or NDArray has no data pointer");
+            return false;
+        }
+        
+        // Copy any binary data we already have after the newline
+        size_t remaining = total_read - (newline_pos - line_buffer + 1);
+        size_t binary_read = 0;
+        
+        std::vector<char> pixel_buffer(binary_needed);
+        
+        if (remaining > 0) {
+            size_t to_copy = std::min(remaining, binary_needed);
+            memcpy(pixel_buffer.data(), newline_pos + 1, to_copy);
+            binary_read = to_copy;
+        }
+        
+        // Read any remaining binary data needed
+        epicsMutexLock(prvImgMutex_);
+        if (binary_read < binary_needed && prvImgNetworkClient_ && prvImgNetworkClient_->is_connected()) {
+            if (!prvImgNetworkClient_->receive_exact(
+                pixel_buffer.data() + binary_read,
+                binary_needed - binary_read)) {
+                epicsMutexUnlock(prvImgMutex_);
+                ERR("Failed to read binary pixel data");
+                return false;
+            }
+        }
+        epicsMutexUnlock(prvImgMutex_);
+        
+        // Validate pixel buffer size
+        if (pixel_buffer.size() < binary_needed) {
+            ERR_ARGS("Pixel buffer too small: have %zu, need %zu", pixel_buffer.size(), binary_needed);
+            return false;
+        }
+        
+        // Convert network byte order to host byte order and copy to NDArray
+        if (!pImage->pData) {
+            ERR("NDArray pData is null");
+            return false;
+        }
+        
+        if (is_uint32) {
+            uint32_t* pixels = reinterpret_cast<uint32_t*>(pixel_buffer.data());
+            uint32_t* pData = reinterpret_cast<uint32_t*>(pImage->pData);
+            if (!pixels || !pData) {
+                ERR("Invalid pixel data pointers");
+                return false;
+            }
+            for (size_t i = 0; i < pixel_count; ++i) {
+                pData[i] = __builtin_bswap32(pixels[i]);
+            }
+        } else {
+            uint16_t* pixels = reinterpret_cast<uint16_t*>(pixel_buffer.data());
+            uint16_t* pData = reinterpret_cast<uint16_t*>(pImage->pData);
+            if (!pixels || !pData) {
+                ERR("Invalid pixel data pointers");
+                return false;
+            }
+            for (size_t i = 0; i < pixel_count; ++i) {
+                pData[i] = __builtin_bswap16(pixels[i]);
+            }
+        }
+        
+        // Set image parameters (thread-safe via asynPortDriver)
+        setIntegerParam(ADSizeX, width);
+        setIntegerParam(NDArraySizeX, width);
+        setIntegerParam(ADSizeY, height);
+        setIntegerParam(NDArraySizeY, height);
+        
+        // Set data type
+        int dataTypeValue = (int)dataType;
+        setIntegerParam(NDDataType, dataTypeValue);
+        setIntegerParam(NDColorMode, NDColorModeMono);
+        
+        NDArrayInfo_t arrayInfo;
+        pImage->getInfo(&arrayInfo);
+        setIntegerParam(NDArraySize, (int)arrayInfo.totalBytes);
+        
+        // Increment array counter (thread-safe)
+        int imagesAcquired = 0;
+        getIntegerParam(NDArrayCounter, &imagesAcquired);
+        imagesAcquired++;
+        setIntegerParam(NDArrayCounter, imagesAcquired);
+        
+        // Set timestamp
+        pImage->uniqueId = frame_number;
+        epicsTimeStamp timestamp;
+        epicsTimeGetCurrent(&timestamp);
+        pImage->timeStamp = timestamp.secPastEpoch + timestamp.nsec / 1.e9;
+        updateTimeStamp(&pImage->epicsTS);
+        
+        // Get attributes
+        if (pImage->pAttributeList) {
+            this->getAttributes(pImage->pAttributeList);
+        }
+        
+        // Call parameter callbacks to update EPICS PVs (thread-safe)
+        callParamCallbacks();
+        
+        // Trigger NDArray callbacks (thread-safe)
+        int arrayCallbacks = 0;
+        getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+        if (arrayCallbacks && pImage) {
+            doCallbacksGenericPointer(pImage, NDArrayData, 0);
+        }
+        
+        LOG_ARGS("Processed PrvImg frame: width=%d, height=%d, format=%s, frame=%d, counter=%d", 
+                 width, height, pixel_format_str.c_str(), frame_number, imagesAcquired);
+        
+    } catch (const std::exception& e) {
+        ERR_ARGS("Error processing PrvImg frame: %s", e.what());
+        return false;
+    }
+    
+    return true;
+}
+
+void ADTimePix::prvImgConnect() {
+    static const char* functionName = "prvImgConnect";
+    
+    if (!prvImgMutex_) {
+        ERR("PrvImg TCP: Mutex not initialized");
+        return;
+    }
+    
+    epicsMutexLock(prvImgMutex_);
+    std::string host = prvImgHost_;
+    int port = prvImgPort_;
+    epicsMutexUnlock(prvImgMutex_);
+    
+    if (host.empty() || port <= 0) {
+        ERR("PrvImg TCP: Invalid host or port");
+        return;
+    }
+    
+    prvImgDisconnect(); // Ensure clean state
+    
+    prvImgNetworkClient_.reset(new NetworkClient());
+    if (!prvImgNetworkClient_) {
+        ERR("PrvImg TCP: Failed to create NetworkClient");
+        return;
+    }
+    
+    if (prvImgNetworkClient_->connect(host, port)) {
+        epicsMutexLock(prvImgMutex_);
+        prvImgConnected_ = true;
+        epicsMutexUnlock(prvImgMutex_);
+        LOG_ARGS("PrvImg TCP connected to %s:%d", host.c_str(), port);
+    } else {
+        ERR_ARGS("PrvImg TCP failed to connect to %s:%d", host.c_str(), port);
+        prvImgNetworkClient_.reset();
+    }
+}
+
+void ADTimePix::prvImgDisconnect() {
+    const char* functionName = "prvImgDisconnect";
+    
+    epicsMutexLock(prvImgMutex_);
+    prvImgConnected_ = false;
+    epicsMutexUnlock(prvImgMutex_);
+    
+    if (prvImgNetworkClient_) {
+        prvImgNetworkClient_->disconnect();
+        prvImgNetworkClient_.reset();
+    }
+    
+    LOG("PrvImg TCP disconnected");
+}
+
+asynStatus ADTimePix::readImageFromTCP() {
+    const char* functionName = "readImageFromTCP";
+    
+    // Check if we should use TCP streaming
+    std::string filePath;
+    getStringParam(ADTimePixPrvImgBase, filePath);
+    
+    if (filePath.find("tcp://") != 0) {
+        // Not TCP, fall back to GraphicsMagick readImage()
+        return readImage();
+    }
+    
+    // Check format - must be jsonimage (format index 3)
+    int format;
+    getIntegerParam(ADTimePixPrvImgFormat, &format);
+    if (format != 3) {
+        ERR_ARGS("PrvImg TCP streaming requires jsonimage format (3), got %d", format);
+        return asynError;
+    }
+    
+    // The worker thread is started in acquireStart() when WritePrvImg is enabled
+    // This function just checks if TCP streaming should be used
+    // The worker thread processes frames and updates pArrays[0] asynchronously
+    
+    // Wait briefly for a frame to be available (worker thread processes it)
+    epicsMutexLock(prvImgMutex_);
+    bool connected = prvImgConnected_;
+    epicsMutexUnlock(prvImgMutex_);
+    
+    if (!connected) {
+        // Connection not established yet - this is OK, worker thread will connect
+        return asynSuccess;
+    }
+    
+    // Frame will be processed by worker thread and pArrays[0] will be updated
+    return asynSuccess;
+}
 
 
 //----------------------------------------------------------------------------
@@ -2738,6 +3646,21 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setStringParam(NDDriverVersion, versionString);
     setStringParam(ADTimePixServerName, serverURL);
 
+    // Initialize TCP streaming for PrvImg channel
+    prvImgNetworkClient_.reset();
+    prvImgHost_ = "";
+    prvImgPort_ = 0;
+    prvImgConnected_ = false;
+    prvImgRunning_ = false;
+    prvImgWorkerThreadId_ = nullptr;
+    prvImgMutex_ = epicsMutexMustCreate();
+    if (!prvImgMutex_) {
+        ERR("Failed to create PrvImg mutex");
+    }
+    prvImgLineBuffer_.resize(MAX_BUFFER_SIZE);
+    prvImgTotalRead_ = 0;
+    prvImgFormat_ = 0;
+
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
     if(strlen(serverURL) <= 0){
@@ -2766,6 +3689,23 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 ADTimePix::~ADTimePix(){
     static const char* functionName = "~ADTimePix";
     FLOW("ADTimePix driver exiting");
+    
+    // Stop PrvImg TCP streaming
+    epicsMutexLock(prvImgMutex_);
+    prvImgRunning_ = false;
+    epicsMutexUnlock(prvImgMutex_);
+    
+    if (prvImgWorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+    prvImgDisconnect();
+    
+    if (prvImgMutex_) {
+        epicsMutexDestroy(prvImgMutex_);
+        prvImgMutex_ = NULL;
+    }
+    
     disconnect(this->pasynUserSelf);
 }
 

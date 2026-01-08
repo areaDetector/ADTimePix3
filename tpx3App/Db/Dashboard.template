@@ -110,7 +110,6 @@ record(calc, "$(P)$(R)FileWriterCalc") {
     field(CALC, "A||B")
     field(INPA, "$(P)$(R)FileWriterCalc1 CP")
     field(INPB, "$(P)$(R)FileWriterCalc2 CP")
-    field(OOPT, "Every Time")
 }
 
 # Hot pixel: neutron specific
