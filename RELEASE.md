@@ -14,9 +14,10 @@ Driver depends on Serval versions, at this time. The current releases support Se
 
 
 
-R1-4 (xxx, 2026)
+R1-4 (January 8, 2026)
 --------
 
+* For img channel, rename $(P)$(R)ImgStpOnDskLim, $(P)$(R)ImgStpOnDskLim_RBV for consistancy. 
 * Refresh the FileWriter Phoebus screens for additional img1 channel.
 * Add additional image (img1) channel, to allow concurrent tcp streming of jsonimag, and TIFF file writing.
 * cpr (1.9.1) and nlohmann/json (3.12.0) sources embeded in this ioc (Jakub Wlodek)
