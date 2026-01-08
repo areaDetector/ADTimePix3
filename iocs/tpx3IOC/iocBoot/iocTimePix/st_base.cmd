@@ -79,7 +79,7 @@ dbpf("$(PREFIX)cam1:ImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:ImgFileFmt","0")    # tiff
 dbpf("$(PREFIX)cam1:ImgFileMode","1")   # tot
 dbpf("$(PREFIX)cam1:ImgIntgMode","1")   # average
-dbpf("$(PREFIX)cam1:StpOnDskLim","1")   # true
+dbpf("$(PREFIX)cam1:ImgStpOnDskLim","1")   # true
 dbpf("$(PREFIX)cam1:WriteImg","0")   # Select img disk write
 
 dbpf("$(PREFIX)cam1:Img1FilePath","tcp://listen@localhost:8087")

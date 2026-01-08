@@ -1478,7 +1478,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>Menu Button_9</name>
-    <pv_name>$(P)$(R)StpOnDskLim</pv_name>
+    <pv_name>$(P)$(R)ImgStpOnDskLim</pv_name>
     <x>208</x>
     <y>620</y>
     <width>120</width>
@@ -1491,7 +1491,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_29</name>
-    <pv_name>$(P)$(R)StpOnDskLim_RBV</pv_name>
+    <pv_name>$(P)$(R)ImgStpOnDskLim_RBV</pv_name>
     <x>333</x>
     <y>620</y>
     <width>80</width>

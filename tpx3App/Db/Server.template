@@ -505,7 +505,7 @@ record(mbbi, "$(P)$(R)ImgIntgMode_RBV")
    field(SCAN, "I/O Intr")
 }
 
-record(bo, "$(P)$(R)StpOnDskLim")
+record(bo, "$(P)$(R)ImgStpOnDskLim")
 {
     field(PINI, "YES")
     field(DTYP, "asynInt32")
@@ -515,7 +515,7 @@ record(bo, "$(P)$(R)StpOnDskLim")
     field(VAL,  "0")
     info(autosaveFields, "VAL")
 }
-record(bi, "$(P)$(R)StpOnDskLim_RBV")
+record(bi, "$(P)$(R)ImgStpOnDskLim_RBV")
 {
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_STPONDSK")

@@ -3351,7 +3351,7 @@ $(pv_value)</tooltip>
     <height>20</height>
     <label></label>
     <name>Menu Button_9</name>
-    <pv_name>$(P)$(R)StpOnDskLim</pv_name>
+    <pv_name>$(P)$(R)ImgStpOnDskLim</pv_name>
     <pv_value />
     <rules />
     <scale_options>
@@ -3399,7 +3399,7 @@ $(pv_value)</tooltip>
     <name>Text Update_29</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>$(P)$(R)StpOnDskLim_RBV</pv_name>
+    <pv_name>$(P)$(R)ImgStpOnDskLim_RBV</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
