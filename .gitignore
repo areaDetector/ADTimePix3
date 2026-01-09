@@ -12,3 +12,5 @@ autosave/
 envPaths
 mask.bpc
 
+# Documentation files
+documentation/PRVIMG_METADATA_RECOMMENDATIONS.md
