@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>PrvImgMonitor</name>
+  <macros>
+    <P>TPX3-TEST:</P>
+    <R>cam1:</R>
+  </macros>
+  <width>1200</width>
+  <height>800</height>
+  <widget type="group" version="3.0.0">
+    <name>PrvImg_Monitor</name>
+    <width>1180</width>
+    <height>790</height>
+    <widget type="label" version="2.0.0">
+      <name>Title</name>
+      <text>Timepix3 Preview Image (PrvImg) TCP Streaming Monitor</text>
+      <x>10</x>
+      <y>10</y>
+      <width>1140</width>
+      <height>40</height>
+      <font>
+        <font family="Liberation Sans" style="BOLD" size="24.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="255" green="255" blue="255">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="30" green="144" blue="255">
+        </color>
+      </background_color>
+      <transparent>false</transparent>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>ConnectionStatus</name>
+      <x>10</x>
+      <y>70</y>
+      <width>1140</width>
+      <height>100</height>
+      <widget type="label" version="2.0.0">
+        <name>ConnectionStatusLabel</name>
+        <text>TCP Connection Status</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="led" version="2.0.0">
+        <name>WritePrvImgLED</name>
+        <pv_name>$(P)$(R)WritePrvImg_RBV</pv_name>
+        <x>20</x>
+        <y>40</y>
+        <width>30</width>
+        <height>30</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>WritePrvImgLabel</name>
+        <text>PrvImg Enabled</text>
+        <x>60</x>
+        <y>40</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>PrvImgFilePathDisplay</name>
+        <pv_name>$(P)$(R)PrvImgFilePath_RBV</pv_name>
+        <x>230</x>
+        <y>30</y>
+        <width>700</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FilePathLabel</name>
+        <text>TCP Path:</text>
+        <x>230</x>
+        <y>10</y>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>FrameMetadata</name>
+      <x>10</x>
+      <y>190</y>
+      <width>1140</width>
+      <widget type="label" version="2.0.0">
+        <name>FrameMetadataLabel</name>
+        <text>Frame Metadata (from jsonimage header)</text>
+        <x>10</x>
+        <y>10</y>
+        <width>300</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameNumberLabel</name>
+        <text>Frame Number:</text>
+        <x>20</x>
+        <y>50</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameNumberDisplay</name>
+        <pv_name>$(P)$(R)PrvImgFrameNumber_RBV</pv_name>
+        <x>160</x>
+        <y>45</y>
+        <width>180</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TimeAtFrameLabel</name>
+        <text>Time at Frame (ns):</text>
+        <x>20</x>
+        <y>90</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TimeAtFrameDisplay</name>
+        <pv_name>$(P)$(R)PrvImgTimeAtFrame_RBV</pv_name>
+        <x>160</x>
+        <y>85</y>
+        <width>180</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="220" blue="220">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>9</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>AcqRateLabel</name>
+        <text>Acquisition Rate (Hz):</text>
+        <x>20</x>
+        <y>130</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>AcqRateDisplay</name>
+        <pv_name>$(P)$(R)PrvImgAcqRate_RBV</pv_name>
+        <x>160</x>
+        <y>125</y>
+        <width>180</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="255" blue="220">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>3</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ImageWidthLabel</name>
+        <text>Image Width:</text>
+        <x>360</x>
+        <y>50</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ImageWidthDisplay</name>
+        <pv_name>$(P)$(R)SizeX_RBV</pv_name>
+        <x>480</x>
+        <y>45</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="255" blue="220">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ImageHeightLabel</name>
+        <text>Image Height:</text>
+        <x>620</x>
+        <y>50</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ImageHeightDisplay</name>
+        <pv_name>$(P)$(R)SizeY_RBV</pv_name>
+        <x>750</x>
+        <y>45</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="220" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>DataTypeLabel</name>
+        <text>Data Type:</text>
+        <x>360</x>
+        <y>90</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>DataTypeDisplay</name>
+        <pv_name>$(P)$(R)DataType_RBV</pv_name>
+        <x>480</x>
+        <y>85</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="220">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ArrayCounterLabel</name>
+        <text>Array Counter:</text>
+        <x>620</x>
+        <y>90</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ArrayCounterDisplay</name>
+        <pv_name>$(P)$(R)ArrayCounter_RBV</pv_name>
+        <x>750</x>
+        <y>85</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="220" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ArrayRateLabel</name>
+        <text>Array Rate (Hz):</text>
+        <x>360</x>
+        <y>130</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ArrayRateDisplay</name>
+        <pv_name>$(P)$(R)ArrayRate_RBV</pv_name>
+        <x>480</x>
+        <y>125</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="220">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>3</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>StatusSection</name>
+      <x>10</x>
+      <y>410</y>
+      <width>1140</width>
+      <height>100</height>
+      <widget type="label" version="2.0.0">
+        <name>StatusSectionLabel</name>
+        <text>Status Information</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StatusDisplay</name>
+        <pv_name>$(P)$(R)Status_RBV</pv_name>
+        <x>10</x>
+        <y>40</y>
+        <width>1100</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>ConfigurationSection</name>
+      <x>10</x>
+      <y>530</y>
+      <width>1140</width>
+      <height>230</height>
+      <widget type="label" version="2.0.0">
+        <name>ConfigurationSectionLabel</name>
+        <text>PrvImg Configuration</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FormatLabel</name>
+        <text>Format:</text>
+        <x>20</x>
+        <y>50</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FormatDisplay</name>
+        <pv_name>$(P)$(R)PrvImgFileFmt_RBV</pv_name>
+        <x>120</x>
+        <y>45</y>
+        <width>150</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>IntgSizeLabel</name>
+        <text>Integration Size:</text>
+        <x>20</x>
+        <y>90</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>IntgSizeDisplay</name>
+        <pv_name>$(P)$(R)PrvImgIntgSize_RBV</pv_name>
+        <x>120</x>
+        <y>85</y>
+        <width>150</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>IntgModeLabel</name>
+        <text>Integration Mode:</text>
+        <x>20</x>
+        <y>130</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>IntgModeDisplay</name>
+        <pv_name>$(P)$(R)PrvImgIntgMode_RBV</pv_name>
+        <x>120</x>
+        <y>125</y>
+        <width>150</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>QueueSizeLabel</name>
+        <text>Queue Size:</text>
+        <x>20</x>
+        <y>170</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>QueueSizeDisplay</name>
+        <pv_name>$(P)$(R)PrvImgQueueSize_RBV</pv_name>
+        <x>120</x>
+        <y>165</y>
+        <width>150</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>PeriodLabel</name>
+        <text>Preview Period (s):</text>
+        <x>300</x>
+        <y>50</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>PeriodDisplay</name>
+        <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
+        <x>420</x>
+        <y>45</y>
+        <width>150</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>3</precision>
+        <border_width>1</border_width>
+      </widget>
+    </widget>
+  </widget>
+</display>

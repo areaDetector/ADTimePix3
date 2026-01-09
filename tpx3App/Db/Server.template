@@ -974,6 +974,36 @@ record(longin, "$(P)$(R)PrvImgQueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# PrvImg TCP streaming metadata (from jsonimage header)
+record(longin, "$(P)$(R)PrvImgFrameNumber_RBV")
+{
+    field(DESC, "Frame number from jsonimage")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_FRAME_NUMBER")
+    field(PREC, "0")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvImgTimeAtFrame_RBV")
+{
+    field(DESC, "Timestamp at frame (nanoseconds)")
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_TIME_AT_FRAME")
+    field(PREC, "3")
+    field(EGU, "ns")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvImgAcqRate_RBV")
+{
+    field(DESC, "Calculated acquisition rate (fps)")
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_ACQ_RATE")
+    field(PREC, "3")
+    field(EGU, "Hz")
+    field(SCAN, "I/O Intr")
+}
+
 # Preview Image Channel[1], measurement/image file path.
 record(waveform, "$(P)$(R)PrvImg1FilePath")
 {

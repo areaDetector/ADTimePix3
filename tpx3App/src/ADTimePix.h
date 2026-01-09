@@ -222,6 +222,10 @@
 #define ADTimePixPrvImgStpOnDskLimString        "TPX3_PRV_STPONDSK"         // (asynInt32,         w)      Preview ImageChannels StopMeasurementOnDiskLimit
 #define ADTimePixPrvImgQueueSizeString          "TPX3_PRV_QUEUESIZE"        // (asynInt32,         w)      Preview ImageChannels QueueSize
 #define ADTimePixPrvImgFilePathExistsString     "PRV_IMG_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
+    // PrvImg TCP streaming metadata (from jsonimage header)
+#define ADTimePixPrvImgFrameNumberString        "TPX3_PRVIMG_FRAME_NUMBER"  // (asynInt32,         r)      Frame number from jsonimage
+#define ADTimePixPrvImgTimeAtFrameString        "TPX3_PRVIMG_TIME_AT_FRAME" // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
+#define ADTimePixPrvImgAcqRateString            "TPX3_PRVIMG_ACQ_RATE"      // (asynFloat64,       r)      Calculated acquisition rate (fps)
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -577,10 +581,14 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvImgMode;           
         int ADTimePixPrvImgThs;           
         int ADTimePixPrvImgIntSize; 
-        int ADTimePixPrvImgIntMode;      
-        int ADTimePixPrvImgStpOnDskLim;   
-        int ADTimePixPrvImgQueueSize;
-        int ADTimePixPrvImgFilePathExists;     
+        int ADTimePixPrvImgIntMode;       
+        int ADTimePixPrvImgStpOnDskLim;    
+        int ADTimePixPrvImgQueueSize;      
+        int ADTimePixPrvImgFilePathExists;
+        // PrvImg TCP streaming metadata
+        int ADTimePixPrvImgFrameNumber;
+        int ADTimePixPrvImgTimeAtFrame;
+        int ADTimePixPrvImgAcqRate;
             // Server, Preview, ImageChannel[1]
         int ADTimePixPrvImg1Base;    
         int ADTimePixPrvImg1FilePat;   
@@ -641,7 +649,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixRaw1Stream;
         int ADTimePixPrvHstStream;
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvHstStream
+        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvImgAcqRate
 
     private:
 
@@ -669,6 +677,15 @@ class ADTimePix : public ADDriver{
         std::vector<char> prvImgLineBuffer_;
         size_t prvImgTotalRead_;
         int prvImgFormat_;  // Cache format to determine if jsonimage (3)
+        
+        // PrvImg metadata tracking for rate calculation
+        int prvImgPreviousFrameNumber_;
+        double prvImgPreviousTimeAtFrame_;
+        double prvImgAcquisitionRate_;
+        std::deque<double> prvImgRateSamples_;
+        double prvImgLastRateUpdateTime_;
+        bool prvImgFirstFrameReceived_;
+        static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables

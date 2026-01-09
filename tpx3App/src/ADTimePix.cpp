@@ -2432,6 +2432,11 @@ asynStatus ADTimePix::acquireStop(){
     if (prvImgMutex_) {
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
+        // Reset metadata tracking for next acquisition
+        prvImgFirstFrameReceived_ = false;
+        prvImgAcquisitionRate_ = 0.0;
+        prvImgRateSamples_.clear();
+        setDoubleParam(ADTimePixPrvImgAcqRate, 0.0);
         epicsMutexUnlock(prvImgMutex_);
     }
     
@@ -2996,6 +3001,7 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         
         // Extract additional frame data
         int frame_number = j.value("frameNumber", 0);
+        double time_at_frame = j.value("timeAtFrame", 0.0);
         
         // Determine pixel format
         bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
@@ -3123,6 +3129,53 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         epicsTimeGetCurrent(&timestamp);
         pImage->timeStamp = timestamp.secPastEpoch + timestamp.nsec / 1.e9;
         updateTimeStamp(&pImage->epicsTS);
+        
+        // Set PrvImg metadata PVs
+        setIntegerParam(ADTimePixPrvImgFrameNumber, frame_number);
+        setDoubleParam(ADTimePixPrvImgTimeAtFrame, time_at_frame);
+        
+        // Calculate acquisition rate
+        epicsTimeStamp current_time;
+        epicsTimeGetCurrent(&current_time);
+        double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
+        
+        if (!prvImgFirstFrameReceived_) {
+            prvImgPreviousFrameNumber_ = frame_number;
+            prvImgPreviousTimeAtFrame_ = current_time_seconds;
+            prvImgFirstFrameReceived_ = true;
+            prvImgAcquisitionRate_ = 0.0;
+        } else {
+            int frame_diff = frame_number - prvImgPreviousFrameNumber_;
+            double time_diff_seconds = current_time_seconds - prvImgPreviousTimeAtFrame_;
+            
+            if (frame_diff > 1) {
+                LOG_ARGS("PrvImg frame loss detected! Expected frame %d, got frame %d (lost %d frames)", 
+                         prvImgPreviousFrameNumber_ + 1, frame_number, frame_diff - 1);
+            }
+            
+            if (frame_diff > 0 && time_diff_seconds > 0.0) {
+                double current_rate = frame_diff / time_diff_seconds;
+                
+                prvImgRateSamples_.push_back(current_rate);
+                if (prvImgRateSamples_.size() > PRVIMG_MAX_RATE_SAMPLES) {
+                    prvImgRateSamples_.erase(prvImgRateSamples_.begin());
+                }
+                
+                double sum = 0.0;
+                for (size_t i = 0; i < prvImgRateSamples_.size(); ++i) {
+                    sum += prvImgRateSamples_[i];
+                }
+                prvImgAcquisitionRate_ = sum / prvImgRateSamples_.size();
+                
+                if (current_time_seconds - prvImgLastRateUpdateTime_ >= 1.0) {
+                    setDoubleParam(ADTimePixPrvImgAcqRate, prvImgAcquisitionRate_);
+                    prvImgLastRateUpdateTime_ = current_time_seconds;
+                }
+            }
+            
+            prvImgPreviousFrameNumber_ = frame_number;
+            prvImgPreviousTimeAtFrame_ = current_time_seconds;
+        }
         
         // Get attributes
         if (pImage->pAttributeList) {
@@ -3457,7 +3510,11 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgIntModeString,                asynParamInt32, &ADTimePixPrvImgIntMode);        
     createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamInt32, &ADTimePixPrvImgStpOnDskLim);    
     createParam(ADTimePixPrvImgQueueSizeString,              asynParamInt32, &ADTimePixPrvImgQueueSize);
-    createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);          
+    createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);
+    // PrvImg TCP streaming metadata
+    createParam(ADTimePixPrvImgFrameNumberString,            asynParamInt32, &ADTimePixPrvImgFrameNumber);
+    createParam(ADTimePixPrvImgTimeAtFrameString,            asynParamFloat64, &ADTimePixPrvImgTimeAtFrame);
+    createParam(ADTimePixPrvImgAcqRateString,                asynParamFloat64, &ADTimePixPrvImgAcqRate);          
     // Server, Preview, ImageChannels[1]   
     createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);
     createParam(ADTimePixPrvImg1FilePatString,             asynParamOctet, &ADTimePixPrvImg1FilePat);             
@@ -3538,6 +3595,13 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImgLineBuffer_.resize(MAX_BUFFER_SIZE);
     prvImgTotalRead_ = 0;
     prvImgFormat_ = 0;
+    
+    // Initialize PrvImg metadata tracking
+    prvImgPreviousFrameNumber_ = 0;
+    prvImgPreviousTimeAtFrame_ = 0.0;
+    prvImgAcquisitionRate_ = 0.0;
+    prvImgLastRateUpdateTime_ = 0.0;
+    prvImgFirstFrameReceived_ = false;
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
