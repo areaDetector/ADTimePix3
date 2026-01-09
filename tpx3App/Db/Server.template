@@ -546,7 +546,6 @@ record(longin, "$(P)$(R)ImgFrameNumber_RBV")
     field(DESC, "Frame number from jsonimage")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_FRAME_NUMBER")
-    field(PREC, "0")
     field(SCAN, "I/O Intr")
 }
 
@@ -1010,7 +1009,6 @@ record(longin, "$(P)$(R)PrvImgFrameNumber_RBV")
     field(DESC, "Frame number from jsonimage")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_FRAME_NUMBER")
-    field(PREC, "0")
     field(SCAN, "I/O Intr")
 }
 
