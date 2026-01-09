@@ -65,8 +65,6 @@
 
 using namespace std;
 using json = nlohmann::json;
-using namespace Magick;
-
 // Add any additional namespaces here
 
 // NetworkClient class implementation
@@ -2236,7 +2234,7 @@ void ADTimePix::timePixCallback(){
     bool isIdle = false;
     int writeChannel;
 
-    NDArray* pImage;
+    // NDArray* pImage; // Not used with TCP streaming - worker thread handles image processing
     int arrayCallbacks;
     epicsTimeStamp startTime, endTime;
 //    double elapsedTime;
@@ -2399,45 +2397,12 @@ void ADTimePix::timePixCallback(){
                     setIntegerParam(ADNumImagesCounter, frameCounter);
                     callParamCallbacks();
                 } else {
-                    // Use GraphicsMagick HTTP method
-                    asynStatus imageStatus = readImage();
-    
+                    // Non-TCP path: TCP streaming is required for preview images
+                    // GraphicsMagick HTTP method has been removed - use TCP streaming instead
+                    WARN("PrvImg requires TCP streaming (tcp:// format). GraphicsMagick HTTP method no longer supported.");
+                    // Worker thread handles TCP streaming, so just update counters
+                    setIntegerParam(ADNumImagesCounter, frameCounter);
                     callParamCallbacks();
-    
-                    if (imageStatus == asynSuccess) {
-                        imageCounter++;
-                        imagesAcquired++;
-                        if (this->pArrays && this->pArrays[0]) {
-                            pImage = this->pArrays[0];
-    
-                            /* Put the frame number and time stamp into the buffer */
-                            pImage->uniqueId = imageCounter;
-                            pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
-                            updateTimeStamp(&pImage->epicsTS);
-    
-                            /* Get any attributes that have been defined for this driver */
-                            if (pImage->pAttributeList) {
-                                this->getAttributes(pImage->pAttributeList);
-                            }
-    
-                            if (arrayCallbacks) {
-                                /* Call the NDArray callback */
-                                FLOW("calling imageData callback");
-                                doCallbacksGenericPointer(pImage, NDArrayData, 0);
-                            }
-                        }
-                        if(mode == 0){
-                            acquireStop();
-                        }
-                        else if(mode == 1){
-                            if (numImages == imageCounter){
-                                acquireStop();
-                            }
-                        }
-                        setIntegerParam(ADNumImagesCounter, frameCounter);
-                        setIntegerParam(NDArrayCounter, imagesAcquired);
-                        callParamCallbacks();
-                    }
                 }
             }
         }
@@ -2801,98 +2766,9 @@ void ADTimePix::report(FILE* fp, int details){
 }
 
 
-asynStatus ADTimePix::readImage()
-{
-//    Image image;
-//    static const string imageEndpoint = "/measurement/image";  // Cache the endpoint
-//    static const string URLString = this->serverURL + imageEndpoint;  // Cache the full URL
-    static const string URLString = this->serverURL + "/measurement/image";  // Cache the full URL
-//    string URLString=this->serverURL + std::string("/measurement/image");
-
-    size_t dims[3];
-    int ndims;
-    int nrows, ncols;
-    ImageType imageType;
-    StorageType storageType;
-    NDDataType_t dataType;
-    NDColorMode_t colorMode;
-    NDArrayInfo_t arrayInfo;
-    NDArray *pImage = this->pArrays[0];
-    int depth;
-    const char *map;
-    static const char *functionName = "readImage";
-    
-    try {
-        image.read(URLString);
-        imageType = image.type();
-        depth = image.depth();
-        nrows = image.rows();
-        ncols = image.columns();
-        switch(imageType) {
-        case GrayscaleType:
-            ndims = 2;
-            dims[0] = ncols;
-            dims[1] = nrows;
-            dims[2] = 0;
-            map = "R";
-            colorMode = NDColorModeMono;
-            break;
-        case TrueColorType:
-            ndims = 3;
-            dims[0] = 3;
-            dims[1] = ncols;
-            dims[2] = nrows;
-            map = "RGB";
-            colorMode = NDColorModeRGB1;
-            break;
-        default:
-            ERR_ARGS("unknown ImageType=%d",imageType);    
-            return(asynError);
-            break;
-        }
-        switch(depth) {
-        case 1:
-        case 8:
-            dataType = NDUInt8;
-            storageType = CharPixel;
-            break;
-        case 16:
-            dataType = NDUInt16;
-            storageType = ShortPixel;
-            break;
-        case 32:
-            dataType = NDUInt32;
-            storageType = IntegerPixel;
-            break;
-        default:
-            ERR_ARGS("unsupported depth=%d",depth);
-            return(asynError);
-            break;
-        }
-        if (pImage) pImage->release();
-        this->pArrays[0] = this->pNDArrayPool->alloc(ndims, dims, dataType, 0, NULL);
-        pImage = this->pArrays[0];  
-        LOG_ARGS("reading URL=%s, dimensions=[%lu,%lu,%lu], ImageType=%d, depth=%d", URLString.c_str(), 
-            (unsigned long)dims[0], (unsigned long)dims[1], (unsigned long)dims[2], imageType, depth);
-        image.write(0, 0, ncols, nrows, map, storageType, pImage->pData);
-        pImage->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
-        setIntegerParam(ADSizeX, ncols);
-        setIntegerParam(NDArraySizeX, ncols);
-        setIntegerParam(ADSizeY, nrows);
-        setIntegerParam(NDArraySizeY, nrows);
-        pImage->getInfo(&arrayInfo);
-        setIntegerParam(NDArraySize,  (int)arrayInfo.totalBytes);
-        setIntegerParam(NDDataType, dataType);
-        setIntegerParam(NDColorMode, colorMode);
-    }
-    catch(std::exception &error)
-    {
-        ERR_ARGS("ERROR reading URL=%s",error.what());
-        return(asynError);
-    }
-         
-    return(asynSuccess);
-}
+// readImage() method removed - GraphicsMagick HTTP method no longer supported
+// Use TCP streaming (tcp:// format) for preview images instead
+// GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
 
 //----------------------------------------------------------------------------
 // TCP Streaming Implementation for PrvImg Channel
@@ -3334,8 +3210,10 @@ asynStatus ADTimePix::readImageFromTCP() {
     getStringParam(ADTimePixPrvImgBase, filePath);
     
     if (filePath.find("tcp://") != 0) {
-        // Not TCP, fall back to GraphicsMagick readImage()
-        return readImage();
+        // Not TCP: TCP streaming is required for preview images
+        // GraphicsMagick HTTP method has been removed
+        ERR("PrvImg requires TCP streaming (tcp:// format). GraphicsMagick HTTP method no longer supported.");
+        return asynError;
     }
     
     // Check format - must be jsonimage (format index 3)
@@ -3389,8 +3267,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     mDetOrientationMap["DOWN_MIRRORED"] =   6;
     mDetOrientationMap["LEFT_MIRRORED"] =   7;
 
-    /* Initialize GraphicsMagick */
-    InitializeMagick(NULL);
+    // GraphicsMagick initialization removed - TCP streaming is used instead
+    // GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
 
     this->serverURL = string(serverURL);
 

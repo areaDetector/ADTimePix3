@@ -22,7 +22,6 @@
 
 #include "ADDriver.h"
 #include "cpr/cpr.h"
-#include <Magick++.h>
 #include <json.hpp>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -285,7 +284,6 @@
 #define ADTimePixPrvHstStreamString           "TPX3_PRV_HST_STREAM"    // (asynInt32,         w)      file:/, http://, tcp://
 
 
-using namespace Magick;
 using json = nlohmann::json;
 
 // Forward declarations
@@ -654,7 +652,7 @@ class ADTimePix : public ADDriver{
         std::map<std::string, int> mDetOrientationMap;
 
         std::string serverURL;
-        Image image;
+        // GraphicsMagick Image member removed - TCP streaming used instead
 
         bool acquiring=false;
 
@@ -720,7 +718,6 @@ class ADTimePix : public ADDriver{
         asynStatus uploadDACS();
         asynStatus writeDac(int chip, const std::string &dac, int value);
         asynStatus fetchDacs(json &data, int chip);
-        asynStatus readImage();
         asynStatus fileWriter();
         
         // TCP streaming methods for PrvImg channel

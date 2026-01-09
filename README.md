@@ -12,11 +12,19 @@ Notes:
 * Depends on the [CPR](https://github.com/libcpr/cpr) verison 1.9.1.
 * Depends on the [json](https://github.com/nlohmann/json) version v3.11.2.
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
+* **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * This has only been developed for 2 x 2 chips layout and 1 chip tpx3CAM, since that is what I have access to now.
 * This has been tested with serval version 4.1.1, 4.1.0, 3.3.2, 3.2.0, 3.1.0 and 3.0.0 extensively. Only most recent serval version(s) are tested extensively. However, the master branch is compatible with serval 4.x.x, and attempts are being made to make it compatible with Serval 3.x.x. In the meantime, please use the 3.3.2 branch for serval 3.x.x. The Serval 4.x.x has additional features, which are not yet supported.
 * Driver is specific to Serval version, since Rust features differ. Driver for Serval 2.x.y is in separate branch, and is not under current development. The branch 3.3.2 is compatible with serval 3.x.x only, and will likely not be developed further.
 * The driver has been developed using TimePix3 Emulator, and real detectors. Real detectors are quad-chip, and single chip.
+
+Preview Image Streaming
+------------------------
+
+* **TCP Streaming**: Preview images (PrvImg channel) use TCP streaming with jsonimage format for real-time image delivery.
+* **Configuration**: Set `PrvImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8089`) and `PrvImgFileFmt` to `jsonimage` (format index 3).
+* **GraphicsMagick**: The GraphicsMagick HTTP method for preview images has been removed from the master branch. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 
 How to run:
 -----------
@@ -43,7 +51,7 @@ areaDetector
 Uncomment following lines in ADCore/iocBoot
 
 * ADCore/iocBoot/commonPlugins.cmd
-  * Magick file saving plugin
+  * Magick file saving plugin (optional, for file saving only - preview images use TCP streaming)
     * NDFileMagickConfigure("FileMagick1", $(QSIZE), 0, "$(PORT)", 0)
     * dbLoadRecords("NDFileMagick.template","P=$(PREFIX),R=Magick1:,PORT=FileMagick1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
   * load NDPluginPva plugin
@@ -70,12 +78,13 @@ The ADTimePix3 is an EPICS areaDetector driver for TimePix3 detectors from Adva
 
 ### Key Components
 
-#### 1\. Driver Architecture
+#### 1\. Driver Architecture
 
--   Main Class: ADTimePix inherits from ADDriver (areaDetector base class)
--   Communication: HTTP REST API using the cpr (C++ Requests) library
--   Data Format: JSON using nlohmann/json library
--   Image Processing: GraphicsMagick for image handling
+-   Main Class: ADTimePix inherits from ADDriver (areaDetector base class)
+-   Communication: HTTP REST API using the cpr (C++ Requests) library
+-   Data Format: JSON using nlohmann/json library
+-   Preview Images: TCP streaming (jsonimage format) for real-time preview images
+-   Image Processing: TCP streaming replaces GraphicsMagick HTTP method (GraphicsMagick preserved in `preserve/graphicsmagick-preview` branch)
 
 #### 2. Core Functionality
 
@@ -225,10 +234,11 @@ ADDriver(portName, 4, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
          ASYN_MULTIDEVICE | ASYN_CANBLOCK, 1, priority, stackSize)
 ```
 
-* Image Acquisition:
-  -   Asynchronous callback thread for continuous acquisition
+* Image Acquisition:
+  -   Asynchronous callback thread for continuous acquisition
   -   Real-time measurement status updates
-  -   Support for multiple data formats and streaming
+  -   Support for multiple data formats and streaming
+  -   TCP streaming for preview images (jsonimage format) with configurable ports
 
 #### 10. Recent Developments
 

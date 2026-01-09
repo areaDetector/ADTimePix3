@@ -9,11 +9,10 @@ endif
 
 USR_CPPFLAGS += -std=c++11
 
-USR_CXXFLAGS += -DPREFIX_MAGICK_SYMBOLS
-
 INC += ADTimePix.h
 
-USR_INCLUDES += $(addprefix -I, $(GRAPHICSMAGICK_INCLUDE))
+# GraphicsMagick removed - TCP streaming is used instead
+# GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp

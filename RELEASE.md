@@ -12,7 +12,11 @@ The master branch (under development) is tested with Serval 4.1.1 and 3.3.2
 Driver depends on Serval versions, at this time. The current releases support Serval 4.1.1 and 3.0.0-3.3.2
 
 
+R1-5 (XXX, 2026)
+--------
 
+* **TCP Streaming for Preview Images**: Replaced GraphicsMagick HTTP method with TCP jsonimage streaming for PrvImg channel. Preview images now use configurable TCP streaming (tcp://listen@hostname:port format) for lower latency and better performance. GraphicsMagick implementation preserved in `preserve/graphicsmagick-preview` branch for backward compatibility.
+* **Note**: GraphicsMagick was only used for preview image reading via HTTP. File saving is handled directly by Serval, which writes files to disk without using GraphicsMagick.
 
 R1-4 (January 8, 2026)
 --------
