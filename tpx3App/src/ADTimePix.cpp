@@ -204,11 +204,11 @@ ssize_t NetworkClient::receive(char* buffer, size_t max_size) {
     ssize_t bytes_read = recv(socket_fd_, buffer, max_size, 0);
     
     if (bytes_read == 0) {
-        std::cout << "Connection closed by peer" << std::endl;
+        // Connection closed by peer - let the caller log this with context (channel name)
         connected_ = false;
     } else if (bytes_read < 0) {
         if (errno != EAGAIN && errno != EWOULDBLOCK) {
-            std::cerr << "Socket error: " << strerror(errno) << std::endl;
+            // Socket error - let the caller log this with context (channel name)
             connected_ = false;
         }
     }
@@ -2717,17 +2717,25 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     status = setIntegerParam(addr, function, value);
     // start/stop acquisition
     if(function == ADAcquire){
-        printf("SAW ACQUIRE CHANGE!, status=%d\n", status);
+        int currentADStatus;
+        getIntegerParam(ADStatus, &currentADStatus);
+        printf("ACQUIRE CHANGE: ADAcquire=%d (was %d), current ADStatus=%d\n", value, acquiring, currentADStatus);
         if(value && !acquiring){
             FLOW("Entering acquire start\n");
             status = acquireStart();  // Start acquisition
             if(status < 0) {
                 return asynError;
             }
+            // After acquireStart, ADStatus should be ADStatusAcquire (1)
+            getIntegerParam(ADStatus, &currentADStatus);
+            printf("After acquireStart: ADStatus=%d\n", currentADStatus);
         }
         if(!value && acquiring){
             FLOW("Entering acquire stop");
             acquireStop();  // Stop acquisition
+            // After acquireStop, ADStatus should be ADStatusIdle (0)
+            getIntegerParam(ADStatus, &currentADStatus);
+            printf("After acquireStop: ADStatus=%d\n", currentADStatus);
         }
     }
 
@@ -2938,7 +2946,7 @@ void ADTimePix::prvImgWorkerThread() {
                         prvImgConnected_ = false;
                         prvImgRunning_ = false;
                         epicsMutexUnlock(prvImgMutex_);
-                        LOG("PrvImg TCP connection closed by peer");
+                        printf("PrvImg TCP connection closed by peer\n");
                         break;
                     } else {
                         epicsMutexLock(prvImgMutex_);
@@ -3126,7 +3134,7 @@ void ADTimePix::imgWorkerThread() {
                         imgConnected_ = false;
                         imgRunning_ = false;
                         epicsMutexUnlock(imgMutex_);
-                        LOG("Img TCP connection closed by peer");
+                        printf("Img TCP connection closed by peer\n");
                         break;
                     } else {
                         epicsMutexLock(imgMutex_);
