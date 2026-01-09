@@ -74,15 +74,17 @@ dbpf("$(PREFIX)cam1:Raw1FilePath","tcp://listen@localhost:8085")    # tcp://list
 dbpf("$(PREFIX)cam1:Raw1FileTemplate","raw%MdHms_")
 dbpf("$(PREFIX)cam1:WriteRaw1","0")   # Select raw disk write, or stream
 
-dbpf("$(PREFIX)cam1:ImgFilePath","file:/media/nvme/img")
+dbpf("$(PREFIX)cam1:ImgFilePath","tcp://listen@localhost:8087")
 dbpf("$(PREFIX)cam1:ImgFileTemplate","f%MdHms_")
-dbpf("$(PREFIX)cam1:ImgFileFmt","0")    # tiff
+dbpf("$(PREFIX)cam1:ImgFileFmt","3")    # jsonimage (TCP streaming)
 dbpf("$(PREFIX)cam1:ImgFileMode","1")   # tot
-dbpf("$(PREFIX)cam1:ImgIntgMode","1")   # average
-dbpf("$(PREFIX)cam1:ImgStpOnDskLim","1")   # true
+dbpf("$(PREFIX)cam1:ImgIntgSize","1")   # Integration size: 1
+dbpf("$(PREFIX)cam1:ImgIntgMode","0")   # sum (for IntegrationSize=1)
+dbpf("$(PREFIX)cam1:ImgStpOnDskLim","0")   # false
+dbpf("$(PREFIX)cam1:ImgQueueSize","1024")   # Queue size: 1024
 dbpf("$(PREFIX)cam1:WriteImg","0")   # Select img disk write
 
-dbpf("$(PREFIX)cam1:Img1FilePath","tcp://listen@localhost:8087")
+dbpf("$(PREFIX)cam1:Img1FilePath","file:/media/nvme/img1")
 dbpf("$(PREFIX)cam1:Img1FileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:Img1FileFmt","0")    # tiff
 dbpf("$(PREFIX)cam1:Img1FileMode","1")   # tot

@@ -2500,8 +2500,36 @@ asynStatus ADTimePix::acquireStop(){
 
     this->acquiring=false;
     
-    // Stop PrvImg TCP streaming worker thread FIRST before stopping Serval measurement
-    // This ensures clean disconnection before Serval releases the port
+    // Stop callback thread first
+    if(this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf())
+        epicsThreadMustJoin(this->callbackThreadId);
+
+    this->callbackThreadId = NULL;
+
+    // Stop Serval measurement FIRST to tell Serval to stop sending new data
+    // This MUST happen before we signal worker threads to exit, otherwise
+    // worker threads will close the socket while Serval is still trying to write
+    string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
+    cpr::Response r = cpr::Get(cpr::Url{stopMeasurementURL},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+
+    if (r.status_code != 200){
+        ERR("Failed to stop measurement!");
+        return asynError;
+    }
+    
+    // Wait for Serval to process the stop command and stop its TcpSender threads
+    // Serval needs time to:
+    // 1. Process the stop command
+    // 2. Signal its TcpSender threads to stop
+    // 3. Allow TcpSender threads to finish sending any buffered data
+    // 4. Close Serval's side of the socket gracefully
+    // Increasing delay to prevent "Broken pipe" errors
+    epicsThreadSleep(0.5);  // 500ms delay - allows Serval TcpSender threads to stop cleanly
+    
+    // NOW signal worker threads to stop (after Serval has stopped sending)
+    // Worker threads will detect the closed connection (bytes_read <= 0) and exit cleanly
     if (prvImgMutex_) {
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
@@ -2513,14 +2541,6 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexUnlock(prvImgMutex_);
     }
     
-    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-    prvImgDisconnect();
-    
-    // Stop Img TCP streaming worker thread FIRST before stopping Serval measurement
-    // This ensures clean disconnection before Serval releases the port
     if (imgMutex_) {
         epicsMutexLock(imgMutex_);
         imgRunning_ = false;
@@ -2532,26 +2552,22 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexUnlock(imgMutex_);
     }
     
+    // Join worker threads - they will detect closed connection (bytes_read <= 0) and exit
+    // or exit when they see prvImgRunning_/imgRunning_ is false
+    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+    
     if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
         epicsThreadMustJoin(imgWorkerThreadId_);
         imgWorkerThreadId_ = NULL;
     }
-    imgDisconnect();
     
-    if(this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf())
-        epicsThreadMustJoin(this->callbackThreadId);
-
-    this->callbackThreadId = NULL;
-
-    string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
-    cpr::Response r = cpr::Get(cpr::Url{stopMeasurementURL},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
-
-    if (r.status_code != 200){
-        ERR("Failed to stop measurement!");
-        return asynError;
-    }
+    // Explicitly disconnect to ensure clean state
+    // Worker threads may have already disconnected when they detected the closed connection
+    prvImgDisconnect();
+    imgDisconnect();
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setIntegerParam(ADAcquire, 0);
