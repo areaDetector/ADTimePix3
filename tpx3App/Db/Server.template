@@ -540,6 +540,36 @@ record(longin, "$(P)$(R)ImgQueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# Img TCP streaming metadata (from jsonimage header)
+record(longin, "$(P)$(R)ImgFrameNumber_RBV")
+{
+    field(DESC, "Frame number from jsonimage")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_FRAME_NUMBER")
+    field(PREC, "0")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)ImgTimeAtFrame_RBV")
+{
+    field(DESC, "Timestamp at frame (nanoseconds)")
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_TIME_AT_FRAME")
+    field(PREC, "3")
+    field(EGU, "ns")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)ImgAcqRate_RBV")
+{
+    field(DESC, "Calculated acquisition rate (fps)")
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_ACQ_RATE")
+    field(PREC, "3")
+    field(EGU, "Hz")
+    field(SCAN, "I/O Intr")
+}
+
 # Image Channels[1] file path.
 record(waveform, "$(P)$(R)Img1FilePath")
 {

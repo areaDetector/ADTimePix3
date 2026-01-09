@@ -16,6 +16,8 @@ R1-5 (XXX, 2026)
 --------
 
 * **TCP Streaming for Preview Images**: Replaced GraphicsMagick HTTP method with TCP jsonimage streaming for PrvImg channel. Preview images now use configurable TCP streaming (tcp://listen@hostname:port format) for lower latency and better performance. GraphicsMagick implementation preserved in `preserve/graphicsmagick-preview` branch for backward compatibility.
+* **TCP Streaming for Image Channel**: Added TCP jsonimage streaming support for Img channel, enabling real-time 2D image streaming similar to PrvImg channel. Both PrvImg and Img channels can now stream concurrently using separate array slots (pArrays[0] for PrvImg, pArrays[1] for Img) to prevent reference count conflicts.
+* **Concurrent Channel Support**: Fixed NDArray reference count conflicts when both PrvImg and Img channels are configured for TCP streaming simultaneously. Each channel now uses its own array slot, allowing stable concurrent operation.
 * **Note**: GraphicsMagick was only used for preview image reading via HTTP. File saving is handled directly by Serval, which writes files to disk without using GraphicsMagick.
 
 R1-4 (January 8, 2026)

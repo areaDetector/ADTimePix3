@@ -226,6 +226,10 @@
 #define ADTimePixPrvImgFrameNumberString        "TPX3_PRVIMG_FRAME_NUMBER"  // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixPrvImgTimeAtFrameString        "TPX3_PRVIMG_TIME_AT_FRAME" // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
 #define ADTimePixPrvImgAcqRateString            "TPX3_PRVIMG_ACQ_RATE"      // (asynFloat64,       r)      Calculated acquisition rate (fps)
+    // Img TCP streaming metadata (from jsonimage header)
+#define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
+#define ADTimePixImgTimeAtFrameString           "TPX3_IMG_TIME_AT_FRAME"    // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
+#define ADTimePixImgAcqRateString               "TPX3_IMG_ACQ_RATE"         // (asynFloat64,       r)      Calculated acquisition rate (fps)
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -589,6 +593,10 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvImgFrameNumber;
         int ADTimePixPrvImgTimeAtFrame;
         int ADTimePixPrvImgAcqRate;
+        // Img TCP streaming metadata
+        int ADTimePixImgFrameNumber;
+        int ADTimePixImgTimeAtFrame;
+        int ADTimePixImgAcqRate;
             // Server, Preview, ImageChannel[1]
         int ADTimePixPrvImg1Base;    
         int ADTimePixPrvImg1FilePat;   
@@ -649,7 +657,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixRaw1Stream;
         int ADTimePixPrvHstStream;
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvImgAcqRate
+        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvHstStream
 
     private:
 
@@ -686,6 +694,27 @@ class ADTimePix : public ADDriver{
         double prvImgLastRateUpdateTime_;
         bool prvImgFirstFrameReceived_;
         static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
+        
+        // TCP streaming for Img channel
+        std::unique_ptr<NetworkClient> imgNetworkClient_;
+        std::string imgHost_;
+        int imgPort_;
+        bool imgConnected_;
+        bool imgRunning_;
+        epicsThreadId imgWorkerThreadId_;
+        epicsMutexId imgMutex_;
+        std::vector<char> imgLineBuffer_;
+        size_t imgTotalRead_;
+        int imgFormat_;  // Cache format to determine if jsonimage (3)
+        
+        // Img metadata tracking for rate calculation
+        int imgPreviousFrameNumber_;
+        double imgPreviousTimeAtFrame_;
+        double imgAcquisitionRate_;
+        std::deque<double> imgRateSamples_;
+        double imgLastRateUpdateTime_;
+        bool imgFirstFrameReceived_;
+        static constexpr size_t IMG_MAX_RATE_SAMPLES = 10;
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
@@ -745,6 +774,13 @@ class ADTimePix : public ADDriver{
         void prvImgConnect();
         void prvImgDisconnect();
         bool parseTcpPath(const std::string& filePath, std::string& host, int& port);
+        
+        // TCP streaming methods for Img channel
+        bool processImgDataLine(char* line_buffer, char* newline_pos, size_t total_read);
+        void imgWorkerThread();
+        static void imgWorkerThreadC(void *pPvt);
+        void imgConnect();
+        void imgDisconnect();
         
         // Helper functions for fileWriter optimization
         asynStatus getParameterSafely(int param, int& value);

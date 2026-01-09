@@ -465,8 +465,33 @@ asynStatus ADTimePix::checkRaw1Path()
 
 asynStatus ADTimePix::checkImgPath()
 {
-    return checkChannelPath(ADTimePixImgBase, -1, ADTimePixImgFilePathExists,
-                          "Img", "Img file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
+    static const char* functionName = "checkImgPath";
+    asynStatus status = checkChannelPath(ADTimePixImgBase, -1, ADTimePixImgFilePathExists,
+                          "Img", "Img file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://listen@hostname:port");
+    
+    // If TCP path, parse host and port
+    if (status == asynSuccess) {
+        std::string filePath;
+        getStringParam(ADTimePixImgBase, filePath);
+        if (filePath.find("tcp://") == 0) {
+            std::string host;
+            int port;
+            if (parseTcpPath(filePath, host, port)) {
+                epicsMutexLock(imgMutex_);
+                imgHost_ = host;
+                imgPort_ = port;
+                getIntegerParam(ADTimePixImgFormat, &imgFormat_);
+                epicsMutexUnlock(imgMutex_);
+                LOG_ARGS("Parsed Img TCP path: host=%s, port=%d", host.c_str(), port);
+            } else {
+                ERR_ARGS("Failed to parse Img TCP path: %s", filePath.c_str());
+                setIntegerParam(ADTimePixImgFilePathExists, 0);
+                return asynError;
+            }
+        }
+    }
+    
+    return status;
 }
 
 asynStatus ADTimePix::checkImg1Path()
@@ -2113,6 +2138,19 @@ asynStatus ADTimePix::acquireStart(){
         prvImgWorkerThreadId_ = NULL;
     }
     prvImgDisconnect();
+    
+    // Ensure any existing Img TCP connection is disconnected before starting new measurement
+    // This prevents port conflicts
+    if (imgMutex_) {
+        epicsMutexLock(imgMutex_);
+        imgRunning_ = false;
+        epicsMutexUnlock(imgMutex_);
+    }
+    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(imgWorkerThreadId_);
+        imgWorkerThreadId_ = NULL;
+    }
+    imgDisconnect();
 
     setIntegerParam(ADStatus, ADStatusAcquire);
 
@@ -2185,6 +2223,15 @@ asynStatus ADTimePix::acquireStart(){
             prvImgWorkerThreadId_ = NULL;
         }
         prvImgDisconnect();
+        
+        epicsMutexLock(imgMutex_);
+        imgRunning_ = false;
+        epicsMutexUnlock(imgMutex_);
+        if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+            epicsThreadMustJoin(imgWorkerThreadId_);
+            imgWorkerThreadId_ = NULL;
+        }
+        imgDisconnect();
         return asynError;
     }
 
@@ -2214,6 +2261,32 @@ asynStatus ADTimePix::acquireStart(){
                 }
             }
             epicsMutexUnlock(prvImgMutex_);
+        }
+    }
+    
+    // Start Img TCP streaming worker thread if WriteImg is enabled and path is TCP
+    // Wait a bit for Serval to bind to the port before trying to connect
+    int writeImg;
+    getIntegerParam(ADTimePixWriteImg, &writeImg);
+    if (writeImg != 0) {
+        std::string imgPath;
+        getStringParam(ADTimePixImgBase, imgPath);
+        if (imgPath.find("tcp://") == 0) {
+            // Give Serval time to bind to the TCP port
+            epicsThreadSleep(0.5); // Wait 500ms for Serval to start TCP server
+            
+            epicsMutexLock(imgMutex_);
+            if (!imgRunning_ && !imgWorkerThreadId_) {
+                imgRunning_ = true;
+                imgWorkerThreadId_ = epicsThreadCreateOpt("imgWorker", imgWorkerThreadC, this, &opts);
+                if (!imgWorkerThreadId_) {
+                    ERR("Failed to create Img worker thread");
+                    imgRunning_ = false;
+                } else {
+                    LOG("Started Img TCP worker thread in acquireStart");
+                }
+            }
+            epicsMutexUnlock(imgMutex_);
         }
     }
     
@@ -2445,6 +2518,25 @@ asynStatus ADTimePix::acquireStop(){
         prvImgWorkerThreadId_ = NULL;
     }
     prvImgDisconnect();
+    
+    // Stop Img TCP streaming worker thread FIRST before stopping Serval measurement
+    // This ensures clean disconnection before Serval releases the port
+    if (imgMutex_) {
+        epicsMutexLock(imgMutex_);
+        imgRunning_ = false;
+        // Reset metadata tracking for next acquisition
+        imgFirstFrameReceived_ = false;
+        imgAcquisitionRate_ = 0.0;
+        imgRateSamples_.clear();
+        setDoubleParam(ADTimePixImgAcqRate, 0.0);
+        epicsMutexUnlock(imgMutex_);
+    }
+    
+    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(imgWorkerThreadId_);
+        imgWorkerThreadId_ = NULL;
+    }
+    imgDisconnect();
     
     if(this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf())
         epicsThreadMustJoin(this->callbackThreadId);
@@ -2967,6 +3059,431 @@ void ADTimePix::prvImgWorkerThread() {
     LOG("PrvImg worker thread exiting");
 }
 
+void ADTimePix::imgWorkerThreadC(void *pPvt) {
+    ADTimePix *pPvtClass = (ADTimePix *)pPvt;
+    pPvtClass->imgWorkerThread();
+}
+
+void ADTimePix::imgWorkerThread() {
+    static const char* functionName = "imgWorkerThread";
+    constexpr double RECONNECT_DELAY_SEC = 1.0;
+    
+    if (!imgMutex_) {
+        ERR("Img worker thread: Mutex not initialized");
+        return;
+    }
+    
+    imgLineBuffer_.resize(MAX_BUFFER_SIZE);
+    imgTotalRead_ = 0;
+    
+    while (imgRunning_) {
+        epicsMutexLock(imgMutex_);
+        bool should_connect = imgRunning_ && !imgConnected_;
+        std::string host = imgHost_;
+        int port = imgPort_;
+        epicsMutexUnlock(imgMutex_);
+        
+        if (should_connect && !host.empty() && port > 0) {
+            imgConnect();
+        }
+        
+        if (!imgRunning_) {
+            break;
+        }
+        
+        epicsMutexLock(imgMutex_);
+        bool connected = imgConnected_;
+        epicsMutexUnlock(imgMutex_);
+        
+        if (connected && imgNetworkClient_) {
+            try {
+                epicsMutexLock(imgMutex_);
+                ssize_t bytes_read = imgNetworkClient_->receive(
+                    imgLineBuffer_.data() + imgTotalRead_,
+                    MAX_BUFFER_SIZE - imgTotalRead_ - 1
+                );
+                epicsMutexUnlock(imgMutex_);
+                
+                if (bytes_read <= 0) {
+                    if (bytes_read == 0) {
+                        epicsMutexLock(imgMutex_);
+                        imgConnected_ = false;
+                        imgRunning_ = false;
+                        epicsMutexUnlock(imgMutex_);
+                        LOG("Img TCP connection closed by peer");
+                        break;
+                    } else {
+                        epicsMutexLock(imgMutex_);
+                        if (imgConnected_) {
+                            imgConnected_ = false;
+                            imgRunning_ = false;
+                            LOG_ARGS("Img TCP socket error: %s", strerror(errno));
+                        }
+                        epicsMutexUnlock(imgMutex_);
+                        break;
+                    }
+                }
+                
+                epicsMutexLock(imgMutex_);
+                imgTotalRead_ += bytes_read;
+                imgLineBuffer_[imgTotalRead_] = '\0';
+                
+                // Look for newline to find complete JSON line
+                char* newline_pos = static_cast<char*>(memchr(imgLineBuffer_.data(), '\n', imgTotalRead_));
+                
+                if (newline_pos) {
+                    // Found a newline - check if there's valid JSON before it
+                    char* json_start = nullptr;
+                    
+                    // Try to find {" pattern (most reliable indicator of JSON)
+                    for (char* p = imgLineBuffer_.data(); p < newline_pos - 1; ++p) {
+                        if (*p == '{' && p[1] == '"') {
+                            json_start = p;
+                            break;
+                        }
+                    }
+                    
+                    // If we didn't find {", try finding { followed by valid JSON structure
+                    if (!json_start) {
+                        for (char* p = imgLineBuffer_.data(); p < newline_pos - 2; ++p) {
+                            if (*p == '{') {
+                                bool looks_like_json = false;
+                                size_t check_len = std::min(size_t(newline_pos - p - 1), size_t(100));
+                                
+                                int json_chars = 0;
+                                for (size_t i = 1; i < check_len; ++i) {
+                                    char c = p[i];
+                                    if (c == '"' || c == ':' || c == ',' || c == '}' || c == '[' || c == ']') {
+                                        looks_like_json = true;
+                                        break;
+                                    }
+                                    if (std::isalnum(c) || c == ' ' || c == '_' || c == '-' || c == '.') {
+                                        json_chars++;
+                                    } else if (c < 32 && c != '\n' && c != '\r' && c != '\t') {
+                                        break;
+                                    }
+                                }
+                                
+                                if (looks_like_json || json_chars > 5) {
+                                    json_start = p;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    bool valid_json_start = (json_start != nullptr);
+                    
+                    if (valid_json_start) {
+                        // Try to parse the JSON to verify it's valid
+                        bool is_valid_json = false;
+                        try {
+                            std::string json_str(json_start, newline_pos - json_start);
+                            json test_json = json::parse(json_str);
+                            if (test_json.contains("width") || test_json.contains("frameNumber") ||
+                                test_json.contains("height") || test_json.contains("timeAtFrame")) {
+                                is_valid_json = true;
+                            }
+                        } catch (...) {
+                            is_valid_json = false;
+                        }
+                        
+                        if (is_valid_json) {
+                            *newline_pos = '\0';
+                            
+                            // Process the JSON line
+                            if (!processImgDataLine(json_start, newline_pos, imgTotalRead_)) {
+                                epicsMutexUnlock(imgMutex_);
+                                break;
+                            }
+                            
+                            // Move remaining data to start of buffer
+                            size_t remaining = imgTotalRead_ - (newline_pos - imgLineBuffer_.data() + 1);
+                            if (remaining > 0) {
+                                memmove(imgLineBuffer_.data(), newline_pos + 1, remaining);
+                            }
+                            imgTotalRead_ = remaining;
+                        } else {
+                            // Found { but it's not valid JSON - skip this newline
+                            size_t remaining = imgTotalRead_ - (newline_pos - imgLineBuffer_.data() + 1);
+                            if (remaining > 0) {
+                                memmove(imgLineBuffer_.data(), newline_pos + 1, remaining);
+                            }
+                            imgTotalRead_ = remaining;
+                        }
+                    } else {
+                        // Found newline but no valid JSON - might be binary data
+                        size_t remaining = imgTotalRead_ - (newline_pos - imgLineBuffer_.data() + 1);
+                        if (remaining > 0) {
+                            memmove(imgLineBuffer_.data(), newline_pos + 1, remaining);
+                        }
+                        imgTotalRead_ = remaining;
+                    }
+                } else {
+                    // No newline found yet - check if buffer is getting too full
+                    if (imgTotalRead_ >= MAX_BUFFER_SIZE - 1) {
+                        LOG("Img TCP buffer full without finding newline, resetting");
+                        imgTotalRead_ = 0;
+                    }
+                }
+                
+                if (imgTotalRead_ >= MAX_BUFFER_SIZE - 1) {
+                    LOG("Img TCP buffer full, resetting");
+                    imgTotalRead_ = 0;
+                }
+                
+                epicsMutexUnlock(imgMutex_);
+                
+            } catch (const std::exception& e) {
+                epicsMutexUnlock(imgMutex_);
+                ERR_ARGS("Error in Img worker thread: %s", e.what());
+            }
+        } else {
+            epicsThreadSleep(RECONNECT_DELAY_SEC);
+        }
+    }
+    
+    imgDisconnect();
+    LOG("Img worker thread exiting");
+}
+
+bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
+    const char* functionName = "processImgDataLine";
+    
+    // Skip any leading whitespace or binary data
+    char* json_start = line_buffer;
+    
+    // Skip non-printable characters until we find '{'
+    while (*json_start != '\0' && *json_start != '{' &&
+           (*json_start < 32 || *json_start > 126)) {
+        json_start++;
+    }
+    
+    if (*json_start == '\0' || *json_start != '{') {
+        return true;
+    }
+    
+    json j;
+    try {
+        j = json::parse(json_start);
+    } catch (const json::parse_error& e) {
+        if (*json_start == '{') {
+            ERR_ARGS("JSON parse error: %s", e.what());
+        }
+        return true;
+    }
+    
+    try {
+        // Extract header information for jsonimage
+        int width = j["width"];
+        int height = j["height"];
+        std::string pixel_format_str = j.value("pixelFormat", "uint16");
+        
+        // Extract additional frame data
+        int frame_number = j.value("frameNumber", 0);
+        double time_at_frame = j.value("timeAtFrame", 0.0);
+        
+        // Determine pixel format
+        bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
+        NDDataType_t dataType = is_uint32 ? NDUInt32 : NDUInt16;
+        
+        // Calculate pixel data size
+        size_t pixel_count = width * height;
+        size_t bytes_per_pixel = is_uint32 ? sizeof(uint32_t) : sizeof(uint16_t);
+        size_t binary_needed = pixel_count * bytes_per_pixel;
+        
+        // Validate dimensions
+        if (width <= 0 || height <= 0 || width > 100000 || height > 100000) {
+            ERR_ARGS("Invalid image dimensions: width=%d, height=%d", width, height);
+            return false;
+        }
+        
+        // Create NDArray - check if pool is available
+        if (!this->pNDArrayPool) {
+            ERR("NDArray pool is not available");
+            return false;
+        }
+        
+        size_t dims[3];
+        dims[0] = width;
+        dims[1] = height;
+        dims[2] = 0;
+        
+        NDArray *pImage = nullptr;
+        // Use pArrays[1] for Img channel to avoid conflict with PrvImg (pArrays[0])
+        if (this->pArrays && this->pArrays[1]) {
+            pImage = this->pArrays[1];
+            pImage->release();
+        }
+        
+        this->pArrays[1] = this->pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
+        pImage = this->pArrays[1];
+        
+        if (!pImage || !pImage->pData) {
+            ERR("Failed to allocate NDArray or NDArray has no data pointer");
+            return false;
+        }
+        
+        // Copy any binary data we already have after the newline
+        size_t remaining = total_read - (newline_pos - line_buffer + 1);
+        size_t binary_read = 0;
+        
+        std::vector<char> pixel_buffer(binary_needed);
+        
+        if (remaining > 0) {
+            size_t to_copy = std::min(remaining, binary_needed);
+            memcpy(pixel_buffer.data(), newline_pos + 1, to_copy);
+            binary_read = to_copy;
+        }
+        
+        // Read any remaining binary data needed
+        epicsMutexLock(imgMutex_);
+        if (binary_read < binary_needed && imgNetworkClient_ && imgNetworkClient_->is_connected()) {
+            if (!imgNetworkClient_->receive_exact(
+                pixel_buffer.data() + binary_read,
+                binary_needed - binary_read)) {
+                epicsMutexUnlock(imgMutex_);
+                ERR("Failed to read binary pixel data");
+                return false;
+            }
+        }
+        epicsMutexUnlock(imgMutex_);
+        
+        // Validate pixel buffer size
+        if (pixel_buffer.size() < binary_needed) {
+            ERR_ARGS("Pixel buffer too small: have %zu, need %zu", pixel_buffer.size(), binary_needed);
+            return false;
+        }
+        
+        // Convert network byte order to host byte order and copy to NDArray
+        if (!pImage->pData) {
+            ERR("NDArray pData is null");
+            return false;
+        }
+        
+        if (is_uint32) {
+            uint32_t* pixels = reinterpret_cast<uint32_t*>(pixel_buffer.data());
+            uint32_t* pData = reinterpret_cast<uint32_t*>(pImage->pData);
+            if (!pixels || !pData) {
+                ERR("Invalid pixel data pointers");
+                return false;
+            }
+            for (size_t i = 0; i < pixel_count; ++i) {
+                pData[i] = __builtin_bswap32(pixels[i]);
+            }
+        } else {
+            uint16_t* pixels = reinterpret_cast<uint16_t*>(pixel_buffer.data());
+            uint16_t* pData = reinterpret_cast<uint16_t*>(pImage->pData);
+            if (!pixels || !pData) {
+                ERR("Invalid pixel data pointers");
+                return false;
+            }
+            for (size_t i = 0; i < pixel_count; ++i) {
+                pData[i] = __builtin_bswap16(pixels[i]);
+            }
+        }
+        
+        // Set image parameters (thread-safe via asynPortDriver)
+        setIntegerParam(ADSizeX, width);
+        setIntegerParam(NDArraySizeX, width);
+        setIntegerParam(ADSizeY, height);
+        setIntegerParam(NDArraySizeY, height);
+        
+        // Set data type
+        int dataTypeValue = (int)dataType;
+        setIntegerParam(NDDataType, dataTypeValue);
+        setIntegerParam(NDColorMode, NDColorModeMono);
+        
+        NDArrayInfo_t arrayInfo;
+        pImage->getInfo(&arrayInfo);
+        setIntegerParam(NDArraySize, (int)arrayInfo.totalBytes);
+        
+        // Increment array counter (thread-safe)
+        int imagesAcquired = 0;
+        getIntegerParam(NDArrayCounter, &imagesAcquired);
+        imagesAcquired++;
+        setIntegerParam(NDArrayCounter, imagesAcquired);
+        
+        // Set timestamp
+        pImage->uniqueId = frame_number;
+        epicsTimeStamp timestamp;
+        epicsTimeGetCurrent(&timestamp);
+        pImage->timeStamp = timestamp.secPastEpoch + timestamp.nsec / 1.e9;
+        updateTimeStamp(&pImage->epicsTS);
+        
+        // Set Img metadata PVs
+        setIntegerParam(ADTimePixImgFrameNumber, frame_number);
+        setDoubleParam(ADTimePixImgTimeAtFrame, time_at_frame);
+        
+        // Calculate acquisition rate
+        epicsTimeStamp current_time;
+        epicsTimeGetCurrent(&current_time);
+        double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
+        
+        if (!imgFirstFrameReceived_) {
+            imgPreviousFrameNumber_ = frame_number;
+            imgPreviousTimeAtFrame_ = current_time_seconds;
+            imgFirstFrameReceived_ = true;
+            imgAcquisitionRate_ = 0.0;
+        } else {
+            int frame_diff = frame_number - imgPreviousFrameNumber_;
+            double time_diff_seconds = current_time_seconds - imgPreviousTimeAtFrame_;
+            
+            if (frame_diff > 1) {
+                LOG_ARGS("Img frame loss detected! Expected frame %d, got frame %d (lost %d frames)", 
+                         imgPreviousFrameNumber_ + 1, frame_number, frame_diff - 1);
+            }
+            
+            if (frame_diff > 0 && time_diff_seconds > 0.0) {
+                double current_rate = frame_diff / time_diff_seconds;
+                
+                imgRateSamples_.push_back(current_rate);
+                if (imgRateSamples_.size() > IMG_MAX_RATE_SAMPLES) {
+                    imgRateSamples_.erase(imgRateSamples_.begin());
+                }
+                
+                double sum = 0.0;
+                for (size_t i = 0; i < imgRateSamples_.size(); ++i) {
+                    sum += imgRateSamples_[i];
+                }
+                imgAcquisitionRate_ = sum / imgRateSamples_.size();
+                
+                if (current_time_seconds - imgLastRateUpdateTime_ >= 1.0) {
+                    setDoubleParam(ADTimePixImgAcqRate, imgAcquisitionRate_);
+                    imgLastRateUpdateTime_ = current_time_seconds;
+                }
+            }
+            
+            imgPreviousFrameNumber_ = frame_number;
+            imgPreviousTimeAtFrame_ = current_time_seconds;
+        }
+        
+        // Get attributes
+        if (pImage->pAttributeList) {
+            this->getAttributes(pImage->pAttributeList);
+        }
+        
+        // Call parameter callbacks to update EPICS PVs (thread-safe)
+        callParamCallbacks();
+        
+        // Trigger NDArray callbacks (thread-safe)
+        int arrayCallbacks = 0;
+        getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+        if (arrayCallbacks && pImage) {
+            doCallbacksGenericPointer(pImage, NDArrayData, 0);
+        }
+        
+        LOG_ARGS("Processed Img frame: width=%d, height=%d, format=%s, frame=%d, counter=%d", 
+                 width, height, pixel_format_str.c_str(), frame_number, imagesAcquired);
+        
+    } catch (const std::exception& e) {
+        ERR_ARGS("Error processing Img frame: %s", e.what());
+        return false;
+    }
+    
+    return true;
+}
+
 bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
     const char* functionName = "processPrvImgDataLine";
     
@@ -3201,6 +3718,54 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
     }
     
     return true;
+}
+
+void ADTimePix::imgConnect() {
+    static const char* functionName = "imgConnect";
+    
+    if (!imgMutex_) {
+        ERR("Img TCP: Mutex not initialized");
+        return;
+    }
+    
+    epicsMutexLock(imgMutex_);
+    std::string host = imgHost_;
+    int port = imgPort_;
+    epicsMutexUnlock(imgMutex_);
+    
+    if (host.empty() || port <= 0) {
+        ERR("Img TCP: Invalid host or port");
+        return;
+    }
+    
+    imgDisconnect(); // Ensure clean state
+    
+    imgNetworkClient_.reset(new NetworkClient());
+    if (!imgNetworkClient_) {
+        ERR("Img TCP: Failed to create NetworkClient");
+        return;
+    }
+    
+    if (imgNetworkClient_->connect(host, port)) {
+        epicsMutexLock(imgMutex_);
+        imgConnected_ = true;
+        epicsMutexUnlock(imgMutex_);
+        LOG_ARGS("Img TCP connected to %s:%d", host.c_str(), port);
+    } else {
+        ERR_ARGS("Img TCP failed to connect to %s:%d", host.c_str(), port);
+        imgNetworkClient_.reset();
+    }
+}
+
+void ADTimePix::imgDisconnect() {
+    epicsMutexLock(imgMutex_);
+    imgConnected_ = false;
+    epicsMutexUnlock(imgMutex_);
+    
+    if (imgNetworkClient_) {
+        imgNetworkClient_->disconnect();
+        imgNetworkClient_.reset();
+    }
 }
 
 void ADTimePix::prvImgConnect() {
@@ -3514,7 +4079,11 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // PrvImg TCP streaming metadata
     createParam(ADTimePixPrvImgFrameNumberString,            asynParamInt32, &ADTimePixPrvImgFrameNumber);
     createParam(ADTimePixPrvImgTimeAtFrameString,            asynParamFloat64, &ADTimePixPrvImgTimeAtFrame);
-    createParam(ADTimePixPrvImgAcqRateString,                asynParamFloat64, &ADTimePixPrvImgAcqRate);          
+    createParam(ADTimePixPrvImgAcqRateString,                asynParamFloat64, &ADTimePixPrvImgAcqRate);
+    // Img TCP streaming metadata
+    createParam(ADTimePixImgFrameNumberString,               asynParamInt32, &ADTimePixImgFrameNumber);
+    createParam(ADTimePixImgTimeAtFrameString,               asynParamFloat64, &ADTimePixImgTimeAtFrame);
+    createParam(ADTimePixImgAcqRateString,                   asynParamFloat64, &ADTimePixImgAcqRate);
     // Server, Preview, ImageChannels[1]   
     createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);
     createParam(ADTimePixPrvImg1FilePatString,             asynParamOctet, &ADTimePixPrvImg1FilePat);             
@@ -3602,6 +4171,28 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImgAcquisitionRate_ = 0.0;
     prvImgLastRateUpdateTime_ = 0.0;
     prvImgFirstFrameReceived_ = false;
+    
+    // Initialize TCP streaming for Img channel
+    imgNetworkClient_.reset();
+    imgHost_ = "";
+    imgPort_ = 0;
+    imgConnected_ = false;
+    imgRunning_ = false;
+    imgWorkerThreadId_ = nullptr;
+    imgMutex_ = epicsMutexMustCreate();
+    if (!imgMutex_) {
+        ERR("Failed to create Img mutex");
+    }
+    imgLineBuffer_.resize(MAX_BUFFER_SIZE);
+    imgTotalRead_ = 0;
+    imgFormat_ = 0;
+    
+    // Initialize Img metadata tracking
+    imgPreviousFrameNumber_ = 0;
+    imgPreviousTimeAtFrame_ = 0.0;
+    imgAcquisitionRate_ = 0.0;
+    imgLastRateUpdateTime_ = 0.0;
+    imgFirstFrameReceived_ = false;
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
@@ -3646,6 +4237,22 @@ ADTimePix::~ADTimePix(){
     if (prvImgMutex_) {
         epicsMutexDestroy(prvImgMutex_);
         prvImgMutex_ = NULL;
+    }
+    
+    // Stop Img TCP streaming
+    epicsMutexLock(imgMutex_);
+    imgRunning_ = false;
+    epicsMutexUnlock(imgMutex_);
+    
+    if (imgWorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(imgWorkerThreadId_);
+        imgWorkerThreadId_ = NULL;
+    }
+    imgDisconnect();
+    
+    if (imgMutex_) {
+        epicsMutexDestroy(imgMutex_);
+        imgMutex_ = NULL;
     }
     
     disconnect(this->pasynUserSelf);

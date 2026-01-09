@@ -19,11 +19,12 @@ Notes:
 * Driver is specific to Serval version, since Rust features differ. Driver for Serval 2.x.y is in separate branch, and is not under current development. The branch 3.3.2 is compatible with serval 3.x.x only, and will likely not be developed further.
 * The driver has been developed using TimePix3 Emulator, and real detectors. Real detectors are quad-chip, and single chip.
 
-Preview Image Streaming
-------------------------
+TCP Image Streaming
+--------------------
 
-* **TCP Streaming**: Preview images (PrvImg channel) use TCP streaming with jsonimage format for real-time image delivery.
-* **Configuration**: Set `PrvImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8089`) and `PrvImgFileFmt` to `jsonimage` (format index 3).
+* **Preview Image Streaming (PrvImg)**: Preview images use TCP streaming with jsonimage format for real-time image delivery. Set `PrvImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8089`) and `PrvImgFileFmt` to `jsonimage` (format index 3).
+* **Image Channel Streaming (Img)**: The Img channel also supports TCP jsonimage streaming for real-time 2D image delivery. Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`) and `ImgFileFmt` to `jsonimage` (format index 3).
+* **Concurrent Operation**: Both PrvImg and Img channels can stream concurrently without conflicts. Each channel uses its own array slot (PrvImg uses pArrays[0], Img uses pArrays[1]) to prevent NDArray reference count issues.
 * **GraphicsMagick**: The GraphicsMagick HTTP method for preview images has been removed from the master branch. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 
 How to run:
@@ -96,10 +97,11 @@ Detector Communication:
 
 Acquisition Modes:
 
--   Raw Mode: .tpx3 file output or TCP streaming
--   Image Mode: Processed images (TIFF, PNG, PGM formats)
--   Preview Mode: Real-time preview images and histograms
--   Multiple Streams: Support for dual raw streams (Serval 3.3.0+)
+-   Raw Mode: .tpx3 file output or TCP streaming
+-   Image Mode: Processed images (TIFF, PNG, PGM formats) or TCP jsonimage streaming
+-   Preview Mode: Real-time preview images and histograms via TCP jsonimage streaming
+-   Multiple Streams: Support for dual raw streams (Serval 3.3.0+)
+-   Concurrent Channels: PrvImg and Img channels can stream simultaneously via TCP without conflicts
 
 Trigger Modes:
 
@@ -238,7 +240,8 @@ ADDriver(portName, 4, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
   -   Asynchronous callback thread for continuous acquisition
   -   Real-time measurement status updates
   -   Support for multiple data formats and streaming
-  -   TCP streaming for preview images (jsonimage format) with configurable ports
+  -   TCP streaming for preview images (PrvImg) and image channel (Img) using jsonimage format with configurable ports
+  -   Concurrent TCP streaming support: PrvImg and Img channels can operate simultaneously using separate array slots
 
 #### 10. Recent Developments
 
