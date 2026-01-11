@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--Saved on 2025-02-19 10:12:58 by kg1-->
 <display version="2.0.0">
   <name>$(BL) Mask</name>
   <width>710</width>
@@ -23,8 +22,9 @@
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
-      <color red="0" green="128" blue="255">
+      <color red="0" green="0" blue="255">
       </color>
     </border_color>
   </widget>
