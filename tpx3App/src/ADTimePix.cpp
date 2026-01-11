@@ -2184,8 +2184,8 @@ asynStatus ADTimePix::acquireStart(){
                                                    cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                                    cpr::Parameters{{"anon", "true"}, {"key", "value"}});
                         if (stop_r.status_code == 200) {
-                            // Wait a bit for Serval to release ports
-                            epicsThreadSleep(0.5);
+                            // Wait for Serval to release ports (minimum: 100ms)
+                            epicsThreadSleep(0.1);  // 100ms - allows port release
                         } else {
                             WARN_ARGS("Failed to stop existing measurement (status: %ld), continuing anyway", stop_r.status_code);
                         }
@@ -2246,8 +2246,8 @@ asynStatus ADTimePix::acquireStart(){
         std::string prvImgPath;
         getStringParam(ADTimePixPrvImgBase, prvImgPath);
         if (prvImgPath.find("tcp://") == 0) {
-            // Give Serval time to bind to the TCP port
-            epicsThreadSleep(0.5); // Wait 500ms for Serval to start TCP server
+            // Give Serval time to bind to the TCP port (minimum: 200ms)
+            epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
             
             epicsMutexLock(prvImgMutex_);
             if (!prvImgRunning_ && !prvImgWorkerThreadId_) {
@@ -2272,8 +2272,8 @@ asynStatus ADTimePix::acquireStart(){
         std::string imgPath;
         getStringParam(ADTimePixImgBase, imgPath);
         if (imgPath.find("tcp://") == 0) {
-            // Give Serval time to bind to the TCP port
-            epicsThreadSleep(0.5); // Wait 500ms for Serval to start TCP server
+            // Give Serval time to bind to the TCP port (minimum: 200ms)
+            epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
             
             epicsMutexLock(imgMutex_);
             if (!imgRunning_ && !imgWorkerThreadId_) {
@@ -2525,8 +2525,8 @@ asynStatus ADTimePix::acquireStop(){
     // 2. Signal its TcpSender threads to stop
     // 3. Allow TcpSender threads to finish sending any buffered data
     // 4. Close Serval's side of the socket gracefully
-    // Increasing delay to prevent "Broken pipe" errors
-    epicsThreadSleep(0.5);  // 500ms delay - allows Serval TcpSender threads to stop cleanly
+    // Delay to prevent "Broken pipe" errors (minimum: 300ms for reliable operation)
+    epicsThreadSleep(0.3);  // 300ms - allows Serval TcpSender threads to stop cleanly
     
     // NOW signal worker threads to stop (after Serval has stopped sending)
     // Worker threads will detect the closed connection (bytes_read <= 0) and exit cleanly
