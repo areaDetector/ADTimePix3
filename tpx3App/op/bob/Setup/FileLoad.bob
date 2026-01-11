@@ -35,7 +35,7 @@ $(pv_value)</tooltip>
     <name>Label</name>
     <text>BPC File name</text>
     <x>10</x>
-    <y>81</y>
+    <y>80</y>
     <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -54,9 +54,9 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input</name>
     <pv_name>$(P)$(R)BPCFileName</pv_name>
-    <x>140</x>
-    <y>81</y>
-    <width>700</width>
+    <x>135</x>
+    <y>80</y>
+    <width>705</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -78,7 +78,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update</name>
     <pv_name>$(P)$(R)BPCFileName_RBV</pv_name>
-    <x>140</x>
+    <x>135</x>
     <y>60</y>
     <width>600</width>
     <height>18</height>
@@ -128,9 +128,9 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input</name>
     <pv_name>$(P)$(R)BPCFilePath</pv_name>
-    <x>140</x>
+    <x>135</x>
     <y>30</y>
-    <width>700</width>
+    <width>705</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -171,7 +171,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update</name>
     <pv_name>$(P)$(R)BPCFilePathExists_RBV</pv_name>
-    <x>830</x>
+    <x>795</x>
     <y>10</y>
     <width>40</width>
     <font>
@@ -179,7 +179,7 @@ $(pv_value)</tooltip>
       </font>
     </font>
     <foreground_color>
-      <color name="OK" red="0" green="255" blue="0">
+      <color red="255" green="0" blue="0">
       </color>
     </foreground_color>
     <background_color>
@@ -201,9 +201,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label</name>
     <text>Upload BPC file</text>
-    <x>6</x>
+    <x>10</x>
     <y>240</y>
-    <width>140</width>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -229,7 +229,7 @@ $(pv_value)</tooltip>
     </actions>
     <pv_name>$(P)$(R)WriteBPCFile</pv_name>
     <text>Upload</text>
-    <x>165</x>
+    <x>135</x>
     <y>240</y>
     <width>60</width>
     <height>20</height>
@@ -242,9 +242,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label</name>
     <text>Write status code</text>
-    <x>6</x>
+    <x>10</x>
     <y>310</y>
-    <width>140</width>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -262,7 +262,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update</name>
     <pv_name>$(P)$(R)HttpCode_RBV</pv_name>
-    <x>165</x>
+    <x>135</x>
     <y>310</y>
     <width>120</width>
     <font>
@@ -270,7 +270,7 @@ $(pv_value)</tooltip>
       </font>
     </font>
     <foreground_color>
-      <color name="OK" red="0" green="255" blue="0">
+      <color red="0" green="0" blue="255">
       </color>
     </foreground_color>
     <background_color>
@@ -291,9 +291,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label</name>
     <text>Write message</text>
-    <x>6</x>
+    <x>10</x>
     <y>330</y>
-    <width>140</width>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -331,9 +331,9 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_2</name>
     <pv_name>$(P)$(R)DACSFileName</pv_name>
-    <x>140</x>
+    <x>135</x>
     <y>195</y>
-    <width>700</width>
+    <width>705</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -355,8 +355,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_7</name>
     <pv_name>$(P)$(R)DACSFileName_RBV</pv_name>
-    <x>140</x>
-    <y>172</y>
+    <x>135</x>
+    <y>175</y>
     <width>600</width>
     <height>18</height>
     <font>
@@ -385,8 +385,8 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_8</name>
     <pv_name>$(P)$(R)DACSFilePath_RBV</pv_name>
-    <x>140</x>
-    <y>124</y>
+    <x>135</x>
+    <y>125</y>
     <width>600</width>
     <height>18</height>
     <font>
@@ -416,7 +416,7 @@ $(pv_value)</tooltip>
     <name>Label_8</name>
     <text>DACS File path</text>
     <x>10</x>
-    <y>147</y>
+    <y>145</y>
     <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -435,9 +435,9 @@ $(pv_value)</tooltip>
   <widget type="textentry" version="3.0.0">
     <name>Text Input_3</name>
     <pv_name>$(P)$(R)DACSFilePath</pv_name>
-    <x>140</x>
-    <y>147</y>
-    <width>700</width>
+    <x>135</x>
+    <y>145</y>
+    <width>705</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -460,7 +460,7 @@ $(pv_value)</tooltip>
     <name>Label_9</name>
     <text>Exists:</text>
     <x>750</x>
-    <y>124</y>
+    <y>125</y>
     <width>70</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
@@ -478,15 +478,15 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_9</name>
     <pv_name>$(P)$(R)DACSFilePathExists_RBV</pv_name>
-    <x>830</x>
-    <y>124</y>
+    <x>795</x>
+    <y>125</y>
     <width>40</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
     </font>
     <foreground_color>
-      <color name="OK" red="0" green="255" blue="0">
+      <color red="255" green="0" blue="0">
       </color>
     </foreground_color>
     <background_color>
@@ -508,7 +508,7 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update_11</name>
     <pv_name>$(P)$(R)BPCFilePath_RBV</pv_name>
-    <x>140</x>
+    <x>135</x>
     <y>10</y>
     <width>600</width>
     <height>18</height>
@@ -538,9 +538,9 @@ $(pv_value)</tooltip>
   <widget type="label" version="2.0.0">
     <name>Label_10</name>
     <text>Upload DACS file</text>
-    <x>8</x>
+    <x>10</x>
     <y>265</y>
-    <width>140</width>
+    <width>120</width>
     <font>
       <font family="Sans" style="REGULAR" size="10.891089108910892">
       </font>
@@ -566,7 +566,7 @@ $(pv_value)</tooltip>
     </actions>
     <pv_name>$(P)$(R)WriteDACSFile</pv_name>
     <text>Upload</text>
-    <x>165</x>
+    <x>135</x>
     <y>265</y>
     <width>60</width>
     <height>20</height>
@@ -579,9 +579,9 @@ $(pv_value)</tooltip>
   <widget type="textupdate" version="2.0.0">
     <name>Text Update</name>
     <pv_name>$(P)$(R)WriteFileMessage</pv_name>
-    <x>10</x>
+    <x>5</x>
     <y>350</y>
-    <width>850</width>
+    <width>860</width>
     <height>50</height>
     <font>
       <font family="Sans" style="REGULAR" size="7.920792079207921">
@@ -609,7 +609,7 @@ $(pv_value)</tooltip>
     <name>File Selector</name>
     <pv_name>$(P)$(R)BPCFilePath</pv_name>
     <x>840</x>
-    <y>33</y>
+    <y>30</y>
     <width>1</width>
     <height>1</height>
   </widget>
@@ -617,24 +617,24 @@ $(pv_value)</tooltip>
     <name>File Selector_1</name>
     <pv_name>$(P)$(R)BPCFileName</pv_name>
     <x>840</x>
-    <y>81</y>
-    <width>0</width>
-    <height>0</height>
+    <y>80</y>
+    <width>1</width>
+    <height>1</height>
   </widget>
   <widget type="fileselector" version="2.0.0">
     <name>File Selector_2</name>
     <pv_name>$(P)$(R)DACSFilePath</pv_name>
     <x>840</x>
-    <y>147</y>
-    <width>0</width>
-    <height>0</height>
+    <y>145</y>
+    <width>1</width>
+    <height>1</height>
   </widget>
   <widget type="fileselector" version="2.0.0">
     <name>File Selector_3</name>
     <pv_name>$(P)$(R)DACSFileName</pv_name>
     <x>840</x>
     <y>195</y>
-    <width>0</width>
-    <height>0</height>
+    <width>1</width>
+    <height>1</height>
   </widget>
 </display>
