@@ -46,6 +46,7 @@ $(pv_value)</tooltip>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -62,6 +63,7 @@ $(pv_value)</tooltip>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -102,6 +104,7 @@ $(pv_value)</tooltip>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -118,6 +121,7 @@ $(pv_value)</tooltip>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -134,6 +138,7 @@ $(pv_value)</tooltip>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -143,13 +148,14 @@ $(pv_value)</tooltip>
     <name>Linking Container_6</name>
     <file>../../../../$(pathADCore)/ADBuffers.opi</file>
     <x>360</x>
-    <y>689</y>
+    <y>690</y>
     <width>350</width>
     <height>160</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -159,13 +165,14 @@ $(pv_value)</tooltip>
     <name>Linking Container_7</name>
     <file>../../../../$(pathADCore)/ADAttrFile.opi</file>
     <x>360</x>
-    <y>857</y>
+    <y>855</y>
     <width>350</width>
     <height>110</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -175,13 +182,14 @@ $(pv_value)</tooltip>
     <name>Linking Container_8</name>
     <file>Detector/TimePixDetectorHealth.opi</file>
     <x>720</x>
-    <y>35</y>
-    <width>350</width>
-    <height>230</height>
+    <y>10</y>
+    <width>300</width>
+    <height>255</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -198,6 +206,7 @@ $(pv_value)</tooltip>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
@@ -206,14 +215,15 @@ $(pv_value)</tooltip>
   <widget type="embedded" version="2.0.0">
     <name>Linking Container_13</name>
     <file>TimePix3Status.opi</file>
-    <x>3</x>
-    <y>852</y>
+    <x>2</x>
+    <y>850</y>
     <width>350</width>
-    <height>80</height>
+    <height>120</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <border_width>1</border_width>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>

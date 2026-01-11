@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>TimePix3Detector</name>
+  <macros>
+    <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
+  </macros>
+  <width>1000</width>
+  <height>1000</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <actions>
+  </actions>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="rectangle" version="2.0.0">
+    <name>Rectangle</name>
+    <macros>
+      <pv_name></pv_name>
+    </macros>
+    <y>4</y>
+    <width>715</width>
+    <height>25</height>
+    <line_width>0</line_width>
+    <line_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </line_color>
+    <actions>
+    </actions>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Label</name>
+    <text>Area Detector Control - $(P)$(R)</text>
+    <y>5</y>
+    <width>715</width>
+    <height>25</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="14.851485148514852">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+    <wrap_words>false</wrap_words>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_8</name>
+    <file>Detector/TimePixDetectorHealth.opi</file>
+    <x>2</x>
+    <y>35</y>
+    <width>350</width>
+    <height>255</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_10</name>
+    <file>Detector/TimePixDetectorInfo.opi</file>
+    <x>2</x>
+    <y>300</y>
+    <width>350</width>
+    <height>605</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_11</name>
+    <file>Detector/TimePixDetectorConfig.opi</file>
+    <x>359</x>
+    <y>33</y>
+    <width>350</width>
+    <height>485</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_12</name>
+    <macros>
+      <Chip>CHIP0</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>715</x>
+    <y>30</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_13</name>
+    <macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>715</x>
+    <y>570</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_14</name>
+    <macros>
+      <Chip>CHIP1</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>920</x>
+    <y>30</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_15</name>
+    <macros>
+      <Chip>CHIP3</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>920</x>
+    <y>570</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_16</name>
+    <macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorLayout.opi</file>
+    <x>360</x>
+    <y>525</y>
+    <width>350</width>
+    <height>160</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_17</name>
+    <macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <file>Measurement/MeasurementInfo.opi</file>
+    <x>360</x>
+    <y>690</y>
+    <width>350</width>
+    <height>260</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_18</name>
+    <macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <file>Measurement/Dashboard.opi</file>
+    <x>2</x>
+    <y>910</y>
+    <width>350</width>
+    <height>130</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_19</name>
+    <macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <file>TimePix3API.opi</file>
+    <x>360</x>
+    <y>955</y>
+    <width>350</width>
+    <height>80</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_20</name>
+    <macros>
+      <Chip>CHIP2</Chip>
+    </macros>
+    <file>TimePix3Alarm.opi</file>
+    <x>360</x>
+    <y>1040</y>
+    <width>350</width>
+    <height>100</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+</display>
