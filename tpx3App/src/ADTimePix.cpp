@@ -3839,9 +3839,11 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         std::memset(imgSumArray64WorkBuffer_.data(), 0, sum_pixel_count * sizeof(uint64_t));
         
         // Sum all frames in buffer
+        size_t frames_summed = 0;
         for (const auto& frame : imgFrameBuffer_) {
             if (frame.get_width() == sum_frame_width && 
                 frame.get_height() == sum_frame_height) {
+                frames_summed++;
                 if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
                     const uint16_t* pixels = frame.get_pixels_16_ptr();
                     for (size_t i = 0; i < sum_pixel_count; ++i) {
@@ -3855,6 +3857,10 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
                 }
             }
         }
+        
+        // Debug output
+        printf("DEBUG: Sum calculation: buffer_size=%zu, frames_summed=%zu, imgFramesToSum_=%d\n",
+               imgFrameBuffer_.size(), frames_summed, imgFramesToSum_);
         
         // Convert to epicsInt64
         for (size_t i = 0; i < sum_pixel_count; ++i) {
