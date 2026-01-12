@@ -570,13 +570,14 @@ record(ai, "$(P)$(R)ImgAcqRate_RBV")
 }
 
 # Img channel accumulation and display data
+# MAX_PIXELS: 262144 for 512x512 detector (can be overridden via macro)
 record(waveform, "$(P)$(R)ImgImageData")
 {
     field(DESC, "Accumulated image data (64-bit)")
     field(DTYP, "asynInt64ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_DATA")
     field(FTVL, "INT64")
-    field(NELM, "$(MAX_PIXELS)")
+    field(NELM, "$(MAX_PIXELS=262144)")
     field(SCAN, "I/O Intr")
 }
 
@@ -586,7 +587,7 @@ record(waveform, "$(P)$(R)ImgImageFrame")
     field(DTYP, "asynInt32ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_FRAME")
     field(FTVL, "LONG")
-    field(NELM, "$(MAX_PIXELS)")
+    field(NELM, "$(MAX_PIXELS=262144)")
     field(SCAN, "I/O Intr")
 }
 
@@ -596,7 +597,7 @@ record(waveform, "$(P)$(R)ImgImageSumNFrames")
     field(DTYP, "asynInt64ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_SUM_N_FRAMES")
     field(FTVL, "INT64")
-    field(NELM, "$(MAX_PIXELS)")
+    field(NELM, "$(MAX_PIXELS=262144)")
     field(SCAN, "I/O Intr")
 }
 

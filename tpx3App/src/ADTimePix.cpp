@@ -2807,7 +2807,9 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         imgFramesToSum_ = value;
         if (imgFramesToSum_ < 1) imgFramesToSum_ = 1;
         if (imgFramesToSum_ > 100000) imgFramesToSum_ = 100000;
+        setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
         epicsMutexUnlock(imgMutex_);
+        callParamCallbacks(ADTimePixImgFramesToSum);
     }
     
     else if(function == ADTimePixImgSumUpdateIntervalFrames) {
@@ -2815,7 +2817,9 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         imgSumUpdateIntervalFrames_ = value;
         if (imgSumUpdateIntervalFrames_ < 1) imgSumUpdateIntervalFrames_ = 1;
         if (imgSumUpdateIntervalFrames_ > 10000) imgSumUpdateIntervalFrames_ = 10000;
+        setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
         epicsMutexUnlock(imgMutex_);
+        callParamCallbacks(ADTimePixImgSumUpdateIntervalFrames);
     }
 
     else{
@@ -3708,8 +3712,82 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         imgFrameBuffer_.pop_front();
     }
     
-    // Update EPICS arrays
-    updateImgDisplayData();
+    // Increment frame counter for sum update interval
+    imgFramesSinceLastSumUpdate_++;
+    
+    // Prepare data for callbacks (while holding mutex)
+    // Copy data to buffers that will be used for callbacks
+    size_t image_data_size = 0;
+    size_t image_frame_size = 0;
+    size_t image_sum_size = 0;
+    bool has_running_sum = (imgRunningSum_ != nullptr);
+    bool has_current_frame = (imgCurrentFrame_.get_pixel_count() > 0);
+    bool should_update_sum = (imgFramesSinceLastSumUpdate_ >= imgSumUpdateIntervalFrames_ && !imgFrameBuffer_.empty());
+    
+    if (has_running_sum) {
+        image_data_size = imgRunningSum_->get_pixel_count();
+        if (imgArrayData64Buffer_.size() < image_data_size) {
+            imgArrayData64Buffer_.resize(image_data_size);
+        }
+        const uint64_t* pixels = imgRunningSum_->get_pixels_64_ptr();
+        for (size_t i = 0; i < image_data_size; ++i) {
+            imgArrayData64Buffer_[i] = static_cast<epicsInt64>(pixels[i]);
+        }
+    }
+    
+    if (has_current_frame) {
+        image_frame_size = imgCurrentFrame_.get_pixel_count();
+        if (imgFrameArrayDataBuffer_.size() < image_frame_size) {
+            imgFrameArrayDataBuffer_.resize(image_frame_size);
+        }
+        if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+            const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
+            for (size_t i = 0; i < image_frame_size; ++i) {
+                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+            }
+        } else {
+            const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
+            for (size_t i = 0; i < image_frame_size; ++i) {
+                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+            }
+        }
+    }
+    
+    if (should_update_sum) {
+        imgFramesSinceLastSumUpdate_ = 0;
+        size_t pixel_count = imgFrameBuffer_[0].get_pixel_count();
+        size_t frame_width = imgFrameBuffer_[0].get_width();
+        size_t frame_height = imgFrameBuffer_[0].get_height();
+        
+        if (imgSumArray64WorkBuffer_.size() < pixel_count) {
+            imgSumArray64WorkBuffer_.resize(pixel_count);
+            imgSumArray64Buffer_.resize(pixel_count);
+        }
+        
+        std::memset(imgSumArray64WorkBuffer_.data(), 0, pixel_count * sizeof(uint64_t));
+        
+        for (const auto& frame : imgFrameBuffer_) {
+            if (frame.get_width() == frame_width && 
+                frame.get_height() == frame_height) {
+                if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+                    const uint16_t* pixels = frame.get_pixels_16_ptr();
+                    for (size_t i = 0; i < pixel_count; ++i) {
+                        imgSumArray64WorkBuffer_[i] += pixels[i];
+                    }
+                } else {
+                    const uint32_t* pixels = frame.get_pixels_32_ptr();
+                    for (size_t i = 0; i < pixel_count; ++i) {
+                        imgSumArray64WorkBuffer_[i] += pixels[i];
+                    }
+                }
+            }
+        }
+        
+        for (size_t i = 0; i < pixel_count; ++i) {
+            imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
+        }
+        image_sum_size = pixel_count;
+    }
     
     // Calculate processing time
     epicsTimeStamp processing_end_time;
@@ -3722,14 +3800,21 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         imgProcessingTimeSamples_.erase(imgProcessingTimeSamples_.begin());
     }
     
-    double sum = 0.0;
-    for (size_t i = 0; i < imgProcessingTimeSamples_.size(); ++i) {
-        sum += imgProcessingTimeSamples_[i];
+    // Calculate average processing time from samples
+    if (imgProcessingTimeSamples_.size() > 0) {
+        double sum = 0.0;
+        for (size_t i = 0; i < imgProcessingTimeSamples_.size(); ++i) {
+            sum += imgProcessingTimeSamples_[i];
+        }
+        imgProcessingTime_ = sum / imgProcessingTimeSamples_.size();
+    } else {
+        imgProcessingTime_ = 0.0;
     }
-    imgProcessingTime_ = sum / imgProcessingTimeSamples_.size();
     
+    // Update EPICS PV periodically (every 1 second) or when we have enough samples
     double current_time_seconds = processing_end_time.secPastEpoch + processing_end_time.nsec / 1e9;
-    if (current_time_seconds - imgLastProcessingTimeUpdate_ >= 1.0) {
+    if (current_time_seconds - imgLastProcessingTimeUpdate_ >= 1.0 || 
+        imgProcessingTimeSamples_.size() >= IMG_MAX_PROCESSING_TIME_SAMPLES) {
         setDoubleParam(ADTimePixImgProcessingTime, imgProcessingTime_);
         callParamCallbacks(ADTimePixImgProcessingTime);
         imgLastProcessingTimeUpdate_ = current_time_seconds;
@@ -3739,9 +3824,27 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     updateImgPerformanceMetrics();
     
     epicsMutexUnlock(imgMutex_);
+    
+    // Trigger callbacks OUTSIDE mutex to avoid deadlocks
+    if (has_running_sum && image_data_size > 0) {
+        doCallbacksInt64Array(imgArrayData64Buffer_.data(), image_data_size, 
+                              ADTimePixImgImageData, 0);
+    }
+    
+    if (has_current_frame && image_frame_size > 0) {
+        doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), image_frame_size,
+                              ADTimePixImgImageFrame, 0);
+    }
+    
+    if (should_update_sum && image_sum_size > 0) {
+        doCallbacksInt64Array(imgSumArray64Buffer_.data(), image_sum_size,
+                              ADTimePixImgImageSumNFrames, 0);
+    }
 }
 
 void ADTimePix::updateImgDisplayData() {
+    const char* functionName = "updateImgDisplayData";
+    
     // Update IMAGE_DATA (running sum)
     if (imgRunningSum_) {
         size_t pixel_count = imgRunningSum_->get_pixel_count();
@@ -3754,8 +3857,19 @@ void ADTimePix::updateImgDisplayData() {
         for (size_t i = 0; i < pixel_count; ++i) {
             imgArrayData64Buffer_[i] = static_cast<epicsInt64>(pixels[i]);
         }
-        // Callback (outside mutex for better performance)
-        doCallbacksInt64Array(imgArrayData64Buffer_.data(), pixel_count, 
+        // Trigger callback - must be done while holding mutex to ensure data consistency
+        asynStatus status = doCallbacksInt64Array(imgArrayData64Buffer_.data(), pixel_count, 
+                                                   ADTimePixImgImageData, 0);
+        if (status != asynSuccess) {
+            ERR_ARGS("Failed to trigger callback for IMAGE_DATA: status=%d", status);
+        }
+    } else {
+        // No running sum yet - trigger callback with zeros to initialize the array
+        size_t default_pixel_count = 512 * 512; // Default detector size
+        if (imgArrayData64Buffer_.size() < default_pixel_count) {
+            imgArrayData64Buffer_.resize(default_pixel_count, 0);
+        }
+        doCallbacksInt64Array(imgArrayData64Buffer_.data(), default_pixel_count,
                               ADTimePixImgImageData, 0);
     }
     
@@ -3777,7 +3891,18 @@ void ADTimePix::updateImgDisplayData() {
                 imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
             }
         }
-        doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), pixel_count,
+        asynStatus status = doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), pixel_count,
+                                                   ADTimePixImgImageFrame, 0);
+        if (status != asynSuccess) {
+            ERR_ARGS("Failed to trigger callback for IMAGE_FRAME: status=%d", status);
+        }
+    } else {
+        // No current frame yet - trigger callback with zeros to initialize the array
+        size_t default_pixel_count = 512 * 512; // Default detector size
+        if (imgFrameArrayDataBuffer_.size() < default_pixel_count) {
+            imgFrameArrayDataBuffer_.resize(default_pixel_count, 0);
+        }
+        doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), default_pixel_count,
                               ADTimePixImgImageFrame, 0);
     }
     
@@ -3820,8 +3945,19 @@ void ADTimePix::updateImgDisplayData() {
             imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
         }
         
-        // Callback (outside mutex for better performance)
-        doCallbacksInt64Array(imgSumArray64Buffer_.data(), pixel_count,
+        // Trigger callback
+        asynStatus status = doCallbacksInt64Array(imgSumArray64Buffer_.data(), pixel_count,
+                                                   ADTimePixImgImageSumNFrames, 0);
+        if (status != asynSuccess) {
+            ERR_ARGS("Failed to trigger callback for IMAGE_SUM_N_FRAMES: status=%d", status);
+        }
+    } else if (imgFrameBuffer_.empty()) {
+        // No frames in buffer yet - trigger callback with zeros to initialize the array
+        size_t default_pixel_count = 512 * 512; // Default detector size
+        if (imgSumArray64Buffer_.size() < default_pixel_count) {
+            imgSumArray64Buffer_.resize(default_pixel_count, 0);
+        }
+        doCallbacksInt64Array(imgSumArray64Buffer_.data(), default_pixel_count,
                               ADTimePixImgImageSumNFrames, 0);
     }
 }
@@ -3834,8 +3970,12 @@ void ADTimePix::updateImgPerformanceMetrics() {
     // Update total counts
     setInteger64Param(ADTimePixImgTotalCounts, imgTotalCounts_);
     
-    // Calculate memory usage periodically
-    if (current_time_seconds - imgLastMemoryUpdateTime_ >= IMG_MEMORY_UPDATE_INTERVAL_SEC) {
+    // Calculate memory usage periodically (every 5 seconds) or more frequently if buffer is growing
+    // Update more frequently if frame buffer is near capacity to catch memory growth
+    bool should_update_memory = (current_time_seconds - imgLastMemoryUpdateTime_ >= IMG_MEMORY_UPDATE_INTERVAL_SEC) ||
+                                 (imgFrameBuffer_.size() >= static_cast<size_t>(imgFramesToSum_) * 0.9);
+    
+    if (should_update_memory) {
         imgMemoryUsage_ = calculateImgMemoryUsageMB();
         setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
         callParamCallbacks(ADTimePixImgMemoryUsage);
@@ -4622,7 +4762,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
     setInteger64Param(ADTimePixImgTotalCounts, 0);
     setDoubleParam(ADTimePixImgProcessingTime, 0.0);
-    setDoubleParam(ADTimePixImgMemoryUsage, 0.0);
+    // Calculate initial memory usage (will be 0.0 initially since buffers are empty)
+    imgMemoryUsage_ = calculateImgMemoryUsageMB();
+    setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
