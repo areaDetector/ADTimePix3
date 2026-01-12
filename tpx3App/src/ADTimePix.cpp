@@ -2803,6 +2803,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixImgFramesToSum) {
+        printf("DEBUG writeInt32: ADTimePixImgFramesToSum called with value=%d (current imgFramesToSum_=%d)\n", value, imgFramesToSum_);
         epicsMutexLock(imgMutex_);
         imgFramesToSum_ = value;
         if (imgFramesToSum_ < 1) imgFramesToSum_ = 1;
@@ -2813,6 +2814,11 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         while (imgFrameBuffer_.size() > static_cast<size_t>(imgFramesToSum_)) {
             imgFrameBuffer_.pop_front();
         }
+        // Trim frame buffer if new limit is smaller
+        while (imgFrameBuffer_.size() > static_cast<size_t>(imgFramesToSum_)) {
+            imgFrameBuffer_.pop_front();
+        }
+        printf("DEBUG writeInt32: imgFramesToSum_ set to %d, buffer_size=%zu\n", imgFramesToSum_, imgFrameBuffer_.size());
         
         // Prepare to recalculate sum of N frames immediately if buffer has frames
         size_t sum_pixel_count = 0;
