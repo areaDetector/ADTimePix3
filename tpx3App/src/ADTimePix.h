@@ -677,12 +677,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixMaskPel;
         int ADTimePixMaskWrite;
 
-            // Controls
-        int ADTimePixRawStream;
-        int ADTimePixRaw1Stream;
-        int ADTimePixPrvHstStream;
-
-        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvHstStream  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixMaskWrite  // Last parameter in the list
 
     private:
 

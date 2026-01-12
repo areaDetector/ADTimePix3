@@ -2836,37 +2836,6 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     return asynSuccess;
 }
 
-asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn) {
-    int function = pasynUser->reason;
-    
-    if (function == ADTimePixImgImageFrame) {
-        epicsMutexLock(imgMutex_);
-        size_t pixel_count = imgCurrentFrame_.get_pixel_count();
-        size_t elements_to_copy = std::min(nElements, pixel_count);
-        
-        if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-            const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
-            for (size_t i = 0; i < elements_to_copy; ++i) {
-                value[i] = static_cast<epicsInt32>(pixels[i]);
-            }
-        } else {
-            const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
-            for (size_t i = 0; i < elements_to_copy; ++i) {
-                value[i] = static_cast<epicsInt32>(pixels[i]);
-            }
-        }
-        
-        // Zero out remaining elements
-        for (size_t i = elements_to_copy; i < nElements; ++i) {
-            value[i] = 0;
-        }
-        *nIn = nElements;
-        epicsMutexUnlock(imgMutex_);
-        return asynSuccess;
-    }
-    
-    return asynPortDriver::readInt32Array(pasynUser, value, nElements, nIn);
-}
 
 asynStatus ADTimePix::readInt64Array(asynUser *pasynUser, epicsInt64 *value, size_t nElements, size_t *nIn) {
     int function = pasynUser->reason;
@@ -3675,12 +3644,12 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     
     // Initialize running sum if needed
     if (!imgRunningSum_) {
-        imgRunningSum_ = std::make_unique<ImageData>(
+        imgRunningSum_.reset(new ImageData(
             frame_data.get_width(), 
             frame_data.get_height(),
             frame_data.get_pixel_format(),
             ImageData::DataType::RUNNING_SUM
-        );
+        ));
     }
     
     // Check for dimension mismatch
@@ -3690,23 +3659,18 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
                   imgRunningSum_->get_width(), imgRunningSum_->get_height(),
                   frame_data.get_width(), frame_data.get_height());
         
-        imgRunningSum_ = std::make_unique<ImageData>(
+        imgRunningSum_.reset(new ImageData(
             frame_data.get_width(), 
             frame_data.get_height(),
             frame_data.get_pixel_format(),
             ImageData::DataType::RUNNING_SUM
-        );
+        ));
         
         // Reinitialize current frame with new dimensions
-        imgCurrentFrame_ = ImageData(
-            frame_data.get_width(),
-            frame_data.get_height(),
-            frame_data.get_pixel_format(),
-            ImageData::DataType::FRAME_DATA
-        );
+        imgCurrentFrame_ = frame_data;
         
         imgTotalCounts_ = 0;
-        setInt64Param(ADTimePixImgTotalCounts, 0);
+        setInteger64Param(ADTimePixImgTotalCounts, 0);
     }
     
     // Add frame to running sum
@@ -3797,23 +3761,25 @@ void ADTimePix::updateImgDisplayData() {
     
     // Update IMAGE_FRAME (current frame)
     size_t pixel_count = imgCurrentFrame_.get_pixel_count();
-    if (imgFrameArrayDataBuffer_.size() < pixel_count) {
-        imgFrameArrayDataBuffer_.resize(pixel_count);
-    }
-    // Copy current frame to buffer
-    if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-        const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
-        for (size_t i = 0; i < pixel_count; ++i) {
-            imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+    if (pixel_count > 0) {
+        if (imgFrameArrayDataBuffer_.size() < pixel_count) {
+            imgFrameArrayDataBuffer_.resize(pixel_count);
         }
-    } else {
-        const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
-        for (size_t i = 0; i < pixel_count; ++i) {
-            imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+        // Copy current frame to buffer
+        if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+            const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
+            for (size_t i = 0; i < pixel_count; ++i) {
+                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+            }
+        } else {
+            const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
+            for (size_t i = 0; i < pixel_count; ++i) {
+                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+            }
         }
+        doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), pixel_count,
+                              ADTimePixImgImageFrame, 0);
     }
-    doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), pixel_count,
-                          ADTimePixImgImageFrame, 0);
     
     // Update IMAGE_SUM_N_FRAMES (sum of last N frames)
     imgFramesSinceLastSumUpdate_++;
@@ -3866,7 +3832,7 @@ void ADTimePix::updateImgPerformanceMetrics() {
     double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
     
     // Update total counts
-    setInt64Param(ADTimePixImgTotalCounts, imgTotalCounts_);
+    setInteger64Param(ADTimePixImgTotalCounts, imgTotalCounts_);
     
     // Calculate memory usage periodically
     if (current_time_seconds - imgLastMemoryUpdateTime_ >= IMG_MEMORY_UPDATE_INTERVAL_SEC) {
@@ -3910,7 +3876,7 @@ void ADTimePix::resetImgAccumulation() {
     imgFramesSinceLastSumUpdate_ = 0;
     imgProcessingTime_ = 0.0;
     imgProcessingTimeSamples_.clear();
-    setInt64Param(ADTimePixImgTotalCounts, 0);
+    setInteger64Param(ADTimePixImgTotalCounts, 0);
     setDoubleParam(ADTimePixImgProcessingTime, 0.0);
     callParamCallbacks();
 }
@@ -4298,12 +4264,13 @@ asynStatus ADTimePix::readImageFromTCP() {
 
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize)
     : ADDriver(portName, 4, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
-        asynInt64Mask | asynEnumMask,
-        asynInt64Mask | asynEnumMask,
+        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask,
+        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK,
         1,
         priority,
-        stackSize)
+        stackSize),
+      imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
     static const char* functionName = "ADTimePix";
 
@@ -4635,9 +4602,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     imgFirstFrameReceived_ = false;
     
     // Initialize Img channel accumulation and frame buffer
-    imgRunningSum_ = nullptr;
+    imgRunningSum_.reset();
     imgFrameBuffer_.clear();
-    imgCurrentFrame_ = ImageData(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA);
+    // imgCurrentFrame_ is initialized in constructor initialization list
     imgFramesToSum_ = 10;
     imgSumUpdateIntervalFrames_ = 1;
     imgFramesSinceLastSumUpdate_ = 0;
@@ -4653,7 +4620,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Set initial parameter values
     setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
     setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
-    setInt64Param(ADTimePixImgTotalCounts, 0);
+    setInteger64Param(ADTimePixImgTotalCounts, 0);
     setDoubleParam(ADTimePixImgProcessingTime, 0.0);
     setDoubleParam(ADTimePixImgMemoryUsage, 0.0);
 

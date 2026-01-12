@@ -5,8 +5,47 @@
 asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                 size_t nElements, size_t *nIn)
 {   
-    ADDriver::readInt32Array(pasynUser, value, nElements, nIn);
 	int reason = pasynUser->reason;
+    
+    // Handle Img channel accumulation arrays
+    if (reason == ADTimePixImgImageFrame) {
+        epicsMutexLock(imgMutex_);
+        // Check if imgCurrentFrame_ has valid data (pixel_count > 0)
+        size_t pixel_count = imgCurrentFrame_.get_pixel_count();
+        if (pixel_count == 0) {
+            // Not initialized yet, return zeros
+            for (size_t i = 0; i < nElements; ++i) {
+                value[i] = 0;
+            }
+            *nIn = nElements;
+            epicsMutexUnlock(imgMutex_);
+            return asynSuccess;
+        }
+        size_t elements_to_copy = std::min(nElements, pixel_count);
+        
+        if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+            const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
+            for (size_t i = 0; i < elements_to_copy; ++i) {
+                value[i] = static_cast<epicsInt32>(pixels[i]);
+            }
+        } else {
+            const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
+            for (size_t i = 0; i < elements_to_copy; ++i) {
+                value[i] = static_cast<epicsInt32>(pixels[i]);
+            }
+        }
+        
+        // Zero out remaining elements
+        for (size_t i = elements_to_copy; i < nElements; ++i) {
+            value[i] = 0;
+        }
+        *nIn = nElements;
+        epicsMutexUnlock(imgMutex_);
+        return asynSuccess;
+    }
+    
+    // Handle mask-related arrays (existing functionality)
+    ADDriver::readInt32Array(pasynUser, value, nElements, nIn);
     int maskOnOff_val, maskReset_val, maskRectangle_val, maskCircle_val;
     int maskRectangle_MinX, maskRectangle_SizeX, maskRectangle_MinY, maskRectangle_SizeY, maskCircle_Radius;
     int maskBPCfile_val, maskWrite_val;
