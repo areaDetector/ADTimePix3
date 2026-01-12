@@ -2808,8 +2808,77 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         if (imgFramesToSum_ < 1) imgFramesToSum_ = 1;
         if (imgFramesToSum_ > 100000) imgFramesToSum_ = 100000;
         setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
+        
+        // Trim frame buffer if new limit is smaller
+        while (imgFrameBuffer_.size() > static_cast<size_t>(imgFramesToSum_)) {
+            imgFrameBuffer_.pop_front();
+        }
+        
+        // Prepare to recalculate sum of N frames immediately if buffer has frames
+        size_t sum_pixel_count = 0;
+        bool should_recalc_sum = false;
+        if (!imgFrameBuffer_.empty()) {
+            sum_pixel_count = imgFrameBuffer_[0].get_pixel_count();
+            size_t frame_width = imgFrameBuffer_[0].get_width();
+            size_t frame_height = imgFrameBuffer_[0].get_height();
+            
+            if (imgSumArray64WorkBuffer_.size() < sum_pixel_count) {
+                imgSumArray64WorkBuffer_.resize(sum_pixel_count);
+                imgSumArray64Buffer_.resize(sum_pixel_count);
+            }
+            
+            std::memset(imgSumArray64WorkBuffer_.data(), 0, sum_pixel_count * sizeof(uint64_t));
+            
+            for (const auto& frame : imgFrameBuffer_) {
+                if (frame.get_width() == frame_width && 
+                    frame.get_height() == frame_height) {
+                    if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+                        const uint16_t* pixels = frame.get_pixels_16_ptr();
+                        for (size_t i = 0; i < sum_pixel_count; ++i) {
+                            imgSumArray64WorkBuffer_[i] += pixels[i];
+                        }
+                    } else {
+                        const uint32_t* pixels = frame.get_pixels_32_ptr();
+                        for (size_t i = 0; i < sum_pixel_count; ++i) {
+                            imgSumArray64WorkBuffer_[i] += pixels[i];
+                        }
+                    }
+                }
+            }
+            
+            // Convert to epicsInt64
+            for (size_t i = 0; i < sum_pixel_count; ++i) {
+                imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
+            }
+            
+            // Reset update counter to trigger immediate update on next frame
+            imgFramesSinceLastSumUpdate_ = imgSumUpdateIntervalFrames_;
+            should_recalc_sum = true;
+        }
+        
+        // Recalculate memory usage immediately since buffer size may have changed
+        imgMemoryUsage_ = calculateImgMemoryUsageMB();
+        setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
         epicsMutexUnlock(imgMutex_);
+        
+        // Trigger callbacks outside mutex
         callParamCallbacks(ADTimePixImgFramesToSum);
+        callParamCallbacks(ADTimePixImgMemoryUsage);
+        
+        // Trigger sum callback if we recalculated it (outside mutex)
+        if (should_recalc_sum && sum_pixel_count > 0) {
+            // Copy buffer data while holding mutex
+            std::vector<epicsInt64> temp_buffer(sum_pixel_count);
+            epicsMutexLock(imgMutex_);
+            for (size_t i = 0; i < sum_pixel_count; ++i) {
+                temp_buffer[i] = imgSumArray64Buffer_[i];
+            }
+            epicsMutexUnlock(imgMutex_);
+            
+            // Trigger callback outside mutex
+            doCallbacksInt64Array(temp_buffer.data(), sum_pixel_count,
+                                  ADTimePixImgImageSumNFrames, 0);
+        }
     }
     
     else if(function == ADTimePixImgSumUpdateIntervalFrames) {
@@ -3989,10 +4058,22 @@ void ADTimePix::updateImgPerformanceMetrics() {
 double ADTimePix::calculateImgMemoryUsageMB() {
     double total_mb = 0.0;
     
+    // Memory for running sum (64-bit pixels)
     if (imgRunningSum_) {
         total_mb += imgRunningSum_->get_pixel_count() * sizeof(uint64_t) / (1024.0 * 1024.0);
     }
     
+    // Memory for current frame
+    size_t current_frame_pixels = imgCurrentFrame_.get_pixel_count();
+    if (current_frame_pixels > 0) {
+        if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+            total_mb += current_frame_pixels * sizeof(uint16_t) / (1024.0 * 1024.0);
+        } else {
+            total_mb += current_frame_pixels * sizeof(uint32_t) / (1024.0 * 1024.0);
+        }
+    }
+    
+    // Memory for frame buffer (actual frames stored, up to imgFramesToSum_)
     for (const auto& frame : imgFrameBuffer_) {
         if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
             total_mb += frame.get_pixel_count() * sizeof(uint16_t) / (1024.0 * 1024.0);
@@ -4001,10 +4082,33 @@ double ADTimePix::calculateImgMemoryUsageMB() {
         }
     }
     
-    total_mb += (imgArrayData64Buffer_.size() * sizeof(epicsInt64) +
-                 imgFrameArrayDataBuffer_.size() * sizeof(epicsInt32) +
-                 imgSumArray64Buffer_.size() * sizeof(epicsInt64) +
-                 imgSumArray64WorkBuffer_.size() * sizeof(uint64_t)) / (1024.0 * 1024.0);
+    // Memory for EPICS array buffers (use maximum potential size based on imgFramesToSum_)
+    // Calculate maximum pixels based on current frame dimensions or default
+    size_t max_pixels = 0;
+    if (imgRunningSum_) {
+        max_pixels = imgRunningSum_->get_pixel_count();
+    } else if (current_frame_pixels > 0) {
+        max_pixels = current_frame_pixels;
+    } else {
+        max_pixels = 512 * 512; // Default detector size
+    }
+    
+    // EPICS waveform buffers: IMAGE_DATA and IMAGE_SUM_N_FRAMES use 64-bit, IMAGE_FRAME uses 32-bit
+    // Account for maximum potential allocation
+    total_mb += max_pixels * sizeof(epicsInt64) / (1024.0 * 1024.0); // IMAGE_DATA (64-bit)
+    total_mb += max_pixels * sizeof(epicsInt64) / (1024.0 * 1024.0); // IMAGE_SUM_N_FRAMES (64-bit)
+    total_mb += max_pixels * sizeof(epicsInt32) / (1024.0 * 1024.0); // IMAGE_FRAME (32-bit)
+    
+    // Internal work buffers
+    total_mb += (imgSumArray64WorkBuffer_.size() * sizeof(uint64_t)) / (1024.0 * 1024.0);
+    
+    // Add overhead for std::vector and std::deque structures (approximate)
+    // Each ImageData object has some overhead, and std::deque has overhead per element
+    size_t frame_buffer_overhead = imgFrameBuffer_.size() * 64; // Approximate overhead per frame in deque
+    total_mb += frame_buffer_overhead / (1024.0 * 1024.0);
+    
+    // Add small overhead for other structures
+    total_mb += 0.1; // Overhead for rate samples, processing time samples, etc.
     
     return total_mb;
 }
