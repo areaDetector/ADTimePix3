@@ -3775,7 +3775,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     }
     imgTotalCounts_ += frame_total;
     
-    // Add to frame buffer
+    // Add to frame buffer (must be done BEFORE checking update condition)
     imgFrameBuffer_.push_back(frame_data);
     while (imgFrameBuffer_.size() > static_cast<size_t>(imgFramesToSum_)) {
         imgFrameBuffer_.pop_front();
@@ -3824,38 +3824,43 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     
     if (should_update_sum) {
         imgFramesSinceLastSumUpdate_ = 0;
-        size_t pixel_count = imgFrameBuffer_[0].get_pixel_count();
-        size_t frame_width = imgFrameBuffer_[0].get_width();
-        size_t frame_height = imgFrameBuffer_[0].get_height();
         
-        if (imgSumArray64WorkBuffer_.size() < pixel_count) {
-            imgSumArray64WorkBuffer_.resize(pixel_count);
-            imgSumArray64Buffer_.resize(pixel_count);
+        // Use dimensions from first frame in buffer (should match current frame)
+        size_t sum_pixel_count = imgFrameBuffer_[0].get_pixel_count();
+        size_t sum_frame_width = imgFrameBuffer_[0].get_width();
+        size_t sum_frame_height = imgFrameBuffer_[0].get_height();
+        
+        if (imgSumArray64WorkBuffer_.size() < sum_pixel_count) {
+            imgSumArray64WorkBuffer_.resize(sum_pixel_count);
+            imgSumArray64Buffer_.resize(sum_pixel_count);
         }
         
-        std::memset(imgSumArray64WorkBuffer_.data(), 0, pixel_count * sizeof(uint64_t));
+        // Initialize sum array to zero
+        std::memset(imgSumArray64WorkBuffer_.data(), 0, sum_pixel_count * sizeof(uint64_t));
         
+        // Sum all frames in buffer
         for (const auto& frame : imgFrameBuffer_) {
-            if (frame.get_width() == frame_width && 
-                frame.get_height() == frame_height) {
+            if (frame.get_width() == sum_frame_width && 
+                frame.get_height() == sum_frame_height) {
                 if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
                     const uint16_t* pixels = frame.get_pixels_16_ptr();
-                    for (size_t i = 0; i < pixel_count; ++i) {
+                    for (size_t i = 0; i < sum_pixel_count; ++i) {
                         imgSumArray64WorkBuffer_[i] += pixels[i];
                     }
                 } else {
                     const uint32_t* pixels = frame.get_pixels_32_ptr();
-                    for (size_t i = 0; i < pixel_count; ++i) {
+                    for (size_t i = 0; i < sum_pixel_count; ++i) {
                         imgSumArray64WorkBuffer_[i] += pixels[i];
                     }
                 }
             }
         }
         
-        for (size_t i = 0; i < pixel_count; ++i) {
+        // Convert to epicsInt64
+        for (size_t i = 0; i < sum_pixel_count; ++i) {
             imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
         }
-        image_sum_size = pixel_count;
+        image_sum_size = sum_pixel_count;
     }
     
     // Calculate processing time
