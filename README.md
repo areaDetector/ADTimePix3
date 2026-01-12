@@ -29,6 +29,29 @@ TCP Image Streaming
 * **Debug Output**: Acquisition status debug messages show actual ADStatus values (0 = Idle, 1 = Acquire) with context including ADAcquire value, previous state, and ADStatus transitions for better troubleshooting.
 * **GraphicsMagick**: The GraphicsMagick HTTP method for preview images has been removed from the master branch. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 
+Image Accumulation Features (Img Channel)
+------------------------------------------
+
+The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulation and display features similar to the standalone `tpx3image` IOC:
+
+* **Running Sum Accumulation**: Accumulates pixel values over all frames using 64-bit integers to prevent overflow. Access via `ImgImageData` PV (INT64 waveform array).
+* **Current Frame Display**: Individual frame data available via `ImgImageFrame` PV (INT32 waveform array).
+* **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via `ImgFramesToSum` PV, default: 10). Access via `ImgImageSumNFrames` PV (INT64 waveform array). Update interval configurable via `ImgSumUpdateInterval` PV (default: 1 frame).
+* **Performance Monitoring**: 
+  - Acquisition rate: `ImgAcqRate_RBV` (Hz) - already available from TCP streaming metadata
+  - Processing time: `ImgProcessingTime` (ms) - average processing time per frame
+  - Memory usage: `ImgMemoryUsage` (MB) - estimated memory usage for accumulation buffers
+* **Total Counts**: `ImgTotalCounts` (INT64) - total counts across all accumulated frames
+* **Phoebus Screen**: Use `tpx3image.bob` screen (adapted for ADTimePix3) to visualize accumulated images, sum of N frames, and performance metrics.
+
+**Configuration**:
+- Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`)
+- Set `ImgFileFmt` to `jsonimage` (format index 3)
+- Configure `ImgFramesToSum` (1-100000, default: 10) to control frame buffer size
+- Configure `ImgSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
+
+**File Saving**: Image data is available via NDArray callbacks for use with areaDetector file plugins (NDFileTIFF, NDFileHDF5, etc.). The accumulated image data arrays (`ImgImageData`, `ImgImageFrame`, `ImgImageSumNFrames`) are also available as EPICS waveform arrays for direct access.
+
 How to run:
 -----------
 

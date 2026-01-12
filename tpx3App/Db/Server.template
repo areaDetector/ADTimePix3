@@ -569,6 +569,85 @@ record(ai, "$(P)$(R)ImgAcqRate_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Img channel accumulation and display data
+record(waveform, "$(P)$(R)ImgImageData")
+{
+    field(DESC, "Accumulated image data (64-bit)")
+    field(DTYP, "asynInt64ArrayIn")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_DATA")
+    field(FTVL, "INT64")
+    field(NELM, "$(MAX_PIXELS)")
+    field(SCAN, "I/O Intr")
+}
+
+record(waveform, "$(P)$(R)ImgImageFrame")
+{
+    field(DESC, "Current frame data (32-bit)")
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_FRAME")
+    field(FTVL, "LONG")
+    field(NELM, "$(MAX_PIXELS)")
+    field(SCAN, "I/O Intr")
+}
+
+record(waveform, "$(P)$(R)ImgImageSumNFrames")
+{
+    field(DESC, "Sum of last N frames (64-bit)")
+    field(DTYP, "asynInt64ArrayIn")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_SUM_N_FRAMES")
+    field(FTVL, "INT64")
+    field(NELM, "$(MAX_PIXELS)")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)ImgFramesToSum")
+{
+    field(DESC, "Number of frames to sum")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_FRAMES_TO_SUM")
+    field(DRVL, "1")
+    field(DRVH, "100000")
+    field(VAL, "10")
+}
+
+record(longout, "$(P)$(R)ImgSumUpdateInterval")
+{
+    field(DESC, "Sum update interval (frames)")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_SUM_UPDATE_INTERVAL")
+    field(DRVL, "1")
+    field(DRVH, "10000")
+    field(VAL, "1")
+}
+
+record(int64in, "$(P)$(R)ImgTotalCounts")
+{
+    field(DESC, "Total counts in accumulated image")
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_TOTAL_COUNTS")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)ImgProcessingTime")
+{
+    field(DESC, "Processing time (ms)")
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_PROCESSING_TIME")
+    field(PREC, "3")
+    field(EGU, "ms")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)ImgMemoryUsage")
+{
+    field(DESC, "Memory usage (MB)")
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_MEMORY_USAGE")
+    field(PREC, "3")
+    field(EGU, "MB")
+    field(SCAN, "I/O Intr")
+}
+
 # Image Channels[1] file path.
 record(waveform, "$(P)$(R)Img1FilePath")
 {

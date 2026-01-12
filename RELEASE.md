@@ -22,6 +22,15 @@ R1-5 (XXX, 2026)
 * **Optimized TCP Connection Delays**: Reduced delay times to minimum safe values for faster acquisition startup/shutdown: port release delay (100ms), port binding delays (200ms for PrvImg and Img channels), and TcpSender stop delay (300ms). These optimized delays reduce total acquisition cycle time by ~900ms while maintaining reliability.
 * **Improved Debug Messages**: Enhanced acquisition status debug messages to show actual ADStatus values (0 = Idle, 1 = Acquire) instead of asynStatus return codes. Messages now display ADAcquire value, previous state, and ADStatus before and after acquireStart()/acquireStop() operations for better debugging.
 * **Phoebus .bob Screen Updates**: Updated multiple Phoebus display builder (.bob) screens throughout the user interface to reflect new features and improvements, including TCP streaming support, Img1 channel configuration, PrvImg monitoring, and enhanced metadata display. Screens updated include acquisition controls, detector configuration, file writing, mask management, and status monitoring.
+* **Image Accumulation Features for Img Channel**: Integrated functionality from the standalone `tpx3image` IOC into the ADTimePix3 driver's Img channel. New features include:
+  - **Running Sum Accumulation**: 64-bit accumulation of pixel values over all frames via `ImgImageData` PV (INT64 waveform array)
+  - **Current Frame Display**: Individual frame data via `ImgImageFrame` PV (INT32 waveform array)
+  - **Sum of Last N Frames**: Configurable sum of last N frames (default: 10) via `ImgImageSumNFrames` PV (INT64 waveform array), with configurable update interval
+  - **Performance Monitoring**: Processing time (`ImgProcessingTime`, ms) and memory usage (`ImgMemoryUsage`, MB) tracking
+  - **Total Counts**: Total counts across all accumulated frames via `ImgTotalCounts` PV (INT64)
+  - **Configuration PVs**: `ImgFramesToSum` (1-100000, default: 10) and `ImgSumUpdateInterval` (1-10000, default: 1 frame)
+  - **Phoebus Screen**: Updated `tpx3image.bob` screen adapted for ADTimePix3 to visualize accumulated images, sum of N frames, and performance metrics
+  - **Code Organization**: ImageData class and accumulation logic implemented in separate files (`img_accumulation.h`/`.cpp`) following existing pattern (`mask_io.cpp`) for better maintainability
 * **Note**: GraphicsMagick was only used for preview image reading via HTTP. File saving is handled directly by Serval, which writes files to disk without using GraphicsMagick.
 
 R1-4 (January 8, 2026)

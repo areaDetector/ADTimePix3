@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>tpx3image</name>
   <macros>
-    <R>Image:</R>
+    <R>cam1:Img</R>
     <DETECTOR_WIDTH>512</DETECTOR_WIDTH>
     <DETECTOR_HEIGHT>512</DETECTOR_HEIGHT>
   </macros>
@@ -14,7 +14,7 @@
     <height>1070</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
-      <text>Timepix3 Image IOC Control Panel</text>
+      <text>ADTimePix3 Image Accumulation Control Panel</text>
       <x>50</x>
       <y>20</y>
       <width>1300</width>
@@ -298,7 +298,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>TotalCountsDisplay</name>
-        <pv_name>$(P)$(R)TOTAL_COUNTS</pv_name>
+        <pv_name>$(P)$(R)TotalCounts</pv_name>
         <x>380</x>
         <y>40</y>
         <width>120</width>
@@ -389,7 +389,7 @@
       </widget>
       <widget type="spinner" version="2.0.0">
         <name>FramesToSumSpinner</name>
-        <pv_name>$(P)$(R)FRAMES_TO_SUM</pv_name>
+        <pv_name>$(P)$(R)FramesToSum</pv_name>
         <x>920</x>
         <y>80</y>
         <height>30</height>
@@ -409,7 +409,7 @@
       </widget>
       <widget type="spinner" version="2.0.0">
         <name>SumUpdateIntervalSpinner</name>
-        <pv_name>$(P)$(R)SUM_UPDATE_INTERVAL_FRAMES</pv_name>
+        <pv_name>$(P)$(R)SumUpdateInterval</pv_name>
         <x>920</x>
         <y>40</y>
         <height>30</height>
@@ -597,7 +597,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ImageDataDisplay</name>
-        <pv_name>$(P)$(R)IMAGE_DATA</pv_name>
+        <pv_name>$(P)$(R)ImageData</pv_name>
         <x>220</x>
         <y>40</y>
         <width>1080</width>
@@ -621,7 +621,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ImageSumNFramesDisplay</name>
-        <pv_name>$(P)$(R)IMAGE_SUM_N_FRAMES</pv_name>
+        <pv_name>$(P)$(R)ImageSumNFrames</pv_name>
         <x>220</x>
         <y>80</y>
         <width>1080</width>
@@ -680,7 +680,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>AcquisitionRateDisplay</name>
-        <pv_name>$(P)$(R)ACQUISITION_RATE</pv_name>
+        <pv_name>$(P)$(R)AcqRate_RBV</pv_name>
         <x>190</x>
         <y>50</y>
         <height>30</height>
@@ -703,7 +703,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ProcessingTimeDisplay</name>
-        <pv_name>$(P)$(R)PROCESSING_TIME_MS</pv_name>
+        <pv_name>$(P)$(R)ProcessingTime</pv_name>
         <x>520</x>
         <y>50</y>
         <height>30</height>
@@ -726,7 +726,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>MemoryUsageDisplay</name>
-        <pv_name>$(P)$(R)MEMORY_USAGE_MB</pv_name>
+        <pv_name>$(P)$(R)MemoryUsage</pv_name>
         <x>860</x>
         <y>50</y>
         <height>30</height>
@@ -782,7 +782,7 @@
   </widget>
   <widget type="image" version="2.0.0">
     <name>Image_Frame</name>
-    <pv_name>$(P)$(R)IMAGE_FRAME</pv_name>
+        <pv_name>$(P)$(R)ImageFrame</pv_name>
     <x>1410</x>
     <y>830</y>
     <width>800</width>

@@ -36,6 +36,7 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include "img_accumulation.h"
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -230,6 +231,15 @@
 #define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixImgTimeAtFrameString           "TPX3_IMG_TIME_AT_FRAME"    // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
 #define ADTimePixImgAcqRateString               "TPX3_IMG_ACQ_RATE"         // (asynFloat64,       r)      Calculated acquisition rate (fps)
+    // Img channel accumulation and display data
+#define ADTimePixImgImageDataString             "TPX3_IMG_IMAGE_DATA"        // (asynInt64Array,    r)      Accumulated image data
+#define ADTimePixImgImageFrameString            "TPX3_IMG_IMAGE_FRAME"       // (asynInt32Array,    r)      Current frame data
+#define ADTimePixImgImageSumNFramesString       "TPX3_IMG_IMAGE_SUM_N_FRAMES" // (asynInt64Array,  r)      Sum of last N frames
+#define ADTimePixImgFramesToSumString           "TPX3_IMG_FRAMES_TO_SUM"    // (asynInt32,         r/w)    Number of frames to sum
+#define ADTimePixImgSumUpdateIntervalString     "TPX3_IMG_SUM_UPDATE_INTERVAL" // (asynInt32,       r/w)    Update interval
+#define ADTimePixImgTotalCountsString           "TPX3_IMG_TOTAL_COUNTS"     // (asynInt64,         r)      Total counts
+#define ADTimePixImgProcessingTimeString        "TPX3_IMG_PROCESSING_TIME"   // (asynFloat64,       r)      Processing time (ms)
+#define ADTimePixImgMemoryUsageString            "TPX3_IMG_MEMORY_USAGE"    // (asynFloat64,       r)      Memory usage (MB)
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -387,6 +397,7 @@ class ADTimePix : public ADDriver{
 
         // Declaration for the new function in the driver class
         virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn);
+        virtual asynStatus readInt64Array(asynUser *pasynUser, epicsInt64 *value, size_t nElements, size_t *nIn);
 
         asynStatus maskReset(epicsInt32 *buf, int OnOff);
         asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
@@ -597,6 +608,20 @@ class ADTimePix : public ADDriver{
         int ADTimePixImgFrameNumber;
         int ADTimePixImgTimeAtFrame;
         int ADTimePixImgAcqRate;
+        // Img channel accumulation and display data
+        int ADTimePixImgImageData;
+        int ADTimePixImgImageFrame;
+        int ADTimePixImgImageSumNFrames;
+        int ADTimePixImgFramesToSum;
+        int ADTimePixImgSumUpdateIntervalFrames;
+        int ADTimePixImgTotalCounts;
+        int ADTimePixImgProcessingTime;
+        int ADTimePixImgMemoryUsage;
+
+            // Controls
+        int ADTimePixRawStream;
+        int ADTimePixRaw1Stream;
+        int ADTimePixPrvHstStream;
             // Server, Preview, ImageChannel[1]
         int ADTimePixPrvImg1Base;    
         int ADTimePixPrvImg1FilePat;   
@@ -657,7 +682,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixRaw1Stream;
         int ADTimePixPrvHstStream;
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvHstStream
+        #define ADTIMEPIX_LAST_PARAM ADTimePixPrvHstStream  // Last parameter in the list
 
     private:
 
@@ -715,6 +740,30 @@ class ADTimePix : public ADDriver{
         double imgLastRateUpdateTime_;
         bool imgFirstFrameReceived_;
         static constexpr size_t IMG_MAX_RATE_SAMPLES = 10;
+        
+        // Img channel accumulation and frame buffer
+        std::unique_ptr<ImageData> imgRunningSum_;           // 64-bit accumulated image
+        std::deque<ImageData> imgFrameBuffer_;              // Circular buffer for last N frames
+        ImageData imgCurrentFrame_;                         // Current frame for IMAGE_FRAME PV
+        int imgFramesToSum_;                               // Number of frames to sum (configurable)
+        int imgSumUpdateIntervalFrames_;                   // Update interval for sum PV
+        int imgFramesSinceLastSumUpdate_;                  // Counter for update interval
+        
+        // Img channel performance tracking
+        std::vector<double> imgProcessingTimeSamples_;     // Processing time samples
+        double imgLastProcessingTimeUpdate_;               // Last processing time update
+        double imgLastMemoryUpdateTime_;                   // Last memory usage update
+        double imgProcessingTime_;                         // Average processing time (ms)
+        double imgMemoryUsage_;                           // Memory usage (MB)
+        uint64_t imgTotalCounts_;                         // Total counts across all frames
+        static constexpr size_t IMG_MAX_PROCESSING_TIME_SAMPLES = 10;
+        static constexpr size_t IMG_MEMORY_UPDATE_INTERVAL_SEC = 5;
+        
+        // Reusable buffers for EPICS arrays (performance optimization)
+        std::vector<epicsInt64> imgArrayData64Buffer_;     // For IMAGE_DATA (64-bit)
+        std::vector<epicsInt32> imgFrameArrayDataBuffer_;  // For IMAGE_FRAME (32-bit)
+        std::vector<epicsInt64> imgSumArray64Buffer_;      // For IMAGE_SUM_N_FRAMES (64-bit)
+        std::vector<uint64_t> imgSumArray64WorkBuffer_;   // Working buffer for sum calculation
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
@@ -781,6 +830,13 @@ class ADTimePix : public ADDriver{
         static void imgWorkerThreadC(void *pPvt);
         void imgConnect();
         void imgDisconnect();
+        
+        // Img channel accumulation methods
+        void processImgFrame(const ImageData& frame_data);
+        void updateImgDisplayData();
+        void updateImgPerformanceMetrics();
+        double calculateImgMemoryUsageMB();
+        void resetImgAccumulation();
         
         // Helper functions for fileWriter optimization
         asynStatus getParameterSafely(int param, int& value);

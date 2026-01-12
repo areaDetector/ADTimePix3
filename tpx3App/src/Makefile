@@ -17,6 +17,7 @@ INC += ADTimePix.h
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
 LIB_SRCS += mask_io.cpp
+LIB_SRCS += img_accumulation.cpp
 
 LIB_SYS_LIBS += cpr curl z
 
