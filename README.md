@@ -42,7 +42,7 @@ The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulat
   - Processing time: `ImgProcessingTime` (ms) - average processing time per frame
   - Memory usage: `ImgMemoryUsage` (MB) - estimated memory usage for accumulation buffers
 * **Total Counts**: `ImgTotalCounts` (INT64) - total counts across all accumulated frames
-* **Phoebus Screen**: Use `tpx3image.bob` screen (adapted for ADTimePix3) to visualize accumulated images, sum of N frames, and performance metrics.
+* **Phoebus Screen**: Use `ImgAccumulation.bob` screen (located in `Acquire/` folder) to visualize accumulated images, sum of N frames, and performance metrics.
 
 **Configuration**:
 - Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`)

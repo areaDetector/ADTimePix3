@@ -29,7 +29,7 @@ R1-5 (XXX, 2026)
   - **Performance Monitoring**: Processing time (`ImgProcessingTime`, ms) and memory usage (`ImgMemoryUsage`, MB) tracking
   - **Total Counts**: Total counts across all accumulated frames via `ImgTotalCounts` PV (INT64)
   - **Configuration PVs**: `ImgFramesToSum` (1-100000, default: 10) and `ImgSumUpdateInterval` (1-10000, default: 1 frame)
-  - **Phoebus Screen**: Updated `tpx3image.bob` screen adapted for ADTimePix3 to visualize accumulated images, sum of N frames, and performance metrics
+  - **Phoebus Screen**: Updated `ImgAccumulation.bob` screen (located in `Acquire/` folder) adapted for ADTimePix3 to visualize accumulated images, sum of N frames, and performance metrics
   - **Code Organization**: ImageData class and accumulation logic implemented in separate files (`img_accumulation.h`/`.cpp`) following existing pattern (`mask_io.cpp`) for better maintainability
 * **Note**: GraphicsMagick was only used for preview image reading via HTTP. File saving is handled directly by Serval, which writes files to disk without using GraphicsMagick.
 

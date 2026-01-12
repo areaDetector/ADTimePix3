@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
-  <name>tpx3image</name>
+  <name>ImgAccumulation</name>
   <macros>
     <R>cam1:Img</R>
     <DETECTOR_WIDTH>512</DETECTOR_WIDTH>
