@@ -69,17 +69,48 @@
         <y>45</y>
         <width>100</width>
       </widget>
+      <widget type="bool_button" version="2.0.0">
+        <name>PrvHstAccumulationEnableButton</name>
+        <pv_name>$(P)$(R)PrvHstAccumulationEnable</pv_name>
+        <bit>-1</bit>
+        <x>180</x>
+        <y>40</y>
+        <height>30</height>
+        <off_label>Disabled</off_label>
+        <off_color>
+          <color red="200" green="100" blue="100">
+          </color>
+        </off_color>
+        <on_label>Enabled</on_label>
+        <on_color>
+          <color red="100" green="200" blue="100">
+          </color>
+        </on_color>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>PrvHstAccumulationEnableStatus</name>
+        <pv_name>$(P)$(R)PrvHstAccumulationEnable_RBV</pv_name>
+        <x>290</x>
+        <y>40</y>
+        <width>100</width>
+        <height>30</height>
+        <format>0</format>
+      </widget>
       <widget type="label" version="2.0.0">
         <name>FilePathLabel</name>
         <text>File Path:</text>
-        <x>180</x>
+        <x>400</x>
         <y>45</y>
         <width>80</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>FilePathInput</name>
         <pv_name>$(P)$(R)PrvHstFilePath</pv_name>
-        <x>260</x>
+        <x>480</x>
         <y>40</y>
         <width>300</width>
         <height>30</height>
@@ -133,7 +164,7 @@
       <widget type="led" version="2.0.0">
         <name>FilePathExistsLED</name>
         <pv_name>$(P)$(R)PrvHstFilePathExists_RBV</pv_name>
-        <x>1020</x>
+        <x>1220</x>
         <y>40</y>
         <width>30</width>
         <height>30</height>
@@ -141,7 +172,7 @@
       <widget type="label" version="2.0.0">
         <name>FilePathExistsLabel</name>
         <text>Path Exists</text>
-        <x>1060</x>
+        <x>1260</x>
         <y>45</y>
         <width>80</width>
       </widget>

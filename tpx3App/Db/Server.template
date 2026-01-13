@@ -1626,3 +1626,23 @@ record(waveform, "$(P)$(R)PrvHstHistogramTimeMs")
     field(NELM, "100000")
     field(SCAN, "I/O Intr")
 }
+
+record(bo, "$(P)$(R)PrvHstAccumulationEnable")
+{
+    field(DESC, "Enable histogram accumulation processing")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_ACCUMULATION_ENABLE")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(VAL, "1")
+}
+
+record(bi, "$(P)$(R)PrvHstAccumulationEnable_RBV")
+{
+    field(DESC, "Histogram accumulation processing status")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_ACCUMULATION_ENABLE")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SCAN, "I/O Intr")
+}

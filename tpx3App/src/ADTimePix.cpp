@@ -2309,7 +2309,8 @@ asynStatus ADTimePix::acquireStart(){
             }
         }
         
-        // Start PrvHst TCP streaming if enabled
+        // Start PrvHst TCP streaming if enabled, path is TCP, format is jsonhisto, and accumulation is enabled
+        // If accumulation is disabled, don't connect to TCP port so other clients can connect
         int writePrvHst;
         getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
         if (writePrvHst != 0) {
@@ -2320,37 +2321,43 @@ asynStatus ADTimePix::acquireStart(){
                 int format;
                 getIntegerParam(ADTimePixPrvHstFormat, &format);
                 if (format == 4) {  // jsonhisto format
-                    // Parse TCP path
-                    std::string host;
-                    int port;
-                    if (parseTcpPath(prvHstPath, host, port)) {
-                        epicsMutexLock(prvHstMutex_);
-                        prvHstHost_ = host;
-                        prvHstPort_ = port;
-                        prvHstFormat_ = format;
-                        epicsMutexUnlock(prvHstMutex_);
-                        
-                        // Give Serval time to bind to the TCP port
-                        epicsThreadSleep(0.2);  // 200ms
-                        
-                        epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
-                        opts.priority = epicsThreadPriorityMedium;
-                        opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
-                        
-                        epicsMutexLock(prvHstMutex_);
-                        if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
-                            prvHstRunning_ = true;
-                            prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
-                            if (!prvHstWorkerThreadId_) {
-                                ERR("Failed to create PrvHst worker thread");
-                                prvHstRunning_ = false;
-                            } else {
-                                LOG("Started PrvHst TCP worker thread in acquireStart");
+                    int accumulationEnable;
+                    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+                    if (accumulationEnable) {
+                        // Parse TCP path
+                        std::string host;
+                        int port;
+                        if (parseTcpPath(prvHstPath, host, port)) {
+                            epicsMutexLock(prvHstMutex_);
+                            prvHstHost_ = host;
+                            prvHstPort_ = port;
+                            prvHstFormat_ = format;
+                            epicsMutexUnlock(prvHstMutex_);
+                            
+                            // Give Serval time to bind to the TCP port
+                            epicsThreadSleep(0.2);  // 200ms
+                            
+                            epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
+                            opts.priority = epicsThreadPriorityMedium;
+                            opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
+                            
+                            epicsMutexLock(prvHstMutex_);
+                            if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
+                                prvHstRunning_ = true;
+                                prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
+                                if (!prvHstWorkerThreadId_) {
+                                    ERR("Failed to create PrvHst worker thread");
+                                    prvHstRunning_ = false;
+                                } else {
+                                    LOG("Started PrvHst TCP worker thread in acquireStart");
+                                }
                             }
+                            epicsMutexUnlock(prvHstMutex_);
+                        } else {
+                            ERR_ARGS("Failed to parse PrvHst TCP path: %s", prvHstPath.c_str());
                         }
-                        epicsMutexUnlock(prvHstMutex_);
                     } else {
-                        ERR_ARGS("Failed to parse PrvHst TCP path: %s", prvHstPath.c_str());
+                        LOG("PrvHstAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
                     }
                 } else {
                     LOG_ARGS("PrvHst format is not jsonhisto (4), got %d - TCP streaming not started", format);
@@ -4880,6 +4887,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstHistogramFrameString,         asynParamInt32Array, &ADTimePixPrvHstHistogramFrame);
     createParam(ADTimePixPrvHstHistogramSumNFramesString,     asynParamInt64Array, &ADTimePixPrvHstHistogramSumNFrames);
     createParam(ADTimePixPrvHstHistogramTimeMsString,        asynParamFloat64Array, &ADTimePixPrvHstHistogramTimeMs);
+    createParam(ADTimePixPrvHstAccumulationEnableString,     asynParamInt32, &ADTimePixPrvHstAccumulationEnable);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
@@ -5018,6 +5026,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     
     // Set initial parameter values
     setIntegerParam(ADTimePixImgAccumulationEnable, 1);  // Default: enabled
+    setIntegerParam(ADTimePixPrvHstAccumulationEnable, 1);  // Default: enabled
     setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
     setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
     setInteger64Param(ADTimePixImgTotalCounts, 0);

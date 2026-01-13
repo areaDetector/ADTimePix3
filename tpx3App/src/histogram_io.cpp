@@ -307,6 +307,15 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
 void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     const char* functionName = "processPrvHstFrame";
     const char* driverName = "ADTimePix";
+    
+    // Check if accumulation is enabled
+    int accumulationEnable = 0;
+    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+    if (!accumulationEnable) {
+        // Accumulation disabled - don't process frames
+        return;
+    }
+    
     epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
     

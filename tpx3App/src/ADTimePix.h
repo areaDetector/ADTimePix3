@@ -274,6 +274,8 @@
 #define ADTimePixPrvHstHistogramFrameString     "TPX3_PRV_HST_HISTOGRAM_FRAME"       // (asynInt32Array,    r)      Current frame histogram data
 #define ADTimePixPrvHstHistogramSumNFramesString "TPX3_PRV_HST_HISTOGRAM_SUM_N_FRAMES" // (asynInt64Array,  r)      Sum of last N frames
 #define ADTimePixPrvHstHistogramTimeMsString    "TPX3_PRV_HST_HISTOGRAM_TIME_MS"     // (asynFloat64Array,  r)      Histogram time axis (milliseconds)
+    // PrvHst accumulation control
+#define ADTimePixPrvHstAccumulationEnableString "TPX3_PRV_HST_ACCUMULATION_ENABLE" // (asynInt32,       r/w)    Enable/disable histogram accumulation processing
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
@@ -661,7 +663,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstHistogramData;
         int ADTimePixPrvHstHistogramFrame;
         int ADTimePixPrvHstHistogramSumNFrames;
-        int ADTimePixPrvHstHistogramTimeMs;    
+        int ADTimePixPrvHstHistogramTimeMs;
+        int ADTimePixPrvHstAccumulationEnable;    
 
             // Measurement
         int ADTimePixPelRate;        
