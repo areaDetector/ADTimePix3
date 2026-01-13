@@ -31,6 +31,7 @@ R1-5 (XXX, 2026)
   - **Configuration PVs**: `ImgFramesToSum` (1-100000, default: 10) and `ImgSumUpdateInterval` (1-10000, default: 1 frame)
   - **Phoebus Screen**: Updated `ImgAccumulation.bob` screen (located in `Acquire/` folder) adapted for ADTimePix3 to visualize accumulated images, sum of N frames, and performance metrics
   - **Code Organization**: ImageData class and accumulation logic implemented in separate files (`img_accumulation.h`/`.cpp`) following existing pattern (`mask_io.cpp`) for better maintainability
+* **Bug Fix - Image Accumulation Parameter Update**: Fixed critical bug in `writeInt32()` handler where condition for bias/trigger parameters (line 2795) was missing `function ==` comparisons for subsequent terms, causing all writeInt32 calls to be intercepted and preventing `ImgFramesToSum` parameter updates from being processed. The buffer size now correctly updates when `ImgFramesToSum` PV is changed, and memory usage properly reflects the configured buffer size.
 * **Note**: GraphicsMagick was only used for preview image reading via HTTP. File saving is handled directly by Serval, which writes files to disk without using GraphicsMagick.
 
 R1-4 (January 8, 2026)
