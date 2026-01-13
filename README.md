@@ -44,7 +44,8 @@ The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulat
   - Processing time: `ImgProcessingTime` (ms) - average processing time per frame
   - Memory usage: `ImgMemoryUsage` (MB) - estimated memory usage for accumulation buffers
 * **Total Counts**: `ImgTotalCounts` (INT64) - total counts across all accumulated frames
-* **Phoebus Screen**: Use `ImgAccumulation.bob` screen (located in `Acquire/` folder) to visualize accumulated images, sum of N frames, and performance metrics.
+* **Reset Control**: `ImgImageDataReset` (boolean output) - one-shot button to reset accumulated image data. Clears running sum, frame buffer, total counts, and processing time samples. The PV automatically resets to 0 after the reset action.
+* **Phoebus Screen**: Use `ImgAccumulation.bob` screen (located in `Acquire/` folder) to visualize accumulated images, sum of N frames, and performance metrics. The screen includes controls for enabling/disabling accumulation, resetting accumulation, and configuring frame buffer parameters.
 
 **Configuration**:
 - Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`)
