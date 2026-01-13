@@ -24,7 +24,7 @@ TCP Image Streaming
 
 * **Preview Image Streaming (PrvImg)**: Preview images use TCP streaming with jsonimage format for real-time image delivery. Set `PrvImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8089`) and `PrvImgFileFmt` to `jsonimage` (format index 3).
 * **Image Channel Streaming (Img)**: The Img channel also supports TCP jsonimage streaming for real-time 2D image delivery. Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`) and `ImgFileFmt` to `jsonimage` (format index 3).
-* **Histogram Channel Streaming (PrvHst)**: The PrvHst channel supports TCP streaming with jsonhisto format for real-time 1D histogram delivery. Set `PrvHstFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8451`) and `PrvHstFileFmt` to `jsonhisto` (format index 4). Histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins.
+* **Histogram Channel Streaming (PrvHst)**: The PrvHst channel supports TCP streaming with jsonhisto format for real-time 1D histogram delivery. Set `PrvHstFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8451`) and `PrvHstFileFmt` to `jsonhisto` (format index 4). Histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins. The driver processes histogram frames, accumulates running sums, and provides waveform PVs for plotting Time-of-Flight (ToF) histograms.
 * **Concurrent Operation**: PrvImg, Img, and PrvHst channels can stream concurrently without conflicts. Each channel uses its own NDArray address (PrvImg uses address 0, Img uses address 1, PrvHst uses address 5) to prevent conflicts.
 * **Shutdown Behavior**: When stopping acquisition, the shutdown sequence properly handles TCP streaming channels. Serval measurement is stopped first, allowing Serval's TcpSender threads to stop sending data cleanly. Worker threads then detect "Connection closed by peer" as expected behavior. Connection closure messages are channel-specific ("PrvImg TCP connection closed by peer", "Img TCP connection closed by peer", and "PrvHst TCP connection closed by peer") to distinguish which channel is closing. This prevents "Broken pipe" errors even with rate mismatches (e.g., 60 Hz frame rate vs 5 Hz preview rate).
 * **Debug Output**: Acquisition status debug messages show actual ADStatus values (0 = Idle, 1 = Acquire) with context including ADAcquire value, previous state, and ADStatus transitions for better troubleshooting.
@@ -55,6 +55,37 @@ The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulat
 - Configure `ImgSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
 
 **File Saving**: Image data is available via NDArray callbacks for use with areaDetector file plugins (NDFileTIFF, NDFileHDF5, etc.). The accumulated image data arrays (`ImgImageData`, `ImgImageFrame`, `ImgImageSumNFrames`) are also available as EPICS waveform arrays for direct access.
+
+Histogram Streaming (PrvHst)
+------------------------------------------
+
+The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histogram streaming and accumulation with Time-of-Flight (ToF) plotting capabilities:
+
+* **Accumulation Enable Control (`PrvHstAccumulationEnable`)**: Controls whether the ADTimePix3 driver connects to the TCP port and performs histogram accumulation processing. When enabled, the driver connects to the TCP port (e.g., port 8451) and processes histogram frames for accumulation. When disabled, the driver does not connect to the TCP port, allowing other clients to connect instead. This is useful when you want external clients to process jsonhisto data without the driver consuming the TCP connection. Note: `WritePrvHst` must still be enabled for Serval to configure the PrvHst channel; `PrvHstAccumulationEnable` only controls whether the driver connects to the TCP stream.
+
+* **Running Sum Accumulation**: Accumulates histogram bin values over all frames using 64-bit integers to prevent overflow. Access via `PrvHstHistogramData` PV (INT64 waveform array).
+
+* **Current Frame Display**: Individual frame histogram data available via `PrvHstHistogramFrame` PV (INT32 waveform array).
+
+* **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via frame buffer management). Access via `PrvHstHistogramSumNFrames` PV (INT64 waveform array).
+
+* **Time-of-Flight Axis**: Time axis in milliseconds for plotting histograms vs ToF. Access via `PrvHstHistogramTimeMs` PV (DOUBLE waveform array). Bin centers are calculated from bin edges and converted to milliseconds.
+
+* **NDArray Callbacks**: Histogram data is available as 1D NDArray via callbacks (NDArrayAddress=5) for use with areaDetector plugins.
+
+* **Phoebus Screen**: Use `PrvHstHistogram.bob` screen (located in `Acquire/` folder) to visualize histogram data with three XY plots:
+  - **Accumulated Histogram**: Running sum vs ToF [ms]
+  - **Current Frame**: Individual frame histogram vs ToF [ms]
+  - **Sum of Last N Frames**: Sum of last N frames vs ToF [ms]
+  The screen includes controls for enabling/disabling accumulation and histogram configuration parameters.
+
+**Configuration**:
+- Set `PrvHstFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8451`)
+- Set `PrvHstFileFmt` to `jsonhisto` (format index 4)
+- Set `PrvHstFileMode` to `tof` (format index 3) for Time-of-Flight histograms
+- Configure `PrvHstNumBins`, `PrvHstBinWidth`, and `PrvHstOffset` for histogram binning parameters
+
+**File Saving**: Histogram data is available via NDArray callbacks for use with areaDetector file plugins. The histogram waveform arrays (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) are also available as EPICS waveform arrays for direct access and plotting.
 
 How to run:
 -----------
