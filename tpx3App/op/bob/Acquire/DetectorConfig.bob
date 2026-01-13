@@ -1783,28 +1783,4 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
-  <widget type="action_button" version="3.0.0">
-    <name>Action Button_11</name>
-    <actions>
-      <action type="open_display">
-        <description>ImageAccumulation</description>
-        <file>ImgAccumulation.bob</file>
-        <macros>
-          <R>Emulator:</R>
-        </macros>
-        <target>tab</target>
-      </action>
-    </actions>
-    <text>ImageAccumulation</text>
-    <x>755</x>
-    <y>395</y>
-    <width>140</width>
-    <height>20</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-    <tooltip>$(actions)</tooltip>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-  </widget>
 </display>
