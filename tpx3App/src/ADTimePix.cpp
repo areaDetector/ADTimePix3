@@ -4970,7 +4970,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Initialize PrvHst histogram data
     prvHstRunningSum_.reset();
     prvHstFrameBuffer_.clear();
-    prvHstCurrentFrame_ = HistogramData(1, HistogramData::DataType::FRAME_DATA);  // Dummy initialization
+    // prvHstCurrentFrame_ will be initialized when first frame is received
     prvHstFramesToSum_ = 10;  // Default: sum last 10 frames
     prvHstSumUpdateIntervalFrames_ = 1;  // Default: update every frame
     prvHstFramesSinceLastSumUpdate_ = 0;

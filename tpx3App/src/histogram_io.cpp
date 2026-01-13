@@ -5,8 +5,37 @@
 #include <cstring>
 #include <iostream>
 #include <json.hpp>
+#include <asynDriver.h>
 
 using json = nlohmann::json;
+
+// Error message formatters (same as ADTimePix.cpp)
+#define ERR(msg)                                                                                 \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, functionName, \
+              msg)
+
+#define ERR_ARGS(fmt, ...)                                                              \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
+              functionName, __VA_ARGS__)
+
+// Warning message formatters
+#define WARN(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, functionName, msg)
+
+#define WARN_ARGS(fmt, ...)                                                            \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
+              functionName, __VA_ARGS__)
+
+// Log message formatters
+#define LOG(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, functionName, msg)
+
+#define LOG_ARGS(fmt, ...)                                                                       \
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, functionName, \
+              __VA_ARGS__)
+
+// Driver name constant (extern from ADTimePix.cpp)
+extern const char* driverName;
 
 // HistogramData class implementation
 HistogramData::HistogramData(size_t bin_size, DataType type)
@@ -177,7 +206,6 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         int bin_offset = j["binOffset"];
         
         // Extract additional frame data
-        double time_at_frame = j["timeAtFrame"];
         int frame_number = j.value("frameNumber", 0);
         
         // Validate bin size
@@ -277,7 +305,8 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
 }
 
 void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
-    static const char* functionName = "processPrvHstFrame";
+    const char* functionName = "processPrvHstFrame";
+    const char* driverName = "ADTimePix";
     epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
     
@@ -322,7 +351,10 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Store current frame
-    prvHstCurrentFrame_ = frame_data;
+    if (!prvHstCurrentFrame_) {
+        prvHstCurrentFrame_.reset(new HistogramData(frame_data.get_bin_size(), HistogramData::DataType::FRAME_DATA));
+    }
+    *prvHstCurrentFrame_ = frame_data;
     
     // Calculate total counts for this frame
     size_t bin_size = frame_data.get_bin_size();
@@ -451,7 +483,8 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
 }
 
 void ADTimePix::prvHstConnect() {
-    static const char* functionName = "prvHstConnect";
+    const char* functionName = "prvHstConnect";
+    const char* driverName = "ADTimePix";
     
     if (!prvHstMutex_) {
         ERR("PrvHst TCP: Mutex not initialized");
@@ -489,6 +522,7 @@ void ADTimePix::prvHstConnect() {
 
 void ADTimePix::prvHstDisconnect() {
     const char* functionName = "prvHstDisconnect";
+    const char* driverName = "ADTimePix";
     
     epicsMutexLock(prvHstMutex_);
     prvHstConnected_ = false;
@@ -508,7 +542,8 @@ void ADTimePix::prvHstWorkerThreadC(void *pPvt) {
 }
 
 void ADTimePix::prvHstWorkerThread() {
-    static const char* functionName = "prvHstWorkerThread";
+    const char* functionName = "prvHstWorkerThread";
+    const char* driverName = "ADTimePix";
     constexpr double RECONNECT_DELAY_SEC = 1.0;
     
     if (!prvHstMutex_) {

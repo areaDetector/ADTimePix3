@@ -789,7 +789,7 @@ class ADTimePix : public ADDriver{
         // PrvHst histogram data
         std::unique_ptr<HistogramData> prvHstRunningSum_;
         std::deque<HistogramData> prvHstFrameBuffer_;
-        HistogramData prvHstCurrentFrame_;
+        std::unique_ptr<HistogramData> prvHstCurrentFrame_;  // Use pointer to avoid default constructor requirement
         int prvHstFramesToSum_;
         int prvHstSumUpdateIntervalFrames_;
         int prvHstFramesSinceLastSumUpdate_;
