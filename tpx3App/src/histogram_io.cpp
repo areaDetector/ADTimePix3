@@ -588,7 +588,7 @@ void ADTimePix::prvHstWorkerThread() {
                         prvHstConnected_ = false;
                         prvHstRunning_ = false;
                         epicsMutexUnlock(prvHstMutex_);
-                        printf("PrvHst TCP connection closed by peer\n");
+                        LOG("PrvHst TCP connection closed by peer");
                         break;
                     } else {
                         epicsMutexLock(prvHstMutex_);

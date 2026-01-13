@@ -2597,8 +2597,8 @@ asynStatus ADTimePix::acquireStop(){
     // Delay to prevent "Broken pipe" errors (minimum: 300ms for reliable operation)
     epicsThreadSleep(0.3);  // 300ms - allows Serval TcpSender threads to stop cleanly
     
-    // NOW signal worker threads to stop (after Serval has stopped sending)
-    // Worker threads will detect the closed connection (bytes_read <= 0) and exit cleanly
+    // NOW signal ALL worker threads to stop (after Serval has stopped sending)
+    // Signal all channels at once to ensure clean shutdown of all TcpSender threads
     if (prvImgMutex_) {
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
@@ -2623,24 +2623,7 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexUnlock(imgMutex_);
     }
     
-    // Join worker threads - they will detect closed connection (bytes_read <= 0) and exit
-    // or exit when they see prvImgRunning_/imgRunning_ is false
-    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-    
-    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(imgWorkerThreadId_);
-        imgWorkerThreadId_ = NULL;
-    }
-    
-    // Explicitly disconnect to ensure clean state
-    // Worker threads may have already disconnected when they detected the closed connection
-    prvImgDisconnect();
-    imgDisconnect();
-    
-    // Stop PrvHst TCP streaming
+    // Signal PrvHst to stop at the same time as other channels
     if (prvHstMutex_) {
         epicsMutexLock(prvHstMutex_);
         prvHstRunning_ = false;
@@ -2651,10 +2634,27 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexUnlock(prvHstMutex_);
     }
     
+    // Join worker threads - they will detect closed connection (bytes_read <= 0) and exit
+    // or exit when they see prvImgRunning_/imgRunning_/prvHstRunning_ is false
+    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+    
+    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(imgWorkerThreadId_);
+        imgWorkerThreadId_ = NULL;
+    }
+    
     if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
         epicsThreadMustJoin(prvHstWorkerThreadId_);
         prvHstWorkerThreadId_ = NULL;
     }
+    
+    // Explicitly disconnect to ensure clean state
+    // Worker threads may have already disconnected when they detected the closed connection
+    prvImgDisconnect();
+    imgDisconnect();
     prvHstDisconnect();
 
     setIntegerParam(ADStatus, ADStatusIdle);
