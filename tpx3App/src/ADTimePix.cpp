@@ -2233,6 +2233,19 @@ asynStatus ADTimePix::acquireStart(){
             imgWorkerThreadId_ = NULL;
         }
         imgDisconnect();
+        
+        // Also stop PrvHst if it was started
+        if (prvHstMutex_) {
+            epicsMutexLock(prvHstMutex_);
+            prvHstRunning_ = false;
+            epicsMutexUnlock(prvHstMutex_);
+        }
+        if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
+            epicsThreadMustJoin(prvHstWorkerThreadId_);
+            prvHstWorkerThreadId_ = NULL;
+        }
+        prvHstDisconnect();
+        
         return asynError;
     }
 
@@ -2293,6 +2306,55 @@ asynStatus ADTimePix::acquireStart(){
                 epicsMutexUnlock(imgMutex_);
             } else {
                 LOG("ImgAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
+            }
+        }
+        
+        // Start PrvHst TCP streaming if enabled
+        int writePrvHst;
+        getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
+        if (writePrvHst != 0) {
+            std::string prvHstPath;
+            getStringParam(ADTimePixPrvHstBase, prvHstPath);
+            
+            if (prvHstPath.find("tcp://") == 0) {
+                int format;
+                getIntegerParam(ADTimePixPrvHstFormat, &format);
+                if (format == 4) {  // jsonhisto format
+                    // Parse TCP path
+                    std::string host;
+                    int port;
+                    if (parseTcpPath(prvHstPath, host, port)) {
+                        epicsMutexLock(prvHstMutex_);
+                        prvHstHost_ = host;
+                        prvHstPort_ = port;
+                        prvHstFormat_ = format;
+                        epicsMutexUnlock(prvHstMutex_);
+                        
+                        // Give Serval time to bind to the TCP port
+                        epicsThreadSleep(0.2);  // 200ms
+                        
+                        epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
+                        opts.priority = epicsThreadPriorityMedium;
+                        opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
+                        
+                        epicsMutexLock(prvHstMutex_);
+                        if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
+                            prvHstRunning_ = true;
+                            prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
+                            if (!prvHstWorkerThreadId_) {
+                                ERR("Failed to create PrvHst worker thread");
+                                prvHstRunning_ = false;
+                            } else {
+                                LOG("Started PrvHst TCP worker thread in acquireStart");
+                            }
+                        }
+                        epicsMutexUnlock(prvHstMutex_);
+                    } else {
+                        ERR_ARGS("Failed to parse PrvHst TCP path: %s", prvHstPath.c_str());
+                    }
+                } else {
+                    LOG_ARGS("PrvHst format is not jsonhisto (4), got %d - TCP streaming not started", format);
+                }
             }
         }
     }
@@ -2577,6 +2639,23 @@ asynStatus ADTimePix::acquireStop(){
     // Worker threads may have already disconnected when they detected the closed connection
     prvImgDisconnect();
     imgDisconnect();
+    
+    // Stop PrvHst TCP streaming
+    if (prvHstMutex_) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstRunning_ = false;
+        // Reset metadata tracking for next acquisition
+        prvHstFirstFrameReceived_ = false;
+        prvHstAcquisitionRate_ = 0.0;
+        prvHstRateSamples_.clear();
+        epicsMutexUnlock(prvHstMutex_);
+    }
+    
+    if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvHstWorkerThreadId_);
+        prvHstWorkerThreadId_ = NULL;
+    }
+    prvHstDisconnect();
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setIntegerParam(ADAcquire, 0);
@@ -4867,6 +4946,40 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     imgRunning_ = false;
     imgWorkerThreadId_ = nullptr;
     imgMutex_ = epicsMutexMustCreate();
+    
+    // Initialize PrvHst TCP streaming
+    prvHstMutex_ = epicsMutexMustCreate();
+    prvHstNetworkClient_.reset();
+    prvHstHost_ = "";
+    prvHstPort_ = 0;
+    prvHstConnected_ = false;
+    prvHstRunning_ = false;
+    prvHstWorkerThreadId_ = NULL;
+    prvHstLineBuffer_.clear();
+    prvHstTotalRead_ = 0;
+    prvHstFormat_ = 0;
+    
+    // Initialize PrvHst metadata tracking
+    prvHstPreviousFrameNumber_ = 0;
+    prvHstPreviousTimeAtFrame_ = 0.0;
+    prvHstAcquisitionRate_ = 0.0;
+    prvHstRateSamples_.clear();
+    prvHstLastRateUpdateTime_ = 0.0;
+    prvHstFirstFrameReceived_ = false;
+    
+    // Initialize PrvHst histogram data
+    prvHstRunningSum_.reset();
+    prvHstFrameBuffer_.clear();
+    prvHstCurrentFrame_ = HistogramData(1, HistogramData::DataType::FRAME_DATA);  // Dummy initialization
+    prvHstFramesToSum_ = 10;  // Default: sum last 10 frames
+    prvHstSumUpdateIntervalFrames_ = 1;  // Default: update every frame
+    prvHstFramesSinceLastSumUpdate_ = 0;
+    prvHstTotalCounts_ = 0;
+    
+    // Initialize PrvHst buffers
+    prvHstArrayData32Buffer_.clear();
+    prvHstSumArray64Buffer_.clear();
+    prvHstSumArray64WorkBuffer_.clear();
     if (!imgMutex_) {
         ERR("Failed to create Img mutex");
     }
@@ -4966,6 +5079,22 @@ ADTimePix::~ADTimePix(){
     if (imgMutex_) {
         epicsMutexDestroy(imgMutex_);
         imgMutex_ = NULL;
+    }
+    
+    // Stop PrvHst TCP streaming
+    epicsMutexLock(prvHstMutex_);
+    prvHstRunning_ = false;
+    epicsMutexUnlock(prvHstMutex_);
+    
+    if (prvHstWorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvHstWorkerThreadId_);
+        prvHstWorkerThreadId_ = NULL;
+    }
+    prvHstDisconnect();
+    
+    if (prvHstMutex_) {
+        epicsMutexDestroy(prvHstMutex_);
+        prvHstMutex_ = NULL;
     }
     
     disconnect(this->pasynUserSelf);

@@ -37,6 +37,7 @@
 #include <vector>
 #include <deque>
 #include "img_accumulation.h"
+#include "histogram_io.h"
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -764,6 +765,41 @@ class ADTimePix : public ADDriver{
         std::vector<epicsInt64> imgSumArray64Buffer_;      // For IMAGE_SUM_N_FRAMES (64-bit)
         std::vector<uint64_t> imgSumArray64WorkBuffer_;   // Working buffer for sum calculation
 
+        // TCP streaming for PrvHst channel
+        std::unique_ptr<NetworkClient> prvHstNetworkClient_;
+        std::string prvHstHost_;
+        int prvHstPort_;
+        bool prvHstConnected_;
+        bool prvHstRunning_;
+        epicsThreadId prvHstWorkerThreadId_;
+        epicsMutexId prvHstMutex_;
+        std::vector<char> prvHstLineBuffer_;
+        size_t prvHstTotalRead_;
+        int prvHstFormat_;  // Cache format to determine if jsonhisto (4)
+        
+        // PrvHst metadata tracking for rate calculation
+        int prvHstPreviousFrameNumber_;
+        double prvHstPreviousTimeAtFrame_;
+        double prvHstAcquisitionRate_;
+        std::deque<double> prvHstRateSamples_;
+        double prvHstLastRateUpdateTime_;
+        bool prvHstFirstFrameReceived_;
+        static constexpr size_t PRVHST_MAX_RATE_SAMPLES = 10;
+        
+        // PrvHst histogram data
+        std::unique_ptr<HistogramData> prvHstRunningSum_;
+        std::deque<HistogramData> prvHstFrameBuffer_;
+        HistogramData prvHstCurrentFrame_;
+        int prvHstFramesToSum_;
+        int prvHstSumUpdateIntervalFrames_;
+        int prvHstFramesSinceLastSumUpdate_;
+        uint64_t prvHstTotalCounts_;
+        
+        // PrvHst reusable buffers for EPICS arrays
+        std::vector<epicsInt32> prvHstArrayData32Buffer_;  // For histogram data (32-bit)
+        std::vector<epicsInt64> prvHstSumArray64Buffer_;   // For sum of N frames (64-bit)
+        std::vector<uint64_t> prvHstSumArray64WorkBuffer_; // Working buffer for sum calculation
+
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
 
@@ -836,6 +872,14 @@ class ADTimePix : public ADDriver{
         void updateImgPerformanceMetrics();
         double calculateImgMemoryUsageMB();
         void resetImgAccumulation();
+        
+        // TCP streaming methods for PrvHst channel
+        bool processPrvHstDataLine(char* line_buffer, char* newline_pos, size_t total_read);
+        void processPrvHstFrame(const HistogramData& frame_data);
+        void prvHstWorkerThread();
+        static void prvHstWorkerThreadC(void *pPvt);
+        void prvHstConnect();
+        void prvHstDisconnect();
         
         // Helper functions for fileWriter optimization
         asynStatus getParameterSafely(int param, int& value);
