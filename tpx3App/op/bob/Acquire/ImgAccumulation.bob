@@ -56,16 +56,57 @@
         </border_color>
       </widget>
       <widget type="label" version="2.0.0">
-        <name>NoteLabel</name>
-        <text>Note: Image accumulation is active when Img channel TCP streaming is enabled. Use areaDetector acquisition controls to start/stop.</text>
+        <name>EnableLabel</name>
+        <text>Enable Accumulation:</text>
         <x>20</x>
         <y>40</y>
-        <width>1300</width>
-        <height>30</height>
+        <width>200</width>
+        <height>25</height>
+      </widget>
+      <widget type="bool_button" version="2.0.0">
+        <name>AccumulationEnableButton</name>
+        <pv_name>$(P)$(R)AccumulationEnable</pv_name>
+        <bit>-1</bit>
+        <x>230</x>
+        <y>38</y>
+        <height>25</height>
+        <off_label>Disabled</off_label>
+        <off_color>
+          <color red="200" green="100" blue="100">
+          </color>
+        </off_color>
+        <on_label>Enabled</on_label>
+        <on_color>
+          <color red="100" green="200" blue="100">
+          </color>
+        </on_color>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <actions>
+        </actions>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>AccumulationEnableStatus</name>
+        <pv_name>$(P)$(R)AccumulationEnable_RBV</pv_name>
+        <x>340</x>
+        <y>38</y>
+        <height>25</height>
+        <vertical_alignment>1</vertical_alignment>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>NoteLabel</name>
+        <text>Note: When disabled, images can be written to disk/NDArray callbacks but accumulation processing is skipped.</text>
+        <x>450</x>
+        <y>40</y>
+        <width>890</width>
+        <height>25</height>
         <foreground_color>
           <color red="100" green="100" blue="100">
           </color>
         </foreground_color>
+        <vertical_alignment>1</vertical_alignment>
       </widget>
     </widget>
     <widget type="group" version="3.0.0">

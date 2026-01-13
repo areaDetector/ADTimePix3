@@ -601,6 +601,26 @@ record(waveform, "$(P)$(R)ImgImageSumNFrames")
     field(SCAN, "I/O Intr")
 }
 
+record(bo, "$(P)$(R)ImgAccumulationEnable")
+{
+    field(DESC, "Enable image accumulation processing")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_ACCUMULATION_ENABLE")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(VAL, "1")
+}
+
+record(bi, "$(P)$(R)ImgAccumulationEnable_RBV")
+{
+    field(DESC, "Image accumulation processing status")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_ACCUMULATION_ENABLE")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SCAN, "I/O Intr")
+}
+
 record(longout, "$(P)$(R)ImgFramesToSum")
 {
     field(DESC, "Number of frames to sum")

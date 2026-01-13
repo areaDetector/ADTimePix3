@@ -2265,29 +2265,35 @@ asynStatus ADTimePix::acquireStart(){
         }
     }
     
-    // Start Img TCP streaming worker thread if WriteImg is enabled and path is TCP
-    // Wait a bit for Serval to bind to the port before trying to connect
+    // Start Img TCP streaming worker thread if WriteImg is enabled, path is TCP, and accumulation is enabled
+    // If accumulation is disabled, don't connect to TCP port so other clients can connect
     int writeImg;
     getIntegerParam(ADTimePixWriteImg, &writeImg);
     if (writeImg != 0) {
         std::string imgPath;
         getStringParam(ADTimePixImgBase, imgPath);
         if (imgPath.find("tcp://") == 0) {
-            // Give Serval time to bind to the TCP port (minimum: 200ms)
-            epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
-            
-            epicsMutexLock(imgMutex_);
-            if (!imgRunning_ && !imgWorkerThreadId_) {
-                imgRunning_ = true;
-                imgWorkerThreadId_ = epicsThreadCreateOpt("imgWorker", imgWorkerThreadC, this, &opts);
-                if (!imgWorkerThreadId_) {
-                    ERR("Failed to create Img worker thread");
-                    imgRunning_ = false;
-                } else {
-                    LOG("Started Img TCP worker thread in acquireStart");
+            int accumulationEnable;
+            getIntegerParam(ADTimePixImgAccumulationEnable, &accumulationEnable);
+            if (accumulationEnable) {
+                // Give Serval time to bind to the TCP port (minimum: 200ms)
+                epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
+                
+                epicsMutexLock(imgMutex_);
+                if (!imgRunning_ && !imgWorkerThreadId_) {
+                    imgRunning_ = true;
+                    imgWorkerThreadId_ = epicsThreadCreateOpt("imgWorker", imgWorkerThreadC, this, &opts);
+                    if (!imgWorkerThreadId_) {
+                        ERR("Failed to create Img worker thread");
+                        imgRunning_ = false;
+                    } else {
+                        LOG("Started Img TCP worker thread in acquireStart");
+                    }
                 }
+                epicsMutexUnlock(imgMutex_);
+            } else {
+                LOG("ImgAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
             }
-            epicsMutexUnlock(imgMutex_);
         }
     }
     
@@ -3684,8 +3690,12 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
             }
         }
         
-        // NEW: Process frame for accumulation
-        processImgFrame(frame_image);
+        // NEW: Process frame for accumulation (only if enabled)
+        int accumulationEnable = 0;
+        getIntegerParam(ADTimePixImgAccumulationEnable, &accumulationEnable);
+        if (accumulationEnable) {
+            processImgFrame(frame_image);
+        }
         
         // Call parameter callbacks to update EPICS PVs (thread-safe)
         callParamCallbacks();
@@ -4737,6 +4747,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixImgImageDataString,                 asynParamInt64Array, &ADTimePixImgImageData);
     createParam(ADTimePixImgImageFrameString,                asynParamInt32Array, &ADTimePixImgImageFrame);
     createParam(ADTimePixImgImageSumNFramesString,           asynParamInt64Array, &ADTimePixImgImageSumNFrames);
+    createParam(ADTimePixImgAccumulationEnableString,        asynParamInt32, &ADTimePixImgAccumulationEnable);
     createParam(ADTimePixImgFramesToSumString,               asynParamInt32, &ADTimePixImgFramesToSum);
     createParam(ADTimePixImgSumUpdateIntervalString,         asynParamInt32, &ADTimePixImgSumUpdateIntervalFrames);
     createParam(ADTimePixImgTotalCountsString,               asynParamInt64, &ADTimePixImgTotalCounts);
@@ -4869,6 +4880,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     imgTotalCounts_ = 0;
     
     // Set initial parameter values
+    setIntegerParam(ADTimePixImgAccumulationEnable, 1);  // Default: enabled
     setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
     setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
     setInteger64Param(ADTimePixImgTotalCounts, 0);

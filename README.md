@@ -34,6 +34,8 @@ Image Accumulation Features (Img Channel)
 
 The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulation and display features similar to the standalone `tpx3image` IOC:
 
+* **Accumulation Enable Control (`ImgAccumulationEnable`)**: Controls whether the ADTimePix3 driver connects to the TCP port and performs accumulation processing. When enabled, the driver connects to the TCP port (e.g., port 8087) and processes images for accumulation. When disabled, the driver does not connect to the TCP port, allowing other clients to connect instead. This is useful when you want to write images to disk or have other clients connect to the image channel without the driver consuming the TCP connection. Note: `WriteImg` must still be enabled for Serval to configure the Img channel; `ImgAccumulationEnable` only controls whether the driver connects to the TCP stream.
+
 * **Running Sum Accumulation**: Accumulates pixel values over all frames using 64-bit integers to prevent overflow. Access via `ImgImageData` PV (INT64 waveform array).
 * **Current Frame Display**: Individual frame data available via `ImgImageFrame` PV (INT32 waveform array).
 * **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via `ImgFramesToSum` PV, default: 10). Access via `ImgImageSumNFrames` PV (INT64 waveform array). Update interval configurable via `ImgSumUpdateInterval` PV (default: 1 frame).
