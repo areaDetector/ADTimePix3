@@ -402,25 +402,61 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             prvHstSumArray64Buffer_[i] = static_cast<epicsInt64>(prvHstSumArray64WorkBuffer_[i]);
         }
         
-        // Update EPICS PV via callback (if parameter exists)
-        // Note: May need to add histogram sum PV parameter
+        // Update EPICS PV via callback for sum of N frames
+        doCallbacksInt64Array(prvHstSumArray64Buffer_.data(), frame_bin_size, ADTimePixPrvHstHistogramSumNFrames, 0);
     }
     
-    // Update histogram data PV via callback
+    // Update histogram data PVs via callbacks
     if (prvHstRunningSum_) {
         size_t bin_size = prvHstRunningSum_->get_bin_size();
+        
+        // Resize buffers if needed
         if (prvHstArrayData32Buffer_.size() < bin_size) {
             prvHstArrayData32Buffer_.resize(bin_size);
         }
+        if (prvHstTimeMsBuffer_.size() < bin_size + 1) {
+            prvHstTimeMsBuffer_.resize(bin_size + 1);
+        }
         
-        // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection)
+        // Create time axis from bin edges (convert seconds to milliseconds)
+        // For plotting, we use bin centers (not edges), so bin_size elements
+        const auto& bin_edges = prvHstRunningSum_->get_bin_edges();
+        if (prvHstTimeMsBuffer_.size() < bin_size) {
+            prvHstTimeMsBuffer_.resize(bin_size);
+        }
+        // Calculate bin centers: average of left and right edges
+        for (size_t i = 0; i < bin_size; ++i) {
+            double bin_center = (bin_edges[i] + bin_edges[i + 1]) / 2.0;
+            prvHstTimeMsBuffer_[i] = bin_center * 1000.0;  // Convert to milliseconds
+        }
+        
+        // Update time axis waveform (bin_size elements for bin centers)
+        doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+        
+        // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
+        // For accumulated data, use 64-bit array
+        std::vector<epicsInt64> prvHstData64Buffer(bin_size);
         for (size_t i = 0; i < bin_size; ++i) {
             uint64_t val64 = prvHstRunningSum_->get_bin_value_64(i);
+            prvHstData64Buffer[i] = static_cast<epicsInt64>(val64);
+            // Also store in 32-bit buffer for frame display
             prvHstArrayData32Buffer_[i] = (val64 > UINT32_MAX) ? UINT32_MAX : static_cast<epicsInt32>(val64);
         }
         
-        // Trigger callback - may need to add histogram data parameter index
-        // doCallbacksInt32Array(prvHstArrayData32Buffer_.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
+        // Update accumulated histogram data (64-bit)
+        doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
+        
+        // Update current frame histogram data (32-bit)
+        if (prvHstCurrentFrame_) {
+            size_t frame_bin_size = prvHstCurrentFrame_->get_bin_size();
+            if (frame_bin_size == bin_size) {
+                std::vector<epicsInt32> frameBuffer(bin_size);
+                for (size_t i = 0; i < bin_size; ++i) {
+                    frameBuffer[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
+                }
+                doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
+            }
+        }
     }
     
     // Create NDArray for histogram (1D array)

@@ -4875,6 +4875,11 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstBinWidthString,               asynParamFloat64,  &ADTimePixPrvHstBinWidth);
     createParam(ADTimePixPrvHstOffsetString,                 asynParamFloat64,  &ADTimePixPrvHstOffset);
     createParam(ADTimePixPrvHstFilePathExistsString,         asynParamInt32,    &ADTimePixPrvHstFilePathExists);
+    // PrvHst histogram data arrays
+    createParam(ADTimePixPrvHstHistogramDataString,          asynParamInt64Array, &ADTimePixPrvHstHistogramData);
+    createParam(ADTimePixPrvHstHistogramFrameString,         asynParamInt32Array, &ADTimePixPrvHstHistogramFrame);
+    createParam(ADTimePixPrvHstHistogramSumNFramesString,     asynParamInt64Array, &ADTimePixPrvHstHistogramSumNFrames);
+    createParam(ADTimePixPrvHstHistogramTimeMsString,        asynParamFloat64Array, &ADTimePixPrvHstHistogramTimeMs);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
@@ -4980,6 +4985,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvHstArrayData32Buffer_.clear();
     prvHstSumArray64Buffer_.clear();
     prvHstSumArray64WorkBuffer_.clear();
+    prvHstTimeMsBuffer_.clear();
     if (!imgMutex_) {
         ERR("Failed to create Img mutex");
     }

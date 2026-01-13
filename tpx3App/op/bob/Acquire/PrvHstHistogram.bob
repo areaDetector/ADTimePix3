@@ -534,13 +534,13 @@
     </widget>
   </widget>
   <widget type="xyplot" version="3.0.0">
-    <name>HistogramPlot</name>
+    <name>HistogramPlot_Sum</name>
     <x>1410</x>
     <y>20</y>
     <width>800</width>
-    <height>1300</height>
+    <height>400</height>
     <x_axis>
-      <title>Time-of-Flight [ms]</title>
+      <title>ToF [ms]</title>
       <autoscale>true</autoscale>
       <log_scale>false</log_scale>
       <minimum>0.0</minimum>
@@ -558,7 +558,7 @@
     </x_axis>
     <y_axes>
       <y_axis>
-        <title>Counts</title>
+        <title>Counts [Sum]</title>
         <autoscale>true</autoscale>
         <log_scale>false</log_scale>
         <minimum>0.0</minimum>
@@ -582,9 +582,9 @@
     </y_axes>
     <traces>
       <trace>
-        <name>Histogram Data</name>
-        <x_pv>$(P)$(R)ArrayData1</x_pv>
-        <y_pv>pva://$(P)Pva1:Image</y_pv>
+        <name>Accumulated Histogram</name>
+        <x_pv>$(P)$(R)PrvHstHistogramTimeMs</x_pv>
+        <y_pv>$(P)$(R)PrvHstHistogramData</y_pv>
         <err_pv></err_pv>
         <axis>0</axis>
         <trace_type>1</trace_type>
@@ -592,12 +592,165 @@
           <color red="0" green="0" blue="255">
           </color>
         </color>
-        <line_width>2</line_width>
+        <line_width>1</line_width>
         <line_style>0</line_style>
         <point_type>0</point_type>
         <point_size>10</point_size>
         <visible>true</visible>
-        <y_pv_index>5</y_pv_index>
+      </trace>
+    </traces>
+    <toolbar>
+      <visible>true</visible>
+    </toolbar>
+    <legend>
+      <visible>true</visible>
+      <font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        </font>
+      </font>
+    </legend>
+  </widget>
+  <widget type="xyplot" version="3.0.0">
+    <name>HistogramPlot_Frame</name>
+    <x>1410</x>
+    <y>440</y>
+    <width>800</width>
+    <height>400</height>
+    <x_axis>
+      <title>ToF [ms]</title>
+      <autoscale>true</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>25.0</maximum>
+      <show_grid>true</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
+    <y_axes>
+      <y_axis>
+        <title>Counts [Frame]</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>1000.0</maximum>
+        <show_grid>true</show_grid>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+          </font>
+        </scale_font>
+        <on_right>false</on_right>
+        <visible>true</visible>
+        <color>
+          <color name="Text" red="0" green="0" blue="0">
+          </color>
+        </color>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>Current Frame</name>
+        <x_pv>$(P)$(R)PrvHstHistogramTimeMs</x_pv>
+        <y_pv>$(P)$(R)PrvHstHistogramFrame</y_pv>
+        <err_pv></err_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="0" green="0" blue="255">
+          </color>
+        </color>
+        <line_width>1</line_width>
+        <line_style>0</line_style>
+        <point_type>0</point_type>
+        <point_size>10</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+    <toolbar>
+      <visible>true</visible>
+    </toolbar>
+    <legend>
+      <visible>true</visible>
+      <font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        </font>
+      </font>
+    </legend>
+  </widget>
+  <widget type="xyplot" version="3.0.0">
+    <name>HistogramPlot_SumNFrames</name>
+    <x>1410</x>
+    <y>860</y>
+    <width>800</width>
+    <height>400</height>
+    <x_axis>
+      <title>ToF [ms]</title>
+      <autoscale>true</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>25.0</maximum>
+      <show_grid>true</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
+    <y_axes>
+      <y_axis>
+        <title>Counts [Sum N Frames]</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>1000.0</maximum>
+        <show_grid>true</show_grid>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+          </font>
+        </scale_font>
+        <on_right>false</on_right>
+        <visible>true</visible>
+        <color>
+          <color name="Text" red="0" green="0" blue="0">
+          </color>
+        </color>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>Sum of Last N Frames</name>
+        <x_pv>$(P)$(R)PrvHstHistogramTimeMs</x_pv>
+        <y_pv>$(P)$(R)PrvHstHistogramSumNFrames</y_pv>
+        <err_pv></err_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </color>
+        <line_width>1</line_width>
+        <line_style>0</line_style>
+        <point_type>0</point_type>
+        <point_size>10</point_size>
+        <visible>true</visible>
       </trace>
     </traces>
     <toolbar>

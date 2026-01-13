@@ -269,6 +269,11 @@
 #define ADTimePixPrvHstBinWidthString           "TPX3_PRV_HSTBINWIDTH"      // (asynFloat64,       w)      Preview HistogramChannels BinWidth
 #define ADTimePixPrvHstOffsetString             "TPX3_PRV_HSTOFFSET"        // (asynFloat64,       w)      Preview HistogramChannels Offset
 #define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
+    // PrvHst histogram data arrays (similar to Img channel)
+#define ADTimePixPrvHstHistogramDataString      "TPX3_PRV_HST_HISTOGRAM_DATA"        // (asynInt64Array,    r)      Accumulated histogram data
+#define ADTimePixPrvHstHistogramFrameString     "TPX3_PRV_HST_HISTOGRAM_FRAME"       // (asynInt32Array,    r)      Current frame histogram data
+#define ADTimePixPrvHstHistogramSumNFramesString "TPX3_PRV_HST_HISTOGRAM_SUM_N_FRAMES" // (asynInt64Array,  r)      Sum of last N frames
+#define ADTimePixPrvHstHistogramTimeMsString    "TPX3_PRV_HST_HISTOGRAM_TIME_MS"     // (asynFloat64Array,  r)      Histogram time axis (milliseconds)
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
@@ -651,7 +656,12 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstNumBins;
         int ADTimePixPrvHstBinWidth;
         int ADTimePixPrvHstOffset;
-        int ADTimePixPrvHstFilePathExists;    
+        int ADTimePixPrvHstFilePathExists;
+        // PrvHst histogram data arrays
+        int ADTimePixPrvHstHistogramData;
+        int ADTimePixPrvHstHistogramFrame;
+        int ADTimePixPrvHstHistogramSumNFrames;
+        int ADTimePixPrvHstHistogramTimeMs;    
 
             // Measurement
         int ADTimePixPelRate;        
@@ -799,6 +809,7 @@ class ADTimePix : public ADDriver{
         std::vector<epicsInt32> prvHstArrayData32Buffer_;  // For histogram data (32-bit)
         std::vector<epicsInt64> prvHstSumArray64Buffer_;   // For sum of N frames (64-bit)
         std::vector<uint64_t> prvHstSumArray64WorkBuffer_; // Working buffer for sum calculation
+        std::vector<epicsFloat64> prvHstTimeMsBuffer_;    // For histogram time axis (milliseconds)
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
