@@ -456,7 +456,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ADStatusDisplay</name>
-        <pv_name>$(P)$(R)ADStatus_RBV</pv_name>
+        <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
         <x>650</x>
         <y>40</y>
         <width>100</width>
