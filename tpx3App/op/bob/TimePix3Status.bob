@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Tpx3Status</name>
   <width>350</width>
-  <height>120</height>
+  <height>150</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -17,12 +17,8 @@
       <pv_name></pv_name>
     </macros>
     <width>350</width>
-    <height>120</height>
-    <line_width>0</line_width>
-    <line_color>
-      <color red="0" green="128" blue="255">
-      </color>
-    </line_color>
+    <height>150</height>
+    <line_width>1</line_width>
     <transparent>true</transparent>
     <actions>
     </actions>
@@ -227,6 +223,54 @@ $(pv_value)</tooltip>
     <x>45</x>
     <y>85</y>
     <width>65</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>$(actions)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_11</name>
+    <actions>
+      <action type="open_display">
+        <description>ImageAccumulation</description>
+        <file>Acquire/ImgAccumulation.bob</file>
+        <macros>
+          <R>Emulator:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>ImageAccumulation</text>
+    <x>120</x>
+    <y>85</y>
+    <width>140</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>$(actions)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_12</name>
+    <actions>
+      <action type="open_display">
+        <description>PrvHistogram</description>
+        <file>Acquire/PrvHstHistogram.bob</file>
+        <macros>
+          <R>Emulator:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>PrvHistogram</text>
+    <x>45</x>
+    <y>110</y>
+    <width>140</width>
     <height>20</height>
     <background_color>
       <color red="115" green="223" blue="255">

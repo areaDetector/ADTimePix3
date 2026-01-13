@@ -218,7 +218,7 @@ $(pv_value)</tooltip>
     <x>2</x>
     <y>850</y>
     <width>350</width>
-    <height>120</height>
+    <height>150</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
