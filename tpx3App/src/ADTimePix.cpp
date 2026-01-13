@@ -2808,6 +2808,18 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         if (status == asynSuccess) status = initAcquisition();
     }
 
+    else if(function == ADTimePixImgImageDataReset) {
+        // Reset accumulated image data when value is set to 1
+        if (value == 1) {
+            epicsMutexLock(imgMutex_);
+            resetImgAccumulation();
+            epicsMutexUnlock(imgMutex_);
+            // Reset the PV back to 0 (one-shot action)
+            setIntegerParam(ADTimePixImgImageDataReset, 0);
+            callParamCallbacks(ADTimePixImgImageDataReset);
+        }
+    }
+
     else if(function == ADTimePixImgFramesToSum) {
         epicsMutexLock(imgMutex_);
         imgFramesToSum_ = value;
@@ -4131,7 +4143,7 @@ double ADTimePix::calculateImgMemoryUsageMB() {
 }
 
 void ADTimePix::resetImgAccumulation() {
-    imgRunningSum_ = nullptr;
+    imgRunningSum_.reset();
     imgFrameBuffer_.clear();
     imgTotalCounts_ = 0;
     imgFramesSinceLastSumUpdate_ = 0;
@@ -4139,7 +4151,12 @@ void ADTimePix::resetImgAccumulation() {
     imgProcessingTimeSamples_.clear();
     setInteger64Param(ADTimePixImgTotalCounts, 0);
     setDoubleParam(ADTimePixImgProcessingTime, 0.0);
-    callParamCallbacks();
+    // Update memory usage after reset
+    imgMemoryUsage_ = calculateImgMemoryUsageMB();
+    setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
+    // Note: Array callbacks will be triggered when next frame arrives and finds empty buffers
+    // For immediate update, we could trigger callbacks with zero arrays here, but it's cleaner
+    // to wait for the next frame to populate the arrays
 }
 
 bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
@@ -4748,6 +4765,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixImgImageFrameString,                asynParamInt32Array, &ADTimePixImgImageFrame);
     createParam(ADTimePixImgImageSumNFramesString,           asynParamInt64Array, &ADTimePixImgImageSumNFrames);
     createParam(ADTimePixImgAccumulationEnableString,        asynParamInt32, &ADTimePixImgAccumulationEnable);
+    createParam(ADTimePixImgImageDataResetString,            asynParamInt32, &ADTimePixImgImageDataReset);
     createParam(ADTimePixImgFramesToSumString,               asynParamInt32, &ADTimePixImgFramesToSum);
     createParam(ADTimePixImgSumUpdateIntervalString,         asynParamInt32, &ADTimePixImgSumUpdateIntervalFrames);
     createParam(ADTimePixImgTotalCountsString,               asynParamInt64, &ADTimePixImgTotalCounts);

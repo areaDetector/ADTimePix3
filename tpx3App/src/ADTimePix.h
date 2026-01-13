@@ -236,6 +236,7 @@
 #define ADTimePixImgImageFrameString            "TPX3_IMG_IMAGE_FRAME"       // (asynInt32Array,    r)      Current frame data
 #define ADTimePixImgImageSumNFramesString       "TPX3_IMG_IMAGE_SUM_N_FRAMES" // (asynInt64Array,  r)      Sum of last N frames
 #define ADTimePixImgAccumulationEnableString    "TPX3_IMG_ACCUMULATION_ENABLE" // (asynInt32,       r/w)    Enable/disable image accumulation processing
+#define ADTimePixImgImageDataResetString        "TPX3_IMG_IMAGE_DATA_RESET" // (asynInt32,       w)      Reset accumulated image data
 #define ADTimePixImgFramesToSumString           "TPX3_IMG_FRAMES_TO_SUM"    // (asynInt32,         r/w)    Number of frames to sum
 #define ADTimePixImgSumUpdateIntervalString     "TPX3_IMG_SUM_UPDATE_INTERVAL" // (asynInt32,       r/w)    Update interval
 #define ADTimePixImgTotalCountsString           "TPX3_IMG_TOTAL_COUNTS"     // (asynInt64,         r)      Total counts
@@ -614,6 +615,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixImgImageFrame;
         int ADTimePixImgImageSumNFrames;
         int ADTimePixImgAccumulationEnable;
+        int ADTimePixImgImageDataReset;
         int ADTimePixImgFramesToSum;
         int ADTimePixImgSumUpdateIntervalFrames;
         int ADTimePixImgTotalCounts;
