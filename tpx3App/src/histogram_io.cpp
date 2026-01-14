@@ -303,6 +303,8 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         }
         
         // Process frame
+        LOG_ARGS("PrvHst: Processing frame %d, bin_size=%d, bin_width=%d, bin_offset=%d", 
+                 frame_number, bin_size, bin_width, bin_offset);
         processPrvHstFrame(frame_histogram);
         
     } catch (const std::exception& e) {
@@ -322,6 +324,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
     if (!accumulationEnable) {
         // Accumulation disabled - don't process frames
+        LOG("PrvHst: Accumulation disabled, skipping frame processing");
         return;
     }
     
@@ -464,16 +467,16 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             prvHstTimeMsBuffer_.resize(bin_size + 1);
         }
         
-        // Create time axis from bin edges (convert seconds to milliseconds)
-        // For plotting, we use bin centers (not edges), so bin_size elements
-        const auto& bin_edges = prvHstRunningSum_->get_bin_edges();
+        // Create time axis from frame parameters (convert seconds to milliseconds)
+        // For plotting, we use bin centers: bin_offset + i * bin_width (convert to milliseconds)
+        // This matches the standalone histogram IOC calculation
         if (prvHstTimeMsBuffer_.size() < bin_size) {
             prvHstTimeMsBuffer_.resize(bin_size);
         }
-        // Calculate bin centers: average of left and right edges
+        // Calculate bin centers using frame parameters (same as standalone histogram IOC)
         for (size_t i = 0; i < bin_size; ++i) {
-            double bin_center = (bin_edges[i] + bin_edges[i + 1]) / 2.0;
-            prvHstTimeMsBuffer_[i] = bin_center * 1000.0;  // Convert to milliseconds
+            // Time value for bin i: bin_offset + i * bin_width (convert to milliseconds)
+            prvHstTimeMsBuffer_[i] = (prvHstFrameBinOffset_ + i * prvHstFrameBinWidth_) * TPX3_TDC_CLOCK_PERIOD_SEC * 1e3;
         }
         
         // Update time axis waveform (bin_size elements for bin centers)
@@ -492,7 +495,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         // Update accumulated histogram data (64-bit)
         doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
         
-        // Update current frame histogram data (32-bit)
+                // Update current frame histogram data (32-bit)
         if (prvHstCurrentFrame_) {
             size_t frame_bin_size = prvHstCurrentFrame_->get_bin_size();
             if (frame_bin_size == bin_size) {
@@ -500,8 +503,14 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                 for (size_t i = 0; i < bin_size; ++i) {
                     frameBuffer[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
                 }
+                LOG_ARGS("PrvHst: Pushing frame data, bin_size=%zu, first 5 values: %d %d %d %d %d",
+                         bin_size, frameBuffer[0], frameBuffer[1], frameBuffer[2], frameBuffer[3], frameBuffer[4]);
                 doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
+            } else {
+                WARN_ARGS("PrvHst: Frame bin size mismatch: frame=%zu, running_sum=%zu", frame_bin_size, bin_size);
             }
+        } else {
+            WARN("PrvHst: prvHstCurrentFrame_ is null, cannot push frame data");
         }
     }
     
