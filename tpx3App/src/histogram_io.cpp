@@ -664,7 +664,29 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Check if bin sizes match
-    if (prvHstRunningSum_->get_bin_size() != frame_data.get_bin_size()) {
+    printf("PrvHst: processPrvHstFrame: About to check bin sizes\n");
+    fflush(stdout);
+    
+    if (!prvHstRunningSum_) {
+        printf("PrvHst: processPrvHstFrame: ERROR - prvHstRunningSum_ is null after creation!\n");
+        fflush(stdout);
+        epicsMutexUnlock(prvHstMutex_);
+        return;
+    }
+    
+    printf("PrvHst: processPrvHstFrame: About to call get_bin_size() on prvHstRunningSum_\n");
+    fflush(stdout);
+    
+    size_t running_sum_bin_size = prvHstRunningSum_->get_bin_size();
+    size_t frame_bin_size = frame_data.get_bin_size();
+    
+    printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ bin_size=%zu, frame_data bin_size=%zu\n", 
+           running_sum_bin_size, frame_bin_size);
+    fflush(stdout);
+    
+    if (running_sum_bin_size != frame_bin_size) {
+        printf("PrvHst: processPrvHstFrame: Bin size mismatch detected\n");
+        fflush(stdout);
         WARN_ARGS("PrvHst bin size mismatch! Running sum has %zu bins, frame has %zu bins. Reinitializing running sum.",
                   prvHstRunningSum_->get_bin_size(), frame_data.get_bin_size());
         
@@ -692,10 +714,26 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Add frame data to running sum
+    printf("PrvHst: processPrvHstFrame: About to add histogram to running sum\n");
+    fflush(stdout);
+    
+    if (!prvHstRunningSum_) {
+        printf("PrvHst: processPrvHstFrame: ERROR - prvHstRunningSum_ is null before add_histogram!\n");
+        fflush(stdout);
+        epicsMutexUnlock(prvHstMutex_);
+        return;
+    }
+    
     try {
+        printf("PrvHst: processPrvHstFrame: Calling add_histogram\n");
+        fflush(stdout);
+        
         prvHstRunningSum_->add_histogram(frame_data);
+        
+        printf("PrvHst: processPrvHstFrame: add_histogram completed\n");
+        fflush(stdout);
     } catch (const std::exception& e) {
-        ERR_ARGS("Failed to add histogram to running sum: %s", e.what());
+        fprintf(stderr, "ERROR | ADTimePix::%s: Failed to add histogram to running sum: %s\n", functionName, e.what());
         epicsMutexUnlock(prvHstMutex_);
         return;
     }
