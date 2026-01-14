@@ -176,27 +176,46 @@ void HistogramData::add_histogram(const HistogramData& other) {
 bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
     static const char* functionName = "processPrvHstDataLine";
     
-    // Skip empty lines
-    if (strlen(line_buffer) == 0) {
-        return true;
+    // Validate pointers
+    if (!line_buffer || !newline_pos || newline_pos <= line_buffer) {
+        printf("PrvHst: processPrvHstDataLine: Invalid pointers (line_buffer=%p, newline_pos=%p)\n", 
+               line_buffer, newline_pos);
+        return false;
+    }
+    
+    // Calculate safe length (up to newline, not using strlen which requires null terminator)
+    size_t line_length = newline_pos - line_buffer;
+    if (line_length == 0) {
+        return true;  // Empty line
     }
     
     // Skip any leading whitespace or binary data
     char* json_start = line_buffer;
-    while (*json_start != '\0' && *json_start != '{' &&
+    char* line_end = newline_pos;  // Don't go past newline
+    while (json_start < line_end && *json_start != '{' &&
            (*json_start < 32 || *json_start > 126)) {
         json_start++;
     }
     
-    if (*json_start == '\0' || *json_start != '{') {
-        return true;
+    if (json_start >= line_end || *json_start != '{') {
+        return true;  // No valid JSON found
     }
+    
+    // Calculate JSON length (from json_start to newline)
+    size_t json_length = newline_pos - json_start;
+    
+    printf("PrvHst: processPrvHstDataLine: Parsing JSON, length=%zu\n", json_length);
+    fflush(stdout);
     
     json j;
     try {
-        j = json::parse(json_start);
+        // Parse only up to newline, not using strlen
+        std::string json_str(json_start, json_length);
+        j = json::parse(json_str);
+        printf("PrvHst: processPrvHstDataLine: JSON parsed successfully\n");
+        fflush(stdout);
     } catch (const json::parse_error& e) {
-        ERR_ARGS("JSON parse error in PrvHst: %s", e.what());
+        fprintf(stderr, "ERROR | ADTimePix::%s: JSON parse error in PrvHst: %s\n", functionName, e.what());
         return true;  // Continue processing
     }
     
