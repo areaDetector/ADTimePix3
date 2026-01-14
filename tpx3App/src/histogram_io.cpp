@@ -738,22 +738,60 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         return;
     }
     
-    // Increment frame count (must be done after successful addition)
+    printf("PrvHst: processPrvHstFrame: About to increment frame count\n");
+    fflush(stdout);
+    
     prvHstFrameCount_++;
     
+    printf("PrvHst: processPrvHstFrame: Frame count incremented to %d\n", prvHstFrameCount_);
+    fflush(stdout);
+    
     // Store current frame
+    printf("PrvHst: processPrvHstFrame: About to store current frame\n");
+    fflush(stdout);
+    
     if (!prvHstCurrentFrame_) {
+        printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ is null, creating new one (bin_size=%zu)\n", frame_data.get_bin_size());
+        fflush(stdout);
         prvHstCurrentFrame_.reset(new HistogramData(frame_data.get_bin_size(), HistogramData::DataType::FRAME_DATA));
+        printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ created\n");
+        fflush(stdout);
+    } else {
+        printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ already exists\n");
+        fflush(stdout);
     }
+    
+    printf("PrvHst: processPrvHstFrame: About to copy frame_data to prvHstCurrentFrame_\n");
+    fflush(stdout);
+    
     *prvHstCurrentFrame_ = frame_data;
     
+    printf("PrvHst: processPrvHstFrame: Frame data copied to prvHstCurrentFrame_\n");
+    fflush(stdout);
+    
     // Calculate total counts for this frame
+    printf("PrvHst: processPrvHstFrame: About to calculate total counts\n");
+    fflush(stdout);
+    
     size_t bin_size = frame_data.get_bin_size();
+    printf("PrvHst: processPrvHstFrame: bin_size=%zu\n", bin_size);
+    fflush(stdout);
+    
     uint64_t frame_total = 0;
+    printf("PrvHst: processPrvHstFrame: About to sum bin values\n");
+    fflush(stdout);
+    
     for (size_t i = 0; i < bin_size; ++i) {
         frame_total += frame_data.get_bin_value_32(i);
     }
+    
+    printf("PrvHst: processPrvHstFrame: frame_total=%llu\n", (unsigned long long)frame_total);
+    fflush(stdout);
+    
     prvHstTotalCounts_ += frame_total;
+    
+    printf("PrvHst: processPrvHstFrame: Total counts updated to %llu\n", (unsigned long long)prvHstTotalCounts_);
+    fflush(stdout);
     
     // Update frame metadata PVs
     setDoubleParam(ADTimePixPrvHstTimeAtFrame, prvHstTimeAtFrame_);
