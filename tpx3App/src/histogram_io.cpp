@@ -794,17 +794,44 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     fflush(stdout);
     
     // Update frame metadata PVs
+    printf("PrvHst: processPrvHstFrame: About to update frame metadata PVs\n");
+    fflush(stdout);
+    
+    printf("PrvHst: processPrvHstFrame: About to call setDoubleParam for TimeAtFrame\n");
+    fflush(stdout);
     setDoubleParam(ADTimePixPrvHstTimeAtFrame, prvHstTimeAtFrame_);
+    
+    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameBinSize\n");
+    fflush(stdout);
     setIntegerParam(ADTimePixPrvHstFrameBinSize, prvHstFrameBinSize_);
+    
+    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameBinWidth\n");
+    fflush(stdout);
     setIntegerParam(ADTimePixPrvHstFrameBinWidth, prvHstFrameBinWidth_);
+    
+    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameBinOffset\n");
+    fflush(stdout);
     setIntegerParam(ADTimePixPrvHstFrameBinOffset, prvHstFrameBinOffset_);
     
     // Update frame count and total counts PVs
+    printf("PrvHst: processPrvHstFrame: About to update frame count and total counts PVs\n");
+    fflush(stdout);
+    
+    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameCount\n");
+    fflush(stdout);
     setIntegerParam(ADTimePixPrvHstFrameCount, static_cast<epicsInt32>(prvHstFrameCount_));
+    
+    printf("PrvHst: processPrvHstFrame: About to call setInteger64Param for TotalCounts\n");
+    fflush(stdout);
     setInteger64Param(ADTimePixPrvHstTotalCounts, static_cast<epicsInt64>(prvHstTotalCounts_));
     
     // Update acquisition rate PV
+    printf("PrvHst: processPrvHstFrame: About to call setDoubleParam for AcqRate\n");
+    fflush(stdout);
     setDoubleParam(ADTimePixPrvHstAcqRate, prvHstAcquisitionRate_);
+    
+    printf("PrvHst: processPrvHstFrame: Frame metadata PVs updated\n");
+    fflush(stdout);
     
     // Add to frame buffer (circular buffer for sum of N frames)
     prvHstFrameBuffer_.push_back(frame_data);
