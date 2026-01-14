@@ -10,7 +10,7 @@
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
     <width>1400</width>
-    <height>1070</height>
+    <height>1150</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>ADTimePix3 Histogram (PrvHst) Control Panel</text>
@@ -37,7 +37,7 @@
       <x>10</x>
       <y>80</y>
       <width>1350</width>
-      <height>180</height>
+      <height>170</height>
       <widget type="label" version="2.0.0">
         <name>ConfigurationControlLabel</name>
         <text>Histogram Configuration</text>
@@ -67,7 +67,6 @@
         <text>Write PrvHst</text>
         <x>60</x>
         <y>45</y>
-        <width>100</width>
       </widget>
       <widget type="bool_button" version="2.0.0">
         <name>PrvHstAccumulationEnableButton</name>
@@ -75,7 +74,6 @@
         <bit>-1</bit>
         <x>180</x>
         <y>40</y>
-        <height>30</height>
         <off_label>Disabled</off_label>
         <off_color>
           <color red="200" green="100" blue="100">
@@ -96,85 +94,25 @@
         <pv_name>$(P)$(R)PrvHstAccumulationEnable_RBV</pv_name>
         <x>290</x>
         <y>40</y>
-        <width>100</width>
         <height>30</height>
-        <format>0</format>
+        <vertical_alignment>1</vertical_alignment>
       </widget>
       <widget type="label" version="2.0.0">
         <name>FilePathLabel</name>
         <text>File Path:</text>
-        <x>400</x>
+        <x>482</x>
         <y>45</y>
         <width>80</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>FilePathInput</name>
         <pv_name>$(P)$(R)PrvHstFilePath</pv_name>
-        <x>480</x>
+        <x>562</x>
         <y>40</y>
         <width>300</width>
         <height>30</height>
         <format>6</format>
         <show_units>false</show_units>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>FileFmtLabel</name>
-        <text>Format:</text>
-        <x>580</x>
-        <y>45</y>
-        <width>70</width>
-      </widget>
-      <widget type="combo" version="2.0.0">
-        <name>FileFmtCombo</name>
-        <pv_name>$(P)$(R)PrvHstFileFmt</pv_name>
-        <x>650</x>
-        <y>40</y>
-        <width>150</width>
-        <height>30</height>
-        <items>
-          <item>tiff</item>
-          <item>pgm</item>
-          <item>png</item>
-          <item>jsonimage</item>
-          <item>jsonhisto</item>
-        </items>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>FileModeLabel</name>
-        <text>Mode:</text>
-        <x>820</x>
-        <y>45</y>
-        <width>60</width>
-      </widget>
-      <widget type="combo" version="2.0.0">
-        <name>FileModeCombo</name>
-        <pv_name>$(P)$(R)PrvHstFileMode</pv_name>
-        <x>880</x>
-        <y>40</y>
-        <width>120</width>
-        <height>30</height>
-        <items>
-          <item>count</item>
-          <item>tot</item>
-          <item>toa</item>
-          <item>tof</item>
-          <item>count_fb</item>
-        </items>
-      </widget>
-      <widget type="led" version="2.0.0">
-        <name>FilePathExistsLED</name>
-        <pv_name>$(P)$(R)PrvHstFilePathExists_RBV</pv_name>
-        <x>1220</x>
-        <y>40</y>
-        <width>30</width>
-        <height>30</height>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>FilePathExistsLabel</name>
-        <text>Path Exists</text>
-        <x>1260</x>
-        <y>45</y>
-        <width>80</width>
       </widget>
       <widget type="label" version="2.0.0">
         <name>NumBinsLabel</name>
@@ -187,217 +125,109 @@
         <name>NumBinsSpinner</name>
         <pv_name>$(P)$(R)PrvHstNumBins</pv_name>
         <x>140</x>
-        <y>85</y>
+        <y>90</y>
         <width>120</width>
         <height>30</height>
-        <minimum>1.0</minimum>
-        <maximum>100000.0</maximum>
         <background_color>
           <color red="255" green="255" blue="200">
           </color>
         </background_color>
+        <minimum>1.0</minimum>
+        <maximum>100000.0</maximum>
       </widget>
       <widget type="label" version="2.0.0">
         <name>BinWidthLabel</name>
         <text>Bin Width (ms):</text>
-        <x>280</x>
+        <x>444</x>
         <y>90</y>
         <width>120</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>BinWidthInput</name>
         <pv_name>$(P)$(R)PrvHstBinWidth</pv_name>
-        <x>400</x>
-        <y>85</y>
+        <x>564</x>
+        <y>90</y>
         <width>120</width>
         <height>30</height>
-        <format>3</format>
-        <precision>6</precision>
         <background_color>
           <color red="255" green="200" blue="255">
           </color>
         </background_color>
+        <format>3</format>
+        <precision>6</precision>
       </widget>
       <widget type="label" version="2.0.0">
         <name>OffsetLabel</name>
         <text>Offset (ms):</text>
-        <x>540</x>
+        <x>934</x>
         <y>90</y>
-        <width>100</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>OffsetInput</name>
         <pv_name>$(P)$(R)PrvHstOffset</pv_name>
-        <x>640</x>
-        <y>85</y>
+        <x>1034</x>
+        <y>90</y>
         <width>120</width>
         <height>30</height>
-        <format>3</format>
-        <precision>6</precision>
         <background_color>
           <color red="255" green="200" blue="255">
           </color>
         </background_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>IntgSizeLabel</name>
-        <text>Integration Size:</text>
-        <x>780</x>
-        <y>90</y>
-        <width>130</width>
-      </widget>
-      <widget type="spinner" version="2.0.0">
-        <name>IntgSizeSpinner</name>
-        <pv_name>$(P)$(R)PrvHstIntgSize</pv_name>
-        <x>910</x>
-        <y>85</y>
-        <width>100</width>
-        <height>30</height>
-        <minimum>1.0</minimum>
-        <maximum>10000.0</maximum>
-        <background_color>
-          <color red="200" green="255" blue="200">
-          </color>
-        </background_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>IntgModeLabel</name>
-        <text>Integration Mode:</text>
-        <x>1030</x>
-        <y>90</y>
-        <width>140</width>
-      </widget>
-      <widget type="combo" version="2.0.0">
-        <name>IntgModeCombo</name>
-        <pv_name>$(P)$(R)PrvHstIntgMode</pv_name>
-        <x>1170</x>
-        <y>85</y>
-        <width>100</width>
-        <height>30</height>
-        <items>
-          <item>sum</item>
-          <item>average</item>
-        </items>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>QueueSizeLabel</name>
-        <text>Queue Size:</text>
-        <x>20</x>
-        <y>135</y>
-        <width>100</width>
-      </widget>
-      <widget type="spinner" version="2.0.0">
-        <name>QueueSizeSpinner</name>
-        <pv_name>$(P)$(R)PrvHstQueueSize</pv_name>
-        <x>120</x>
-        <y>130</y>
-        <width>100</width>
-        <height>30</height>
-        <minimum>1.0</minimum>
-        <maximum>1000.0</maximum>
-        <background_color>
-          <color red="200" green="255" blue="255">
-          </color>
-        </background_color>
-      </widget>
-      <widget type="led" version="2.0.0">
-        <name>StpOnDskLimLED</name>
-        <pv_name>$(P)$(R)PrvHstStpOnDskLim_RBV</pv_name>
-        <x>240</x>
-        <y>135</y>
-        <width>30</width>
-        <height>30</height>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>StpOnDskLimLabel</name>
-        <text>Stop on Disk Limit</text>
-        <x>280</x>
-        <y>140</y>
-        <width>140</width>
+        <format>3</format>
+        <precision>6</precision>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>NumBinsRBVDisplay</name>
         <pv_name>$(P)$(R)PrvHstNumBins_RBV</pv_name>
-        <x>440</x>
-        <y>130</y>
-        <width>100</width>
+        <x>280</x>
+        <y>90</y>
         <height>30</height>
-        <background_color>
-          <color red="240" green="240" blue="240">
-          </color>
-        </background_color>
+        <vertical_alignment>1</vertical_alignment>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="128" blue="128">
           </color>
         </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>NumBinsRBVLabel</name>
-        <text>Num Bins (RBV):</text>
-        <x>550</x>
-        <y>135</y>
-        <width>120</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>BinWidthRBVDisplay</name>
         <pv_name>$(P)$(R)PrvHstBinWidth_RBV</pv_name>
-        <x>680</x>
-        <y>130</y>
+        <x>704</x>
+        <y>90</y>
         <width>120</width>
         <height>30</height>
         <format>3</format>
         <precision>6</precision>
-        <background_color>
-          <color red="240" green="240" blue="240">
-          </color>
-        </background_color>
+        <vertical_alignment>1</vertical_alignment>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="128" blue="128">
           </color>
         </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>BinWidthRBVLabel</name>
-        <text>Bin Width RBV (ms):</text>
-        <x>810</x>
-        <y>135</y>
-        <width>140</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>OffsetRBVDisplay</name>
         <pv_name>$(P)$(R)PrvHstOffset_RBV</pv_name>
-        <x>960</x>
-        <y>130</y>
+        <x>1178</x>
+        <y>90</y>
         <width>120</width>
         <height>30</height>
         <format>3</format>
         <precision>6</precision>
-        <background_color>
-          <color red="240" green="240" blue="240">
-          </color>
-        </background_color>
+        <vertical_alignment>1</vertical_alignment>
         <border_width>1</border_width>
         <border_color>
           <color red="128" green="128" blue="128">
           </color>
         </border_color>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>OffsetRBVLabel</name>
-        <text>Offset RBV (ms):</text>
-        <x>1090</x>
-        <y>135</y>
-        <width>110</width>
       </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>AcquisitionControl</name>
       <x>10</x>
-      <y>280</y>
+      <y>249</y>
       <width>1350</width>
-      <height>100</height>
+      <height>110</height>
       <widget type="label" version="2.0.0">
         <name>AcquisitionControlLabel</name>
         <text>Acquisition Control</text>
@@ -459,7 +289,6 @@
         <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
         <x>650</x>
         <y>40</y>
-        <width>100</width>
         <height>30</height>
         <background_color>
           <color red="255" green="255" blue="200">
@@ -483,7 +312,6 @@
         <pv_name>$(P)$(R)NumImages</pv_name>
         <x>850</x>
         <y>40</y>
-        <width>100</width>
         <height>30</height>
         <background_color>
           <color red="255" green="255" blue="200">
@@ -507,7 +335,6 @@
         <pv_name>$(P)$(R)NumImagesCounter_RBV</pv_name>
         <x>1060</x>
         <y>40</y>
-        <width>100</width>
         <height>30</height>
         <background_color>
           <color red="255" green="255" blue="200">
@@ -530,7 +357,7 @@
     <widget type="group" version="3.0.0">
       <name>InfoDisplay</name>
       <x>10</x>
-      <y>400</y>
+      <y>1002</y>
       <width>1350</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
@@ -554,13 +381,511 @@
         <text>Histogram data is streamed via TCP (jsonhisto format) when PrvHstFilePath is set to tcp://listen@hostname:port and PrvHstFileFmt is set to jsonhisto (4). The histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins.</text>
         <x>20</x>
         <y>40</y>
-        <width>1320</width>
-        <height>70</height>
+        <width>1270</width>
+        <height>40</height>
         <foreground_color>
           <color red="100" green="100" blue="100">
           </color>
         </foreground_color>
-        <wrap_words>true</wrap_words>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>DataDisplay</name>
+      <x>10</x>
+      <y>356</y>
+      <width>1350</width>
+      <height>160</height>
+      <widget type="label" version="2.0.0">
+        <name>DataDisplayLabel</name>
+        <text>Data Display</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameCountLabel</name>
+        <text>Frame Count:</text>
+        <x>20</x>
+        <y>45</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameCountDisplay</name>
+        <pv_name>$(P)$(R)FRAME_COUNT</pv_name>
+        <x>120</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TotalCountsLabel</name>
+        <text>Total Counts:</text>
+        <x>260</x>
+        <y>45</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TotalCountsDisplay</name>
+        <pv_name>$(P)$(R)TOTAL_COUNTS</pv_name>
+        <x>380</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>BinWidthLabel_1</name>
+        <text>Bin Width (ms):</text>
+        <x>20</x>
+        <y>85</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>BinWidthDisplay</name>
+        <pv_name>$(P)$(R)BIN_WIDTH_MS</pv_name>
+        <x>120</x>
+        <y>80</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TotalTimeLabel</name>
+        <text>Total Time (ms):</text>
+        <x>260</x>
+        <y>85</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TotalTimeDisplay</name>
+        <pv_name>$(P)$(R)TOTAL_TIME_MS</pv_name>
+        <x>380</x>
+        <y>80</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>BinWidthLabel_2</name>
+        <text>Bin Offset (ms):</text>
+        <x>540</x>
+        <y>85</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>BinWidthDisplay_1</name>
+        <pv_name>$(P)$(R)BIN_OFFSET_MS</pv_name>
+        <x>640</x>
+        <y>80</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FramesToSumLabel</name>
+        <text>Frames to Sum:</text>
+        <x>810</x>
+        <y>85</y>
+        <width>110</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>FramesToSumSpinner</name>
+        <pv_name>$(P)$(R)FRAMES_TO_SUM</pv_name>
+        <x>920</x>
+        <y>80</y>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>100000.0</maximum>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>SumUpdateIntervalLabel</name>
+        <text>Sum Update Interval (frames):</text>
+        <x>720</x>
+        <y>45</y>
+        <width>200</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>SumUpdateIntervalSpinner</name>
+        <pv_name>$(P)$(R)SUM_UPDATE_INTERVAL_FRAMES</pv_name>
+        <x>920</x>
+        <y>40</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>10000.0</maximum>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>FrameData</name>
+      <x>10</x>
+      <y>532</y>
+      <width>1350</width>
+      <height>120</height>
+      <widget type="label" version="2.0.0">
+        <name>FrameDataLabel</name>
+        <text>Frame Data from JSON</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TimeAtFrameLabel</name>
+        <text>Time at Frame (ns):</text>
+        <x>20</x>
+        <y>45</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TimeAtFrameDisplay</name>
+        <pv_name>$(P)$(R)TIME_AT_FRAME_NS</pv_name>
+        <x>160</x>
+        <y>40</y>
+        <width>180</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="220" blue="220">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>9</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameBinSizeLabel</name>
+        <text>Frame Bin Size:</text>
+        <x>360</x>
+        <y>45</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameBinSizeDisplay</name>
+        <pv_name>$(P)$(R)FRAME_BIN_SIZE</pv_name>
+        <x>480</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="255" blue="220">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameBinWidthLabel</name>
+        <text>Frame Bin Width:</text>
+        <x>620</x>
+        <y>45</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameBinWidthDisplay</name>
+        <pv_name>$(P)$(R)FRAME_BIN_WIDTH</pv_name>
+        <x>750</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="220" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameBinOffsetLabel</name>
+        <text>Frame Bin Offset:</text>
+        <x>890</x>
+        <y>45</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameBinOffsetDisplay</name>
+        <pv_name>$(P)$(R)FRAME_BIN_OFFSET</pv_name>
+        <x>1020</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="220">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>HistogramBins</name>
+      <x>10</x>
+      <y>655</y>
+      <width>1350</width>
+      <widget type="label" version="2.0.0">
+        <name>HistogramBinsLabel</name>
+        <text>Histogram Data Arrays</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>HistogramDataLabel</name>
+        <text>Full Histogram Data (Accumulated):</text>
+        <x>20</x>
+        <y>40</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>HistogramDataDisplay</name>
+        <pv_name>$(P)$(R)HISTOGRAM_DATA</pv_name>
+        <x>220</x>
+        <y>40</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>HistogramSumNFramesLabel</name>
+        <text>Sum of Last N Frames:</text>
+        <x>20</x>
+        <y>80</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>HistogramSumNFramesDisplay</name>
+        <pv_name>$(P)$(R)HISTOGRAM_SUM_N_FRAMES</pv_name>
+        <x>220</x>
+        <y>80</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>HistogramTimeLabel</name>
+        <text>Histogram Time Axis (ms):</text>
+        <x>20</x>
+        <y>120</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>HistogramTimeDisplay</name>
+        <pv_name>$(P)$(R)HISTOGRAM_TIME_MS</pv_name>
+        <x>220</x>
+        <y>120</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="200">
+          </color>
+        </background_color>
+        <precision>6</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="0">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>PerformanceMonitoring</name>
+      <x>10</x>
+      <y>872</y>
+      <width>1350</width>
+      <height>120</height>
+      <widget type="label" version="2.0.0">
+        <name>PerformanceMonitoringLabel</name>
+        <text>Performance Monitoring</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>InfoLabel</name>
+        <text>Real-time monitoring of acquisition rate, processing time, and memory usage</text>
+        <x>320</x>
+        <y>10</y>
+        <width>600</width>
+        <height>30</height>
+        <foreground_color>
+          <color red="100" green="100" blue="100">
+          </color>
+        </foreground_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>AcquisitionRateLabel</name>
+        <text>Acquisition Rate (Hz):</text>
+        <x>40</x>
+        <y>55</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>AcquisitionRateDisplay</name>
+        <pv_name>$(P)$(R)ACQUISITION_RATE</pv_name>
+        <x>190</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ProcessingTimeLabel</name>
+        <text>Processing Time (ms):</text>
+        <x>360</x>
+        <y>55</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ProcessingTimeDisplay</name>
+        <pv_name>$(P)$(R)PROCESSING_TIME_MS</pv_name>
+        <x>520</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>MemoryUsageLabel</name>
+        <text>Memory Usage (MB):</text>
+        <x>720</x>
+        <y>55</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>MemoryUsageDisplay</name>
+        <pv_name>$(P)$(R)MEMORY_USAGE_MB</pv_name>
+        <x>860</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
       </widget>
     </widget>
   </widget>
@@ -582,7 +907,7 @@
         </font>
       </title_font>
       <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
         </font>
       </scale_font>
       <visible>true</visible>
@@ -600,7 +925,7 @@
           </font>
         </title_font>
         <scale_font>
-          <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
           </font>
         </scale_font>
         <on_right>false</on_right>
@@ -630,16 +955,6 @@
         <visible>true</visible>
       </trace>
     </traces>
-    <toolbar>
-      <visible>true</visible>
-    </toolbar>
-    <legend>
-      <visible>true</visible>
-      <font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
-        </font>
-      </font>
-    </legend>
   </widget>
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_Frame</name>
@@ -659,7 +974,7 @@
         </font>
       </title_font>
       <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
         </font>
       </scale_font>
       <visible>true</visible>
@@ -677,7 +992,7 @@
           </font>
         </title_font>
         <scale_font>
-          <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
           </font>
         </scale_font>
         <on_right>false</on_right>
@@ -707,16 +1022,6 @@
         <visible>true</visible>
       </trace>
     </traces>
-    <toolbar>
-      <visible>true</visible>
-    </toolbar>
-    <legend>
-      <visible>true</visible>
-      <font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
-        </font>
-      </font>
-    </legend>
   </widget>
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_SumNFrames</name>
@@ -736,7 +1041,7 @@
         </font>
       </title_font>
       <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
         </font>
       </scale_font>
       <visible>true</visible>
@@ -754,7 +1059,7 @@
           </font>
         </title_font>
         <scale_font>
-          <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
           </font>
         </scale_font>
         <on_right>false</on_right>
@@ -784,15 +1089,5 @@
         <visible>true</visible>
       </trace>
     </traces>
-    <toolbar>
-      <visible>true</visible>
-    </toolbar>
-    <legend>
-      <visible>true</visible>
-      <font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="12.0">
-        </font>
-      </font>
-    </legend>
   </widget>
 </display>
