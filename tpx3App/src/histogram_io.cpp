@@ -955,17 +955,11 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         printf("PrvHst: processPrvHstFrame: Bin centers calculated\n");
         fflush(stdout);
         
-        // Update time axis waveform (bin_size elements for bin centers)
-        printf("PrvHst: processPrvHstFrame: About to call doCallbacksFloat64Array for time axis\n");
-        fflush(stdout);
-        
-        doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
-        
-        printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
-        fflush(stdout);
-        
         // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
         // For accumulated data, use 64-bit array
+        printf("PrvHst: processPrvHstFrame: About to copy running sum to buffer\n");
+        fflush(stdout);
+        
         std::vector<epicsInt64> prvHstData64Buffer(bin_size);
         for (size_t i = 0; i < bin_size; ++i) {
             uint64_t val64 = prvHstRunningSum_->get_bin_value_64(i);
@@ -974,26 +968,85 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             prvHstArrayData32Buffer_[i] = (val64 > UINT32_MAX) ? UINT32_MAX : static_cast<epicsInt32>(val64);
         }
         
+        printf("PrvHst: processPrvHstFrame: Running sum copied to buffer\n");
+        fflush(stdout);
+        
+        // Unlock mutex before callbacks to avoid deadlocks (similar to processImgFrame)
+        printf("PrvHst: processPrvHstFrame: About to unlock mutex before callbacks\n");
+        fflush(stdout);
+        
+        epicsMutexUnlock(prvHstMutex_);
+        
+        printf("PrvHst: processPrvHstFrame: Mutex unlocked, calling callbacks\n");
+        fflush(stdout);
+        
+        // Update time axis waveform (bin_size elements for bin centers)
+        // Callbacks must be done OUTSIDE mutex to avoid deadlocks
+        printf("PrvHst: processPrvHstFrame: About to call doCallbacksFloat64Array for time axis\n");
+        fflush(stdout);
+        
+        doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+        
+        printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
+        fflush(stdout);
+        
         // Update accumulated histogram data (64-bit)
+        printf("PrvHst: processPrvHstFrame: About to call doCallbacksInt64Array for histogram data\n");
+        fflush(stdout);
+        
         doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
         
-                // Update current frame histogram data (32-bit)
+        printf("PrvHst: processPrvHstFrame: doCallbacksInt64Array for histogram data completed\n");
+        fflush(stdout);
+        
+        // Update current frame histogram data (32-bit)
+        // Need to re-lock mutex to safely access prvHstCurrentFrame_
+        printf("PrvHst: processPrvHstFrame: About to re-lock mutex for frame data\n");
+        fflush(stdout);
+        
+        epicsMutexLock(prvHstMutex_);
+        
+        printf("PrvHst: processPrvHstFrame: Mutex re-locked\n");
+        fflush(stdout);
+        
         if (prvHstCurrentFrame_) {
             size_t frame_bin_size = prvHstCurrentFrame_->get_bin_size();
             if (frame_bin_size == bin_size) {
+                // Copy frame data to local buffer before unlocking
                 std::vector<epicsInt32> frameBuffer(bin_size);
                 for (size_t i = 0; i < bin_size; ++i) {
                     frameBuffer[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
                 }
-                LOG_ARGS("PrvHst: Pushing frame data, bin_size=%zu, first 5 values: %d %d %d %d %d",
-                         bin_size, frameBuffer[0], frameBuffer[1], frameBuffer[2], frameBuffer[3], frameBuffer[4]);
+                
+                printf("PrvHst: processPrvHstFrame: Frame data copied, unlocking mutex for callback\n");
+                fflush(stdout);
+                
+                epicsMutexUnlock(prvHstMutex_);
+                
+                printf("PrvHst: processPrvHstFrame: About to call doCallbacksInt32Array for frame data\n");
+                fflush(stdout);
+                
                 doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
+                
+                printf("PrvHst: processPrvHstFrame: doCallbacksInt32Array for frame data completed\n");
+                fflush(stdout);
+                
+                // Re-lock mutex for remaining operations
+                epicsMutexLock(prvHstMutex_);
             } else {
-                WARN_ARGS("PrvHst: Frame bin size mismatch: frame=%zu, running_sum=%zu", frame_bin_size, bin_size);
+                printf("PrvHst: processPrvHstFrame: Frame bin size mismatch: frame=%zu, running_sum=%zu\n",
+                       frame_bin_size, bin_size);
+                fflush(stdout);
             }
         } else {
-            WARN("PrvHst: prvHstCurrentFrame_ is null, cannot push frame data");
+            printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ is null, cannot push frame data\n");
+            fflush(stdout);
         }
+    } else {
+        // Re-lock mutex if we didn't enter the prvHstRunningSum_ block
+        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ is null, re-locking mutex\n");
+        fflush(stdout);
+        epicsMutexLock(prvHstMutex_);
     }
     
     // Create NDArray for histogram (1D array)
