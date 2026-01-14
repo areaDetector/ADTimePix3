@@ -985,10 +985,24 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         printf("PrvHst: processPrvHstFrame: About to call doCallbacksFloat64Array for time axis\n");
         fflush(stdout);
         
-        doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
-        
-        printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
+        printf("PrvHst: processPrvHstFrame: ADTimePixPrvHstHistogramTimeMs index=%d, bin_size=%zu, buffer_ptr=%p\n",
+               ADTimePixPrvHstHistogramTimeMs, bin_size, prvHstTimeMsBuffer_.data());
         fflush(stdout);
+        
+        // Validate parameter index
+        if (ADTimePixPrvHstHistogramTimeMs < 0) {
+            fprintf(stderr, "ERROR: ADTimePixPrvHstHistogramTimeMs parameter index is invalid: %d\n", 
+                    ADTimePixPrvHstHistogramTimeMs);
+            fflush(stderr);
+        } else {
+            printf("PrvHst: processPrvHstFrame: Parameter index is valid, calling doCallbacksFloat64Array\n");
+            fflush(stdout);
+            
+            doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+            
+            printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
+            fflush(stdout);
+        }
         
         // Update accumulated histogram data (64-bit)
         printf("PrvHst: processPrvHstFrame: About to call doCallbacksInt64Array for histogram data\n");
