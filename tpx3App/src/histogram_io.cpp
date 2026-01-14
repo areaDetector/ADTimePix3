@@ -799,12 +799,18 @@ void ADTimePix::prvHstWorkerThread() {
                 
                 epicsMutexUnlock(prvHstMutex_);
                 
+                printf("PrvHst: After unlock, checking bytes_read\n");
+                fflush(stdout);
+                
                 if (bytes_read > 0) {
                     static int log_counter = 0;
                     if (++log_counter % 100 == 0) {  // Log every 100 reads to avoid spam
                         printf("PrvHst: Received %zd bytes (total in buffer: %zu)\n", bytes_read, prvHstTotalRead_);
                     }
                 }
+                
+                printf("PrvHst: Checking if bytes_read <= 0\n");
+                fflush(stdout);
                 
                 if (bytes_read <= 0) {
                     if (bytes_read == 0) {
@@ -826,8 +832,18 @@ void ADTimePix::prvHstWorkerThread() {
                     }
                 }
                 
+                printf("PrvHst: About to lock mutex to update buffer\n");
+                fflush(stdout);
+                
                 epicsMutexLock(prvHstMutex_);
+                
+                printf("PrvHst: Mutex locked, updating prvHstTotalRead_ (current=%zu, adding=%zd)\n", prvHstTotalRead_, bytes_read);
+                fflush(stdout);
+                
                 prvHstTotalRead_ += bytes_read;
+                
+                printf("PrvHst: prvHstTotalRead_ is now %zu\n", prvHstTotalRead_);
+                fflush(stdout);
                 
                 // Ensure we don't write out of bounds
                 if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
@@ -835,12 +851,37 @@ void ADTimePix::prvHstWorkerThread() {
                             prvHstTotalRead_, MAX_BUFFER_SIZE);
                     prvHstTotalRead_ = MAX_BUFFER_SIZE - 1;
                 }
+                
+                printf("PrvHst: About to write null terminator at index %zu\n", prvHstTotalRead_);
+                fflush(stdout);
+                
                 prvHstLineBuffer_[prvHstTotalRead_] = '\0';
                 
+                printf("PrvHst: Null terminator written\n");
+                fflush(stdout);
+                
                 // Look for newline to find complete JSON line
-                char* newline_pos = static_cast<char*>(memchr(prvHstLineBuffer_.data(), '\n', prvHstTotalRead_));
+                printf("PrvHst: About to call memchr, buffer size=%zu, prvHstTotalRead_=%zu\n", prvHstLineBuffer_.size(), prvHstTotalRead_);
+                fflush(stdout);
+                
+                char* buffer_data = prvHstLineBuffer_.data();
+                if (!buffer_data) {
+                    printf("PrvHst: buffer_data is null!\n");
+                    epicsMutexUnlock(prvHstMutex_);
+                    break;
+                }
+                
+                printf("PrvHst: buffer_data=%p, calling memchr\n", buffer_data);
+                fflush(stdout);
+                
+                char* newline_pos = static_cast<char*>(memchr(buffer_data, '\n', prvHstTotalRead_));
+                
+                printf("PrvHst: memchr returned %p\n", newline_pos);
+                fflush(stdout);
                 
                 if (newline_pos) {
+                    printf("PrvHst: Found newline, processing data line\n");
+                    fflush(stdout);
                     // Found a newline - check if there's valid JSON before it
                     char* json_start = nullptr;
                     
@@ -898,10 +939,18 @@ void ADTimePix::prvHstWorkerThread() {
                             *newline_pos = '\0';
                             
                             // Process the JSON line
+                            printf("PrvHst: About to call processPrvHstDataLine, json_start=%p, newline_pos=%p\n", json_start, newline_pos);
+                            fflush(stdout);
+                            
                             if (!processPrvHstDataLine(json_start, newline_pos, prvHstTotalRead_)) {
+                                printf("PrvHst: processPrvHstDataLine returned false\n");
+                                fflush(stdout);
                                 epicsMutexUnlock(prvHstMutex_);
                                 break;
                             }
+                            
+                            printf("PrvHst: processPrvHstDataLine returned true\n");
+                            fflush(stdout);
                             
                             // Move remaining data to start of buffer
                             size_t remaining = prvHstTotalRead_ - (newline_pos - prvHstLineBuffer_.data() + 1);
