@@ -426,20 +426,44 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         fflush(stdout);
         
         // Calculate bin edges
+        printf("PrvHst: processPrvHstDataLine: About to calculate bin edges (bin_width=%d, bin_offset=%d)\n", bin_width, bin_offset);
+        fflush(stdout);
+        
         frame_histogram.calculate_bin_edges(bin_width, bin_offset);
         
+        printf("PrvHst: processPrvHstDataLine: Bin edges calculated\n");
+        fflush(stdout);
+        
         // Read binary data
+        printf("PrvHst: processPrvHstDataLine: About to create tof_bin_values vector (size=%d)\n", bin_size);
+        fflush(stdout);
+        
         std::vector<uint32_t> tof_bin_values(bin_size);
+        
+        printf("PrvHst: processPrvHstDataLine: Vector created\n");
+        fflush(stdout);
+        
         size_t binary_needed = bin_size * sizeof(uint32_t);
+        printf("PrvHst: processPrvHstDataLine: binary_needed=%zu bytes\n", binary_needed);
+        fflush(stdout);
         
         // Copy any binary data we already have after the newline
         size_t remaining = total_read - (newline_pos - line_buffer + 1);
+        printf("PrvHst: processPrvHstDataLine: remaining=%zu bytes after newline\n", remaining);
+        fflush(stdout);
+        
         size_t binary_read = 0;
         
         if (remaining > 0) {
             size_t to_copy = std::min(remaining, binary_needed);
+            printf("PrvHst: processPrvHstDataLine: About to memcpy %zu bytes\n", to_copy);
+            fflush(stdout);
+            
             memcpy(tof_bin_values.data(), newline_pos + 1, to_copy);
             binary_read = to_copy;
+            
+            printf("PrvHst: processPrvHstDataLine: memcpy completed, binary_read=%zu\n", binary_read);
+            fflush(stdout);
         }
         
         // Read any remaining binary data needed
