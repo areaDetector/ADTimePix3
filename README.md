@@ -24,7 +24,7 @@ TCP Image Streaming
 
 * **Preview Image Streaming (PrvImg)**: Preview images use TCP streaming with jsonimage format for real-time image delivery. Set `PrvImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8089`) and `PrvImgFileFmt` to `jsonimage` (format index 3).
 * **Image Channel Streaming (Img)**: The Img channel also supports TCP jsonimage streaming for real-time 2D image delivery. Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`) and `ImgFileFmt` to `jsonimage` (format index 3).
-* **Histogram Channel Streaming (PrvHst)**: The PrvHst channel supports TCP streaming with jsonhisto format for real-time 1D histogram delivery. Set `PrvHstFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8451`) and `PrvHstFileFmt` to `jsonhisto` (format index 4). Histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins. The driver processes histogram frames, accumulates running sums, and provides waveform PVs for plotting Time-of-Flight (ToF) histograms.
+* **Histogram Channel Streaming (PrvHst)**: The PrvHst channel supports TCP streaming with jsonhisto format for real-time 1D histogram delivery. Set `PrvHstFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8451`) and `PrvHstFileFmt` to `jsonhisto` (format index 4). Histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins. The driver processes histogram frames, accumulates running sums, and provides waveform PVs for plotting Time-of-Flight (ToF) histograms. The integration follows the same pattern as the standalone histogram IOC, providing unified histogram processing within the areaDetector framework.
 * **Concurrent Operation**: PrvImg, Img, and PrvHst channels can stream concurrently without conflicts. Each channel uses its own NDArray address (PrvImg uses address 0, Img uses address 1, PrvHst uses address 5) to prevent conflicts.
 * **Shutdown Behavior**: When stopping acquisition, the shutdown sequence properly handles TCP streaming channels. Serval measurement is stopped first, allowing Serval's TcpSender threads to stop sending data cleanly. Worker threads then detect "Connection closed by peer" as expected behavior. Connection closure messages are channel-specific ("PrvImg TCP connection closed by peer", "Img TCP connection closed by peer", and "PrvHst TCP connection closed by peer") to distinguish which channel is closing. This prevents "Broken pipe" errors even with rate mismatches (e.g., 60 Hz frame rate vs 5 Hz preview rate).
 * **Debug Output**: Acquisition status debug messages show actual ADStatus values (0 = Idle, 1 = Acquire) with context including ADAcquire value, previous state, and ADStatus transitions for better troubleshooting.
@@ -59,19 +59,30 @@ The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulat
 Histogram Streaming (PrvHst)
 ------------------------------------------
 
-The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histogram streaming and accumulation with Time-of-Flight (ToF) plotting capabilities:
+The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histogram streaming and accumulation with Time-of-Flight (ToF) plotting capabilities. This feature integrates the jsonhisto TCP streaming functionality from the standalone histogram IOC into the ADTimePix3 driver, providing unified histogram processing within the areaDetector framework.
 
 * **Accumulation Enable Control (`PrvHstAccumulationEnable`)**: Controls whether the ADTimePix3 driver connects to the TCP port and performs histogram accumulation processing. When enabled, the driver connects to the TCP port (e.g., port 8451) and processes histogram frames for accumulation. When disabled, the driver does not connect to the TCP port, allowing other clients to connect instead. This is useful when you want external clients to process jsonhisto data without the driver consuming the TCP connection. Note: `WritePrvHst` must still be enabled for Serval to configure the PrvHst channel; `PrvHstAccumulationEnable` only controls whether the driver connects to the TCP stream.
 
-* **Running Sum Accumulation**: Accumulates histogram bin values over all frames using 64-bit integers to prevent overflow. Access via `PrvHstHistogramData` PV (INT64 waveform array).
+* **Running Sum Accumulation**: Accumulates histogram bin values over all frames using 64-bit integers to prevent overflow. Access via `PrvHstHistogramData` PV (INT64 waveform array). The running sum is continuously updated as new frames arrive.
 
-* **Current Frame Display**: Individual frame histogram data available via `PrvHstHistogramFrame` PV (INT32 waveform array).
+* **Current Frame Display**: Individual frame histogram data available via `PrvHstHistogramFrame` PV (INT32 waveform array). Each frame shows the histogram bin values for the most recently received frame.
 
-* **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via frame buffer management). Access via `PrvHstHistogramSumNFrames` PV (INT64 waveform array).
+* **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via `PrvHstFramesToSum` PV, default: 10). Access via `PrvHstHistogramSumNFrames` PV (INT64 waveform array). Update interval configurable via `PrvHstSumUpdateInterval` PV (default: 1 frame).
 
-* **Time-of-Flight Axis**: Time axis in milliseconds for plotting histograms vs ToF. Access via `PrvHstHistogramTimeMs` PV (DOUBLE waveform array). Bin centers are calculated from bin edges and converted to milliseconds.
+* **Time-of-Flight Axis**: Time axis in milliseconds for plotting histograms vs ToF. Access via `PrvHstHistogramTimeMs` PV (DOUBLE waveform array). Bin centers are calculated from bin edges (using `binWidth` and `binOffset` from jsonhisto metadata) and converted to milliseconds using the TimePix3 TDC clock period.
 
-* **NDArray Callbacks**: Histogram data is available as 1D NDArray via callbacks (NDArrayAddress=5) for use with areaDetector plugins.
+* **NDArray Callbacks**: Histogram data is available as 1D NDArray via callbacks (NDArrayAddress=5) for use with areaDetector plugins (NDFileTIFF, NDFileHDF5, etc.). The NDArray contains the accumulated histogram data (64-bit integers) and can be saved to disk or processed by other areaDetector plugins.
+
+* **Metadata and Statistics**: The driver provides additional metadata PVs:
+  - `PrvHstTimeAtFrame`: Timestamp at frame (nanoseconds from jsonhisto)
+  - `PrvHstFrameBinSize`: Number of bins in current frame
+  - `PrvHstFrameBinWidth`: Bin width parameter (TDC clock ticks)
+  - `PrvHstFrameBinOffset`: Bin offset parameter (TDC clock ticks)
+  - `PrvHstFrameCount`: Total number of frames processed
+  - `PrvHstTotalCounts`: Total counts across all accumulated frames (INT64)
+  - `PrvHstAcqRate`: Acquisition rate (Hz)
+  - `PrvHstProcessingTime`: Average processing time per frame (ms)
+  - `PrvHstMemoryUsage`: Estimated memory usage for accumulation buffers (MB)
 
 * **Phoebus Screen**: Use `PrvHstHistogram.bob` screen (located in `Acquire/` folder) to visualize histogram data with three XY plots:
   - **Accumulated Histogram**: Running sum vs ToF [ms]
@@ -84,8 +95,20 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 - Set `PrvHstFileFmt` to `jsonhisto` (format index 4)
 - Set `PrvHstFileMode` to `tof` (format index 3) for Time-of-Flight histograms
 - Configure `PrvHstNumBins`, `PrvHstBinWidth`, and `PrvHstOffset` for histogram binning parameters
+- Set `PrvHstAccumulationEnable` to `Enable` (1) to enable histogram accumulation processing
+- Configure `PrvHstFramesToSum` (1-100000, default: 10) to control frame buffer size
+- Configure `PrvHstSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
 
-**File Saving**: Histogram data is available via NDArray callbacks for use with areaDetector file plugins. The histogram waveform arrays (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) are also available as EPICS waveform arrays for direct access and plotting.
+**File Saving**: Histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector file plugins (NDFileTIFF, NDFileHDF5, etc.). The histogram waveform arrays (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) are also available as EPICS waveform arrays for direct access and plotting.
+
+**Integration Notes**:
+- The jsonhisto integration follows the same pattern as the standalone histogram IOC (`/epics/iocs/histogram/tpx3HistogramApp/src/tpx3HistogramDriver.cpp`)
+- Histogram data is processed in a dedicated worker thread that handles TCP connection, JSON parsing, binary data reading, and frame accumulation
+- The driver uses `doCallbacksFloat64Array`, `doCallbacksInt64Array`, and `doCallbacksInt32Array` to push data directly to waveform PVs (no `readFloat64Array` implementation, matching the histogram IOC)
+- Thread synchronization uses `epicsMutex` to protect shared data structures
+- The worker thread automatically clears its thread ID before exiting to allow clean shutdown
+
+**Note on asyn Warnings**: When histogram data callbacks are active, you may see warnings like `asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`. These warnings are harmless and can be safely ignored. They occur because asyn's alarm/status information for array parameters isn't fully initialized for parameters registered later in the sequence. The data callbacks succeed and histogram data is transmitted correctly. See the Troubleshooting section for more details.
 
 How to run:
 -----------
@@ -335,4 +358,11 @@ Configuration:
 -   Set up pixel masking if needed
 -   Adjust chip thresholds for optimal performance
 
-The ADTimePix3 driver provides a comprehensive, production-ready interface for TimePix3 detectors in EPICS environments, with extensive monitoring, control, and data acquisition capabilities.
+The ADTimePix3 driver provides a comprehensive, production-ready interface for TimePix3 detectors in EPICS environments, with extensive monitoring, control, and data acquisition capabilities.
+
+Troubleshooting
+---------------
+
+**Known Warnings (Harmless)**:
+
+* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: This warning appears when histogram data callbacks are triggered. It is harmless and can be safely ignored. The warning occurs because asyn's internal alarm/status information for array parameters (specifically Int32Array parameters, "list 5") is not fully initialized for parameters registered later in the sequence (parameter 51 in this case). The data callbacks complete successfully and histogram data is transmitted correctly. This is a known asyn library limitation when drivers have many parameters (ADTimePix3 has ~237 parameters). The standalone histogram IOC doesn't show this warning because it has fewer parameters (~33), so array parameters are registered earlier with lower indices. **No action required** - the functionality works correctly despite the warning.
