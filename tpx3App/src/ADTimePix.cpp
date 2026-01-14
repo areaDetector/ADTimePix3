@@ -2327,7 +2327,9 @@ asynStatus ADTimePix::acquireStart(){
                         // Parse TCP path
                         std::string host;
                         int port;
+                        LOG_ARGS("PrvHst: Parsing TCP path: %s", prvHstPath.c_str());
                         if (parseTcpPath(prvHstPath, host, port)) {
+                            LOG_ARGS("PrvHst: Parsed TCP path - host=%s, port=%d", host.c_str(), port);
                             epicsMutexLock(prvHstMutex_);
                             prvHstHost_ = host;
                             prvHstPort_ = port;
@@ -2335,6 +2337,7 @@ asynStatus ADTimePix::acquireStart(){
                             epicsMutexUnlock(prvHstMutex_);
                             
                             // Give Serval time to bind to the TCP port
+                            LOG("PrvHst: Waiting 200ms for Serval to bind TCP port...");
                             epicsThreadSleep(0.2);  // 200ms
                             
                             epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
@@ -2349,8 +2352,11 @@ asynStatus ADTimePix::acquireStart(){
                                     ERR("Failed to create PrvHst worker thread");
                                     prvHstRunning_ = false;
                                 } else {
-                                    LOG("Started PrvHst TCP worker thread in acquireStart");
+                                    LOG_ARGS("Started PrvHst TCP worker thread in acquireStart (host=%s, port=%d)", host.c_str(), port);
                                 }
+                            } else {
+                                LOG_ARGS("PrvHst worker thread already running or exists (running=%d, threadId=%p)", 
+                                         prvHstRunning_, prvHstWorkerThreadId_);
                             }
                             epicsMutexUnlock(prvHstMutex_);
                         } else {

@@ -707,7 +707,24 @@ void ADTimePix::prvHstWorkerThread() {
         epicsMutexUnlock(prvHstMutex_);
         
         if (should_connect && !host.empty() && port > 0) {
+            LOG_ARGS("PrvHst worker thread: Attempting to connect to %s:%d", host.c_str(), port);
             prvHstConnect();
+            epicsMutexLock(prvHstMutex_);
+            bool connected_after = prvHstConnected_;
+            epicsMutexUnlock(prvHstMutex_);
+            if (!connected_after) {
+                LOG_ARGS("PrvHst worker thread: Connection failed, will retry in %.1f seconds", RECONNECT_DELAY_SEC);
+                epicsThreadSleep(RECONNECT_DELAY_SEC);
+                continue;
+            } else {
+                LOG("PrvHst worker thread: Connection successful, starting data reception");
+            }
+        } else if (should_connect) {
+            if (host.empty() || port <= 0) {
+                LOG_ARGS("PrvHst worker thread: Invalid host/port (host='%s', port=%d), waiting...", host.c_str(), port);
+                epicsThreadSleep(RECONNECT_DELAY_SEC);
+                continue;
+            }
         }
         
         if (!prvHstRunning_) {
@@ -726,6 +743,13 @@ void ADTimePix::prvHstWorkerThread() {
                     MAX_BUFFER_SIZE - prvHstTotalRead_ - 1
                 );
                 epicsMutexUnlock(prvHstMutex_);
+                
+                if (bytes_read > 0) {
+                    static int log_counter = 0;
+                    if (++log_counter % 100 == 0) {  // Log every 100 reads to avoid spam
+                        LOG_ARGS("PrvHst: Received %zd bytes (total in buffer: %zu)", bytes_read, prvHstTotalRead_);
+                    }
+                }
                 
                 if (bytes_read <= 0) {
                     if (bytes_read == 0) {
