@@ -743,7 +743,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     
     prvHstFrameCount_++;
     
-    printf("PrvHst: processPrvHstFrame: Frame count incremented to %d\n", prvHstFrameCount_);
+    printf("PrvHst: processPrvHstFrame: Frame count incremented to %llu\n", (unsigned long long)prvHstFrameCount_);
     fflush(stdout);
     
     // Store current frame
