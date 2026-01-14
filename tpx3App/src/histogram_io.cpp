@@ -214,16 +214,43 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         j = json::parse(json_str);
         printf("PrvHst: processPrvHstDataLine: JSON parsed successfully\n");
         fflush(stdout);
+        
+        // Validate JSON object is not null
+        if (j.is_null() || j.is_discarded()) {
+            printf("PrvHst: processPrvHstDataLine: JSON object is null or discarded\n");
+            fflush(stdout);
+            return true;
+        }
+        
+        printf("PrvHst: processPrvHstDataLine: JSON object is valid, extracting fields\n");
+        fflush(stdout);
     } catch (const json::parse_error& e) {
         fprintf(stderr, "ERROR | ADTimePix::%s: JSON parse error in PrvHst: %s\n", functionName, e.what());
         return true;  // Continue processing
     }
     
     try {
+        printf("PrvHst: processPrvHstDataLine: About to access j[\"binSize\"]\n");
+        fflush(stdout);
+        
         // Extract header information for jsonhisto
+        if (!j.contains("binSize")) {
+            printf("PrvHst: processPrvHstDataLine: JSON does not contain binSize\n");
+            fflush(stdout);
+            return true;
+        }
+        
         int bin_size = j["binSize"];
+        printf("PrvHst: processPrvHstDataLine: bin_size=%d\n", bin_size);
+        fflush(stdout);
+        
         int bin_width = j["binWidth"];
+        printf("PrvHst: processPrvHstDataLine: bin_width=%d\n", bin_width);
+        fflush(stdout);
+        
         int bin_offset = j["binOffset"];
+        printf("PrvHst: processPrvHstDataLine: bin_offset=%d\n", bin_offset);
+        fflush(stdout);
         
         // Extract additional frame data
         int frame_number = j.value("frameNumber", 0);
