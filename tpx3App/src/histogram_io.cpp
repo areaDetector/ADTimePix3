@@ -733,15 +733,70 @@ void ADTimePix::prvHstWorkerThread() {
         
         epicsMutexLock(prvHstMutex_);
         bool connected = prvHstConnected_;
+        bool has_client = (prvHstNetworkClient_ != nullptr);
         epicsMutexUnlock(prvHstMutex_);
         
-        if (connected && prvHstNetworkClient_) {
+        if (connected && has_client) {
             try {
+                // Defensive checks before accessing network client
+                if (!prvHstMutex_) {
+                    printf("PrvHst: Mutex became null!\n");
+                    break;
+                }
+                
                 epicsMutexLock(prvHstMutex_);
-                ssize_t bytes_read = prvHstNetworkClient_->receive(
-                    prvHstLineBuffer_.data() + prvHstTotalRead_,
-                    MAX_BUFFER_SIZE - prvHstTotalRead_ - 1
+                
+                // Re-check inside mutex to avoid race condition
+                if (!prvHstNetworkClient_) {
+                    printf("PrvHst: NetworkClient became null inside mutex!\n");
+                    epicsMutexUnlock(prvHstMutex_);
+                    break;
+                }
+                
+                if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
+                    printf("PrvHst: Buffer already full before receive! prvHstTotalRead_=%zu\n", prvHstTotalRead_);
+                    prvHstTotalRead_ = 0;
+                }
+                
+                if (prvHstLineBuffer_.size() < MAX_BUFFER_SIZE) {
+                    printf("PrvHst: Line buffer too small! size=%zu, expected=%zu\n", prvHstLineBuffer_.size(), MAX_BUFFER_SIZE);
+                    prvHstLineBuffer_.resize(MAX_BUFFER_SIZE);
+                }
+                
+                size_t available_space = MAX_BUFFER_SIZE - prvHstTotalRead_ - 1;
+                if (available_space == 0 || available_space > MAX_BUFFER_SIZE) {
+                    printf("PrvHst: Invalid available space: %zu\n", available_space);
+                    epicsMutexUnlock(prvHstMutex_);
+                    break;
+                }
+                
+                // Store pointer locally to avoid issues if it's reset during receive
+                NetworkClient* client = prvHstNetworkClient_.get();
+                if (!client) {
+                    printf("PrvHst: NetworkClient get() returned null!\n");
+                    epicsMutexUnlock(prvHstMutex_);
+                    break;
+                }
+                
+                // Get buffer pointer and validate
+                char* buffer_ptr = prvHstLineBuffer_.data() + prvHstTotalRead_;
+                if (!buffer_ptr) {
+                    printf("PrvHst: Buffer pointer is null!\n");
+                    epicsMutexUnlock(prvHstMutex_);
+                    break;
+                }
+                
+                printf("PrvHst: About to call receive(), buffer_ptr=%p, available_space=%zu\n", buffer_ptr, available_space);
+                fflush(stdout);
+                
+                ssize_t bytes_read = client->receive(
+                    buffer_ptr,
+                    available_space
                 );
+                
+                printf("PrvHst: receive() returned %zd\n", bytes_read);
+                fflush(stdout);
+                
                 epicsMutexUnlock(prvHstMutex_);
                 
                 if (bytes_read > 0) {
