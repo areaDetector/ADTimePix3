@@ -178,8 +178,7 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
     
     // Validate pointers
     if (!line_buffer || !newline_pos || newline_pos <= line_buffer) {
-        printf("PrvHst: processPrvHstDataLine: Invalid pointers (line_buffer=%p, newline_pos=%p)\n", 
-               line_buffer, newline_pos);
+        fprintf(stderr, "ERROR | ADTimePix::%s: Invalid pointers\n", functionName);
         return false;
     }
     
@@ -204,190 +203,75 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
     // Calculate JSON length (from json_start to newline)
     size_t json_length = newline_pos - json_start;
     
-    printf("PrvHst: processPrvHstDataLine: Parsing JSON, length=%zu\n", json_length);
-    fflush(stdout);
-    
-    json j;
+        json j;
     try {
         // Parse only up to newline, not using strlen
         std::string json_str(json_start, json_length);
         j = json::parse(json_str);
-        printf("PrvHst: processPrvHstDataLine: JSON parsed successfully\n");
-        fflush(stdout);
-        
-        // Validate JSON object is not null
+                // Validate JSON object is not null
         if (j.is_null() || j.is_discarded()) {
-            printf("PrvHst: processPrvHstDataLine: JSON object is null or discarded\n");
-            fflush(stdout);
-            return true;
+                        return true;
         }
         
-        printf("PrvHst: processPrvHstDataLine: JSON object is valid, extracting fields\n");
-        fflush(stdout);
-    } catch (const json::parse_error& e) {
+            } catch (const json::parse_error& e) {
         fprintf(stderr, "ERROR | ADTimePix::%s: JSON parse error in PrvHst: %s\n", functionName, e.what());
         return true;  // Continue processing
     }
     
     try {
-        printf("PrvHst: processPrvHstDataLine: About to access j[\"binSize\"]\n");
-        fflush(stdout);
-        
-        // Extract header information for jsonhisto
+                // Extract header information for jsonhisto
         if (!j.contains("binSize")) {
-            printf("PrvHst: processPrvHstDataLine: JSON does not contain binSize\n");
-            fflush(stdout);
-            return true;
+                        return true;
         }
         
         int bin_size = j["binSize"];
-        printf("PrvHst: processPrvHstDataLine: bin_size=%d\n", bin_size);
-        fflush(stdout);
-        
-        int bin_width = j["binWidth"];
-        printf("PrvHst: processPrvHstDataLine: bin_width=%d\n", bin_width);
-        fflush(stdout);
-        
-        int bin_offset = j["binOffset"];
-        printf("PrvHst: processPrvHstDataLine: bin_offset=%d\n", bin_offset);
-        fflush(stdout);
-        
-        // Extract additional frame data
-        printf("PrvHst: processPrvHstDataLine: About to access frameNumber\n");
-        fflush(stdout);
-        
-        int frame_number = j.value("frameNumber", 0);
-        printf("PrvHst: processPrvHstDataLine: frame_number=%d\n", frame_number);
-        fflush(stdout);
-        
-        printf("PrvHst: processPrvHstDataLine: About to access timeAtFrame\n");
-        fflush(stdout);
-        
-        double time_at_frame = j.value("timeAtFrame", 0.0);
-        printf("PrvHst: processPrvHstDataLine: time_at_frame=%f\n", time_at_frame);
-        fflush(stdout);
-        
-        // Store frame metadata (will be used in processPrvHstFrame)
-        printf("PrvHst: processPrvHstDataLine: About to lock mutex to store metadata\n");
-        fflush(stdout);
-        
-        if (!prvHstMutex_) {
-            printf("PrvHst: processPrvHstDataLine: ERROR - Mutex is null!\n");
-            fflush(stdout);
-            return false;
+                int bin_width = j["binWidth"];
+                int bin_offset = j["binOffset"];
+                // Extract additional frame data
+                int frame_number = j.value("frameNumber", 0);
+                        double time_at_frame = j.value("timeAtFrame", 0.0);
+                // Store frame metadata (will be used in processPrvHstFrame)
+                if (!prvHstMutex_) {
+                        return false;
         }
         
         epicsMutexLock(prvHstMutex_);
-        printf("PrvHst: processPrvHstDataLine: Mutex locked successfully\n");
-        fflush(stdout);
-        
-        printf("PrvHst: processPrvHstDataLine: About to store metadata\n");
-        fflush(stdout);
-        
-        prvHstTimeAtFrame_ = time_at_frame;
-        printf("PrvHst: processPrvHstDataLine: Stored time_at_frame\n");
-        fflush(stdout);
-        
-        prvHstFrameBinSize_ = bin_size;
-        printf("PrvHst: processPrvHstDataLine: Stored bin_size\n");
-        fflush(stdout);
-        
-        prvHstFrameBinWidth_ = bin_width;
-        printf("PrvHst: processPrvHstDataLine: Stored bin_width\n");
-        fflush(stdout);
-        
-        prvHstFrameBinOffset_ = bin_offset;
-        printf("PrvHst: processPrvHstDataLine: Stored bin_offset, unlocking mutex\n");
-        fflush(stdout);
-        
-        epicsMutexUnlock(prvHstMutex_);
-        printf("PrvHst: processPrvHstDataLine: Mutex unlocked\n");
-        fflush(stdout);
-        
-        // Validate bin size
-        printf("PrvHst: processPrvHstDataLine: About to validate bin_size=%d\n", bin_size);
-        fflush(stdout);
-        
-        if (bin_size <= 0 || bin_size > 1000000) {
-            printf("PrvHst: processPrvHstDataLine: Invalid bin_size detected\n");
-            fflush(stdout);
-            fprintf(stderr, "ERROR | ADTimePix::%s: Invalid bin size: %d\n", functionName, bin_size);
+                        prvHstTimeAtFrame_ = time_at_frame;
+                prvHstFrameBinSize_ = bin_size;
+                prvHstFrameBinWidth_ = bin_width;
+                prvHstFrameBinOffset_ = bin_offset;
+                epicsMutexUnlock(prvHstMutex_);
+                // Validate bin size
+                if (bin_size <= 0 || bin_size > 1000000) {
+                        fprintf(stderr, "ERROR | ADTimePix::%s: Invalid bin size: %d\n", functionName, bin_size);
             return false;
         }
         
-        printf("PrvHst: processPrvHstDataLine: Bin size validated, about to calculate acquisition rate\n");
-        fflush(stdout);
-        
-        // Calculate acquisition rate (similar to PrvImg/Img)
-        printf("PrvHst: processPrvHstDataLine: About to lock mutex for rate calculation\n");
-        fflush(stdout);
-        
-        if (!prvHstMutex_) {
-            printf("PrvHst: processPrvHstDataLine: ERROR - Mutex is null before rate calculation!\n");
-            fflush(stdout);
-            return false;
+                // Calculate acquisition rate (similar to PrvImg/Img)
+                if (!prvHstMutex_) {
+                        return false;
         }
         
         epicsMutexLock(prvHstMutex_);
-        printf("PrvHst: processPrvHstDataLine: Mutex locked for rate calculation\n");
-        fflush(stdout);
-        
-        printf("PrvHst: processPrvHstDataLine: About to get current time\n");
-        fflush(stdout);
-        
-        epicsTimeStamp current_time;
+                        epicsTimeStamp current_time;
         epicsTimeGetCurrent(&current_time);
         double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
         
-        printf("PrvHst: processPrvHstDataLine: Current time obtained, checking prvHstFirstFrameReceived_\n");
-        fflush(stdout);
-        
-        if (!prvHstFirstFrameReceived_) {
-            printf("PrvHst: processPrvHstDataLine: First frame, initializing\n");
-            fflush(stdout);
-            
-            printf("PrvHst: processPrvHstDataLine: About to set prvHstPreviousFrameNumber_=%d\n", frame_number);
-            fflush(stdout);
-            prvHstPreviousFrameNumber_ = frame_number;
-            printf("PrvHst: processPrvHstDataLine: Set prvHstPreviousFrameNumber_\n");
-            fflush(stdout);
-            
-            printf("PrvHst: processPrvHstDataLine: About to set prvHstPreviousTimeAtFrame_=%f\n", current_time_seconds);
-            fflush(stdout);
-            prvHstPreviousTimeAtFrame_ = current_time_seconds;
-            printf("PrvHst: processPrvHstDataLine: Set prvHstPreviousTimeAtFrame_\n");
-            fflush(stdout);
-            
-            printf("PrvHst: processPrvHstDataLine: About to set prvHstFirstFrameReceived_=true\n");
-            fflush(stdout);
-            prvHstFirstFrameReceived_ = true;
-            printf("PrvHst: processPrvHstDataLine: Set prvHstFirstFrameReceived_\n");
-            fflush(stdout);
-            
-            printf("PrvHst: processPrvHstDataLine: About to set prvHstAcquisitionRate_=0.0\n");
-            fflush(stdout);
-            prvHstAcquisitionRate_ = 0.0;
-            printf("PrvHst: processPrvHstDataLine: Set prvHstAcquisitionRate_\n");
-            fflush(stdout);
-        } else {
+                if (!prvHstFirstFrameReceived_) {
+                        prvHstPreviousFrameNumber_ = frame_number;
+                        prvHstPreviousTimeAtFrame_ = current_time_seconds;
+                                    prvHstFirstFrameReceived_ = true;
+                                    prvHstAcquisitionRate_ = 0.0;
+                    } else {
             int frame_diff = frame_number - prvHstPreviousFrameNumber_;
             double time_diff_seconds = current_time_seconds - prvHstPreviousTimeAtFrame_;
             
             if (frame_diff > 0 && time_diff_seconds > 0.0) {
-                printf("PrvHst: processPrvHstDataLine: Calculating rate\n");
-                fflush(stdout);
+                                double current_rate = frame_diff / time_diff_seconds;
                 
-                double current_rate = frame_diff / time_diff_seconds;
+                                prvHstRateSamples_.push_back(current_rate);
                 
-                printf("PrvHst: processPrvHstDataLine: About to push to rate samples\n");
-                fflush(stdout);
-                
-                prvHstRateSamples_.push_back(current_rate);
-                
-                printf("PrvHst: processPrvHstDataLine: Rate sample pushed, size=%zu\n", prvHstRateSamples_.size());
-                fflush(stdout);
-                
-                constexpr size_t PRVHST_MAX_RATE_SAMPLES = 100;
+                                constexpr size_t PRVHST_MAX_RATE_SAMPLES = 100;
                 if (prvHstRateSamples_.size() > PRVHST_MAX_RATE_SAMPLES) {
                     prvHstRateSamples_.erase(prvHstRateSamples_.begin());
                 }
@@ -408,169 +292,81 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
             prvHstPreviousTimeAtFrame_ = current_time_seconds;
         }
         
-        printf("PrvHst: processPrvHstDataLine: About to unlock mutex after rate calculation\n");
-        fflush(stdout);
+                epicsMutexUnlock(prvHstMutex_);
         
-        epicsMutexUnlock(prvHstMutex_);
+                // Create frame histogram
+                HistogramData frame_histogram(bin_size, HistogramData::DataType::FRAME_DATA);
         
-        printf("PrvHst: processPrvHstDataLine: Mutex unlocked after rate calculation\n");
-        fflush(stdout);
+                // Calculate bin edges
+                frame_histogram.calculate_bin_edges(bin_width, bin_offset);
         
-        // Create frame histogram
-        printf("PrvHst: processPrvHstDataLine: About to create HistogramData object\n");
-        fflush(stdout);
+                // Read binary data
+                std::vector<uint32_t> tof_bin_values(bin_size);
         
-        HistogramData frame_histogram(bin_size, HistogramData::DataType::FRAME_DATA);
-        
-        printf("PrvHst: processPrvHstDataLine: HistogramData object created\n");
-        fflush(stdout);
-        
-        // Calculate bin edges
-        printf("PrvHst: processPrvHstDataLine: About to calculate bin edges (bin_width=%d, bin_offset=%d)\n", bin_width, bin_offset);
-        fflush(stdout);
-        
-        frame_histogram.calculate_bin_edges(bin_width, bin_offset);
-        
-        printf("PrvHst: processPrvHstDataLine: Bin edges calculated\n");
-        fflush(stdout);
-        
-        // Read binary data
-        printf("PrvHst: processPrvHstDataLine: About to create tof_bin_values vector (size=%d)\n", bin_size);
-        fflush(stdout);
-        
-        std::vector<uint32_t> tof_bin_values(bin_size);
-        
-        printf("PrvHst: processPrvHstDataLine: Vector created\n");
-        fflush(stdout);
-        
-        size_t binary_needed = bin_size * sizeof(uint32_t);
-        printf("PrvHst: processPrvHstDataLine: binary_needed=%zu bytes\n", binary_needed);
-        fflush(stdout);
-        
-        // Copy any binary data we already have after the newline
+                size_t binary_needed = bin_size * sizeof(uint32_t);
+                // Copy any binary data we already have after the newline
         size_t remaining = total_read - (newline_pos - line_buffer + 1);
-        printf("PrvHst: processPrvHstDataLine: remaining=%zu bytes after newline\n", remaining);
-        fflush(stdout);
-        
-        size_t binary_read = 0;
+                size_t binary_read = 0;
         
         if (remaining > 0) {
             size_t to_copy = std::min(remaining, binary_needed);
-            printf("PrvHst: processPrvHstDataLine: About to memcpy %zu bytes\n", to_copy);
-            fflush(stdout);
-            
-            memcpy(tof_bin_values.data(), newline_pos + 1, to_copy);
+                        memcpy(tof_bin_values.data(), newline_pos + 1, to_copy);
             binary_read = to_copy;
             
-            printf("PrvHst: processPrvHstDataLine: memcpy completed, binary_read=%zu\n", binary_read);
-            fflush(stdout);
-        }
+                    }
         
         // Read any remaining binary data needed
-        printf("PrvHst: processPrvHstDataLine: binary_read=%zu, binary_needed=%zu\n", binary_read, binary_needed);
-        fflush(stdout);
-        
-        if (binary_read < binary_needed) {
-            printf("PrvHst: processPrvHstDataLine: Need to read more binary data (%zu bytes)\n", binary_needed - binary_read);
-            fflush(stdout);
-            
-            printf("PrvHst: processPrvHstDataLine: About to lock mutex for network read\n");
-            fflush(stdout);
-            
-            if (!prvHstMutex_) {
-                printf("PrvHst: processPrvHstDataLine: ERROR - Mutex is null before network read!\n");
-                fflush(stdout);
-                return false;
+                if (binary_read < binary_needed) {
+                                    if (!prvHstMutex_) {
+                                return false;
             }
             
             epicsMutexLock(prvHstMutex_);
-            printf("PrvHst: processPrvHstDataLine: Mutex locked for network read\n");
-            fflush(stdout);
-            
-            if (!prvHstNetworkClient_) {
-                printf("PrvHst: processPrvHstDataLine: NetworkClient is null!\n");
-                fflush(stdout);
-                epicsMutexUnlock(prvHstMutex_);
+                        if (!prvHstNetworkClient_) {
+                                epicsMutexUnlock(prvHstMutex_);
                 return false;
             }
             
             if (!prvHstNetworkClient_->is_connected()) {
-                printf("PrvHst: processPrvHstDataLine: NetworkClient is not connected!\n");
-                fflush(stdout);
-                epicsMutexUnlock(prvHstMutex_);
+                                epicsMutexUnlock(prvHstMutex_);
                 return false;
             }
             
-            printf("PrvHst: processPrvHstDataLine: About to call receive_exact for %zu bytes\n", binary_needed - binary_read);
-            fflush(stdout);
-            
-            char* dest_ptr = reinterpret_cast<char*>(tof_bin_values.data()) + binary_read;
-            printf("PrvHst: processPrvHstDataLine: dest_ptr=%p\n", dest_ptr);
-            fflush(stdout);
-            
-            if (!prvHstNetworkClient_->receive_exact(dest_ptr, binary_needed - binary_read)) {
-                printf("PrvHst: processPrvHstDataLine: receive_exact failed!\n");
-                fflush(stdout);
-                epicsMutexUnlock(prvHstMutex_);
+                        char* dest_ptr = reinterpret_cast<char*>(tof_bin_values.data()) + binary_read;
+                        if (!prvHstNetworkClient_->receive_exact(dest_ptr, binary_needed - binary_read)) {
+                                epicsMutexUnlock(prvHstMutex_);
                 fprintf(stderr, "ERROR | ADTimePix::%s: Failed to read binary histogram data\n", functionName);
                 return false;
             }
             
-            printf("PrvHst: processPrvHstDataLine: receive_exact completed\n");
-            fflush(stdout);
-            
-            epicsMutexUnlock(prvHstMutex_);
-            printf("PrvHst: processPrvHstDataLine: Mutex unlocked after network read\n");
-            fflush(stdout);
-        } else {
-            printf("PrvHst: processPrvHstDataLine: All binary data already read\n");
-            fflush(stdout);
-        }
+                        epicsMutexUnlock(prvHstMutex_);
+                    } else {
+                    }
         
         // Convert network byte order to host byte order
-        printf("PrvHst: processPrvHstDataLine: About to convert byte order for %d bins\n", bin_size);
-        fflush(stdout);
-        
-        for (int i = 0; i < bin_size; ++i) {
+                for (int i = 0; i < bin_size; ++i) {
             if (i == 0) {
-                printf("PrvHst: processPrvHstDataLine: Converting first bin, value before swap: %u\n", tof_bin_values[i]);
-                fflush(stdout);
-            }
+                            }
             
             tof_bin_values[i] = __builtin_bswap32(tof_bin_values[i]);
             
             if (i == 0) {
-                printf("PrvHst: processPrvHstDataLine: First bin after swap: %u\n", tof_bin_values[i]);
-                fflush(stdout);
-            }
+                            }
             
             if (i < 5 || i == bin_size - 1) {
-                printf("PrvHst: processPrvHstDataLine: About to set_bin_value_32 for bin %d\n", i);
-                fflush(stdout);
-            }
+                            }
             
             frame_histogram.set_bin_value_32(i, tof_bin_values[i]);
             
             if (i < 5 || i == bin_size - 1) {
-                printf("PrvHst: processPrvHstDataLine: set_bin_value_32 completed for bin %d\n", i);
-                fflush(stdout);
-            }
+                            }
         }
         
-        printf("PrvHst: processPrvHstDataLine: Byte order conversion completed\n");
-        fflush(stdout);
-        
-        // Process frame
-        printf("PrvHst: processPrvHstDataLine: About to call processPrvHstFrame (frame_number=%d, bin_size=%d)\n", 
+                // Process frame
                frame_number, bin_size);
-        fflush(stdout);
+                processPrvHstFrame(frame_histogram);
         
-        processPrvHstFrame(frame_histogram);
-        
-        printf("PrvHst: processPrvHstDataLine: processPrvHstFrame returned\n");
-        fflush(stdout);
-        
-    } catch (const std::exception& e) {
+            } catch (const std::exception& e) {
         ERR_ARGS("Error processing PrvHst frame: %s", e.what());
         return false;
     }
@@ -583,111 +379,52 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
     // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
     
-    printf("PrvHst: processPrvHstFrame: Starting\n");
-    fflush(stdout);
-    
-    // Check if accumulation is enabled
-    printf("PrvHst: processPrvHstFrame: About to get accumulation enable parameter\n");
-    fflush(stdout);
-    
-    int accumulationEnable = 0;
+        // Check if accumulation is enabled
+        int accumulationEnable = 0;
     getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
     
-    printf("PrvHst: processPrvHstFrame: accumulationEnable=%d\n", accumulationEnable);
-    fflush(stdout);
-    
-    if (!accumulationEnable) {
+        if (!accumulationEnable) {
         // Accumulation disabled - don't process frames
-        printf("PrvHst: processPrvHstFrame: Accumulation disabled, skipping frame processing\n");
-        fflush(stdout);
-        return;
+                return;
     }
     
-    printf("PrvHst: processPrvHstFrame: Accumulation enabled, continuing\n");
-    fflush(stdout);
-    
-    printf("PrvHst: processPrvHstFrame: About to get current time\n");
-    fflush(stdout);
-    
-    epicsTimeStamp processing_start_time;
+            epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
     
-    printf("PrvHst: processPrvHstFrame: Current time obtained\n");
-    fflush(stdout);
-    
-    printf("PrvHst: processPrvHstFrame: About to lock mutex\n");
-    fflush(stdout);
-    
-    if (!prvHstMutex_) {
-        printf("PrvHst: processPrvHstFrame: ERROR - Mutex is null!\n");
-        fflush(stdout);
-        return;
+            if (!prvHstMutex_) {
+                return;
     }
     
     epicsMutexLock(prvHstMutex_);
     
-    printf("PrvHst: processPrvHstFrame: Mutex locked\n");
-    fflush(stdout);
-    
-    // Initialize running sum if needed
-    printf("PrvHst: processPrvHstFrame: Checking if prvHstRunningSum_ exists\n");
-    fflush(stdout);
-    
-    if (!prvHstRunningSum_) {
-        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ is null, creating new one\n");
-        fflush(stdout);
-        printf("PrvHst: processPrvHstFrame: About to create HistogramData for running sum (bin_size=%zu)\n", 
+        // Initialize running sum if needed
+        if (!prvHstRunningSum_) {
                frame_data.get_bin_size());
-        fflush(stdout);
-        
-        prvHstRunningSum_.reset(new HistogramData(
+                prvHstRunningSum_.reset(new HistogramData(
             frame_data.get_bin_size(), 
             HistogramData::DataType::RUNNING_SUM
         ));
         
-        printf("PrvHst: processPrvHstFrame: HistogramData created for running sum\n");
-        fflush(stdout);
-        
-        // Copy bin edges
-        printf("PrvHst: processPrvHstFrame: About to copy bin edges (count=%zu)\n", frame_data.get_bin_edges().size());
-        fflush(stdout);
-        
-        for (size_t i = 0; i < frame_data.get_bin_edges().size(); ++i) {
+                // Copy bin edges
+                for (size_t i = 0; i < frame_data.get_bin_edges().size(); ++i) {
             prvHstRunningSum_->set_bin_edge(i, frame_data.get_bin_edges()[i]);
         }
         
-        printf("PrvHst: processPrvHstFrame: Bin edges copied\n");
-        fflush(stdout);
-    } else {
-        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ already exists\n");
-        fflush(stdout);
-    }
+            } else {
+            }
     
     // Check if bin sizes match
-    printf("PrvHst: processPrvHstFrame: About to check bin sizes\n");
-    fflush(stdout);
-    
-    if (!prvHstRunningSum_) {
-        printf("PrvHst: processPrvHstFrame: ERROR - prvHstRunningSum_ is null after creation!\n");
-        fflush(stdout);
-        epicsMutexUnlock(prvHstMutex_);
+        if (!prvHstRunningSum_) {
+                epicsMutexUnlock(prvHstMutex_);
         return;
     }
     
-    printf("PrvHst: processPrvHstFrame: About to call get_bin_size() on prvHstRunningSum_\n");
-    fflush(stdout);
-    
-    size_t running_sum_bin_size = prvHstRunningSum_->get_bin_size();
+        size_t running_sum_bin_size = prvHstRunningSum_->get_bin_size();
     size_t frame_bin_size = frame_data.get_bin_size();
     
-    printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ bin_size=%zu, frame_data bin_size=%zu\n", 
            running_sum_bin_size, frame_bin_size);
-    fflush(stdout);
-    
-    if (running_sum_bin_size != frame_bin_size) {
-        printf("PrvHst: processPrvHstFrame: Bin size mismatch detected\n");
-        fflush(stdout);
-        WARN_ARGS("PrvHst bin size mismatch! Running sum has %zu bins, frame has %zu bins. Reinitializing running sum.",
+        if (running_sum_bin_size != frame_bin_size) {
+                WARN_ARGS("PrvHst bin size mismatch! Running sum has %zu bins, frame has %zu bins. Reinitializing running sum.",
                   prvHstRunningSum_->get_bin_size(), frame_data.get_bin_size());
         
         prvHstRunningSum_.reset(new HistogramData(
@@ -714,163 +451,72 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Add frame data to running sum
-    printf("PrvHst: processPrvHstFrame: About to add histogram to running sum\n");
-    fflush(stdout);
-    
-    if (!prvHstRunningSum_) {
-        printf("PrvHst: processPrvHstFrame: ERROR - prvHstRunningSum_ is null before add_histogram!\n");
-        fflush(stdout);
-        epicsMutexUnlock(prvHstMutex_);
+        if (!prvHstRunningSum_) {
+                epicsMutexUnlock(prvHstMutex_);
         return;
     }
     
     try {
-        printf("PrvHst: processPrvHstFrame: Calling add_histogram\n");
-        fflush(stdout);
+                prvHstRunningSum_->add_histogram(frame_data);
         
-        prvHstRunningSum_->add_histogram(frame_data);
-        
-        printf("PrvHst: processPrvHstFrame: add_histogram completed\n");
-        fflush(stdout);
-    } catch (const std::exception& e) {
+            } catch (const std::exception& e) {
         fprintf(stderr, "ERROR | ADTimePix::%s: Failed to add histogram to running sum: %s\n", functionName, e.what());
         epicsMutexUnlock(prvHstMutex_);
         return;
     }
     
-    printf("PrvHst: processPrvHstFrame: About to increment frame count\n");
-    fflush(stdout);
+        prvHstFrameCount_++;
     
-    prvHstFrameCount_++;
+        // Store current frame
+        if (!prvHstCurrentFrame_) {
+                prvHstCurrentFrame_.reset(new HistogramData(frame_data.get_bin_size(), HistogramData::DataType::FRAME_DATA));
+            } else {
+            }
     
-    printf("PrvHst: processPrvHstFrame: Frame count incremented to %llu\n", (unsigned long long)prvHstFrameCount_);
-    fflush(stdout);
+        *prvHstCurrentFrame_ = frame_data;
     
-    // Store current frame
-    printf("PrvHst: processPrvHstFrame: About to store current frame\n");
-    fflush(stdout);
-    
-    if (!prvHstCurrentFrame_) {
-        printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ is null, creating new one (bin_size=%zu)\n", frame_data.get_bin_size());
-        fflush(stdout);
-        prvHstCurrentFrame_.reset(new HistogramData(frame_data.get_bin_size(), HistogramData::DataType::FRAME_DATA));
-        printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ created\n");
-        fflush(stdout);
-    } else {
-        printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ already exists\n");
-        fflush(stdout);
-    }
-    
-    printf("PrvHst: processPrvHstFrame: About to copy frame_data to prvHstCurrentFrame_\n");
-    fflush(stdout);
-    
-    *prvHstCurrentFrame_ = frame_data;
-    
-    printf("PrvHst: processPrvHstFrame: Frame data copied to prvHstCurrentFrame_\n");
-    fflush(stdout);
-    
-    // Calculate total counts for this frame
-    printf("PrvHst: processPrvHstFrame: About to calculate total counts\n");
-    fflush(stdout);
-    
-    size_t bin_size = frame_data.get_bin_size();
-    printf("PrvHst: processPrvHstFrame: bin_size=%zu\n", bin_size);
-    fflush(stdout);
-    
-    uint64_t frame_total = 0;
-    printf("PrvHst: processPrvHstFrame: About to sum bin values\n");
-    fflush(stdout);
-    
-    for (size_t i = 0; i < bin_size; ++i) {
+        // Calculate total counts for this frame
+        size_t bin_size = frame_data.get_bin_size();
+        uint64_t frame_total = 0;
+        for (size_t i = 0; i < bin_size; ++i) {
         frame_total += frame_data.get_bin_value_32(i);
     }
     
-    printf("PrvHst: processPrvHstFrame: frame_total=%llu\n", (unsigned long long)frame_total);
-    fflush(stdout);
+        prvHstTotalCounts_ += frame_total;
     
-    prvHstTotalCounts_ += frame_total;
+        // Update frame metadata PVs
+            setDoubleParam(ADTimePixPrvHstTimeAtFrame, prvHstTimeAtFrame_);
     
-    printf("PrvHst: processPrvHstFrame: Total counts updated to %llu\n", (unsigned long long)prvHstTotalCounts_);
-    fflush(stdout);
+        setIntegerParam(ADTimePixPrvHstFrameBinSize, prvHstFrameBinSize_);
     
-    // Update frame metadata PVs
-    printf("PrvHst: processPrvHstFrame: About to update frame metadata PVs\n");
-    fflush(stdout);
+        setIntegerParam(ADTimePixPrvHstFrameBinWidth, prvHstFrameBinWidth_);
     
-    printf("PrvHst: processPrvHstFrame: About to call setDoubleParam for TimeAtFrame\n");
-    fflush(stdout);
-    setDoubleParam(ADTimePixPrvHstTimeAtFrame, prvHstTimeAtFrame_);
-    
-    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameBinSize\n");
-    fflush(stdout);
-    setIntegerParam(ADTimePixPrvHstFrameBinSize, prvHstFrameBinSize_);
-    
-    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameBinWidth\n");
-    fflush(stdout);
-    setIntegerParam(ADTimePixPrvHstFrameBinWidth, prvHstFrameBinWidth_);
-    
-    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameBinOffset\n");
-    fflush(stdout);
-    setIntegerParam(ADTimePixPrvHstFrameBinOffset, prvHstFrameBinOffset_);
+        setIntegerParam(ADTimePixPrvHstFrameBinOffset, prvHstFrameBinOffset_);
     
     // Update frame count and total counts PVs
-    printf("PrvHst: processPrvHstFrame: About to update frame count and total counts PVs\n");
-    fflush(stdout);
+            setIntegerParam(ADTimePixPrvHstFrameCount, static_cast<epicsInt32>(prvHstFrameCount_));
     
-    printf("PrvHst: processPrvHstFrame: About to call setIntegerParam for FrameCount\n");
-    fflush(stdout);
-    setIntegerParam(ADTimePixPrvHstFrameCount, static_cast<epicsInt32>(prvHstFrameCount_));
-    
-    printf("PrvHst: processPrvHstFrame: About to call setInteger64Param for TotalCounts\n");
-    fflush(stdout);
-    setInteger64Param(ADTimePixPrvHstTotalCounts, static_cast<epicsInt64>(prvHstTotalCounts_));
+        setInteger64Param(ADTimePixPrvHstTotalCounts, static_cast<epicsInt64>(prvHstTotalCounts_));
     
     // Update acquisition rate PV
-    printf("PrvHst: processPrvHstFrame: About to call setDoubleParam for AcqRate\n");
-    fflush(stdout);
-    setDoubleParam(ADTimePixPrvHstAcqRate, prvHstAcquisitionRate_);
+        setDoubleParam(ADTimePixPrvHstAcqRate, prvHstAcquisitionRate_);
     
-    printf("PrvHst: processPrvHstFrame: Frame metadata PVs updated\n");
-    fflush(stdout);
+        // Add to frame buffer (circular buffer for sum of N frames)
+        prvHstFrameBuffer_.push_back(frame_data);
     
-    // Add to frame buffer (circular buffer for sum of N frames)
-    printf("PrvHst: processPrvHstFrame: About to push frame to buffer\n");
-    fflush(stdout);
-    
-    prvHstFrameBuffer_.push_back(frame_data);
-    
-    printf("PrvHst: processPrvHstFrame: Frame pushed to buffer (size=%zu)\n", prvHstFrameBuffer_.size());
-    fflush(stdout);
-    
-    // Remove old frames if buffer exceeds frames_to_sum_
-    printf("PrvHst: processPrvHstFrame: About to check buffer size (current=%zu, max=%d)\n", 
+        // Remove old frames if buffer exceeds frames_to_sum_
            prvHstFrameBuffer_.size(), prvHstFramesToSum_);
-    fflush(stdout);
-    
-    while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
-        printf("PrvHst: processPrvHstFrame: Popping old frame from buffer\n");
-        fflush(stdout);
-        prvHstFrameBuffer_.pop_front();
+        while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
+                prvHstFrameBuffer_.pop_front();
     }
     
-    printf("PrvHst: processPrvHstFrame: Buffer size check complete (size=%zu)\n", prvHstFrameBuffer_.size());
-    fflush(stdout);
-    
-    // Update sum of last N frames if needed
-    printf("PrvHst: processPrvHstFrame: About to check if sum update needed\n");
-    fflush(stdout);
-    
-    prvHstFramesSinceLastSumUpdate_++;
+        // Update sum of last N frames if needed
+        prvHstFramesSinceLastSumUpdate_++;
     bool should_update_sum = (prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_);
     
-    printf("PrvHst: processPrvHstFrame: should_update_sum=%d, framesSinceLastSumUpdate=%d, sumUpdateInterval=%d\n",
            should_update_sum, prvHstFramesSinceLastSumUpdate_, prvHstSumUpdateIntervalFrames_);
-    fflush(stdout);
-    
-    if (should_update_sum && !prvHstFrameBuffer_.empty()) {
-        printf("PrvHst: processPrvHstFrame: Updating sum of N frames\n");
-        fflush(stdout);
-        prvHstFramesSinceLastSumUpdate_ = 0;
+        if (should_update_sum && !prvHstFrameBuffer_.empty()) {
+                prvHstFramesSinceLastSumUpdate_ = 0;
         
         // Calculate sum of frames in buffer
         size_t frame_bin_size = prvHstFrameBuffer_[0].get_bin_size();
@@ -900,67 +546,34 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Update histogram data PVs via callbacks
-    printf("PrvHst: processPrvHstFrame: About to update histogram data PVs via callbacks\n");
-    fflush(stdout);
-    
-    if (prvHstRunningSum_) {
-        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ exists, getting bin_size\n");
-        fflush(stdout);
+        if (prvHstRunningSum_) {
+                size_t bin_size = prvHstRunningSum_->get_bin_size();
         
-        size_t bin_size = prvHstRunningSum_->get_bin_size();
-        
-        printf("PrvHst: processPrvHstFrame: bin_size=%zu\n", bin_size);
-        fflush(stdout);
-        
-        // Resize buffers if needed
-        printf("PrvHst: processPrvHstFrame: About to resize buffers\n");
-        fflush(stdout);
-        
-        if (prvHstArrayData32Buffer_.size() < bin_size) {
-            printf("PrvHst: processPrvHstFrame: Resizing prvHstArrayData32Buffer_ to %zu\n", bin_size);
-            fflush(stdout);
-            prvHstArrayData32Buffer_.resize(bin_size);
+                // Resize buffers if needed
+                if (prvHstArrayData32Buffer_.size() < bin_size) {
+                        prvHstArrayData32Buffer_.resize(bin_size);
         }
         if (prvHstTimeMsBuffer_.size() < bin_size + 1) {
-            printf("PrvHst: processPrvHstFrame: Resizing prvHstTimeMsBuffer_ to %zu\n", bin_size + 1);
-            fflush(stdout);
-            prvHstTimeMsBuffer_.resize(bin_size + 1);
+                        prvHstTimeMsBuffer_.resize(bin_size + 1);
         }
         
-        printf("PrvHst: processPrvHstFrame: Buffers resized\n");
-        fflush(stdout);
-        
-        // Create time axis from frame parameters (convert seconds to milliseconds)
+                // Create time axis from frame parameters (convert seconds to milliseconds)
         // For plotting, we use bin centers: bin_offset + i * bin_width (convert to milliseconds)
         // This matches the standalone histogram IOC calculation
-        printf("PrvHst: processPrvHstFrame: About to check/resize time buffer for bin centers\n");
-        fflush(stdout);
-        
-        if (prvHstTimeMsBuffer_.size() < bin_size) {
-            printf("PrvHst: processPrvHstFrame: Resizing prvHstTimeMsBuffer_ to %zu for bin centers\n", bin_size);
-            fflush(stdout);
-            prvHstTimeMsBuffer_.resize(bin_size);
+                if (prvHstTimeMsBuffer_.size() < bin_size) {
+                        prvHstTimeMsBuffer_.resize(bin_size);
         }
         
-        printf("PrvHst: processPrvHstFrame: About to calculate bin centers (bin_size=%zu, bin_offset=%d, bin_width=%d)\n",
                bin_size, prvHstFrameBinOffset_, prvHstFrameBinWidth_);
-        fflush(stdout);
-        
-        // Calculate bin centers using frame parameters (same as standalone histogram IOC)
+                // Calculate bin centers using frame parameters (same as standalone histogram IOC)
         for (size_t i = 0; i < bin_size; ++i) {
             // Time value for bin i: bin_offset + i * bin_width (convert to milliseconds)
             prvHstTimeMsBuffer_[i] = (prvHstFrameBinOffset_ + i * prvHstFrameBinWidth_) * TPX3_TDC_CLOCK_PERIOD_SEC * 1e3;
         }
         
-        printf("PrvHst: processPrvHstFrame: Bin centers calculated\n");
-        fflush(stdout);
-        
-        // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
+                // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
         // For accumulated data, use 64-bit array
-        printf("PrvHst: processPrvHstFrame: About to copy running sum to buffer\n");
-        fflush(stdout);
-        
-        std::vector<epicsInt64> prvHstData64Buffer(bin_size);
+                std::vector<epicsInt64> prvHstData64Buffer(bin_size);
         for (size_t i = 0; i < bin_size; ++i) {
             uint64_t val64 = prvHstRunningSum_->get_bin_value_64(i);
             prvHstData64Buffer[i] = static_cast<epicsInt64>(val64);
@@ -968,28 +581,13 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             prvHstArrayData32Buffer_[i] = (val64 > UINT32_MAX) ? UINT32_MAX : static_cast<epicsInt32>(val64);
         }
         
-        printf("PrvHst: processPrvHstFrame: Running sum copied to buffer\n");
-        fflush(stdout);
+                // Unlock mutex before callbacks to avoid deadlocks (similar to processImgFrame)
+                epicsMutexUnlock(prvHstMutex_);
         
-        // Unlock mutex before callbacks to avoid deadlocks (similar to processImgFrame)
-        printf("PrvHst: processPrvHstFrame: About to unlock mutex before callbacks\n");
-        fflush(stdout);
-        
-        epicsMutexUnlock(prvHstMutex_);
-        
-        printf("PrvHst: processPrvHstFrame: Mutex unlocked, calling callbacks\n");
-        fflush(stdout);
-        
-        // Update time axis waveform (bin_size elements for bin centers)
+                // Update time axis waveform (bin_size elements for bin centers)
         // Callbacks must be done OUTSIDE mutex to avoid deadlocks
-        printf("PrvHst: processPrvHstFrame: About to call doCallbacksFloat64Array for time axis\n");
-        fflush(stdout);
-        
-        printf("PrvHst: processPrvHstFrame: ADTimePixPrvHstHistogramTimeMs index=%d, bin_size=%zu, buffer_ptr=%p\n",
                ADTimePixPrvHstHistogramTimeMs, bin_size, prvHstTimeMsBuffer_.data());
-        fflush(stdout);
-        
-        // Validate parameter index and buffer
+                // Validate parameter index and buffer
         if (ADTimePixPrvHstHistogramTimeMs < 0) {
             fprintf(stderr, "ERROR: ADTimePixPrvHstHistogramTimeMs parameter index is invalid: %d\n", 
                     ADTimePixPrvHstHistogramTimeMs);
@@ -999,47 +597,27 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                     prvHstTimeMsBuffer_.data(), prvHstTimeMsBuffer_.size(), bin_size);
             fflush(stderr);
         } else {
-            printf("PrvHst: processPrvHstFrame: Parameter index is valid, calling doCallbacksFloat64Array\n");
-            printf("PrvHst: processPrvHstFrame: Buffer size=%zu, first value=%.6f, last value=%.6f\n",
                    prvHstTimeMsBuffer_.size(), 
                    bin_size > 0 ? prvHstTimeMsBuffer_[0] : 0.0,
                    bin_size > 0 ? prvHstTimeMsBuffer_[bin_size-1] : 0.0);
-            fflush(stdout);
-            
-            // Try calling with error checking
+                        // Try calling with error checking
             try {
                 asynStatus status = doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
-                printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array returned status=%d\n", status);
-                fflush(stdout);
-            } catch (...) {
+                            } catch (...) {
                 fprintf(stderr, "ERROR: Exception caught in doCallbacksFloat64Array\n");
                 fflush(stderr);
             }
             
-            printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
-            fflush(stdout);
-        }
+                    }
         
         // Update accumulated histogram data (64-bit)
-        printf("PrvHst: processPrvHstFrame: About to call doCallbacksInt64Array for histogram data\n");
-        fflush(stdout);
+                doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
         
-        doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
-        
-        printf("PrvHst: processPrvHstFrame: doCallbacksInt64Array for histogram data completed\n");
-        fflush(stdout);
-        
-        // Update current frame histogram data (32-bit)
+                // Update current frame histogram data (32-bit)
         // Need to re-lock mutex to safely access prvHstCurrentFrame_
-        printf("PrvHst: processPrvHstFrame: About to re-lock mutex for frame data\n");
-        fflush(stdout);
+                epicsMutexLock(prvHstMutex_);
         
-        epicsMutexLock(prvHstMutex_);
-        
-        printf("PrvHst: processPrvHstFrame: Mutex re-locked\n");
-        fflush(stdout);
-        
-        if (prvHstCurrentFrame_) {
+                if (prvHstCurrentFrame_) {
             size_t frame_bin_size = prvHstCurrentFrame_->get_bin_size();
             if (frame_bin_size == bin_size) {
                 // Copy frame data to local buffer before unlocking
@@ -1048,35 +626,20 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                     frameBuffer[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
                 }
                 
-                printf("PrvHst: processPrvHstFrame: Frame data copied, unlocking mutex for callback\n");
-                fflush(stdout);
+                                epicsMutexUnlock(prvHstMutex_);
                 
-                epicsMutexUnlock(prvHstMutex_);
+                                doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
                 
-                printf("PrvHst: processPrvHstFrame: About to call doCallbacksInt32Array for frame data\n");
-                fflush(stdout);
-                
-                doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
-                
-                printf("PrvHst: processPrvHstFrame: doCallbacksInt32Array for frame data completed\n");
-                fflush(stdout);
-                
-                // Re-lock mutex for remaining operations
+                                // Re-lock mutex for remaining operations
                 epicsMutexLock(prvHstMutex_);
             } else {
-                printf("PrvHst: processPrvHstFrame: Frame bin size mismatch: frame=%zu, running_sum=%zu\n",
                        frame_bin_size, bin_size);
-                fflush(stdout);
-            }
+                            }
         } else {
-            printf("PrvHst: processPrvHstFrame: prvHstCurrentFrame_ is null, cannot push frame data\n");
-            fflush(stdout);
-        }
+                    }
     } else {
         // Re-lock mutex if we didn't enter the prvHstRunningSum_ block
-        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ is null, re-locking mutex\n");
-        fflush(stdout);
-        epicsMutexLock(prvHstMutex_);
+                epicsMutexLock(prvHstMutex_);
     }
     
     // Create NDArray for histogram (1D array)
@@ -1305,32 +868,27 @@ void ADTimePix::prvHstWorkerThread() {
             try {
                 // Defensive checks before accessing network client
                 if (!prvHstMutex_) {
-                    printf("PrvHst: Mutex became null!\n");
-                    break;
+                                        break;
                 }
                 
                 epicsMutexLock(prvHstMutex_);
                 
                 // Re-check inside mutex to avoid race condition
                 if (!prvHstNetworkClient_) {
-                    printf("PrvHst: NetworkClient became null inside mutex!\n");
-                    epicsMutexUnlock(prvHstMutex_);
+                                        epicsMutexUnlock(prvHstMutex_);
                     break;
                 }
                 
                 if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
-                    printf("PrvHst: Buffer already full before receive! prvHstTotalRead_=%zu\n", prvHstTotalRead_);
                     prvHstTotalRead_ = 0;
                 }
                 
                 if (prvHstLineBuffer_.size() < MAX_BUFFER_SIZE) {
-                    printf("PrvHst: Line buffer too small! size=%zu, expected=%zu\n", prvHstLineBuffer_.size(), MAX_BUFFER_SIZE);
                     prvHstLineBuffer_.resize(MAX_BUFFER_SIZE);
                 }
                 
                 size_t available_space = MAX_BUFFER_SIZE - prvHstTotalRead_ - 1;
                 if (available_space == 0 || available_space > MAX_BUFFER_SIZE) {
-                    printf("PrvHst: Invalid available space: %zu\n", available_space);
                     epicsMutexUnlock(prvHstMutex_);
                     break;
                 }
@@ -1338,46 +896,31 @@ void ADTimePix::prvHstWorkerThread() {
                 // Store pointer locally to avoid issues if it's reset during receive
                 NetworkClient* client = prvHstNetworkClient_.get();
                 if (!client) {
-                    printf("PrvHst: NetworkClient get() returned null!\n");
-                    epicsMutexUnlock(prvHstMutex_);
+                                        epicsMutexUnlock(prvHstMutex_);
                     break;
                 }
                 
                 // Get buffer pointer and validate
                 char* buffer_ptr = prvHstLineBuffer_.data() + prvHstTotalRead_;
                 if (!buffer_ptr) {
-                    printf("PrvHst: Buffer pointer is null!\n");
-                    epicsMutexUnlock(prvHstMutex_);
+                                        epicsMutexUnlock(prvHstMutex_);
                     break;
                 }
                 
-                printf("PrvHst: About to call receive(), buffer_ptr=%p, available_space=%zu\n", buffer_ptr, available_space);
-                fflush(stdout);
-                
-                ssize_t bytes_read = client->receive(
+                                ssize_t bytes_read = client->receive(
                     buffer_ptr,
                     available_space
                 );
                 
-                printf("PrvHst: receive() returned %zd\n", bytes_read);
-                fflush(stdout);
+                                epicsMutexUnlock(prvHstMutex_);
                 
-                epicsMutexUnlock(prvHstMutex_);
-                
-                printf("PrvHst: After unlock, checking bytes_read\n");
-                fflush(stdout);
-                
-                if (bytes_read > 0) {
+                                if (bytes_read > 0) {
                     static int log_counter = 0;
                     if (++log_counter % 100 == 0) {  // Log every 100 reads to avoid spam
-                        printf("PrvHst: Received %zd bytes (total in buffer: %zu)\n", bytes_read, prvHstTotalRead_);
                     }
                 }
                 
-                printf("PrvHst: Checking if bytes_read <= 0\n");
-                fflush(stdout);
-                
-                if (bytes_read <= 0) {
+                                if (bytes_read <= 0) {
                     if (bytes_read == 0) {
                         epicsMutexLock(prvHstMutex_);
                         prvHstConnected_ = false;
@@ -1397,57 +940,30 @@ void ADTimePix::prvHstWorkerThread() {
                     }
                 }
                 
-                printf("PrvHst: About to lock mutex to update buffer\n");
-                fflush(stdout);
+                                epicsMutexLock(prvHstMutex_);
                 
-                epicsMutexLock(prvHstMutex_);
+                                prvHstTotalRead_ += bytes_read;
                 
-                printf("PrvHst: Mutex locked, updating prvHstTotalRead_ (current=%zu, adding=%zd)\n", prvHstTotalRead_, bytes_read);
-                fflush(stdout);
-                
-                prvHstTotalRead_ += bytes_read;
-                
-                printf("PrvHst: prvHstTotalRead_ is now %zu\n", prvHstTotalRead_);
-                fflush(stdout);
-                
-                // Ensure we don't write out of bounds
+                                // Ensure we don't write out of bounds
                 if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
                     fprintf(stderr, "ERROR | ADTimePix::prvHstWorkerThread: Buffer overflow! prvHstTotalRead_=%zu, MAX_BUFFER_SIZE=%zu\n", 
                             prvHstTotalRead_, MAX_BUFFER_SIZE);
                     prvHstTotalRead_ = MAX_BUFFER_SIZE - 1;
                 }
                 
-                printf("PrvHst: About to write null terminator at index %zu\n", prvHstTotalRead_);
-                fflush(stdout);
+                                prvHstLineBuffer_[prvHstTotalRead_] = '\0';
                 
-                prvHstLineBuffer_[prvHstTotalRead_] = '\0';
-                
-                printf("PrvHst: Null terminator written\n");
-                fflush(stdout);
-                
-                // Look for newline to find complete JSON line
-                printf("PrvHst: About to call memchr, buffer size=%zu, prvHstTotalRead_=%zu\n", prvHstLineBuffer_.size(), prvHstTotalRead_);
-                fflush(stdout);
-                
-                char* buffer_data = prvHstLineBuffer_.data();
+                                // Look for newline to find complete JSON line
+                                char* buffer_data = prvHstLineBuffer_.data();
                 if (!buffer_data) {
-                    printf("PrvHst: buffer_data is null!\n");
-                    epicsMutexUnlock(prvHstMutex_);
+                                        epicsMutexUnlock(prvHstMutex_);
                     break;
                 }
                 
-                printf("PrvHst: buffer_data=%p, calling memchr\n", buffer_data);
-                fflush(stdout);
+                                char* newline_pos = static_cast<char*>(memchr(buffer_data, '\n', prvHstTotalRead_));
                 
-                char* newline_pos = static_cast<char*>(memchr(buffer_data, '\n', prvHstTotalRead_));
-                
-                printf("PrvHst: memchr returned %p\n", newline_pos);
-                fflush(stdout);
-                
-                if (newline_pos) {
-                    printf("PrvHst: Found newline, processing data line\n");
-                    fflush(stdout);
-                    // Found a newline - check if there's valid JSON before it
+                                if (newline_pos) {
+                                        // Found a newline - check if there's valid JSON before it
                     char* json_start = nullptr;
                     
                     // Try to find {" pattern (most reliable indicator of JSON)
@@ -1504,20 +1020,12 @@ void ADTimePix::prvHstWorkerThread() {
                             *newline_pos = '\0';
                             
                             // Process the JSON line
-                            printf("PrvHst: About to call processPrvHstDataLine, json_start=%p, newline_pos=%p\n", json_start, newline_pos);
-                            fflush(stdout);
-                            
-                            if (!processPrvHstDataLine(json_start, newline_pos, prvHstTotalRead_)) {
-                                printf("PrvHst: processPrvHstDataLine returned false\n");
-                                fflush(stdout);
-                                epicsMutexUnlock(prvHstMutex_);
+                                                        if (!processPrvHstDataLine(json_start, newline_pos, prvHstTotalRead_)) {
+                                                                epicsMutexUnlock(prvHstMutex_);
                                 break;
                             }
                             
-                            printf("PrvHst: processPrvHstDataLine returned true\n");
-                            fflush(stdout);
-                            
-                            // Move remaining data to start of buffer
+                                                        // Move remaining data to start of buffer
                             size_t remaining = prvHstTotalRead_ - (newline_pos - prvHstLineBuffer_.data() + 1);
                             if (remaining > 0) {
                                 memmove(prvHstLineBuffer_.data(), newline_pos + 1, remaining);
