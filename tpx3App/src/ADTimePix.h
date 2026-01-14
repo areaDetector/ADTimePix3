@@ -276,6 +276,19 @@
 #define ADTimePixPrvHstHistogramTimeMsString    "TPX3_PRV_HST_HISTOGRAM_TIME_MS"     // (asynFloat64Array,  r)      Histogram time axis (milliseconds)
     // PrvHst accumulation control
 #define ADTimePixPrvHstAccumulationEnableString "TPX3_PRV_HST_ACCUMULATION_ENABLE" // (asynInt32,       r/w)    Enable/disable histogram accumulation processing
+    // PrvHst metadata from jsonhisto (distinct from standalone histogram IOC)
+#define ADTimePixPrvHstTimeAtFrameString        "TPX3_PRV_HST_TIME_AT_FRAME"         // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
+#define ADTimePixPrvHstFrameBinSizeString        "TPX3_PRV_HST_FRAME_BIN_SIZE"        // (asynInt32,         r)      Number of bins in current frame
+#define ADTimePixPrvHstFrameBinWidthString       "TPX3_PRV_HST_FRAME_BIN_WIDTH"       // (asynInt32,         r)      Bin width parameter from frame
+#define ADTimePixPrvHstFrameBinOffsetString      "TPX3_PRV_HST_FRAME_BIN_OFFSET"      // (asynInt32,         r)      Bin offset parameter from frame
+    // PrvHst accumulation statistics
+#define ADTimePixPrvHstFrameCountString          "TPX3_PRV_HST_FRAME_COUNT"          // (asynInt32,         r)      Number of frames processed
+#define ADTimePixPrvHstTotalCountsString         "TPX3_PRV_HST_TOTAL_COUNTS"         // (asynInt64,         r)      Total counts across all frames
+#define ADTimePixPrvHstAcqRateString             "TPX3_PRV_HST_ACQ_RATE"             // (asynFloat64,       r)      Calculated acquisition rate (fps)
+#define ADTimePixPrvHstProcessingTimeString      "TPX3_PRV_HST_PROCESSING_TIME"      // (asynFloat64,       r)      Processing time (ms)
+#define ADTimePixPrvHstMemoryUsageString          "TPX3_PRV_HST_MEMORY_USAGE"         // (asynFloat64,       r)      Memory usage (MB)
+#define ADTimePixPrvHstFramesToSumString         "TPX3_PRV_HST_FRAMES_TO_SUM"        // (asynInt32,         r/w)    Number of frames to sum
+#define ADTimePixPrvHstSumUpdateIntervalString   "TPX3_PRV_HST_SUM_UPDATE_INTERVAL"   // (asynInt32,         r/w)    Update interval for sum (frames)
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
@@ -664,7 +677,20 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstHistogramFrame;
         int ADTimePixPrvHstHistogramSumNFrames;
         int ADTimePixPrvHstHistogramTimeMs;
-        int ADTimePixPrvHstAccumulationEnable;    
+        int ADTimePixPrvHstAccumulationEnable;
+        // PrvHst metadata from jsonhisto
+        int ADTimePixPrvHstTimeAtFrame;
+        int ADTimePixPrvHstFrameBinSize;
+        int ADTimePixPrvHstFrameBinWidth;
+        int ADTimePixPrvHstFrameBinOffset;
+        // PrvHst accumulation statistics
+        int ADTimePixPrvHstFrameCount;
+        int ADTimePixPrvHstTotalCounts;
+        int ADTimePixPrvHstAcqRate;
+        int ADTimePixPrvHstProcessingTime;
+        int ADTimePixPrvHstMemoryUsage;
+        int ADTimePixPrvHstFramesToSum;
+        int ADTimePixPrvHstSumUpdateInterval;    
 
             // Measurement
         int ADTimePixPelRate;        
@@ -807,6 +833,20 @@ class ADTimePix : public ADDriver{
         int prvHstSumUpdateIntervalFrames_;
         int prvHstFramesSinceLastSumUpdate_;
         uint64_t prvHstTotalCounts_;
+        uint64_t prvHstFrameCount_;  // Track number of frames processed
+        // PrvHst frame data from JSON
+        double prvHstTimeAtFrame_;
+        int prvHstFrameBinSize_;
+        int prvHstFrameBinWidth_;
+        int prvHstFrameBinOffset_;
+        // PrvHst performance tracking
+        std::vector<double> prvHstProcessingTimeSamples_;
+        double prvHstLastProcessingTimeUpdate_;
+        double prvHstProcessingTime_;
+        double prvHstLastMemoryUpdateTime_;
+        double prvHstMemoryUsage_;
+        static constexpr size_t PRVHST_MAX_PROCESSING_TIME_SAMPLES = 10;
+        static constexpr size_t PRVHST_MEMORY_UPDATE_INTERVAL_SEC = 5;
         
         // PrvHst reusable buffers for EPICS arrays
         std::vector<epicsInt32> prvHstArrayData32Buffer_;  // For histogram data (32-bit)

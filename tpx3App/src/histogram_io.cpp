@@ -207,6 +207,15 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         
         // Extract additional frame data
         int frame_number = j.value("frameNumber", 0);
+        double time_at_frame = j.value("timeAtFrame", 0.0);
+        
+        // Store frame metadata (will be used in processPrvHstFrame)
+        epicsMutexLock(prvHstMutex_);
+        prvHstTimeAtFrame_ = time_at_frame;
+        prvHstFrameBinSize_ = bin_size;
+        prvHstFrameBinWidth_ = bin_width;
+        prvHstFrameBinOffset_ = bin_offset;
+        epicsMutexUnlock(prvHstMutex_);
         
         // Validate bin size
         if (bin_size <= 0 || bin_size > 1000000) {
@@ -348,6 +357,18 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         for (size_t i = 0; i < frame_data.get_bin_edges().size(); ++i) {
             prvHstRunningSum_->set_bin_edge(i, frame_data.get_bin_edges()[i]);
         }
+        
+        // Reset frame count and total counts since we're starting with new bin configuration
+        prvHstFrameCount_ = 0;
+        prvHstTotalCounts_ = 0;
+        prvHstFrameBuffer_.clear();  // Clear frame buffer on bin size change
+        prvHstFramesSinceLastSumUpdate_ = 0;  // Reset sum update counter
+        
+        // Update parameters
+        setIntegerParam(ADTimePixPrvHstFrameCount, static_cast<epicsInt32>(prvHstFrameCount_));
+        setInteger64Param(ADTimePixPrvHstTotalCounts, static_cast<epicsInt64>(prvHstTotalCounts_));
+        callParamCallbacks(ADTimePixPrvHstFrameCount);
+        callParamCallbacks(ADTimePixPrvHstTotalCounts);
     }
     
     // Add frame data to running sum
@@ -358,6 +379,9 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         epicsMutexUnlock(prvHstMutex_);
         return;
     }
+    
+    // Increment frame count (must be done after successful addition)
+    prvHstFrameCount_++;
     
     // Store current frame
     if (!prvHstCurrentFrame_) {
@@ -372,6 +396,19 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         frame_total += frame_data.get_bin_value_32(i);
     }
     prvHstTotalCounts_ += frame_total;
+    
+    // Update frame metadata PVs
+    setDoubleParam(ADTimePixPrvHstTimeAtFrame, prvHstTimeAtFrame_);
+    setIntegerParam(ADTimePixPrvHstFrameBinSize, prvHstFrameBinSize_);
+    setIntegerParam(ADTimePixPrvHstFrameBinWidth, prvHstFrameBinWidth_);
+    setIntegerParam(ADTimePixPrvHstFrameBinOffset, prvHstFrameBinOffset_);
+    
+    // Update frame count and total counts PVs
+    setIntegerParam(ADTimePixPrvHstFrameCount, static_cast<epicsInt32>(prvHstFrameCount_));
+    setInteger64Param(ADTimePixPrvHstTotalCounts, static_cast<epicsInt64>(prvHstTotalCounts_));
+    
+    // Update acquisition rate PV
+    setDoubleParam(ADTimePixPrvHstAcqRate, prvHstAcquisitionRate_);
     
     // Add to frame buffer (circular buffer for sum of N frames)
     prvHstFrameBuffer_.push_back(frame_data);
@@ -520,6 +557,60 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             pHistArray->release();
         }
     }
+    
+    // Calculate processing time for this frame
+    epicsTimeStamp processing_end_time;
+    epicsTimeGetCurrent(&processing_end_time);
+    double processing_time_ms = ((processing_end_time.secPastEpoch - processing_start_time.secPastEpoch) * 1000.0) +
+                               ((processing_end_time.nsec - processing_start_time.nsec) / 1e6);
+    
+    // Add to processing time samples for averaging
+    prvHstProcessingTimeSamples_.push_back(processing_time_ms);
+    if (prvHstProcessingTimeSamples_.size() > PRVHST_MAX_PROCESSING_TIME_SAMPLES) {
+        prvHstProcessingTimeSamples_.erase(prvHstProcessingTimeSamples_.begin());
+    }
+    
+    // Calculate average processing time
+    double sum = 0.0;
+    for (size_t i = 0; i < prvHstProcessingTimeSamples_.size(); ++i) {
+        sum += prvHstProcessingTimeSamples_[i];
+    }
+    prvHstProcessingTime_ = sum / prvHstProcessingTimeSamples_.size();
+    
+    // Update processing time PV once per second
+    double current_time_seconds = processing_end_time.secPastEpoch + processing_end_time.nsec / 1e9;
+    if (current_time_seconds - prvHstLastProcessingTimeUpdate_ >= 1.0) {
+        setDoubleParam(ADTimePixPrvHstProcessingTime, prvHstProcessingTime_);
+        callParamCallbacks(ADTimePixPrvHstProcessingTime);
+        prvHstLastProcessingTimeUpdate_ = current_time_seconds;
+    }
+    
+    // Update memory usage every 5 seconds
+    if (current_time_seconds - prvHstLastMemoryUpdateTime_ >= PRVHST_MEMORY_UPDATE_INTERVAL_SEC) {
+        // Calculate memory usage (similar to standalone histogram IOC)
+        double total_memory_mb = 0.0;
+        if (prvHstRunningSum_) {
+            size_t bin_size = prvHstRunningSum_->get_bin_size();
+            total_memory_mb += (bin_size * sizeof(uint64_t) + (bin_size + 1) * sizeof(double)) / (1024.0 * 1024.0);
+        }
+        total_memory_mb += prvHstTimeMsBuffer_.size() * sizeof(epicsFloat64) / (1024.0 * 1024.0);
+        for (const auto& frame : prvHstFrameBuffer_) {
+            size_t bin_size = frame.get_bin_size();
+            total_memory_mb += (bin_size * sizeof(uint32_t) + (bin_size + 1) * sizeof(double)) / (1024.0 * 1024.0);
+        }
+        total_memory_mb += (prvHstRateSamples_.size() + prvHstProcessingTimeSamples_.size()) * sizeof(double) / (1024.0 * 1024.0);
+        total_memory_mb += prvHstLineBuffer_.size() * sizeof(char) / (1024.0 * 1024.0);
+        total_memory_mb += 0.1;  // Estimated overhead
+        
+        prvHstMemoryUsage_ = total_memory_mb;
+        setDoubleParam(ADTimePixPrvHstMemoryUsage, prvHstMemoryUsage_);
+        callParamCallbacks(ADTimePixPrvHstMemoryUsage);
+        prvHstLastMemoryUpdateTime_ = current_time_seconds;
+    }
+    
+    // Update frames to sum and sum update interval PVs
+    setIntegerParam(ADTimePixPrvHstFramesToSum, prvHstFramesToSum_);
+    setIntegerParam(ADTimePixPrvHstSumUpdateInterval, prvHstSumUpdateIntervalFrames_);
     
     epicsMutexUnlock(prvHstMutex_);
     

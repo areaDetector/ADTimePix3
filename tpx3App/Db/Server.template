@@ -1627,6 +1627,116 @@ record(waveform, "$(P)$(R)PrvHstHistogramTimeMs")
     field(SCAN, "I/O Intr")
 }
 
+# PrvHst metadata from jsonhisto (distinct from standalone histogram IOC)
+record(ai, "$(P)$(R)PrvHstTimeAtFrame_RBV")
+{
+    field(DESC, "Timestamp at frame (nanoseconds)")
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_TIME_AT_FRAME")
+    field(PREC, "0")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstFrameBinSize_RBV")
+{
+    field(DESC, "Number of bins in current frame")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAME_BIN_SIZE")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstFrameBinWidth_RBV")
+{
+    field(DESC, "Bin width parameter from frame")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAME_BIN_WIDTH")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstFrameBinOffset_RBV")
+{
+    field(DESC, "Bin offset parameter from frame")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAME_BIN_OFFSET")
+    field(SCAN, "I/O Intr")
+}
+
+# PrvHst accumulation statistics
+record(ai, "$(P)$(R)PrvHstFrameCount_RBV")
+{
+    field(DESC, "Number of frames processed")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAME_COUNT")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstTotalCounts_RBV")
+{
+    field(DESC, "Total counts across all frames")
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_TOTAL_COUNTS")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstAcqRate_RBV")
+{
+    field(DESC, "Calculated acquisition rate (fps)")
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_ACQ_RATE")
+    field(PREC, "2")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstProcessingTime_RBV")
+{
+    field(DESC, "Processing time (ms)")
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_PROCESSING_TIME")
+    field(PREC, "3")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)PrvHstMemoryUsage_RBV")
+{
+    field(DESC, "Memory usage (MB)")
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_MEMORY_USAGE")
+    field(PREC, "3")
+    field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)PrvHstFramesToSum")
+{
+    field(DESC, "Number of frames to sum")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAMES_TO_SUM")
+    field(VAL, "10")
+    info(autosaveFields, "VAL")
+}
+record(ai, "$(P)$(R)PrvHstFramesToSum_RBV")
+{
+    field(DESC, "Number of frames to sum (readback)")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAMES_TO_SUM")
+    field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)PrvHstSumUpdateInterval")
+{
+    field(DESC, "Update interval for sum (frames)")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_SUM_UPDATE_INTERVAL")
+    field(VAL, "1")
+    info(autosaveFields, "VAL")
+}
+record(ai, "$(P)$(R)PrvHstSumUpdateInterval_RBV")
+{
+    field(DESC, "Update interval for sum (frames) (readback)")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_SUM_UPDATE_INTERVAL")
+    field(SCAN, "I/O Intr")
+}
+
 record(bo, "$(P)$(R)PrvHstAccumulationEnable")
 {
     field(DESC, "Enable histogram accumulation processing")

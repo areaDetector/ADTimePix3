@@ -2995,6 +2995,32 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         callParamCallbacks(ADTimePixImgSumUpdateIntervalFrames);
     }
 
+    else if(function == ADTimePixPrvHstFramesToSum) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstFramesToSum_ = value;
+        if (prvHstFramesToSum_ < 1) prvHstFramesToSum_ = 1;
+        if (prvHstFramesToSum_ > 100000) prvHstFramesToSum_ = 100000;
+        setIntegerParam(ADTimePixPrvHstFramesToSum, prvHstFramesToSum_);
+        
+        // Trim frame buffer if new limit is smaller
+        while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
+            prvHstFrameBuffer_.pop_front();
+        }
+        epicsMutexUnlock(prvHstMutex_);
+        callParamCallbacks(ADTimePixPrvHstFramesToSum);
+    }
+
+    else if(function == ADTimePixPrvHstSumUpdateInterval) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstSumUpdateIntervalFrames_ = value;
+        if (prvHstSumUpdateIntervalFrames_ < 1) prvHstSumUpdateIntervalFrames_ = 1;
+        if (prvHstSumUpdateIntervalFrames_ > 10000) prvHstSumUpdateIntervalFrames_ = 10000;
+        setIntegerParam(ADTimePixPrvHstSumUpdateInterval, prvHstSumUpdateIntervalFrames_);
+        prvHstFramesSinceLastSumUpdate_ = 0;  // Reset counter on change
+        epicsMutexUnlock(prvHstMutex_);
+        callParamCallbacks(ADTimePixPrvHstSumUpdateInterval);
+    }
+
     else{
         if (function < ADTIMEPIX_FIRST_PARAM) {
             status = ADDriver::writeInt32(pasynUser, value);
@@ -4888,6 +4914,19 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstHistogramSumNFramesString,     asynParamInt64Array, &ADTimePixPrvHstHistogramSumNFrames);
     createParam(ADTimePixPrvHstHistogramTimeMsString,        asynParamFloat64Array, &ADTimePixPrvHstHistogramTimeMs);
     createParam(ADTimePixPrvHstAccumulationEnableString,     asynParamInt32, &ADTimePixPrvHstAccumulationEnable);
+    // PrvHst metadata from jsonhisto
+    createParam(ADTimePixPrvHstTimeAtFrameString,            asynParamFloat64, &ADTimePixPrvHstTimeAtFrame);
+    createParam(ADTimePixPrvHstFrameBinSizeString,          asynParamInt32, &ADTimePixPrvHstFrameBinSize);
+    createParam(ADTimePixPrvHstFrameBinWidthString,          asynParamInt32, &ADTimePixPrvHstFrameBinWidth);
+    createParam(ADTimePixPrvHstFrameBinOffsetString,          asynParamInt32, &ADTimePixPrvHstFrameBinOffset);
+    // PrvHst accumulation statistics
+    createParam(ADTimePixPrvHstFrameCountString,              asynParamInt32, &ADTimePixPrvHstFrameCount);
+    createParam(ADTimePixPrvHstTotalCountsString,             asynParamInt64, &ADTimePixPrvHstTotalCounts);
+    createParam(ADTimePixPrvHstAcqRateString,                asynParamFloat64, &ADTimePixPrvHstAcqRate);
+    createParam(ADTimePixPrvHstProcessingTimeString,          asynParamFloat64, &ADTimePixPrvHstProcessingTime);
+    createParam(ADTimePixPrvHstMemoryUsageString,            asynParamFloat64, &ADTimePixPrvHstMemoryUsage);
+    createParam(ADTimePixPrvHstFramesToSumString,            asynParamInt32, &ADTimePixPrvHstFramesToSum);
+    createParam(ADTimePixPrvHstSumUpdateIntervalString,      asynParamInt32, &ADTimePixPrvHstSumUpdateInterval);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
@@ -4988,6 +5027,20 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvHstSumUpdateIntervalFrames_ = 1;  // Default: update every frame
     prvHstFramesSinceLastSumUpdate_ = 0;
     prvHstTotalCounts_ = 0;
+    prvHstFrameCount_ = 0;  // Initialize frame count
+    
+    // Initialize PrvHst frame data from JSON
+    prvHstTimeAtFrame_ = 0.0;
+    prvHstFrameBinSize_ = 0;
+    prvHstFrameBinWidth_ = 0;
+    prvHstFrameBinOffset_ = 0;
+    
+    // Initialize PrvHst performance tracking
+    prvHstProcessingTimeSamples_.clear();
+    prvHstLastProcessingTimeUpdate_ = 0.0;
+    prvHstProcessingTime_ = 0.0;
+    prvHstLastMemoryUpdateTime_ = 0.0;
+    prvHstMemoryUsage_ = 0.0;
     
     // Initialize PrvHst buffers
     prvHstArrayData32Buffer_.clear();
