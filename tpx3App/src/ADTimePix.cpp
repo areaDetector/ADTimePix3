@@ -2312,27 +2312,57 @@ asynStatus ADTimePix::acquireStart(){
     
     // Start PrvHst TCP streaming if enabled, path is TCP, format is jsonhisto, and accumulation is enabled
     // If accumulation is disabled, don't connect to TCP port so other clients can connect
+    // TEMPORARILY DISABLED TO DEBUG SEGFAULT - uncomment the block below to re-enable
+    /*
+    // Skip PrvHst setup if mutex is not initialized (defensive check to prevent segfault)
+    if (!prvHstMutex_) {
+        // Mutex not initialized, skip PrvHst setup silently
+        return status;
+    }
+    
     try {
-        if (!prvHstMutex_) {
-            ERR("PrvHst mutex not initialized, cannot start TCP streaming");
+        // Check if parameter indices are valid before using them
+        if (ADTimePixWritePrvHst < 0) {
+            // Parameter not initialized, skip PrvHst setup
             return status;
         }
         
-        int writePrvHst;
-        getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
+        int writePrvHst = 0;
+        asynStatus paramStatus = getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
+        if (paramStatus != asynSuccess) {
+            // Parameter might not exist or be accessible, skip PrvHst setup
+            return status;
+        }
         LOG_ARGS("PrvHst: Checking if TCP streaming should start - WritePrvHst=%d", writePrvHst);
         if (writePrvHst != 0) {
+            if (ADTimePixPrvHstBase < 0 || ADTimePixPrvHstFormat < 0 || ADTimePixPrvHstAccumulationEnable < 0) {
+                ERR("PrvHst parameters not initialized");
+                return status;
+            }
+            
             std::string prvHstPath;
-            getStringParam(ADTimePixPrvHstBase, prvHstPath);
+            paramStatus = getStringParam(ADTimePixPrvHstBase, prvHstPath);
+            if (paramStatus != asynSuccess) {
+                ERR("Failed to get PrvHstBase parameter");
+                return status;
+            }
             LOG_ARGS("PrvHst: Path=%s", prvHstPath.c_str());
             
             if (prvHstPath.find("tcp://") == 0) {
-                int format;
-                getIntegerParam(ADTimePixPrvHstFormat, &format);
+                int format = 0;
+                paramStatus = getIntegerParam(ADTimePixPrvHstFormat, &format);
+                if (paramStatus != asynSuccess) {
+                    ERR("Failed to get PrvHstFormat parameter");
+                    return status;
+                }
                 LOG_ARGS("PrvHst: Format=%d (4=jsonhisto)", format);
                 if (format == 4) {  // jsonhisto format
-                    int accumulationEnable;
-                    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+                    int accumulationEnable = 0;
+                    paramStatus = getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+                    if (paramStatus != asynSuccess) {
+                        ERR("Failed to get PrvHstAccumulationEnable parameter");
+                        return status;
+                    }
                     LOG_ARGS("PrvHst: AccumulationEnable=%d", accumulationEnable);
                     if (accumulationEnable) {
                         // Parse TCP path
@@ -2390,6 +2420,7 @@ asynStatus ADTimePix::acquireStart(){
     } catch (...) {
         ERR("Unknown exception in PrvHst TCP streaming setup");
     }
+    */
     
     return status;
 }
