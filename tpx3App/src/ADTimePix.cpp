@@ -2308,68 +2308,76 @@ asynStatus ADTimePix::acquireStart(){
                 LOG("ImgAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
             }
         }
+    }
+    
+    // Start PrvHst TCP streaming if enabled, path is TCP, format is jsonhisto, and accumulation is enabled
+    // If accumulation is disabled, don't connect to TCP port so other clients can connect
+    int writePrvHst;
+    getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
+    LOG_ARGS("PrvHst: Checking if TCP streaming should start - WritePrvHst=%d", writePrvHst);
+    if (writePrvHst != 0) {
+        std::string prvHstPath;
+        getStringParam(ADTimePixPrvHstBase, prvHstPath);
+        LOG_ARGS("PrvHst: Path=%s", prvHstPath.c_str());
         
-        // Start PrvHst TCP streaming if enabled, path is TCP, format is jsonhisto, and accumulation is enabled
-        // If accumulation is disabled, don't connect to TCP port so other clients can connect
-        int writePrvHst;
-        getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
-        if (writePrvHst != 0) {
-            std::string prvHstPath;
-            getStringParam(ADTimePixPrvHstBase, prvHstPath);
-            
-            if (prvHstPath.find("tcp://") == 0) {
-                int format;
-                getIntegerParam(ADTimePixPrvHstFormat, &format);
-                if (format == 4) {  // jsonhisto format
-                    int accumulationEnable;
-                    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
-                    if (accumulationEnable) {
-                        // Parse TCP path
-                        std::string host;
-                        int port;
-                        LOG_ARGS("PrvHst: Parsing TCP path: %s", prvHstPath.c_str());
-                        if (parseTcpPath(prvHstPath, host, port)) {
-                            LOG_ARGS("PrvHst: Parsed TCP path - host=%s, port=%d", host.c_str(), port);
-                            epicsMutexLock(prvHstMutex_);
-                            prvHstHost_ = host;
-                            prvHstPort_ = port;
-                            prvHstFormat_ = format;
-                            epicsMutexUnlock(prvHstMutex_);
-                            
-                            // Give Serval time to bind to the TCP port
-                            LOG("PrvHst: Waiting 200ms for Serval to bind TCP port...");
-                            epicsThreadSleep(0.2);  // 200ms
-                            
-                            epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
-                            opts.priority = epicsThreadPriorityMedium;
-                            opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
-                            
-                            epicsMutexLock(prvHstMutex_);
-                            if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
-                                prvHstRunning_ = true;
-                                prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
-                                if (!prvHstWorkerThreadId_) {
-                                    ERR("Failed to create PrvHst worker thread");
-                                    prvHstRunning_ = false;
-                                } else {
-                                    LOG_ARGS("Started PrvHst TCP worker thread in acquireStart (host=%s, port=%d)", host.c_str(), port);
-                                }
+        if (prvHstPath.find("tcp://") == 0) {
+            int format;
+            getIntegerParam(ADTimePixPrvHstFormat, &format);
+            LOG_ARGS("PrvHst: Format=%d (4=jsonhisto)", format);
+            if (format == 4) {  // jsonhisto format
+                int accumulationEnable;
+                getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+                LOG_ARGS("PrvHst: AccumulationEnable=%d", accumulationEnable);
+                if (accumulationEnable) {
+                    // Parse TCP path
+                    std::string host;
+                    int port;
+                    LOG_ARGS("PrvHst: Parsing TCP path: %s", prvHstPath.c_str());
+                    if (parseTcpPath(prvHstPath, host, port)) {
+                        LOG_ARGS("PrvHst: Parsed TCP path - host=%s, port=%d", host.c_str(), port);
+                        epicsMutexLock(prvHstMutex_);
+                        prvHstHost_ = host;
+                        prvHstPort_ = port;
+                        prvHstFormat_ = format;
+                        epicsMutexUnlock(prvHstMutex_);
+                        
+                        // Give Serval time to bind to the TCP port
+                        LOG("PrvHst: Waiting 200ms for Serval to bind TCP port...");
+                        epicsThreadSleep(0.2);  // 200ms
+                        
+                        epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
+                        opts.priority = epicsThreadPriorityMedium;
+                        opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
+                        
+                        epicsMutexLock(prvHstMutex_);
+                        if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
+                            prvHstRunning_ = true;
+                            prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
+                            if (!prvHstWorkerThreadId_) {
+                                ERR("Failed to create PrvHst worker thread");
+                                prvHstRunning_ = false;
                             } else {
-                                LOG_ARGS("PrvHst worker thread already running or exists (running=%d, threadId=%p)", 
-                                         prvHstRunning_, prvHstWorkerThreadId_);
+                                LOG_ARGS("Started PrvHst TCP worker thread in acquireStart (host=%s, port=%d)", host.c_str(), port);
                             }
-                            epicsMutexUnlock(prvHstMutex_);
                         } else {
-                            ERR_ARGS("Failed to parse PrvHst TCP path: %s", prvHstPath.c_str());
+                            LOG_ARGS("PrvHst worker thread already running or exists (running=%d, threadId=%p)", 
+                                     prvHstRunning_, prvHstWorkerThreadId_);
                         }
+                        epicsMutexUnlock(prvHstMutex_);
                     } else {
-                        LOG("PrvHstAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
+                        ERR_ARGS("Failed to parse PrvHst TCP path: %s", prvHstPath.c_str());
                     }
                 } else {
-                    LOG_ARGS("PrvHst format is not jsonhisto (4), got %d - TCP streaming not started", format);
+                    LOG("PrvHstAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
                 }
+            } else {
+                LOG_ARGS("PrvHst format is not jsonhisto (4), got %d - TCP streaming not started", format);
             }
+        } else {
+            LOG_ARGS("PrvHst path is not TCP (doesn't start with tcp://): %s", prvHstPath.c_str());
         }
+    } else {
+        LOG("PrvHst: WritePrvHst is disabled (0) - TCP streaming not started");
     }
     
     return status;
