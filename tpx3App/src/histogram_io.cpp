@@ -933,17 +933,36 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         // Create time axis from frame parameters (convert seconds to milliseconds)
         // For plotting, we use bin centers: bin_offset + i * bin_width (convert to milliseconds)
         // This matches the standalone histogram IOC calculation
+        printf("PrvHst: processPrvHstFrame: About to check/resize time buffer for bin centers\n");
+        fflush(stdout);
+        
         if (prvHstTimeMsBuffer_.size() < bin_size) {
+            printf("PrvHst: processPrvHstFrame: Resizing prvHstTimeMsBuffer_ to %zu for bin centers\n", bin_size);
+            fflush(stdout);
             prvHstTimeMsBuffer_.resize(bin_size);
         }
+        
+        printf("PrvHst: processPrvHstFrame: About to calculate bin centers (bin_size=%zu, bin_offset=%d, bin_width=%d)\n",
+               bin_size, prvHstFrameBinOffset_, prvHstFrameBinWidth_);
+        fflush(stdout);
+        
         // Calculate bin centers using frame parameters (same as standalone histogram IOC)
         for (size_t i = 0; i < bin_size; ++i) {
             // Time value for bin i: bin_offset + i * bin_width (convert to milliseconds)
             prvHstTimeMsBuffer_[i] = (prvHstFrameBinOffset_ + i * prvHstFrameBinWidth_) * TPX3_TDC_CLOCK_PERIOD_SEC * 1e3;
         }
         
+        printf("PrvHst: processPrvHstFrame: Bin centers calculated\n");
+        fflush(stdout);
+        
         // Update time axis waveform (bin_size elements for bin centers)
+        printf("PrvHst: processPrvHstFrame: About to call doCallbacksFloat64Array for time axis\n");
+        fflush(stdout);
+        
         doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+        
+        printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
+        fflush(stdout);
         
         // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
         // For accumulated data, use 64-bit array
