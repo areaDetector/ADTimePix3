@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cstring>
+#include <cstdio>
 #include <iostream>
 #include <json.hpp>
 #include <asynDriver.h>
@@ -746,7 +747,7 @@ void ADTimePix::prvHstWorkerThread() {
                 if (bytes_read > 0) {
                     static int log_counter = 0;
                     if (++log_counter % 100 == 0) {  // Log every 100 reads to avoid spam
-                        LOG_ARGS("PrvHst: Received %zd bytes (total in buffer: %zu)", bytes_read, prvHstTotalRead_);
+                        printf("PrvHst: Received %zd bytes (total in buffer: %zu)\n", bytes_read, prvHstTotalRead_);
                     }
                 }
                 
@@ -756,14 +757,14 @@ void ADTimePix::prvHstWorkerThread() {
                         prvHstConnected_ = false;
                         prvHstRunning_ = false;
                         epicsMutexUnlock(prvHstMutex_);
-                        LOG("PrvHst TCP connection closed by peer");
+                        printf("PrvHst TCP connection closed by peer\n");
                         break;
                     } else {
                         epicsMutexLock(prvHstMutex_);
                         if (prvHstConnected_) {
                             prvHstConnected_ = false;
                             prvHstRunning_ = false;
-                            LOG_ARGS("PrvHst TCP socket error: %s", strerror(errno));
+                            printf("PrvHst TCP socket error: %s\n", strerror(errno));
                         }
                         epicsMutexUnlock(prvHstMutex_);
                         break;
@@ -772,6 +773,13 @@ void ADTimePix::prvHstWorkerThread() {
                 
                 epicsMutexLock(prvHstMutex_);
                 prvHstTotalRead_ += bytes_read;
+                
+                // Ensure we don't write out of bounds
+                if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
+                    fprintf(stderr, "ERROR | ADTimePix::prvHstWorkerThread: Buffer overflow! prvHstTotalRead_=%zu, MAX_BUFFER_SIZE=%zu\n", 
+                            prvHstTotalRead_, MAX_BUFFER_SIZE);
+                    prvHstTotalRead_ = MAX_BUFFER_SIZE - 1;
+                }
                 prvHstLineBuffer_[prvHstTotalRead_] = '\0';
                 
                 // Look for newline to find complete JSON line
@@ -865,13 +873,13 @@ void ADTimePix::prvHstWorkerThread() {
                 } else {
                     // No newline found yet - check if buffer is getting too full
                     if (prvHstTotalRead_ >= MAX_BUFFER_SIZE - 1) {
-                        LOG("PrvHst TCP buffer full without finding newline, resetting");
+                        printf("PrvHst TCP buffer full without finding newline, resetting\n");
                         prvHstTotalRead_ = 0;
                     }
                 }
                 
                 if (prvHstTotalRead_ >= MAX_BUFFER_SIZE - 1) {
-                    LOG("PrvHst TCP buffer full, resetting");
+                    printf("PrvHst TCP buffer full, resetting\n");
                     prvHstTotalRead_ = 0;
                 }
                 
@@ -879,7 +887,7 @@ void ADTimePix::prvHstWorkerThread() {
                 
             } catch (const std::exception& e) {
                 epicsMutexUnlock(prvHstMutex_);
-                ERR_ARGS("Error in PrvHst worker thread: %s", e.what());
+                fprintf(stderr, "ERROR | ADTimePix::prvHstWorkerThread: Error in worker thread: %s\n", e.what());
             }
         } else {
             epicsThreadSleep(RECONNECT_DELAY_SEC);
@@ -887,5 +895,5 @@ void ADTimePix::prvHstWorkerThread() {
     }
     
     prvHstDisconnect();
-    LOG("PrvHst worker thread exiting");
+    printf("PrvHst worker thread exiting\n");
 }
