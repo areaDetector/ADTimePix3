@@ -528,15 +528,47 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         }
         
         // Convert network byte order to host byte order
+        printf("PrvHst: processPrvHstDataLine: About to convert byte order for %d bins\n", bin_size);
+        fflush(stdout);
+        
         for (int i = 0; i < bin_size; ++i) {
+            if (i == 0) {
+                printf("PrvHst: processPrvHstDataLine: Converting first bin, value before swap: %u\n", tof_bin_values[i]);
+                fflush(stdout);
+            }
+            
             tof_bin_values[i] = __builtin_bswap32(tof_bin_values[i]);
+            
+            if (i == 0) {
+                printf("PrvHst: processPrvHstDataLine: First bin after swap: %u\n", tof_bin_values[i]);
+                fflush(stdout);
+            }
+            
+            if (i < 5 || i == bin_size - 1) {
+                printf("PrvHst: processPrvHstDataLine: About to set_bin_value_32 for bin %d\n", i);
+                fflush(stdout);
+            }
+            
             frame_histogram.set_bin_value_32(i, tof_bin_values[i]);
+            
+            if (i < 5 || i == bin_size - 1) {
+                printf("PrvHst: processPrvHstDataLine: set_bin_value_32 completed for bin %d\n", i);
+                fflush(stdout);
+            }
         }
         
+        printf("PrvHst: processPrvHstDataLine: Byte order conversion completed\n");
+        fflush(stdout);
+        
         // Process frame
-        LOG_ARGS("PrvHst: Processing frame %d, bin_size=%d, bin_width=%d, bin_offset=%d", 
-                 frame_number, bin_size, bin_width, bin_offset);
+        printf("PrvHst: processPrvHstDataLine: About to call processPrvHstFrame (frame_number=%d, bin_size=%d)\n", 
+               frame_number, bin_size);
+        fflush(stdout);
+        
         processPrvHstFrame(frame_histogram);
+        
+        printf("PrvHst: processPrvHstDataLine: processPrvHstFrame returned\n");
+        fflush(stdout);
         
     } catch (const std::exception& e) {
         ERR_ARGS("Error processing PrvHst frame: %s", e.what());
@@ -548,14 +580,26 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
 
 void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     const char* functionName = "processPrvHstFrame";
-    const char* driverName = "ADTimePix";
+    // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
+    // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
+    
+    printf("PrvHst: processPrvHstFrame: Starting\n");
+    fflush(stdout);
     
     // Check if accumulation is enabled
+    printf("PrvHst: processPrvHstFrame: About to get accumulation enable parameter\n");
+    fflush(stdout);
+    
     int accumulationEnable = 0;
     getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+    
+    printf("PrvHst: processPrvHstFrame: accumulationEnable=%d\n", accumulationEnable);
+    fflush(stdout);
+    
     if (!accumulationEnable) {
         // Accumulation disabled - don't process frames
-        LOG("PrvHst: Accumulation disabled, skipping frame processing");
+        printf("PrvHst: processPrvHstFrame: Accumulation disabled, skipping frame processing\n");
+        fflush(stdout);
         return;
     }
     
