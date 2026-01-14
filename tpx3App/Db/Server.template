@@ -1731,7 +1731,7 @@ record(ao, "$(P)$(R)PrvHstSumUpdateInterval")
 }
 record(ai, "$(P)$(R)PrvHstSumUpdateInterval_RBV")
 {
-    field(DESC, "Update interval for sum (frames) (readback)")
+    field(DESC, "Sum update interval (frames)")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_SUM_UPDATE_INTERVAL")
     field(SCAN, "I/O Intr")
