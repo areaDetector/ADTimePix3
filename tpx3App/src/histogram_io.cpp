@@ -834,18 +834,42 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     fflush(stdout);
     
     // Add to frame buffer (circular buffer for sum of N frames)
+    printf("PrvHst: processPrvHstFrame: About to push frame to buffer\n");
+    fflush(stdout);
+    
     prvHstFrameBuffer_.push_back(frame_data);
     
+    printf("PrvHst: processPrvHstFrame: Frame pushed to buffer (size=%zu)\n", prvHstFrameBuffer_.size());
+    fflush(stdout);
+    
     // Remove old frames if buffer exceeds frames_to_sum_
+    printf("PrvHst: processPrvHstFrame: About to check buffer size (current=%zu, max=%d)\n", 
+           prvHstFrameBuffer_.size(), prvHstFramesToSum_);
+    fflush(stdout);
+    
     while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
+        printf("PrvHst: processPrvHstFrame: Popping old frame from buffer\n");
+        fflush(stdout);
         prvHstFrameBuffer_.pop_front();
     }
     
+    printf("PrvHst: processPrvHstFrame: Buffer size check complete (size=%zu)\n", prvHstFrameBuffer_.size());
+    fflush(stdout);
+    
     // Update sum of last N frames if needed
+    printf("PrvHst: processPrvHstFrame: About to check if sum update needed\n");
+    fflush(stdout);
+    
     prvHstFramesSinceLastSumUpdate_++;
     bool should_update_sum = (prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_);
     
+    printf("PrvHst: processPrvHstFrame: should_update_sum=%d, framesSinceLastSumUpdate=%d, sumUpdateInterval=%d\n",
+           should_update_sum, prvHstFramesSinceLastSumUpdate_, prvHstSumUpdateIntervalFrames_);
+    fflush(stdout);
+    
     if (should_update_sum && !prvHstFrameBuffer_.empty()) {
+        printf("PrvHst: processPrvHstFrame: Updating sum of N frames\n");
+        fflush(stdout);
         prvHstFramesSinceLastSumUpdate_ = 0;
         
         // Calculate sum of frames in buffer
@@ -876,16 +900,35 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Update histogram data PVs via callbacks
+    printf("PrvHst: processPrvHstFrame: About to update histogram data PVs via callbacks\n");
+    fflush(stdout);
+    
     if (prvHstRunningSum_) {
+        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ exists, getting bin_size\n");
+        fflush(stdout);
+        
         size_t bin_size = prvHstRunningSum_->get_bin_size();
         
+        printf("PrvHst: processPrvHstFrame: bin_size=%zu\n", bin_size);
+        fflush(stdout);
+        
         // Resize buffers if needed
+        printf("PrvHst: processPrvHstFrame: About to resize buffers\n");
+        fflush(stdout);
+        
         if (prvHstArrayData32Buffer_.size() < bin_size) {
+            printf("PrvHst: processPrvHstFrame: Resizing prvHstArrayData32Buffer_ to %zu\n", bin_size);
+            fflush(stdout);
             prvHstArrayData32Buffer_.resize(bin_size);
         }
         if (prvHstTimeMsBuffer_.size() < bin_size + 1) {
+            printf("PrvHst: processPrvHstFrame: Resizing prvHstTimeMsBuffer_ to %zu\n", bin_size + 1);
+            fflush(stdout);
             prvHstTimeMsBuffer_.resize(bin_size + 1);
         }
+        
+        printf("PrvHst: processPrvHstFrame: Buffers resized\n");
+        fflush(stdout);
         
         // Create time axis from frame parameters (convert seconds to milliseconds)
         // For plotting, we use bin centers: bin_offset + i * bin_width (convert to milliseconds)
