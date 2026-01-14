@@ -629,10 +629,11 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
 
 void ADTimePix::prvHstConnect() {
     const char* functionName = "prvHstConnect";
-    const char* driverName = "ADTimePix";
+    // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
+    // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
     
     if (!prvHstMutex_) {
-        ERR("PrvHst TCP: Mutex not initialized");
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Mutex not initialized\n", functionName);
         return;
     }
     
@@ -642,7 +643,7 @@ void ADTimePix::prvHstConnect() {
     epicsMutexUnlock(prvHstMutex_);
     
     if (host.empty() || port <= 0) {
-        ERR("PrvHst TCP: Invalid host or port");
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Invalid host or port\n", functionName);
         return;
     }
     
@@ -650,7 +651,7 @@ void ADTimePix::prvHstConnect() {
     
     prvHstNetworkClient_.reset(new NetworkClient());
     if (!prvHstNetworkClient_) {
-        ERR("PrvHst TCP: Failed to create NetworkClient");
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Failed to create NetworkClient\n", functionName);
         return;
     }
     
@@ -658,16 +659,15 @@ void ADTimePix::prvHstConnect() {
         epicsMutexLock(prvHstMutex_);
         prvHstConnected_ = true;
         epicsMutexUnlock(prvHstMutex_);
-        LOG_ARGS("PrvHst TCP connected to %s:%d", host.c_str(), port);
+        printf("PrvHst TCP connected to %s:%d\n", host.c_str(), port);
     } else {
-        ERR_ARGS("PrvHst TCP failed to connect to %s:%d", host.c_str(), port);
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP failed to connect to %s:%d\n", functionName, host.c_str(), port);
         prvHstNetworkClient_.reset();
     }
 }
 
 void ADTimePix::prvHstDisconnect() {
     const char* functionName = "prvHstDisconnect";
-    const char* driverName = "ADTimePix";
     
     epicsMutexLock(prvHstMutex_);
     prvHstConnected_ = false;
@@ -678,7 +678,7 @@ void ADTimePix::prvHstDisconnect() {
         prvHstNetworkClient_.reset();
     }
     
-    LOG("PrvHst TCP disconnected");
+    printf("PrvHst TCP disconnected\n");
 }
 
 void ADTimePix::prvHstWorkerThreadC(void *pPvt) {
@@ -688,11 +688,10 @@ void ADTimePix::prvHstWorkerThreadC(void *pPvt) {
 
 void ADTimePix::prvHstWorkerThread() {
     const char* functionName = "prvHstWorkerThread";
-    const char* driverName = "ADTimePix";
     constexpr double RECONNECT_DELAY_SEC = 1.0;
     
     if (!prvHstMutex_) {
-        ERR("PrvHst worker thread: Mutex not initialized");
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst worker thread: Mutex not initialized\n", functionName);
         return;
     }
     
@@ -707,21 +706,21 @@ void ADTimePix::prvHstWorkerThread() {
         epicsMutexUnlock(prvHstMutex_);
         
         if (should_connect && !host.empty() && port > 0) {
-            LOG_ARGS("PrvHst worker thread: Attempting to connect to %s:%d", host.c_str(), port);
+            printf("PrvHst worker thread: Attempting to connect to %s:%d\n", host.c_str(), port);
             prvHstConnect();
             epicsMutexLock(prvHstMutex_);
             bool connected_after = prvHstConnected_;
             epicsMutexUnlock(prvHstMutex_);
             if (!connected_after) {
-                LOG_ARGS("PrvHst worker thread: Connection failed, will retry in %.1f seconds", RECONNECT_DELAY_SEC);
+                printf("PrvHst worker thread: Connection failed, will retry in %.1f seconds\n", RECONNECT_DELAY_SEC);
                 epicsThreadSleep(RECONNECT_DELAY_SEC);
                 continue;
             } else {
-                LOG("PrvHst worker thread: Connection successful, starting data reception");
+                printf("PrvHst worker thread: Connection successful, starting data reception\n");
             }
         } else if (should_connect) {
             if (host.empty() || port <= 0) {
-                LOG_ARGS("PrvHst worker thread: Invalid host/port (host='%s', port=%d), waiting...", host.c_str(), port);
+                printf("PrvHst worker thread: Invalid host/port (host='%s', port=%d), waiting...\n", host.c_str(), port);
                 epicsThreadSleep(RECONNECT_DELAY_SEC);
                 continue;
             }
