@@ -603,22 +603,64 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         return;
     }
     
+    printf("PrvHst: processPrvHstFrame: Accumulation enabled, continuing\n");
+    fflush(stdout);
+    
+    printf("PrvHst: processPrvHstFrame: About to get current time\n");
+    fflush(stdout);
+    
     epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
     
+    printf("PrvHst: processPrvHstFrame: Current time obtained\n");
+    fflush(stdout);
+    
+    printf("PrvHst: processPrvHstFrame: About to lock mutex\n");
+    fflush(stdout);
+    
+    if (!prvHstMutex_) {
+        printf("PrvHst: processPrvHstFrame: ERROR - Mutex is null!\n");
+        fflush(stdout);
+        return;
+    }
+    
     epicsMutexLock(prvHstMutex_);
     
+    printf("PrvHst: processPrvHstFrame: Mutex locked\n");
+    fflush(stdout);
+    
     // Initialize running sum if needed
+    printf("PrvHst: processPrvHstFrame: Checking if prvHstRunningSum_ exists\n");
+    fflush(stdout);
+    
     if (!prvHstRunningSum_) {
+        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ is null, creating new one\n");
+        fflush(stdout);
+        printf("PrvHst: processPrvHstFrame: About to create HistogramData for running sum (bin_size=%zu)\n", 
+               frame_data.get_bin_size());
+        fflush(stdout);
+        
         prvHstRunningSum_.reset(new HistogramData(
             frame_data.get_bin_size(), 
             HistogramData::DataType::RUNNING_SUM
         ));
         
+        printf("PrvHst: processPrvHstFrame: HistogramData created for running sum\n");
+        fflush(stdout);
+        
         // Copy bin edges
+        printf("PrvHst: processPrvHstFrame: About to copy bin edges (count=%zu)\n", frame_data.get_bin_edges().size());
+        fflush(stdout);
+        
         for (size_t i = 0; i < frame_data.get_bin_edges().size(); ++i) {
             prvHstRunningSum_->set_bin_edge(i, frame_data.get_bin_edges()[i]);
         }
+        
+        printf("PrvHst: processPrvHstFrame: Bin edges copied\n");
+        fflush(stdout);
+    } else {
+        printf("PrvHst: processPrvHstFrame: prvHstRunningSum_ already exists\n");
+        fflush(stdout);
     }
     
     // Check if bin sizes match
