@@ -668,7 +668,8 @@ void ADTimePix::prvHstConnect() {
 }
 
 void ADTimePix::prvHstDisconnect() {
-    const char* functionName = "prvHstDisconnect";
+    // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
+    // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
     
     epicsMutexLock(prvHstMutex_);
     prvHstConnected_ = false;
