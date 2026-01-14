@@ -2240,10 +2240,46 @@ asynStatus ADTimePix::acquireStart(){
             prvHstRunning_ = false;
             epicsMutexUnlock(prvHstMutex_);
         }
-        if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
-            epicsThreadMustJoin(prvHstWorkerThreadId_);
-            prvHstWorkerThreadId_ = NULL;
+    // Signal PrvHst worker thread to stop FIRST (before trying to join)
+    if (prvHstMutex_) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstRunning_ = false;
+        // Reset metadata tracking for next acquisition
+        prvHstFirstFrameReceived_ = false;
+        prvHstAcquisitionRate_ = 0.0;
+        prvHstRateSamples_.clear();
+        prvHstFrameCount_ = 0;
+        prvHstTotalCounts_ = 0;
+        prvHstFramesSinceLastSumUpdate_ = 0;
+        setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
+        setIntegerParam(ADTimePixPrvHstFrameCount, 0);
+        setInteger64Param(ADTimePixPrvHstTotalCounts, 0);
+        epicsMutexUnlock(prvHstMutex_);
+    }
+    
+    // Wait for PrvHst worker thread to exit
+    // The thread may have already exited when connection closed, so we need to handle that
+    if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadId threadId = prvHstWorkerThreadId_;
+        prvHstWorkerThreadId_ = NULL;  // Clear pointer first to avoid double-join attempts
+        
+        // Give thread a moment to exit gracefully if it's still running
+        epicsThreadSleep(0.2);
+        
+        // Try to join - if thread already exited, epicsThreadMustJoin will fail
+        // We need to check if thread is still valid before joining
+        if (threadId != NULL) {
+            // epicsThreadMustJoin will handle the case where thread already exited
+            // but it will call cantProceed if thread is not joinable
+            // So we need to check if we can proceed first
+            try {
+                epicsThreadMustJoin(threadId);
+            } catch (...) {
+                // Thread already exited or not joinable - this is OK
+                printf("PrvHst worker thread already exited or not joinable\n");
+            }
         }
+    }
         prvHstDisconnect();
         
         return asynError;
@@ -2724,9 +2760,46 @@ asynStatus ADTimePix::acquireStop(){
         imgWorkerThreadId_ = NULL;
     }
     
-    if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvHstWorkerThreadId_);
-        prvHstWorkerThreadId_ = NULL;
+    // Signal PrvHst worker thread to stop
+    if (prvHstMutex_) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstRunning_ = false;
+        // Reset metadata tracking for next acquisition
+        prvHstFirstFrameReceived_ = false;
+        prvHstAcquisitionRate_ = 0.0;
+        prvHstRateSamples_.clear();
+        prvHstFrameCount_ = 0;
+        prvHstTotalCounts_ = 0;
+        prvHstFramesSinceLastSumUpdate_ = 0;
+        setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
+        setIntegerParam(ADTimePixPrvHstFrameCount, 0);
+        setInteger64Param(ADTimePixPrvHstTotalCounts, 0);
+        epicsMutexUnlock(prvHstMutex_);
+    }
+    
+    // Wait for PrvHst worker thread to exit
+    // The thread may have already exited when connection closed and cleared its own thread ID
+    // So we need to check if thread ID is still valid before trying to join
+    epicsMutexLock(prvHstMutex_);
+    epicsThreadId prvHstThreadId = prvHstWorkerThreadId_;
+    epicsMutexUnlock(prvHstMutex_);
+    
+    if (prvHstThreadId != NULL && prvHstThreadId != epicsThreadGetIdSelf()) {
+        // Give thread a moment to exit gracefully if it's still running
+        epicsThreadSleep(0.2);
+        
+        // Re-check if thread ID is still valid (thread may have cleared it)
+        epicsMutexLock(prvHstMutex_);
+        if (prvHstWorkerThreadId_ == prvHstThreadId) {
+            // Thread ID still valid, try to join
+            prvHstWorkerThreadId_ = NULL;  // Clear pointer first
+            epicsMutexUnlock(prvHstMutex_);
+            epicsThreadMustJoin(prvHstThreadId);
+        } else {
+            // Thread already cleared its own ID, so it already exited
+            epicsMutexUnlock(prvHstMutex_);
+            printf("PrvHst worker thread already exited (cleared its own thread ID)\n");
+        }
     }
     
     // Explicitly disconnect to ensure clean state
@@ -4726,8 +4799,8 @@ asynStatus ADTimePix::readImageFromTCP() {
 
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize)
     : ADDriver(portName, 4, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
-        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask,
-        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask,
+        asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
+        asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK,
         1,
         priority,
