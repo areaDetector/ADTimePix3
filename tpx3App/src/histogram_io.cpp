@@ -345,10 +345,30 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         if (!prvHstFirstFrameReceived_) {
             printf("PrvHst: processPrvHstDataLine: First frame, initializing\n");
             fflush(stdout);
+            
+            printf("PrvHst: processPrvHstDataLine: About to set prvHstPreviousFrameNumber_=%d\n", frame_number);
+            fflush(stdout);
             prvHstPreviousFrameNumber_ = frame_number;
+            printf("PrvHst: processPrvHstDataLine: Set prvHstPreviousFrameNumber_\n");
+            fflush(stdout);
+            
+            printf("PrvHst: processPrvHstDataLine: About to set prvHstPreviousTimeAtFrame_=%f\n", current_time_seconds);
+            fflush(stdout);
             prvHstPreviousTimeAtFrame_ = current_time_seconds;
+            printf("PrvHst: processPrvHstDataLine: Set prvHstPreviousTimeAtFrame_\n");
+            fflush(stdout);
+            
+            printf("PrvHst: processPrvHstDataLine: About to set prvHstFirstFrameReceived_=true\n");
+            fflush(stdout);
             prvHstFirstFrameReceived_ = true;
+            printf("PrvHst: processPrvHstDataLine: Set prvHstFirstFrameReceived_\n");
+            fflush(stdout);
+            
+            printf("PrvHst: processPrvHstDataLine: About to set prvHstAcquisitionRate_=0.0\n");
+            fflush(stdout);
             prvHstAcquisitionRate_ = 0.0;
+            printf("PrvHst: processPrvHstDataLine: Set prvHstAcquisitionRate_\n");
+            fflush(stdout);
         } else {
             int frame_diff = frame_number - prvHstPreviousFrameNumber_;
             double time_diff_seconds = current_time_seconds - prvHstPreviousTimeAtFrame_;
@@ -387,10 +407,23 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
             prvHstPreviousFrameNumber_ = frame_number;
             prvHstPreviousTimeAtFrame_ = current_time_seconds;
         }
+        
+        printf("PrvHst: processPrvHstDataLine: About to unlock mutex after rate calculation\n");
+        fflush(stdout);
+        
         epicsMutexUnlock(prvHstMutex_);
         
+        printf("PrvHst: processPrvHstDataLine: Mutex unlocked after rate calculation\n");
+        fflush(stdout);
+        
         // Create frame histogram
+        printf("PrvHst: processPrvHstDataLine: About to create HistogramData object\n");
+        fflush(stdout);
+        
         HistogramData frame_histogram(bin_size, HistogramData::DataType::FRAME_DATA);
+        
+        printf("PrvHst: processPrvHstDataLine: HistogramData object created\n");
+        fflush(stdout);
         
         // Calculate bin edges
         frame_histogram.calculate_bin_edges(bin_width, bin_offset);
