@@ -467,17 +467,65 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         }
         
         // Read any remaining binary data needed
-        epicsMutexLock(prvHstMutex_);
-        if (binary_read < binary_needed && prvHstNetworkClient_ && prvHstNetworkClient_->is_connected()) {
-            if (!prvHstNetworkClient_->receive_exact(
-                reinterpret_cast<char*>(tof_bin_values.data()) + binary_read,
-                binary_needed - binary_read)) {
-                epicsMutexUnlock(prvHstMutex_);
-                ERR("Failed to read binary histogram data");
+        printf("PrvHst: processPrvHstDataLine: binary_read=%zu, binary_needed=%zu\n", binary_read, binary_needed);
+        fflush(stdout);
+        
+        if (binary_read < binary_needed) {
+            printf("PrvHst: processPrvHstDataLine: Need to read more binary data (%zu bytes)\n", binary_needed - binary_read);
+            fflush(stdout);
+            
+            printf("PrvHst: processPrvHstDataLine: About to lock mutex for network read\n");
+            fflush(stdout);
+            
+            if (!prvHstMutex_) {
+                printf("PrvHst: processPrvHstDataLine: ERROR - Mutex is null before network read!\n");
+                fflush(stdout);
                 return false;
             }
+            
+            epicsMutexLock(prvHstMutex_);
+            printf("PrvHst: processPrvHstDataLine: Mutex locked for network read\n");
+            fflush(stdout);
+            
+            if (!prvHstNetworkClient_) {
+                printf("PrvHst: processPrvHstDataLine: NetworkClient is null!\n");
+                fflush(stdout);
+                epicsMutexUnlock(prvHstMutex_);
+                return false;
+            }
+            
+            if (!prvHstNetworkClient_->is_connected()) {
+                printf("PrvHst: processPrvHstDataLine: NetworkClient is not connected!\n");
+                fflush(stdout);
+                epicsMutexUnlock(prvHstMutex_);
+                return false;
+            }
+            
+            printf("PrvHst: processPrvHstDataLine: About to call receive_exact for %zu bytes\n", binary_needed - binary_read);
+            fflush(stdout);
+            
+            char* dest_ptr = reinterpret_cast<char*>(tof_bin_values.data()) + binary_read;
+            printf("PrvHst: processPrvHstDataLine: dest_ptr=%p\n", dest_ptr);
+            fflush(stdout);
+            
+            if (!prvHstNetworkClient_->receive_exact(dest_ptr, binary_needed - binary_read)) {
+                printf("PrvHst: processPrvHstDataLine: receive_exact failed!\n");
+                fflush(stdout);
+                epicsMutexUnlock(prvHstMutex_);
+                fprintf(stderr, "ERROR | ADTimePix::%s: Failed to read binary histogram data\n", functionName);
+                return false;
+            }
+            
+            printf("PrvHst: processPrvHstDataLine: receive_exact completed\n");
+            fflush(stdout);
+            
+            epicsMutexUnlock(prvHstMutex_);
+            printf("PrvHst: processPrvHstDataLine: Mutex unlocked after network read\n");
+            fflush(stdout);
+        } else {
+            printf("PrvHst: processPrvHstDataLine: All binary data already read\n");
+            fflush(stdout);
         }
-        epicsMutexUnlock(prvHstMutex_);
         
         // Convert network byte order to host byte order
         for (int i = 0; i < bin_size; ++i) {
