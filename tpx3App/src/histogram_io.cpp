@@ -989,16 +989,32 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                ADTimePixPrvHstHistogramTimeMs, bin_size, prvHstTimeMsBuffer_.data());
         fflush(stdout);
         
-        // Validate parameter index
+        // Validate parameter index and buffer
         if (ADTimePixPrvHstHistogramTimeMs < 0) {
             fprintf(stderr, "ERROR: ADTimePixPrvHstHistogramTimeMs parameter index is invalid: %d\n", 
                     ADTimePixPrvHstHistogramTimeMs);
             fflush(stderr);
+        } else if (!prvHstTimeMsBuffer_.data() || prvHstTimeMsBuffer_.size() < bin_size) {
+            fprintf(stderr, "ERROR: prvHstTimeMsBuffer_ is invalid: ptr=%p, size=%zu, needed=%zu\n",
+                    prvHstTimeMsBuffer_.data(), prvHstTimeMsBuffer_.size(), bin_size);
+            fflush(stderr);
         } else {
             printf("PrvHst: processPrvHstFrame: Parameter index is valid, calling doCallbacksFloat64Array\n");
+            printf("PrvHst: processPrvHstFrame: Buffer size=%zu, first value=%.6f, last value=%.6f\n",
+                   prvHstTimeMsBuffer_.size(), 
+                   bin_size > 0 ? prvHstTimeMsBuffer_[0] : 0.0,
+                   bin_size > 0 ? prvHstTimeMsBuffer_[bin_size-1] : 0.0);
             fflush(stdout);
             
-            doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+            // Try calling with error checking
+            try {
+                asynStatus status = doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+                printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array returned status=%d\n", status);
+                fflush(stdout);
+            } catch (...) {
+                fprintf(stderr, "ERROR: Exception caught in doCallbacksFloat64Array\n");
+                fflush(stderr);
+            }
             
             printf("PrvHst: processPrvHstFrame: doCallbacksFloat64Array for time axis completed\n");
             fflush(stdout);

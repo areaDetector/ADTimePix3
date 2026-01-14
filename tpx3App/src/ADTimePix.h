@@ -421,6 +421,7 @@ class ADTimePix : public ADDriver{
         // Declaration for the new function in the driver class
         virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn);
         virtual asynStatus readInt64Array(asynUser *pasynUser, epicsInt64 *value, size_t nElements, size_t *nIn);
+        // Note: readFloat64Array not needed - using doCallbacksFloat64Array() to push data directly (like histogram IOC)
 
         asynStatus maskReset(epicsInt32 *buf, int OnOff);
         asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);

@@ -3192,6 +3192,7 @@ asynStatus ADTimePix::readInt64Array(asynUser *pasynUser, epicsInt64 *value, siz
     return asynPortDriver::readInt64Array(pasynUser, value, nElements, nIn);
 }
 
+// Note: readFloat64Array not implemented - using doCallbacksFloat64Array() to push data directly (like histogram IOC)
 
 /*
  * Function overwriting ADDriver base function.
@@ -4725,8 +4726,8 @@ asynStatus ADTimePix::readImageFromTCP() {
 
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize)
     : ADDriver(portName, 4, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
-        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask,
-        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask,
+        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask,
+        asynInt64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK,
         1,
         priority,
