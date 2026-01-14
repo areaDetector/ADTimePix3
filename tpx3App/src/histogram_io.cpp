@@ -362,9 +362,8 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
                             }
         }
         
-                // Process frame
-               frame_number, bin_size);
-                processPrvHstFrame(frame_histogram);
+        // Process frame
+        processPrvHstFrame(frame_histogram);
         
             } catch (const std::exception& e) {
         ERR_ARGS("Error processing PrvHst frame: %s", e.what());
@@ -399,8 +398,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     
         // Initialize running sum if needed
         if (!prvHstRunningSum_) {
-               frame_data.get_bin_size());
-                prvHstRunningSum_.reset(new HistogramData(
+            prvHstRunningSum_.reset(new HistogramData(
             frame_data.get_bin_size(), 
             HistogramData::DataType::RUNNING_SUM
         ));
@@ -420,9 +418,8 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
         size_t running_sum_bin_size = prvHstRunningSum_->get_bin_size();
-    size_t frame_bin_size = frame_data.get_bin_size();
-    
-           running_sum_bin_size, frame_bin_size);
+        size_t frame_bin_size = frame_data.get_bin_size();
+        
         if (running_sum_bin_size != frame_bin_size) {
                 WARN_ARGS("PrvHst bin size mismatch! Running sum has %zu bins, frame has %zu bins. Reinitializing running sum.",
                   prvHstRunningSum_->get_bin_size(), frame_data.get_bin_size());
@@ -505,16 +502,14 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         prvHstFrameBuffer_.push_back(frame_data);
     
         // Remove old frames if buffer exceeds frames_to_sum_
-           prvHstFrameBuffer_.size(), prvHstFramesToSum_);
         while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
                 prvHstFrameBuffer_.pop_front();
     }
     
         // Update sum of last N frames if needed
         prvHstFramesSinceLastSumUpdate_++;
-    bool should_update_sum = (prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_);
-    
-           should_update_sum, prvHstFramesSinceLastSumUpdate_, prvHstSumUpdateIntervalFrames_);
+        bool should_update_sum = (prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_);
+        
         if (should_update_sum && !prvHstFrameBuffer_.empty()) {
                 prvHstFramesSinceLastSumUpdate_ = 0;
         
@@ -546,34 +541,33 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     }
     
     // Update histogram data PVs via callbacks
-        if (prvHstRunningSum_) {
-                size_t bin_size = prvHstRunningSum_->get_bin_size();
+    if (prvHstRunningSum_) {
+        size_t bin_size = prvHstRunningSum_->get_bin_size();
         
-                // Resize buffers if needed
-                if (prvHstArrayData32Buffer_.size() < bin_size) {
-                        prvHstArrayData32Buffer_.resize(bin_size);
+        // Resize buffers if needed
+        if (prvHstArrayData32Buffer_.size() < bin_size) {
+            prvHstArrayData32Buffer_.resize(bin_size);
         }
         if (prvHstTimeMsBuffer_.size() < bin_size + 1) {
-                        prvHstTimeMsBuffer_.resize(bin_size + 1);
+            prvHstTimeMsBuffer_.resize(bin_size + 1);
         }
         
-                // Create time axis from frame parameters (convert seconds to milliseconds)
+        // Create time axis from frame parameters (convert seconds to milliseconds)
         // For plotting, we use bin centers: bin_offset + i * bin_width (convert to milliseconds)
         // This matches the standalone histogram IOC calculation
-                if (prvHstTimeMsBuffer_.size() < bin_size) {
-                        prvHstTimeMsBuffer_.resize(bin_size);
+        if (prvHstTimeMsBuffer_.size() < bin_size) {
+            prvHstTimeMsBuffer_.resize(bin_size);
         }
         
-               bin_size, prvHstFrameBinOffset_, prvHstFrameBinWidth_);
-                // Calculate bin centers using frame parameters (same as standalone histogram IOC)
+        // Calculate bin centers using frame parameters (same as standalone histogram IOC)
         for (size_t i = 0; i < bin_size; ++i) {
             // Time value for bin i: bin_offset + i * bin_width (convert to milliseconds)
             prvHstTimeMsBuffer_[i] = (prvHstFrameBinOffset_ + i * prvHstFrameBinWidth_) * TPX3_TDC_CLOCK_PERIOD_SEC * 1e3;
         }
         
-                // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
+        // Copy running sum to buffer (convert 64-bit to 32-bit with overflow protection for display)
         // For accumulated data, use 64-bit array
-                std::vector<epicsInt64> prvHstData64Buffer(bin_size);
+        std::vector<epicsInt64> prvHstData64Buffer(bin_size);
         for (size_t i = 0; i < bin_size; ++i) {
             uint64_t val64 = prvHstRunningSum_->get_bin_value_64(i);
             prvHstData64Buffer[i] = static_cast<epicsInt64>(val64);
@@ -581,13 +575,12 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             prvHstArrayData32Buffer_[i] = (val64 > UINT32_MAX) ? UINT32_MAX : static_cast<epicsInt32>(val64);
         }
         
-                // Unlock mutex before callbacks to avoid deadlocks (similar to processImgFrame)
-                epicsMutexUnlock(prvHstMutex_);
+        // Unlock mutex before callbacks to avoid deadlocks (similar to processImgFrame)
+        epicsMutexUnlock(prvHstMutex_);
         
-                // Update time axis waveform (bin_size elements for bin centers)
+        // Update time axis waveform (bin_size elements for bin centers)
         // Callbacks must be done OUTSIDE mutex to avoid deadlocks
-               ADTimePixPrvHstHistogramTimeMs, bin_size, prvHstTimeMsBuffer_.data());
-                // Validate parameter index and buffer
+        // Validate parameter index and buffer
         if (ADTimePixPrvHstHistogramTimeMs < 0) {
             fprintf(stderr, "ERROR: ADTimePixPrvHstHistogramTimeMs parameter index is invalid: %d\n", 
                     ADTimePixPrvHstHistogramTimeMs);
@@ -597,27 +590,23 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                     prvHstTimeMsBuffer_.data(), prvHstTimeMsBuffer_.size(), bin_size);
             fflush(stderr);
         } else {
-                   prvHstTimeMsBuffer_.size(), 
-                   bin_size > 0 ? prvHstTimeMsBuffer_[0] : 0.0,
-                   bin_size > 0 ? prvHstTimeMsBuffer_[bin_size-1] : 0.0);
-                        // Try calling with error checking
+            // Try calling with error checking
             try {
-                asynStatus status = doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
-                            } catch (...) {
+                doCallbacksFloat64Array(prvHstTimeMsBuffer_.data(), bin_size, ADTimePixPrvHstHistogramTimeMs, 0);
+            } catch (...) {
                 fprintf(stderr, "ERROR: Exception caught in doCallbacksFloat64Array\n");
                 fflush(stderr);
             }
-            
-                    }
+        }
         
         // Update accumulated histogram data (64-bit)
-                doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
+        doCallbacksInt64Array(prvHstData64Buffer.data(), bin_size, ADTimePixPrvHstHistogramData, 0);
         
-                // Update current frame histogram data (32-bit)
+        // Update current frame histogram data (32-bit)
         // Need to re-lock mutex to safely access prvHstCurrentFrame_
-                epicsMutexLock(prvHstMutex_);
+        epicsMutexLock(prvHstMutex_);
         
-                if (prvHstCurrentFrame_) {
+        if (prvHstCurrentFrame_) {
             size_t frame_bin_size = prvHstCurrentFrame_->get_bin_size();
             if (frame_bin_size == bin_size) {
                 // Copy frame data to local buffer before unlocking
@@ -626,20 +615,17 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                     frameBuffer[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
                 }
                 
-                                epicsMutexUnlock(prvHstMutex_);
+                epicsMutexUnlock(prvHstMutex_);
                 
-                                doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
+                doCallbacksInt32Array(frameBuffer.data(), bin_size, ADTimePixPrvHstHistogramFrame, 0);
                 
-                                // Re-lock mutex for remaining operations
+                // Re-lock mutex for remaining operations
                 epicsMutexLock(prvHstMutex_);
-            } else {
-                       frame_bin_size, bin_size);
-                            }
-        } else {
-                    }
+            }
+        }
     } else {
         // Re-lock mutex if we didn't enter the prvHstRunningSum_ block
-                epicsMutexLock(prvHstMutex_);
+        epicsMutexLock(prvHstMutex_);
     }
     
     // Create NDArray for histogram (1D array)
