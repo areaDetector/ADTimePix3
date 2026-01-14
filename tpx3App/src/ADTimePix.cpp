@@ -2312,28 +2312,28 @@ asynStatus ADTimePix::acquireStart(){
     
     // Start PrvHst TCP streaming if enabled, path is TCP, format is jsonhisto, and accumulation is enabled
     // If accumulation is disabled, don't connect to TCP port so other clients can connect
-    // TEMPORARILY DISABLED TO DEBUG SEGFAULT - uncomment the block below to re-enable
-    /*
     // Skip PrvHst setup if mutex is not initialized (defensive check to prevent segfault)
     if (!prvHstMutex_) {
         // Mutex not initialized, skip PrvHst setup silently
         return status;
     }
     
+    // Check if parameter indices are valid before using them (defensive check)
+    if (ADTimePixWritePrvHst < 0) {
+        // Parameter not initialized, skip PrvHst setup
+        return status;
+    }
+    
     try {
-        // Check if parameter indices are valid before using them
-        if (ADTimePixWritePrvHst < 0) {
-            // Parameter not initialized, skip PrvHst setup
-            return status;
-        }
-        
         int writePrvHst = 0;
         asynStatus paramStatus = getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
         if (paramStatus != asynSuccess) {
             // Parameter might not exist or be accessible, skip PrvHst setup
             return status;
         }
-        LOG_ARGS("PrvHst: Checking if TCP streaming should start - WritePrvHst=%d", writePrvHst);
+        
+        // Use printf for initial logging to avoid potential issues with LOG_ARGS
+        printf("PrvHst: Checking if TCP streaming should start - WritePrvHst=%d\n", writePrvHst);
         if (writePrvHst != 0) {
             if (ADTimePixPrvHstBase < 0 || ADTimePixPrvHstFormat < 0 || ADTimePixPrvHstAccumulationEnable < 0) {
                 ERR("PrvHst parameters not initialized");
@@ -2343,34 +2343,46 @@ asynStatus ADTimePix::acquireStart(){
             std::string prvHstPath;
             paramStatus = getStringParam(ADTimePixPrvHstBase, prvHstPath);
             if (paramStatus != asynSuccess) {
-                ERR("Failed to get PrvHstBase parameter");
+                printf("PrvHst: Failed to get PrvHstBase parameter\n");
                 return status;
             }
-            LOG_ARGS("PrvHst: Path=%s", prvHstPath.c_str());
+            printf("PrvHst: Path=%s\n", prvHstPath.c_str());
             
             if (prvHstPath.find("tcp://") == 0) {
+                if (ADTimePixPrvHstFormat < 0) {
+                    printf("PrvHst: PrvHstFormat parameter not initialized\n");
+                    return status;
+                }
                 int format = 0;
                 paramStatus = getIntegerParam(ADTimePixPrvHstFormat, &format);
                 if (paramStatus != asynSuccess) {
-                    ERR("Failed to get PrvHstFormat parameter");
+                    printf("PrvHst: Failed to get PrvHstFormat parameter\n");
                     return status;
                 }
-                LOG_ARGS("PrvHst: Format=%d (4=jsonhisto)", format);
+                printf("PrvHst: Format=%d (4=jsonhisto)\n", format);
                 if (format == 4) {  // jsonhisto format
+                    if (ADTimePixPrvHstAccumulationEnable < 0) {
+                        printf("PrvHst: PrvHstAccumulationEnable parameter not initialized\n");
+                        return status;
+                    }
                     int accumulationEnable = 0;
                     paramStatus = getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
                     if (paramStatus != asynSuccess) {
-                        ERR("Failed to get PrvHstAccumulationEnable parameter");
+                        printf("PrvHst: Failed to get PrvHstAccumulationEnable parameter\n");
                         return status;
                     }
-                    LOG_ARGS("PrvHst: AccumulationEnable=%d", accumulationEnable);
+                    printf("PrvHst: AccumulationEnable=%d\n", accumulationEnable);
                     if (accumulationEnable) {
                         // Parse TCP path
                         std::string host;
                         int port;
-                        LOG_ARGS("PrvHst: Parsing TCP path: %s", prvHstPath.c_str());
+                        printf("PrvHst: Parsing TCP path: %s\n", prvHstPath.c_str());
                         if (parseTcpPath(prvHstPath, host, port)) {
-                            LOG_ARGS("PrvHst: Parsed TCP path - host=%s, port=%d", host.c_str(), port);
+                            printf("PrvHst: Parsed TCP path - host=%s, port=%d\n", host.c_str(), port);
+                            if (!prvHstMutex_) {
+                                printf("PrvHst: Mutex became null before lock\n");
+                                return status;
+                            }
                             epicsMutexLock(prvHstMutex_);
                             prvHstHost_ = host;
                             prvHstPort_ = port;
@@ -2378,49 +2390,52 @@ asynStatus ADTimePix::acquireStart(){
                             epicsMutexUnlock(prvHstMutex_);
                             
                             // Give Serval time to bind to the TCP port
-                            LOG("PrvHst: Waiting 200ms for Serval to bind TCP port...");
+                            printf("PrvHst: Waiting 200ms for Serval to bind TCP port...\n");
                             epicsThreadSleep(0.2);  // 200ms
                             
                             epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
                             opts.priority = epicsThreadPriorityMedium;
                             opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
                             
+                            if (!prvHstMutex_) {
+                                printf("PrvHst: Mutex became null before second lock\n");
+                                return status;
+                            }
                             epicsMutexLock(prvHstMutex_);
                             if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
                                 prvHstRunning_ = true;
                                 prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
                                 if (!prvHstWorkerThreadId_) {
-                                    ERR("Failed to create PrvHst worker thread");
+                                    printf("PrvHst: Failed to create worker thread\n");
                                     prvHstRunning_ = false;
                                 } else {
-                                    LOG_ARGS("Started PrvHst TCP worker thread in acquireStart (host=%s, port=%d)", host.c_str(), port);
+                                    printf("PrvHst: Started TCP worker thread (host=%s, port=%d)\n", host.c_str(), port);
                                 }
                             } else {
-                                LOG_ARGS("PrvHst worker thread already running or exists (running=%d, threadId=%p)", 
-                                         prvHstRunning_, prvHstWorkerThreadId_);
+                                printf("PrvHst: Worker thread already running or exists (running=%d, threadId=%p)\n", 
+                                       prvHstRunning_, prvHstWorkerThreadId_);
                             }
                             epicsMutexUnlock(prvHstMutex_);
                         } else {
-                            ERR_ARGS("Failed to parse PrvHst TCP path: %s", prvHstPath.c_str());
+                            printf("PrvHst: Failed to parse TCP path: %s\n", prvHstPath.c_str());
                         }
                     } else {
-                        LOG("PrvHstAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
+                        printf("PrvHst: AccumulationEnable is disabled - not connecting to TCP port\n");
                     }
                 } else {
-                    LOG_ARGS("PrvHst format is not jsonhisto (4), got %d - TCP streaming not started", format);
+                    printf("PrvHst: Format is not jsonhisto (4), got %d - TCP streaming not started\n", format);
                 }
             } else {
-                LOG_ARGS("PrvHst path is not TCP (doesn't start with tcp://): %s", prvHstPath.c_str());
+                printf("PrvHst: Path is not TCP (doesn't start with tcp://): %s\n", prvHstPath.c_str());
             }
         } else {
-            LOG("PrvHst: WritePrvHst is disabled (0) - TCP streaming not started");
+            printf("PrvHst: WritePrvHst is disabled (0) - TCP streaming not started\n");
         }
     } catch (const std::exception& e) {
-        ERR_ARGS("Exception in PrvHst TCP streaming setup: %s", e.what());
+        printf("PrvHst: Exception in TCP streaming setup: %s\n", e.what());
     } catch (...) {
-        ERR("Unknown exception in PrvHst TCP streaming setup");
+        printf("PrvHst: Unknown exception in TCP streaming setup\n");
     }
-    */
     
     return status;
 }
