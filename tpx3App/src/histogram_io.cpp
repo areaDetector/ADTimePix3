@@ -253,30 +253,98 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
         fflush(stdout);
         
         // Extract additional frame data
+        printf("PrvHst: processPrvHstDataLine: About to access frameNumber\n");
+        fflush(stdout);
+        
         int frame_number = j.value("frameNumber", 0);
+        printf("PrvHst: processPrvHstDataLine: frame_number=%d\n", frame_number);
+        fflush(stdout);
+        
+        printf("PrvHst: processPrvHstDataLine: About to access timeAtFrame\n");
+        fflush(stdout);
+        
         double time_at_frame = j.value("timeAtFrame", 0.0);
+        printf("PrvHst: processPrvHstDataLine: time_at_frame=%f\n", time_at_frame);
+        fflush(stdout);
         
         // Store frame metadata (will be used in processPrvHstFrame)
-        epicsMutexLock(prvHstMutex_);
-        prvHstTimeAtFrame_ = time_at_frame;
-        prvHstFrameBinSize_ = bin_size;
-        prvHstFrameBinWidth_ = bin_width;
-        prvHstFrameBinOffset_ = bin_offset;
-        epicsMutexUnlock(prvHstMutex_);
+        printf("PrvHst: processPrvHstDataLine: About to lock mutex to store metadata\n");
+        fflush(stdout);
         
-        // Validate bin size
-        if (bin_size <= 0 || bin_size > 1000000) {
-            ERR_ARGS("Invalid bin size: %d", bin_size);
+        if (!prvHstMutex_) {
+            printf("PrvHst: processPrvHstDataLine: ERROR - Mutex is null!\n");
+            fflush(stdout);
             return false;
         }
         
-        // Calculate acquisition rate (similar to PrvImg/Img)
         epicsMutexLock(prvHstMutex_);
+        printf("PrvHst: processPrvHstDataLine: Mutex locked successfully\n");
+        fflush(stdout);
+        
+        printf("PrvHst: processPrvHstDataLine: About to store metadata\n");
+        fflush(stdout);
+        
+        prvHstTimeAtFrame_ = time_at_frame;
+        printf("PrvHst: processPrvHstDataLine: Stored time_at_frame\n");
+        fflush(stdout);
+        
+        prvHstFrameBinSize_ = bin_size;
+        printf("PrvHst: processPrvHstDataLine: Stored bin_size\n");
+        fflush(stdout);
+        
+        prvHstFrameBinWidth_ = bin_width;
+        printf("PrvHst: processPrvHstDataLine: Stored bin_width\n");
+        fflush(stdout);
+        
+        prvHstFrameBinOffset_ = bin_offset;
+        printf("PrvHst: processPrvHstDataLine: Stored bin_offset, unlocking mutex\n");
+        fflush(stdout);
+        
+        epicsMutexUnlock(prvHstMutex_);
+        printf("PrvHst: processPrvHstDataLine: Mutex unlocked\n");
+        fflush(stdout);
+        
+        // Validate bin size
+        printf("PrvHst: processPrvHstDataLine: About to validate bin_size=%d\n", bin_size);
+        fflush(stdout);
+        
+        if (bin_size <= 0 || bin_size > 1000000) {
+            printf("PrvHst: processPrvHstDataLine: Invalid bin_size detected\n");
+            fflush(stdout);
+            fprintf(stderr, "ERROR | ADTimePix::%s: Invalid bin size: %d\n", functionName, bin_size);
+            return false;
+        }
+        
+        printf("PrvHst: processPrvHstDataLine: Bin size validated, about to calculate acquisition rate\n");
+        fflush(stdout);
+        
+        // Calculate acquisition rate (similar to PrvImg/Img)
+        printf("PrvHst: processPrvHstDataLine: About to lock mutex for rate calculation\n");
+        fflush(stdout);
+        
+        if (!prvHstMutex_) {
+            printf("PrvHst: processPrvHstDataLine: ERROR - Mutex is null before rate calculation!\n");
+            fflush(stdout);
+            return false;
+        }
+        
+        epicsMutexLock(prvHstMutex_);
+        printf("PrvHst: processPrvHstDataLine: Mutex locked for rate calculation\n");
+        fflush(stdout);
+        
+        printf("PrvHst: processPrvHstDataLine: About to get current time\n");
+        fflush(stdout);
+        
         epicsTimeStamp current_time;
         epicsTimeGetCurrent(&current_time);
         double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
         
+        printf("PrvHst: processPrvHstDataLine: Current time obtained, checking prvHstFirstFrameReceived_\n");
+        fflush(stdout);
+        
         if (!prvHstFirstFrameReceived_) {
+            printf("PrvHst: processPrvHstDataLine: First frame, initializing\n");
+            fflush(stdout);
             prvHstPreviousFrameNumber_ = frame_number;
             prvHstPreviousTimeAtFrame_ = current_time_seconds;
             prvHstFirstFrameReceived_ = true;
@@ -286,9 +354,20 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
             double time_diff_seconds = current_time_seconds - prvHstPreviousTimeAtFrame_;
             
             if (frame_diff > 0 && time_diff_seconds > 0.0) {
+                printf("PrvHst: processPrvHstDataLine: Calculating rate\n");
+                fflush(stdout);
+                
                 double current_rate = frame_diff / time_diff_seconds;
                 
+                printf("PrvHst: processPrvHstDataLine: About to push to rate samples\n");
+                fflush(stdout);
+                
                 prvHstRateSamples_.push_back(current_rate);
+                
+                printf("PrvHst: processPrvHstDataLine: Rate sample pushed, size=%zu\n", prvHstRateSamples_.size());
+                fflush(stdout);
+                
+                constexpr size_t PRVHST_MAX_RATE_SAMPLES = 100;
                 if (prvHstRateSamples_.size() > PRVHST_MAX_RATE_SAMPLES) {
                     prvHstRateSamples_.erase(prvHstRateSamples_.begin());
                 }
