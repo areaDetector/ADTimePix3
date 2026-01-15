@@ -636,9 +636,15 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         dims[1] = 0;
         dims[2] = 0;
         
-        // Save current NDDataType value (shared parameter across all channels)
-        int savedDataType = 0;
+        // Save current shared parameter values (used by image channels)
+        int savedSizeX = 0, savedSizeY = 0, savedArraySizeX = 0, savedArraySizeY = 0;
+        int savedDataType = 0, savedArraySize = 0;
+        getIntegerParam(ADSizeX, &savedSizeX);
+        getIntegerParam(ADSizeY, &savedSizeY);
+        getIntegerParam(NDArraySizeX, &savedArraySizeX);
+        getIntegerParam(NDArraySizeY, &savedArraySizeY);
         getIntegerParam(NDDataType, &savedDataType);
+        getIntegerParam(NDArraySize, &savedArraySize);
         
         // Allocate new NDArray for histogram (1D array)
         NDArray *pHistArray = this->pNDArrayPool->alloc(1, dims, NDInt64, 0, NULL);
@@ -650,19 +656,11 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                 pData[i] = static_cast<epicsInt64>(prvHstRunningSum_->get_bin_value_64(i));
             }
             
-            // Set image parameters
-            setIntegerParam(ADSizeX, static_cast<int>(bin_size));
-            setIntegerParam(NDArraySizeX, static_cast<int>(bin_size));
-            setIntegerParam(ADSizeY, 1);
-            setIntegerParam(NDArraySizeY, 1);
-            // Note: NDDataType is shared across channels and enum only supports 0-5,
-            // so we don't set it to NDInt64 (8) to avoid "Illegal Value" in DataType_RBV.
-            // The NDArray itself has the correct data type (NDInt64).
-            setIntegerParam(NDColorMode, NDColorModeMono);
-            
-            NDArrayInfo_t arrayInfo;
-            pHistArray->getInfo(&arrayInfo);
-            setIntegerParam(NDArraySize, static_cast<int>(arrayInfo.totalBytes));
+            // Note: We don't set ADSizeX, ADSizeY, NDArraySizeX, NDArraySizeY, NDDataType, or NDArraySize
+            // for histogram data because these are shared parameters used by image channels (addresses 0 and 1).
+            // Histogram uses NDArray address 5, and the NDArray itself contains all necessary size/type information.
+            // Setting these shared parameters would overwrite image channel values, causing incorrect SizeX_RBV/SizeY_RBV.
+            // The NDArray attributes (accessible via getAttributes) contain the correct information for plugins.
             
             // Set timestamp
             epicsTimeStamp timestamp;
@@ -670,7 +668,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             pHistArray->timeStamp = timestamp.secPastEpoch + timestamp.nsec / 1.e9;
             updateTimeStamp(&pHistArray->epicsTS);
             
-            // Get attributes
+            // Get attributes (includes size information in NDArray)
             if (pHistArray->pAttributeList) {
                 this->getAttributes(pHistArray->pAttributeList);
             }
@@ -685,11 +683,21 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             // Release the array (callbacks will increment reference count if needed)
             pHistArray->release();
             
-            // Restore previous NDDataType value (for image channels)
+            // Restore previous shared parameter values (for image channels)
+            setIntegerParam(ADSizeX, savedSizeX);
+            setIntegerParam(ADSizeY, savedSizeY);
+            setIntegerParam(NDArraySizeX, savedArraySizeX);
+            setIntegerParam(NDArraySizeY, savedArraySizeY);
             setIntegerParam(NDDataType, savedDataType);
+            setIntegerParam(NDArraySize, savedArraySize);
         } else {
-            // Restore previous NDDataType value even if allocation failed
+            // Restore previous values even if allocation failed
+            setIntegerParam(ADSizeX, savedSizeX);
+            setIntegerParam(ADSizeY, savedSizeY);
+            setIntegerParam(NDArraySizeX, savedArraySizeX);
+            setIntegerParam(NDArraySizeY, savedArraySizeY);
             setIntegerParam(NDDataType, savedDataType);
+            setIntegerParam(NDArraySize, savedArraySize);
         }
     }
     
