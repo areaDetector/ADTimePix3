@@ -636,6 +636,10 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         dims[1] = 0;
         dims[2] = 0;
         
+        // Save current NDDataType value (shared parameter across all channels)
+        int savedDataType = 0;
+        getIntegerParam(NDDataType, &savedDataType);
+        
         // Allocate new NDArray for histogram (1D array)
         NDArray *pHistArray = this->pNDArrayPool->alloc(1, dims, NDInt64, 0, NULL);
         
@@ -651,7 +655,9 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             setIntegerParam(NDArraySizeX, static_cast<int>(bin_size));
             setIntegerParam(ADSizeY, 1);
             setIntegerParam(NDArraySizeY, 1);
-            setIntegerParam(NDDataType, NDInt64);
+            // Note: NDDataType is shared across channels and enum only supports 0-5,
+            // so we don't set it to NDInt64 (8) to avoid "Illegal Value" in DataType_RBV.
+            // The NDArray itself has the correct data type (NDInt64).
             setIntegerParam(NDColorMode, NDColorModeMono);
             
             NDArrayInfo_t arrayInfo;
@@ -678,6 +684,12 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             
             // Release the array (callbacks will increment reference count if needed)
             pHistArray->release();
+            
+            // Restore previous NDDataType value (for image channels)
+            setIntegerParam(NDDataType, savedDataType);
+        } else {
+            // Restore previous NDDataType value even if allocation failed
+            setIntegerParam(NDDataType, savedDataType);
         }
     }
     
