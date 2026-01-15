@@ -176,6 +176,13 @@ void HistogramData::add_histogram(const HistogramData& other) {
 bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
     static const char* functionName = "processPrvHstDataLine";
     
+    // Early return if accumulation is disabled - don't process data at all
+    int accumulationEnable = 0;
+    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+    if (!accumulationEnable) {
+        return true;  // Skip processing when accumulation is disabled
+    }
+    
     // Validate pointers
     if (!line_buffer || !newline_pos || newline_pos <= line_buffer) {
         fprintf(stderr, "ERROR | ADTimePix::%s: Invalid pointers\n", functionName);
@@ -757,8 +764,12 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     
     epicsMutexUnlock(prvHstMutex_);
     
-    // Call parameter callbacks to update EPICS PVs
-    callParamCallbacks();
+    // Call parameter callbacks only for histogram-specific parameters to avoid triggering
+    // unnecessary updates to shared parameters (ADSizeX, ADSizeY, etc.) that could cause
+    // PVA plugin flickering. Individual parameter callbacks are already called above for
+    // processing time and memory usage when they update.
+    callParamCallbacks(ADTimePixPrvHstFramesToSum);
+    callParamCallbacks(ADTimePixPrvHstSumUpdateInterval);
 }
 
 void ADTimePix::prvHstConnect() {
