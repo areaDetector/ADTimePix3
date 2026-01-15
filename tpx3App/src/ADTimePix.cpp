@@ -3969,11 +3969,11 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
         // Call parameter callbacks to update EPICS PVs (thread-safe)
         callParamCallbacks();
         
-        // Trigger NDArray callbacks (thread-safe)
+        // Trigger NDArray callbacks (thread-safe) - Img channel uses address 1
         int arrayCallbacks = 0;
         getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
         if (arrayCallbacks && pImage) {
-            doCallbacksGenericPointer(pImage, NDArrayData, 0);
+            doCallbacksGenericPointer(pImage, NDArrayData, 1);
         }
         
         LOG_ARGS("Processed Img frame: width=%d, height=%d, format=%s, frame=%d, counter=%d", 
@@ -4566,11 +4566,9 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         pImage->getInfo(&arrayInfo);
         setIntegerParam(NDArraySize, (int)arrayInfo.totalBytes);
         
-        // Increment array counter (thread-safe)
-        int imagesAcquired = 0;
-        getIntegerParam(NDArrayCounter, &imagesAcquired);
-        imagesAcquired++;
-        setIntegerParam(NDArrayCounter, imagesAcquired);
+        // Note: PrvImg channel does NOT increment NDArrayCounter to avoid double-counting.
+        // Only the Img channel (main acquisition) increments the shared NDArrayCounter.
+        // ArrayRate_RBV reflects the rate of the main Img channel, not preview channels.
         
         // Set timestamp
         pImage->uniqueId = frame_number;
@@ -4634,15 +4632,15 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         // Call parameter callbacks to update EPICS PVs (thread-safe)
         callParamCallbacks();
         
-        // Trigger NDArray callbacks (thread-safe)
+        // Trigger NDArray callbacks (thread-safe) - PrvImg channel uses address 0
         int arrayCallbacks = 0;
         getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
         if (arrayCallbacks && pImage) {
             doCallbacksGenericPointer(pImage, NDArrayData, 0);
         }
         
-        LOG_ARGS("Processed PrvImg frame: width=%d, height=%d, format=%s, frame=%d, counter=%d", 
-                 width, height, pixel_format_str.c_str(), frame_number, imagesAcquired);
+        LOG_ARGS("Processed PrvImg frame: width=%d, height=%d, format=%s, frame=%d", 
+                 width, height, pixel_format_str.c_str(), frame_number);
         
     } catch (const std::exception& e) {
         ERR_ARGS("Error processing PrvImg frame: %s", e.what());
