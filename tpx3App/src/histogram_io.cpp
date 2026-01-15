@@ -882,6 +882,17 @@ void ADTimePix::prvHstWorkerThread() {
         epicsMutexUnlock(prvHstMutex_);
         
         if (connected && has_client) {
+            // Check if accumulation is disabled - if so, skip reading data to prevent buffer overflow
+            // The worker thread stays connected but doesn't consume data when accumulation is disabled
+            int accumulationEnable = 0;
+            getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+            if (!accumulationEnable) {
+                // Accumulation disabled - sleep briefly and skip data reading to prevent buffer overflow
+                // This prevents log spam from buffer full messages
+                epicsThreadSleep(0.1);
+                continue;
+            }
+            
             try {
                 // Defensive checks before accessing network client
                 if (!prvHstMutex_) {
@@ -1036,13 +1047,13 @@ void ADTimePix::prvHstWorkerThread() {
                         if (is_valid_json) {
                             *newline_pos = '\0';
                             
-                            // Process the JSON line
-                                                        if (!processPrvHstDataLine(json_start, newline_pos, prvHstTotalRead_)) {
-                                                                epicsMutexUnlock(prvHstMutex_);
+                            // Process the JSON line (will return early if accumulation is disabled)
+                            if (!processPrvHstDataLine(json_start, newline_pos, prvHstTotalRead_)) {
+                                epicsMutexUnlock(prvHstMutex_);
                                 break;
                             }
                             
-                                                        // Move remaining data to start of buffer
+                            // Move remaining data to start of buffer
                             size_t remaining = prvHstTotalRead_ - (newline_pos - prvHstLineBuffer_.data() + 1);
                             if (remaining > 0) {
                                 memmove(prvHstLineBuffer_.data(), newline_pos + 1, remaining);
@@ -1067,13 +1078,26 @@ void ADTimePix::prvHstWorkerThread() {
                 } else {
                     // No newline found yet - check if buffer is getting too full
                     if (prvHstTotalRead_ >= MAX_BUFFER_SIZE - 1) {
-                        printf("PrvHst TCP buffer full without finding newline, resetting\n");
+                        // Check if accumulation is disabled - if so, silently discard data
+                        // (this is expected behavior when accumulation is disabled)
+                        int accumulationEnable = 0;
+                        getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+                        if (accumulationEnable) {
+                            printf("PrvHst TCP buffer full without finding newline, resetting\n");
+                        }
+                        // Always reset buffer to prevent overflow, but only log warning if accumulation is enabled
                         prvHstTotalRead_ = 0;
                     }
                 }
                 
                 if (prvHstTotalRead_ >= MAX_BUFFER_SIZE - 1) {
-                    printf("PrvHst TCP buffer full, resetting\n");
+                    // Check if accumulation is disabled - if so, silently discard data
+                    int accumulationEnable = 0;
+                    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+                    if (accumulationEnable) {
+                        printf("PrvHst TCP buffer full, resetting\n");
+                    }
+                    // Always reset buffer to prevent overflow, but only log warning if accumulation is enabled
                     prvHstTotalRead_ = 0;
                 }
                 
