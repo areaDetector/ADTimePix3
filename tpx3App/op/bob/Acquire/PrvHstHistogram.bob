@@ -419,7 +419,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameCountDisplay</name>
-        <pv_name>$(P)$(R)FRAME_COUNT</pv_name>
+        <pv_name>$(P)$(R)PrvHstFrameCount_RBV</pv_name>
         <x>120</x>
         <y>40</y>
         <width>120</width>
@@ -442,7 +442,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>TotalCountsDisplay</name>
-        <pv_name>$(P)$(R)TOTAL_COUNTS</pv_name>
+        <pv_name>$(P)$(R)PrvHstTotalCounts_RBV</pv_name>
         <x>380</x>
         <y>40</y>
         <width>120</width>
@@ -536,7 +536,7 @@
       </widget>
       <widget type="spinner" version="2.0.0">
         <name>FramesToSumSpinner</name>
-        <pv_name>$(P)$(R)FRAMES_TO_SUM</pv_name>
+        <pv_name>$(P)$(R)PrvHstFramesToSum</pv_name>
         <x>920</x>
         <y>80</y>
         <height>30</height>
@@ -556,7 +556,7 @@
       </widget>
       <widget type="spinner" version="2.0.0">
         <name>SumUpdateIntervalSpinner</name>
-        <pv_name>$(P)$(R)SUM_UPDATE_INTERVAL_FRAMES</pv_name>
+        <pv_name>$(P)$(R)PrvHstSumUpdateInterval</pv_name>
         <x>920</x>
         <y>40</y>
         <height>30</height>
@@ -599,7 +599,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>TimeAtFrameDisplay</name>
-        <pv_name>$(P)$(R)TIME_AT_FRAME_NS</pv_name>
+        <pv_name>$(P)$(R)PrvHstTimeAtFrame_RBV</pv_name>
         <x>160</x>
         <y>40</y>
         <width>180</width>
@@ -625,7 +625,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameBinSizeDisplay</name>
-        <pv_name>$(P)$(R)FRAME_BIN_SIZE</pv_name>
+        <pv_name>$(P)$(R)PrvHstFrameBinSize_RBV</pv_name>
         <x>480</x>
         <y>40</y>
         <width>120</width>
@@ -649,7 +649,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameBinWidthDisplay</name>
-        <pv_name>$(P)$(R)FRAME_BIN_WIDTH</pv_name>
+        <pv_name>$(P)$(R)PrvHstFrameBinWidth_RBV</pv_name>
         <x>750</x>
         <y>40</y>
         <width>120</width>
@@ -673,7 +673,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameBinOffsetDisplay</name>
-        <pv_name>$(P)$(R)FRAME_BIN_OFFSET</pv_name>
+        <pv_name>$(P)$(R)PrvHstFrameBinOffset_RBV</pv_name>
         <x>1020</x>
         <y>40</y>
         <width>120</width>
@@ -719,7 +719,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>HistogramDataDisplay</name>
-        <pv_name>$(P)$(R)HISTOGRAM_DATA</pv_name>
+        <pv_name>$(P)$(R)PrvHstHistogramData</pv_name>
         <x>220</x>
         <y>40</y>
         <width>1080</width>
@@ -743,7 +743,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>HistogramSumNFramesDisplay</name>
-        <pv_name>$(P)$(R)HISTOGRAM_SUM_N_FRAMES</pv_name>
+        <pv_name>$(P)$(R)PrvHstHistogramSumNFrames</pv_name>
         <x>220</x>
         <y>80</y>
         <width>1080</width>
@@ -767,7 +767,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>HistogramTimeDisplay</name>
-        <pv_name>$(P)$(R)HISTOGRAM_TIME_MS</pv_name>
+        <pv_name>$(P)$(R)PrvHstHistogramTimeMs</pv_name>
         <x>220</x>
         <y>120</y>
         <width>1080</width>
@@ -827,7 +827,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>AcquisitionRateDisplay</name>
-        <pv_name>$(P)$(R)ACQUISITION_RATE</pv_name>
+        <pv_name>$(P)$(R)PrvHstAcqRate_RBV</pv_name>
         <x>190</x>
         <y>50</y>
         <height>30</height>
@@ -850,7 +850,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ProcessingTimeDisplay</name>
-        <pv_name>$(P)$(R)PROCESSING_TIME_MS</pv_name>
+        <pv_name>$(P)$(R)PrvHstProcessingTime_RBV</pv_name>
         <x>520</x>
         <y>50</y>
         <height>30</height>
@@ -873,7 +873,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>MemoryUsageDisplay</name>
-        <pv_name>$(P)$(R)MEMORY_USAGE_MB</pv_name>
+        <pv_name>$(P)$(R)PrvHstMemoryUsage_RBV</pv_name>
         <x>860</x>
         <y>50</y>
         <height>30</height>
