@@ -1663,33 +1663,34 @@ record(ai, "$(P)$(R)PrvHstFrameBinOffset_RBV")
 
 # PrvHst calculated values in milliseconds (for compatibility with histogram IOC screen)
 # These are calculated from frame parameters: TPX3_TDC_CLOCK_PERIOD_SEC = (1.5625 / 6.0) * 1e-9
+# CP flag in input links causes calc record to process when input changes
 record(calc, "$(P)$(R)PrvHstBinWidthMs_RBV")
 {
     field(DESC, "Bin width in milliseconds")
-    field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV")
+    field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV CP")
     field(CALC, "A * 2.6041666666666667e-7")
     field(EGU, "ms")
     field(PREC, "6")
-    field(SCAN, "I/O Intr")
+    field(SCAN, "Passive")
 }
 record(calc, "$(P)$(R)PrvHstBinOffsetMs_RBV")
 {
     field(DESC, "Bin offset in milliseconds")
-    field(INPA, "$(P)$(R)PrvHstFrameBinOffset_RBV")
+    field(INPA, "$(P)$(R)PrvHstFrameBinOffset_RBV CP")
     field(CALC, "A * 2.6041666666666667e-7")
     field(EGU, "ms")
     field(PREC, "6")
-    field(SCAN, "I/O Intr")
+    field(SCAN, "Passive")
 }
 record(calc, "$(P)$(R)PrvHstTotalTimeMs_RBV")
 {
     field(DESC, "Total time range in milliseconds")
-    field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV")
-    field(INPB, "$(P)$(R)PrvHstFrameBinSize_RBV")
+    field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV CP")
+    field(INPB, "$(P)$(R)PrvHstFrameBinSize_RBV CP")
     field(CALC, "A * B * 2.6041666666666667e-7")
     field(EGU, "ms")
     field(PREC, "6")
-    field(SCAN, "I/O Intr")
+    field(SCAN, "Passive")
 }
 
 # PrvHst accumulation statistics
