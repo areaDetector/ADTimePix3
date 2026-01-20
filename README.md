@@ -365,7 +365,87 @@ Troubleshooting
 
 **Known Warnings (Harmless)**:
 
-* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: This warning appears when histogram data callbacks are triggered for Int32Array parameters. It is harmless and can be safely ignored. The warning occurs because asyn's internal alarm/status information arrays for Int32Array parameters (list 5 in asyn's internal structure) are not fully initialized for parameters with high indices. When `doCallbacksInt32Array()` is called, asyn automatically tries to update alarm/status information via `getParamStatus()`, `getParamAlarmStatus()`, and `getParamAlarmSeverity()`, but these functions fail because the alarm/status arrays for Int32Array parameters aren't properly sized for high parameter indices. The data callbacks complete successfully and histogram data is transmitted correctly to EPICS PVs - only the alarm/status metadata update fails. This is a fundamental asyn library limitation when drivers have many parameters (ADTimePix3 has ~237 parameters). **Is this fixed in newer asyn versions?** No - this is a persistent limitation in asyn library across all versions. The alarm/status arrays for array parameters are sized based on the total number of parameters, but for drivers with many parameters, high-index array parameters may exceed the allocated size. **Can this be fixed by moving parameters to lower indices?** No - testing has shown that moving Int32Array parameters to earlier positions does not resolve the warning. The issue is that asyn's internal arrays for alarm/status metadata are not properly sized for any Int32Array parameters when the total parameter count is high, regardless of their position. This is a fundamental limitation of how asyn manages alarm/status arrays for array parameter types. **No action required** - the functionality works correctly despite the warning. The warnings can be filtered from log files if desired (e.g., `grep -v "parameter.*in list 5"`), but they don't affect driver operation. The data callbacks succeed and all histogram data is transmitted correctly to EPICS PVs.
+* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: This warning appears when histogram data callbacks are triggered for Int32Array parameters. It is harmless and can be safely ignored. The warning occurs because asyn's internal alarm/status information arrays for Int32Array parameters (list 5 in asyn's internal structure) are not fully initialized for parameters with high indices. When `doCallbacksInt32Array()` is called, asyn automatically tries to update alarm/status information via `getParamStatus()`, `getParamAlarmStatus()`, and `getParamAlarmSeverity()`, but these functions fail because the alarm/status arrays for Int32Array parameters aren't properly sized for high parameter indices. The data callbacks complete successfully and histogram data is transmitted correctly to EPICS PVs - only the alarm/status metadata update fails. This is a fundamental asyn library limitation when drivers have many parameters (ADTimePix3 has ~237 parameters). **Is this fixed in newer asyn versions?** No - this is a persistent limitation in asyn library across all versions. The alarm/status arrays for array parameters are sized based on the total number of parameters, but for drivers with many parameters, high-index array parameters may exceed the allocated size. **Can this be fixed by moving parameters to lower indices?** No - testing has shown that moving Int32Array parameters to earlier positions does not resolve the warning. The issue is that asyn's internal arrays for alarm/status metadata are not properly sized for any Int32Array parameters when the total parameter count is high, regardless of their position. This is a fundamental limitation of how asyn manages alarm/status arrays for array parameter types. **No action required** - the functionality works correctly despite the warning. The warnings can be filtered from log files if desired, but they don't affect driver operation. The data callbacks succeed and all histogram data is transmitted correctly to EPICS PVs.
+
+**Suppressing these messages in log files:**
+
+Since these warnings can fill log files, here are several methods to suppress them. **Important**: Do NOT filter stderr/stdout at IOC startup as this breaks the interactive EPICS prompt and procServer integration.
+
+**Recommended methods (post-processing):**
+
+1. **Filter existing log files** (simplest, works with any setup):
+   ```bash
+   # Filter a log file
+   grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" ioc.log > ioc_filtered.log
+   
+   # Or filter in place (backup first!)
+   cp ioc.log ioc.log.backup
+   grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" ioc.log.backup > ioc.log
+   ```
+
+2. **Use logrotate with post-rotate filtering** (for automated log management):
+   Create a `/etc/logrotate.d/epics-ioc` configuration:
+   ```
+   /path/to/ioc.log {
+       daily
+       rotate 7
+       compress
+       delaycompress
+       missingok
+       notifempty
+       postrotate
+           # Filter warnings after rotation (if log file exists)
+           if [ -f /path/to/ioc.log.1 ]; then
+               grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" /path/to/ioc.log.1 > /path/to/ioc.log.1.filtered
+               mv /path/to/ioc.log.1.filtered /path/to/ioc.log.1
+           fi
+       endscript
+   }
+   ```
+
+3. **For procServer users** (recommended approaches):
+   - **Filter in log aggregation system**: If using ELK, Splunk, Grafana Loki, etc., add filters to exclude these patterns
+   - **Use procServer log rotation with post-processing**: Configure procServer to run a post-rotation script that filters the rotated log
+   - **Filter in log viewer**: Configure your log viewing tool (e.g., `less`, `tail -f`, log analysis tools) to filter these patterns
+   - **Periodic log cleanup script**: Run a cron job that periodically filters the active log file:
+     ```bash
+     # Add to crontab (runs every hour)
+     0 * * * * /path/to/filter_ioc_logs.sh
+     ```
+     Where `filter_ioc_logs.sh` contains:
+     ```bash
+     #!/bin/bash
+     LOGFILE="/path/to/ioc.log"
+     if [ -f "$LOGFILE" ]; then
+         # Create filtered version, then replace (atomic operation)
+         grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" "$LOGFILE" > "${LOGFILE}.filtered"
+         mv "${LOGFILE}.filtered" "$LOGFILE"
+     fi
+     ```
+
+4. **Use systemd/journald filtering** (if using systemd):
+   ```bash
+   # View logs without these warnings
+   journalctl -u ioc-service | grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)"
+   
+   # Or configure journald to filter (requires journald configuration)
+   ```
+
+5. **Use rsyslog filtering** (if using rsyslog):
+   Add to `/etc/rsyslog.d/epics-ioc.conf`:
+   ```
+   :msg, contains, "parameter" & msg, contains, "in list 5" ~
+   :msg, contains, "getParamStatus" & msg, contains, "list 5" ~
+   :msg, contains, "getParamAlarmStatus" & msg, contains, "list 5" ~
+   :msg, contains, "getParamAlarmSeverity" & msg, contains, "list 5" ~
+   ```
+
+**NOT recommended:**
+- Filtering stdout/stderr with pipes at startup (breaks interactive prompt and procServer)
+- Using wrapper scripts that pipe all output (prevents procServer from controlling the IOC)
+- Modifying IOC startup scripts to filter output (breaks procServer integration)
+
+**Note**: These warnings are printed by asyn library code, not the ADTimePix3 driver, so they cannot be suppressed at the driver level. Post-processing log files or using log rotation/monitoring tools with filtering is the recommended approach that works with interactive prompts and procServer.
 
 **Fixed Issues (R1-5)**:
 
