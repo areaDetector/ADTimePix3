@@ -465,7 +465,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>BinWidthDisplay</name>
-        <pv_name>$(P)$(R)BIN_WIDTH_MS</pv_name>
+        <pv_name>$(P)$(R)PrvHstBinWidthMs_RBV</pv_name>
         <x>120</x>
         <y>80</y>
         <width>120</width>
@@ -489,7 +489,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>TotalTimeDisplay</name>
-        <pv_name>$(P)$(R)TOTAL_TIME_MS</pv_name>
+        <pv_name>$(P)$(R)PrvHstTotalTimeMs_RBV</pv_name>
         <x>380</x>
         <y>80</y>
         <width>120</width>
@@ -512,7 +512,7 @@
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>BinWidthDisplay_1</name>
-        <pv_name>$(P)$(R)BIN_OFFSET_MS</pv_name>
+        <pv_name>$(P)$(R)PrvHstBinOffsetMs_RBV</pv_name>
         <x>640</x>
         <y>80</y>
         <width>120</width>
