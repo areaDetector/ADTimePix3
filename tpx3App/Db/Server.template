@@ -1663,7 +1663,7 @@ record(ai, "$(P)$(R)PrvHstFrameBinOffset_RBV")
 
 # PrvHst calculated values in milliseconds (for compatibility with histogram IOC screen)
 # These are calculated from frame parameters: TPX3_TDC_CLOCK_PERIOD_SEC = (1.5625 / 6.0) * 1e-9
-record(calc, "$(P)$(R)BIN_WIDTH_MS")
+record(calc, "$(P)$(R)PrvHstBinWidthMs_RBV")
 {
     field(DESC, "Bin width in milliseconds")
     field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV")
@@ -1672,7 +1672,7 @@ record(calc, "$(P)$(R)BIN_WIDTH_MS")
     field(PREC, "6")
     field(SCAN, "I/O Intr")
 }
-record(calc, "$(P)$(R)BIN_OFFSET_MS")
+record(calc, "$(P)$(R)PrvHstBinOffsetMs_RBV")
 {
     field(DESC, "Bin offset in milliseconds")
     field(INPA, "$(P)$(R)PrvHstFrameBinOffset_RBV")
@@ -1681,7 +1681,7 @@ record(calc, "$(P)$(R)BIN_OFFSET_MS")
     field(PREC, "6")
     field(SCAN, "I/O Intr")
 }
-record(calc, "$(P)$(R)TOTAL_TIME_MS")
+record(calc, "$(P)$(R)PrvHstTotalTimeMs_RBV")
 {
     field(DESC, "Total time range in milliseconds")
     field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV")
