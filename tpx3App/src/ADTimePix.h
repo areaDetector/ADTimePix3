@@ -675,8 +675,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstOffset;
         int ADTimePixPrvHstFilePathExists;
         // PrvHst histogram data arrays
-        int ADTimePixPrvHstHistogramFrame;
         int ADTimePixPrvHstHistogramData;
+        int ADTimePixPrvHstHistogramFrame;
         int ADTimePixPrvHstHistogramSumNFrames;
         int ADTimePixPrvHstHistogramTimeMs;
         int ADTimePixPrvHstAccumulationEnable;
