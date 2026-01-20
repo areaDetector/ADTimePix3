@@ -1470,8 +1470,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
             baseParam = ADTimePixImg1Base;
             filePatParam = ADTimePixImg1FilePat;
         } else {
-            baseParam = ADTimePixImgBase;
-            filePatParam = ADTimePixImgFilePat;
+        baseParam = ADTimePixImgBase;
+        filePatParam = ADTimePixImgFilePat;
         }
     } else if (!isChannel1) {
         baseParam = ADTimePixPrvImgBase;
@@ -1511,8 +1511,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
             formatParam = ADTimePixImg1Format;
             modeParam = ADTimePixImg1Mode;
         } else {
-            formatParam = ADTimePixImgFormat;
-            modeParam = ADTimePixImgMode;
+        formatParam = ADTimePixImgFormat;
+        modeParam = ADTimePixImgMode;
         }
     } else if (!isChannel1) {
         formatParam = ADTimePixPrvImgFormat;
@@ -1557,8 +1557,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
             intSizeParam = ADTimePixImg1IntSize;
             intModeParam = ADTimePixImg1IntMode;
         } else {
-            intSizeParam = ADTimePixImgIntSize;
-            intModeParam = ADTimePixImgIntMode;
+        intSizeParam = ADTimePixImgIntSize;
+        intModeParam = ADTimePixImgIntMode;
         }
     } else if (!isChannel1) {
         intSizeParam = ADTimePixPrvImgIntSize;
@@ -1604,8 +1604,8 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
             stopOnDiskParam = ADTimePixImg1StpOnDskLim;
             queueSizeParam = ADTimePixImg1QueueSize;
         } else {
-            stopOnDiskParam = ADTimePixImgStpOnDskLim;
-            queueSizeParam = ADTimePixImgQueueSize;
+        stopOnDiskParam = ADTimePixImgStpOnDskLim;
+        queueSizeParam = ADTimePixImgQueueSize;
         }
     } else if (!isChannel1) {
         stopOnDiskParam = ADTimePixPrvImgStpOnDskLim;
@@ -2154,6 +2154,7 @@ asynStatus ADTimePix::acquireStart(){
     imgDisconnect();
 
     setIntegerParam(ADStatus, ADStatusAcquire);
+    setStringParam(ADStatusMessage, "Starting acquisition...");
 
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.joinable = 1;
@@ -2215,6 +2216,7 @@ asynStatus ADTimePix::acquireStart(){
 
     if (r.status_code != 200){
         ERR_ARGS("Failed to start measurement! Status code: %ld", r.status_code);
+        setStringParam(ADStatusMessage, "Failed to start acquisition");
         // Ensure any partially started worker thread is stopped
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
@@ -2473,6 +2475,12 @@ asynStatus ADTimePix::acquireStart(){
         printf("PrvHst: Unknown exception in TCP streaming setup\n");
     }
     
+    // Update status message on successful start
+    if (status == asynSuccess) {
+        setStringParam(ADStatusMessage, "Acquisition running");
+        callParamCallbacks();
+    }
+    
     return status;
 }
 
@@ -2520,21 +2528,21 @@ void ADTimePix::timePixCallback(){
             setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
         }
 
-        getStringParam(ADSDKVersion, API_Ver);
-        if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
+    getStringParam(ADSDKVersion, API_Ver);
+    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
             if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
                 setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
             }
             if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
                 setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
             }
-        } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
+    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
             if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
                 setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
             }
-        } else {
-            printf ("Serval Version not compared, event rate not read\n");
-        }
+    } else {
+        printf ("Serval Version not compared, event rate not read\n");
+    }
 
         if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
             setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
@@ -2576,21 +2584,21 @@ void ADTimePix::timePixCallback(){
                 if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
                     setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
                 }
-                
-                if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
+            
+            if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
                     if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
                         setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
                     }
                     if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
                         setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
                     }
-                } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
+            } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
                     if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
                         setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
                     }
-                } else {
-                    printf ("Serval Version event rate not specified in while loop.\n");
-                }
+            } else {
+                printf ("Serval Version event rate not specified in while loop.\n");
+            }
 
                 if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
                     setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
@@ -2603,7 +2611,7 @@ void ADTimePix::timePixCallback(){
                 }
                 if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
                     setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
-                    new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
+            new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
                 }
                 if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
                     setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
@@ -2614,7 +2622,7 @@ void ADTimePix::timePixCallback(){
                     // Check if status is "DA_IDLE" (only if it's a string)
                     if (measurement_j["Info"]["Status"].is_string() && 
                         measurement_j["Info"]["Status"].get<std::string>() == "DA_IDLE") {
-                        isIdle = true;
+                isIdle = true;
                     }
                 }
             }
@@ -2651,14 +2659,14 @@ void ADTimePix::timePixCallback(){
                     // Worker thread will update pArrays[0] and trigger callbacks asynchronously
                     // We just update counters based on frame count from measurement endpoint
                     setIntegerParam(ADNumImagesCounter, frameCounter);
-                    callParamCallbacks();
+                callParamCallbacks();
                 } else {
                     // Non-TCP path: TCP streaming is required for preview images
                     // GraphicsMagick HTTP method has been removed - use TCP streaming instead
                     WARN("PrvImg requires TCP streaming (tcp:// format). GraphicsMagick HTTP method no longer supported.");
                     // Worker thread handles TCP streaming, so just update counters
-                    setIntegerParam(ADNumImagesCounter, frameCounter);
-                    callParamCallbacks();
+                     setIntegerParam(ADNumImagesCounter, frameCounter);
+                     callParamCallbacks();
                 }
             }
         }
@@ -2699,6 +2707,8 @@ asynStatus ADTimePix::acquireStop(){
 
     if (r.status_code != 200){
         ERR("Failed to stop measurement!");
+        setStringParam(ADStatusMessage, "Failed to stop acquisition");
+        setIntegerParam(ADStatus, ADStatusError);
         return asynError;
     }
     
@@ -2809,6 +2819,7 @@ asynStatus ADTimePix::acquireStop(){
     prvHstDisconnect();
 
     setIntegerParam(ADStatus, ADStatusIdle);
+    setStringParam(ADStatusMessage, "Acquisition stopped");
     setIntegerParam(ADAcquire, 0);
     callParamCallbacks();
     FLOW("Stopping Image Acquisition");
@@ -2832,21 +2843,21 @@ asynStatus ADTimePix::acquireStop(){
             setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
         }
 
-        getStringParam(ADSDKVersion, API_Ver);
-        if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
+    getStringParam(ADSDKVersion, API_Ver);
+    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
             if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
                 setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
             }
             if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
                 setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
             }
-        } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
+    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
             if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
                 setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
             }
-        } else {
-            printf ("Serval Version not compared, event rate not read in acquireStop\n");
-        }
+    } else {
+        printf ("Serval Version not compared, event rate not read in acquireStop\n");
+    }
 
         if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
             setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
@@ -3396,7 +3407,7 @@ void ADTimePix::prvImgWorkerThread() {
                         prvImgRunning_ = false;
                         epicsMutexUnlock(prvImgMutex_);
                         printf("PrvImg TCP connection closed by peer\n");
-                        break;
+            break;
                     } else {
                         epicsMutexLock(prvImgMutex_);
                         if (prvImgConnected_) {
@@ -3405,7 +3416,7 @@ void ADTimePix::prvImgWorkerThread() {
                             LOG_ARGS("PrvImg TCP socket error: %s", strerror(errno));
                         }
                         epicsMutexUnlock(prvImgMutex_);
-                        break;
+            break;
                     }
                 }
                 
@@ -3424,8 +3435,8 @@ void ADTimePix::prvImgWorkerThread() {
                     for (char* p = prvImgLineBuffer_.data(); p < newline_pos - 1; ++p) {
                         if (*p == '{' && p[1] == '"') {
                             json_start = p;
-                            break;
-                        }
+            break;
+        }
                     }
                     
                     // If we didn't find {", try finding { followed by valid JSON structure
@@ -3440,18 +3451,18 @@ void ADTimePix::prvImgWorkerThread() {
                                     char c = p[i];
                                     if (c == '"' || c == ':' || c == ',' || c == '}' || c == '[' || c == ']') {
                                         looks_like_json = true;
-                                        break;
+            break;
                                     }
                                     if (std::isalnum(c) || c == ' ' || c == '_' || c == '-' || c == '.') {
                                         json_chars++;
                                     } else if (c < 32 && c != '\n' && c != '\r' && c != '\t') {
-                                        break;
+            break;
                                     }
                                 }
                                 
                                 if (looks_like_json || json_chars > 5) {
                                     json_start = p;
-                                    break;
+            break;
                                 }
                             }
                         }
@@ -3479,8 +3490,8 @@ void ADTimePix::prvImgWorkerThread() {
                             // Process the JSON line
                             if (!processPrvImgDataLine(json_start, newline_pos, prvImgTotalRead_)) {
                                 epicsMutexUnlock(prvImgMutex_);
-                                break;
-                            }
+            break;
+        }
                             
                             // Move remaining data to start of buffer
                             size_t remaining = prvImgTotalRead_ - (newline_pos - prvImgLineBuffer_.data() + 1);
@@ -4480,7 +4491,7 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         
         NDArray *pImage = nullptr;
         if (this->pArrays && this->pArrays[0]) {
-            pImage = this->pArrays[0];
+        pImage = this->pArrays[0];  
             pImage->release();
         }
         
@@ -5006,7 +5017,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgIntModeString,                asynParamInt32, &ADTimePixPrvImgIntMode);        
     createParam(ADTimePixPrvImgStpOnDskLimString,            asynParamInt32, &ADTimePixPrvImgStpOnDskLim);    
     createParam(ADTimePixPrvImgQueueSizeString,              asynParamInt32, &ADTimePixPrvImgQueueSize);
-    createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);
+    createParam(ADTimePixPrvImgFilePathExistsString,         asynParamInt32, &ADTimePixPrvImgFilePathExists);          
     // PrvImg TCP streaming metadata
     createParam(ADTimePixPrvImgFrameNumberString,            asynParamInt32, &ADTimePixPrvImgFrameNumber);
     createParam(ADTimePixPrvImgTimeAtFrameString,            asynParamFloat64, &ADTimePixPrvImgTimeAtFrame);
