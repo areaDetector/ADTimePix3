@@ -289,6 +289,7 @@
 #define ADTimePixPrvHstMemoryUsageString          "TPX3_PRV_HST_MEMORY_USAGE"         // (asynFloat64,       r)      Memory usage (MB)
 #define ADTimePixPrvHstFramesToSumString         "TPX3_PRV_HST_FRAMES_TO_SUM"        // (asynInt32,         r/w)    Number of frames to sum
 #define ADTimePixPrvHstSumUpdateIntervalString   "TPX3_PRV_HST_SUM_UPDATE_INTERVAL"   // (asynInt32,         r/w)    Update interval for sum (frames)
+#define ADTimePixPrvHstDataResetString           "TPX3_PRV_HST_DATA_RESET"           // (asynInt32,         w)      Reset accumulated histogram data
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
@@ -691,7 +692,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstProcessingTime;
         int ADTimePixPrvHstMemoryUsage;
         int ADTimePixPrvHstFramesToSum;
-        int ADTimePixPrvHstSumUpdateInterval;    
+        int ADTimePixPrvHstSumUpdateInterval;
+        int ADTimePixPrvHstDataReset;    
 
             // Measurement
         int ADTimePixPelRate;        
@@ -927,6 +929,7 @@ class ADTimePix : public ADDriver{
         void updateImgPerformanceMetrics();
         double calculateImgMemoryUsageMB();
         void resetImgAccumulation();
+        void resetPrvHstAccumulation();
         
         // TCP streaming methods for PrvHst channel
         bool processPrvHstDataLine(char* line_buffer, char* newline_pos, size_t total_read);

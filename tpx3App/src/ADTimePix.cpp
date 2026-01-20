@@ -2246,16 +2246,13 @@ asynStatus ADTimePix::acquireStart(){
     if (prvHstMutex_) {
         epicsMutexLock(prvHstMutex_);
         prvHstRunning_ = false;
-        // Reset metadata tracking for next acquisition
+        // Reset metadata tracking for next acquisition (but keep accumulated data)
         prvHstFirstFrameReceived_ = false;
         prvHstAcquisitionRate_ = 0.0;
         prvHstRateSamples_.clear();
-        prvHstFrameCount_ = 0;
-        prvHstTotalCounts_ = 0;
-        prvHstFramesSinceLastSumUpdate_ = 0;
+        // Don't reset counters here - let user control via reset PV
+        // Only reset rate tracking
         setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
-        setIntegerParam(ADTimePixPrvHstFrameCount, 0);
-        setInteger64Param(ADTimePixPrvHstTotalCounts, 0);
         epicsMutexUnlock(prvHstMutex_);
     }
     
@@ -2774,16 +2771,13 @@ asynStatus ADTimePix::acquireStop(){
     if (prvHstMutex_) {
         epicsMutexLock(prvHstMutex_);
         prvHstRunning_ = false;
-        // Reset metadata tracking for next acquisition
+        // Reset metadata tracking for next acquisition (but keep accumulated data)
         prvHstFirstFrameReceived_ = false;
         prvHstAcquisitionRate_ = 0.0;
         prvHstRateSamples_.clear();
-        prvHstFrameCount_ = 0;
-        prvHstTotalCounts_ = 0;
-        prvHstFramesSinceLastSumUpdate_ = 0;
+        // Don't reset counters here - let user control via reset PV
+        // Only reset rate tracking
         setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
-        setIntegerParam(ADTimePixPrvHstFrameCount, 0);
-        setInteger64Param(ADTimePixPrvHstTotalCounts, 0);
         epicsMutexUnlock(prvHstMutex_);
     }
     
@@ -3058,6 +3052,20 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             // Reset the PV back to 0 (one-shot action)
             setIntegerParam(ADTimePixImgImageDataReset, 0);
             callParamCallbacks(ADTimePixImgImageDataReset);
+        }
+    }
+
+    else if(function == ADTimePixPrvHstDataReset) {
+        // Reset accumulated histogram data when value is set to 1
+        if (value == 1) {
+            if (prvHstMutex_) {
+                epicsMutexLock(prvHstMutex_);
+                resetPrvHstAccumulation();
+                epicsMutexUnlock(prvHstMutex_);
+            }
+            // Reset the PV back to 0 (one-shot action)
+            setIntegerParam(ADTimePixPrvHstDataReset, 0);
+            callParamCallbacks(ADTimePixPrvHstDataReset);
         }
     }
 
@@ -4427,6 +4435,68 @@ void ADTimePix::resetImgAccumulation() {
     // to wait for the next frame to populate the arrays
 }
 
+void ADTimePix::resetPrvHstAccumulation() {
+    // Reset accumulated histogram data
+    prvHstRunningSum_.reset();
+    prvHstFrameBuffer_.clear();
+    prvHstFrameCount_ = 0;
+    prvHstTotalCounts_ = 0;
+    prvHstFramesSinceLastSumUpdate_ = 0;
+    prvHstProcessingTime_ = 0.0;
+    prvHstProcessingTimeSamples_.clear();
+    
+    // Clear buffers
+    prvHstSumArray64Buffer_.clear();
+    prvHstSumArray64WorkBuffer_.clear();
+    prvHstArrayData32Buffer_.clear();
+    prvHstTimeMsBuffer_.clear();
+    
+    // Update PVs
+    setIntegerParam(ADTimePixPrvHstFrameCount, 0);
+    setInteger64Param(ADTimePixPrvHstTotalCounts, 0);
+    setDoubleParam(ADTimePixPrvHstProcessingTime, 0.0);
+    
+    // Calculate memory usage after reset (similar to histogram_io.cpp)
+    double total_memory_mb = 0.0;
+    // Running sum is reset, so no memory for it
+    // Frame buffer is cleared, so no memory for frames
+    // Only buffers remain
+    total_memory_mb += prvHstTimeMsBuffer_.size() * sizeof(epicsFloat64) / (1024.0 * 1024.0);
+    total_memory_mb += (prvHstRateSamples_.size() + prvHstProcessingTimeSamples_.size()) * sizeof(double) / (1024.0 * 1024.0);
+    total_memory_mb += prvHstLineBuffer_.size() * sizeof(char) / (1024.0 * 1024.0);
+    total_memory_mb += 0.1;  // Estimated overhead
+    prvHstMemoryUsage_ = total_memory_mb;
+    setDoubleParam(ADTimePixPrvHstMemoryUsage, prvHstMemoryUsage_);
+    
+    // Trigger callbacks with zero arrays to clear waveform PVs immediately
+    // This ensures the display shows empty arrays right away
+    if (ADTimePixPrvHstHistogramData >= 0) {
+        // Send zero array for accumulated data (use last known bin size or default)
+        size_t zero_bin_size = 16000; // Default bin size
+        if (prvHstFrameBinSize_ > 0) {
+            zero_bin_size = static_cast<size_t>(prvHstFrameBinSize_);
+        }
+        std::vector<epicsInt64> zero_data(zero_bin_size, 0);
+        doCallbacksInt64Array(zero_data.data(), zero_bin_size, ADTimePixPrvHstHistogramData, 0);
+    }
+    
+    if (ADTimePixPrvHstHistogramSumNFrames >= 0) {
+        // Send zero array for sum of N frames
+        size_t zero_bin_size = 16000; // Default bin size
+        if (prvHstFrameBinSize_ > 0) {
+            zero_bin_size = static_cast<size_t>(prvHstFrameBinSize_);
+        }
+        std::vector<epicsInt64> zero_data(zero_bin_size, 0);
+        doCallbacksInt64Array(zero_data.data(), zero_bin_size, ADTimePixPrvHstHistogramSumNFrames, 0);
+    }
+    
+    // Trigger callbacks for counter PVs
+    callParamCallbacks(ADTimePixPrvHstFrameCount);
+    callParamCallbacks(ADTimePixPrvHstTotalCounts);
+    callParamCallbacks(ADTimePixPrvHstProcessingTime);
+    callParamCallbacks(ADTimePixPrvHstMemoryUsage);
+}
+
 bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
     const char* functionName = "processPrvImgDataLine";
     
@@ -5081,6 +5151,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstMemoryUsageString,            asynParamFloat64, &ADTimePixPrvHstMemoryUsage);
     createParam(ADTimePixPrvHstFramesToSumString,            asynParamInt32, &ADTimePixPrvHstFramesToSum);
     createParam(ADTimePixPrvHstSumUpdateIntervalString,      asynParamInt32, &ADTimePixPrvHstSumUpdateInterval);
+    createParam(ADTimePixPrvHstDataResetString,               asynParamInt32, &ADTimePixPrvHstDataReset);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      

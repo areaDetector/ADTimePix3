@@ -1788,3 +1788,13 @@ record(bi, "$(P)$(R)PrvHstAccumulationEnable_RBV")
     field(ONAM, "Enabled")
     field(SCAN, "I/O Intr")
 }
+
+record(bo, "$(P)$(R)PrvHstDataReset")
+{
+    field(DESC, "Reset accumulated histogram data")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_DATA_RESET")
+    field(ZNAM, "No")
+    field(ONAM, "Reset")
+    field(VAL, "0")
+}
