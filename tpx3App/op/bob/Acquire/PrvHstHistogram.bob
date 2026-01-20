@@ -221,6 +221,37 @@
           </color>
         </border_color>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>ResetAccumulationLabel</name>
+        <text>Reset Accumulation:</text>
+        <x>950</x>
+        <y>42</y>
+        <width>160</width>
+        <height>25</height>
+        <vertical_alignment>1</vertical_alignment>
+      </widget>
+      <widget type="bool_button" version="2.0.0">
+        <name>PrvHstDataResetButton</name>
+        <pv_name>$(P)$(R)PrvHstDataReset</pv_name>
+        <bit>-1</bit>
+        <x>1120</x>
+        <y>40</y>
+        <height>25</height>
+        <off_label>No</off_label>
+        <off_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </off_color>
+        <on_label>Reset</on_label>
+        <on_color>
+          <color red="255" green="100" blue="100">
+          </color>
+        </on_color>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+      </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>AcquisitionControl</name>
