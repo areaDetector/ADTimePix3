@@ -1661,6 +1661,37 @@ record(ai, "$(P)$(R)PrvHstFrameBinOffset_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# PrvHst calculated values in milliseconds (for compatibility with histogram IOC screen)
+# These are calculated from frame parameters: TPX3_TDC_CLOCK_PERIOD_SEC = (1.5625 / 6.0) * 1e-9
+record(calc, "$(P)$(R)BIN_WIDTH_MS")
+{
+    field(DESC, "Bin width in milliseconds")
+    field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV")
+    field(CALC, "A * 2.6041666666666667e-7")
+    field(EGU, "ms")
+    field(PREC, "6")
+    field(SCAN, "I/O Intr")
+}
+record(calc, "$(P)$(R)BIN_OFFSET_MS")
+{
+    field(DESC, "Bin offset in milliseconds")
+    field(INPA, "$(P)$(R)PrvHstFrameBinOffset_RBV")
+    field(CALC, "A * 2.6041666666666667e-7")
+    field(EGU, "ms")
+    field(PREC, "6")
+    field(SCAN, "I/O Intr")
+}
+record(calc, "$(P)$(R)TOTAL_TIME_MS")
+{
+    field(DESC, "Total time range in milliseconds")
+    field(INPA, "$(P)$(R)PrvHstFrameBinWidth_RBV")
+    field(INPB, "$(P)$(R)PrvHstFrameBinSize_RBV")
+    field(CALC, "A * B * 2.6041666666666667e-7")
+    field(EGU, "ms")
+    field(PREC, "6")
+    field(SCAN, "I/O Intr")
+}
+
 # PrvHst accumulation statistics
 record(ai, "$(P)$(R)PrvHstFrameCount_RBV")
 {
