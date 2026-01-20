@@ -270,8 +270,8 @@
 #define ADTimePixPrvHstOffsetString             "TPX3_PRV_HSTOFFSET"        // (asynFloat64,       w)      Preview HistogramChannels Offset
 #define ADTimePixPrvHstFilePathExistsString     "PRV_HST_FILE_PATH_EXISTS"  // (asynInt32,       r/w)      File path exists? */
     // PrvHst histogram data arrays (similar to Img channel)
-#define ADTimePixPrvHstHistogramDataString      "TPX3_PRV_HST_HISTOGRAM_DATA"        // (asynInt64Array,    r)      Accumulated histogram data
 #define ADTimePixPrvHstHistogramFrameString     "TPX3_PRV_HST_HISTOGRAM_FRAME"       // (asynInt32Array,    r)      Current frame histogram data
+#define ADTimePixPrvHstHistogramDataString      "TPX3_PRV_HST_HISTOGRAM_DATA"        // (asynInt64Array,    r)      Accumulated histogram data
 #define ADTimePixPrvHstHistogramSumNFramesString "TPX3_PRV_HST_HISTOGRAM_SUM_N_FRAMES" // (asynInt64Array,  r)      Sum of last N frames
 #define ADTimePixPrvHstHistogramTimeMsString    "TPX3_PRV_HST_HISTOGRAM_TIME_MS"     // (asynFloat64Array,  r)      Histogram time axis (milliseconds)
     // PrvHst accumulation control
@@ -675,8 +675,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstOffset;
         int ADTimePixPrvHstFilePathExists;
         // PrvHst histogram data arrays
-        int ADTimePixPrvHstHistogramData;
         int ADTimePixPrvHstHistogramFrame;
+        int ADTimePixPrvHstHistogramData;
         int ADTimePixPrvHstHistogramSumNFrames;
         int ADTimePixPrvHstHistogramTimeMs;
         int ADTimePixPrvHstAccumulationEnable;

@@ -5133,8 +5133,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstOffsetString,                 asynParamFloat64,  &ADTimePixPrvHstOffset);
     createParam(ADTimePixPrvHstFilePathExistsString,         asynParamInt32,    &ADTimePixPrvHstFilePathExists);
     // PrvHst histogram data arrays
-    createParam(ADTimePixPrvHstHistogramDataString,          asynParamInt64Array, &ADTimePixPrvHstHistogramData);
     createParam(ADTimePixPrvHstHistogramFrameString,         asynParamInt32Array, &ADTimePixPrvHstHistogramFrame);
+    createParam(ADTimePixPrvHstHistogramDataString,          asynParamInt64Array, &ADTimePixPrvHstHistogramData);
     createParam(ADTimePixPrvHstHistogramSumNFramesString,     asynParamInt64Array, &ADTimePixPrvHstHistogramSumNFrames);
     createParam(ADTimePixPrvHstHistogramTimeMsString,        asynParamFloat64Array, &ADTimePixPrvHstHistogramTimeMs);
     createParam(ADTimePixPrvHstAccumulationEnableString,     asynParamInt32, &ADTimePixPrvHstAccumulationEnable);
