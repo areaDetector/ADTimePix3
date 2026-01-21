@@ -509,10 +509,10 @@
   <widget type="image" version="2.0.0">
     <name>Image_Accumulated</name>
     <pv_name>$(P)$(R)ImageData</pv_name>
-    <x>10</x>
-    <y>720</y>
-    <width>1300</width>
-    <height>1300</height>
+    <x>1410</x>
+    <y>10</y>
+    <width>800</width>
+    <height>800</height>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
@@ -548,7 +548,7 @@
     <name>Image_Frame</name>
     <pv_name>$(P)$(R)ImageFrame</pv_name>
     <x>1410</x>
-    <y>740</y>
+    <y>830</y>
     <width>800</width>
     <height>800</height>
     <x_axis>
@@ -585,10 +585,10 @@
   <widget type="image" version="2.0.0">
     <name>Image_Sum_N_Frames</name>
     <pv_name>$(P)$(R)ImageSumNFrames</pv_name>
-    <x>1410</x>
-    <y>20</y>
-    <width>800</width>
-    <height>800</height>
+    <x>10</x>
+    <y>720</y>
+    <width>1300</width>
+    <height>1300</height>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
