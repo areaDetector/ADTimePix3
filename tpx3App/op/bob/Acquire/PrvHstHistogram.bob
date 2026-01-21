@@ -2,7 +2,6 @@
 <display version="2.0.0">
   <name>PrvHstHistogram</name>
   <macros>
-    <P>TPX3-TEST:</P>
     <R>cam1:</R>
   </macros>
   <width>2220</width>
