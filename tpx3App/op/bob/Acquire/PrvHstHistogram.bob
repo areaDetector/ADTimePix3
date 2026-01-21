@@ -4,8 +4,8 @@
   <macros>
     <R>cam1:</R>
   </macros>
-  <width>2220</width>
-  <height>1350</height>
+  <width>2230</width>
+  <height>1650</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
     <width>1400</width>
@@ -924,7 +924,7 @@
     <x>1410</x>
     <y>20</y>
     <width>800</width>
-    <height>400</height>
+    <height>800</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
@@ -989,9 +989,9 @@
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_Frame</name>
     <x>1410</x>
-    <y>440</y>
+    <y>840</y>
     <width>800</width>
-    <height>400</height>
+    <height>800</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
@@ -1055,10 +1055,10 @@
   </widget>
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_SumNFrames</name>
-    <x>1410</x>
-    <y>860</y>
-    <width>800</width>
-    <height>400</height>
+    <x>10</x>
+    <y>1160</y>
+    <width>1300</width>
+    <height>1300</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
