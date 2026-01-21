@@ -5315,6 +5315,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Calculate initial memory usage (will be 0.0 initially since buffers are empty)
     imgMemoryUsage_ = calculateImgMemoryUsageMB();
     setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
+    // Initialize NumImages to 0 (unlimited) for continuous mode
+    // This prevents INVALID status from very large default values
+    setIntegerParam(ADNumImages, 0);
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
