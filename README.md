@@ -108,7 +108,7 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 - Thread synchronization uses `epicsMutex` to protect shared data structures
 - The worker thread automatically clears its thread ID before exiting to allow clean shutdown
 
-**Note on asyn Warnings**: When histogram data callbacks are active, you may see warnings like `asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`. These warnings are harmless and can be safely ignored. They occur because asyn's alarm/status information for array parameters isn't fully initialized for parameters registered later in the sequence. The data callbacks succeed and histogram data is transmitted correctly. The driver also handles the `NDInt64` data type used for histogram data without causing "Illegal Value" status in `DataType_RBV`, and preserves shared size parameters (`SizeX_RBV`, `SizeY_RBV`) so they correctly reflect image dimensions even when histogram streaming is active. See the Troubleshooting section for more details.
+**Note on asyn Warnings**: When histogram data callbacks are active, you may see warnings like `asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list` (the parameter number may vary - 50, 51, 52, etc. - depending on your system's asyn library version and configuration). These warnings are harmless and can be safely ignored. They occur because asyn's alarm/status information for array parameters isn't fully initialized for parameters registered later in the sequence. The data callbacks succeed and histogram data is transmitted correctly. The driver also handles the `NDInt64` data type used for histogram data without causing "Illegal Value" status in `DataType_RBV`, and preserves shared size parameters (`SizeX_RBV`, `SizeY_RBV`) so they correctly reflect image dimensions even when histogram streaming is active. See the Troubleshooting section for more details.
 
 How to run:
 -----------
@@ -365,7 +365,7 @@ Troubleshooting
 
 **Known Warnings (Harmless)**:
 
-* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: This warning appears when histogram data callbacks are triggered for Int32Array parameters. It is harmless and can be safely ignored. The warning occurs because asyn's internal alarm/status information arrays for Int32Array parameters (list 5 in asyn's internal structure) are not fully initialized for parameters with high indices. When `doCallbacksInt32Array()` is called, asyn automatically tries to update alarm/status information via `getParamStatus()`, `getParamAlarmStatus()`, and `getParamAlarmSeverity()`, but these functions fail because the alarm/status arrays for Int32Array parameters aren't properly sized for high parameter indices. The data callbacks complete successfully and histogram data is transmitted correctly to EPICS PVs - only the alarm/status metadata update fails. This is a fundamental asyn library limitation when drivers have many parameters (ADTimePix3 has ~237 parameters). **Is this fixed in newer asyn versions?** No - this is a persistent limitation in asyn library across all versions. The alarm/status arrays for array parameters are sized based on the total number of parameters, but for drivers with many parameters, high-index array parameters may exceed the allocated size. **Can this be fixed by moving parameters to lower indices?** No - testing has shown that moving Int32Array parameters to earlier positions does not resolve the warning. The issue is that asyn's internal arrays for alarm/status metadata are not properly sized for any Int32Array parameters when the total parameter count is high, regardless of their position. This is a fundamental limitation of how asyn manages alarm/status arrays for array parameter types. **No action required** - the functionality works correctly despite the warning. The warnings can be filtered from log files if desired, but they don't affect driver operation. The data callbacks succeed and all histogram data is transmitted correctly to EPICS PVs.
+* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`** (or parameter 52, 50, etc.): This warning appears when histogram data callbacks are triggered for Int32Array parameters. It is harmless and can be safely ignored. The warning occurs because asyn's internal alarm/status information arrays for Int32Array parameters (list 5 in asyn's internal structure) are not fully initialized for parameters with high indices. When `doCallbacksInt32Array()` is called, asyn automatically tries to update alarm/status information via `getParamStatus()`, `getParamAlarmStatus()`, and `getParamAlarmSeverity()`, but these functions fail because the alarm/status arrays for Int32Array parameters aren't properly sized for high parameter indices. The data callbacks complete successfully and histogram data is transmitted correctly to EPICS PVs - only the alarm/status metadata update fails. This is a fundamental asyn library limitation when drivers have many parameters (ADTimePix3 has ~237 parameters). **Why does the parameter number vary (51 vs 52)?** The parameter index that triggers the warning can vary between systems due to differences in asyn library versions, EPICS base versions, compiler optimizations, or memory layout. Different systems may allocate asyn's internal parameter arrays slightly differently, causing the same Int32Array parameter to have a different index within the Int32Array list. This is normal and expected - the warning is harmless regardless of the specific parameter number. **Is this fixed in newer asyn versions?** No - this is a persistent limitation in asyn library across all versions. The alarm/status arrays for array parameters are sized based on the total number of parameters, but for drivers with many parameters, high-index array parameters may exceed the allocated size. **Can this be fixed by moving parameters to lower indices?** No - testing has shown that moving Int32Array parameters to earlier positions does not resolve the warning. The issue is that asyn's internal arrays for alarm/status metadata are not properly sized for any Int32Array parameters when the total parameter count is high, regardless of their position. This is a fundamental limitation of how asyn manages alarm/status arrays for array parameter types. **No action required** - the functionality works correctly despite the warning. The warnings can be filtered from log files if desired, but they don't affect driver operation. The data callbacks succeed and all histogram data is transmitted correctly to EPICS PVs.
 
 **Suppressing these messages in log files:**
 
@@ -376,11 +376,11 @@ Since these warnings can fill log files, here are several methods to suppress th
 1. **Filter existing log files** (simplest, works with any setup):
    ```bash
    # Filter a log file
-   grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" ioc.log > ioc_filtered.log
+   grep -vE "(parameter [0-9]+ in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" ioc.log > ioc_filtered.log
    
    # Or filter in place (backup first!)
    cp ioc.log ioc.log.backup
-   grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" ioc.log.backup > ioc.log
+   grep -vE "(parameter [0-9]+ in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" ioc.log.backup > ioc.log
    ```
 
 2. **Use logrotate with post-rotate filtering** (for automated log management):
@@ -396,7 +396,7 @@ Since these warnings can fill log files, here are several methods to suppress th
        postrotate
            # Filter warnings after rotation (if log file exists)
            if [ -f /path/to/ioc.log.1 ]; then
-               grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" /path/to/ioc.log.1 > /path/to/ioc.log.1.filtered
+               grep -vE "(parameter [0-9]+ in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" /path/to/ioc.log.1 > /path/to/ioc.log.1.filtered
                mv /path/to/ioc.log.1.filtered /path/to/ioc.log.1
            fi
        endscript
@@ -418,7 +418,7 @@ Since these warnings can fill log files, here are several methods to suppress th
      LOGFILE="/path/to/ioc.log"
      if [ -f "$LOGFILE" ]; then
          # Create filtered version, then replace (atomic operation)
-         grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" "$LOGFILE" > "${LOGFILE}.filtered"
+         grep -vE "(parameter [0-9]+ in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)" "$LOGFILE" > "${LOGFILE}.filtered"
          mv "${LOGFILE}.filtered" "$LOGFILE"
      fi
      ```
@@ -426,7 +426,7 @@ Since these warnings can fill log files, here are several methods to suppress th
 4. **Use systemd/journald filtering** (if using systemd):
    ```bash
    # View logs without these warnings
-   journalctl -u ioc-service | grep -vE "(parameter.*in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)"
+   journalctl -u ioc-service | grep -vE "(parameter [0-9]+ in list 5|getParamStatus.*list 5|getParamAlarmStatus.*list 5|getParamAlarmSeverity.*list 5)"
    
    # Or configure journald to filter (requires journald configuration)
    ```
