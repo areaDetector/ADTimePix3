@@ -2,7 +2,10 @@
 
 ## Executive Summary
 
-The ADTimePix3 histogram processing code can handle **very high hit rates** (320-640 MHits/s) and **very fine time resolution** (down to ~260 picoseconds, the TDC clock period). The code is optimized for Time-of-Flight (ToF) applications and pump-probe experiments requiring sub-nanosecond bin widths.
+The ADTimePix3 histogram processing code can handle **very high hit rates** (320-640 MHits/s) and **very fine time resolution** (down to ~260 picoseconds, the TDC clock period). The code is optimized for Time-of-Flight (ToF) applications including:
+- **Pump-probe experiments** requiring sub-nanosecond bin widths
+- **Phase transition detection** using neutron Bragg edges in sliding sum waveforms
+- **High hit rate applications** with 320-640+ MHits/s
 
 **Key Capabilities:**
 - **Hit Rate**: Can process **320-640+ MHits/s** (quad-chip and 8-chip Cheetah detectors)
@@ -10,6 +13,7 @@ The ADTimePix3 histogram processing code can handle **very high hit rates** (320
 - **Maximum Bin Count**: **1,000,000 bins** per histogram
 - **Processing Rate**: **10,000-50,000+ FPS** (frames per second) depending on bin size
 - **Frame Rate Limits**: Processing overhead is minimal (~10-50 μs per frame), allowing very high frame rates
+- **Sliding Sum**: Supports sum of last N frames for improved signal-to-noise in phase transition studies
 
 ## TDC Clock Period and Bin Width Resolution
 
@@ -142,6 +146,24 @@ For **pump-probe experiments** requiring fine time resolution:
 
 **Key Limitation**: The **minimum bin width is limited by the TDC clock period (260 ps)**, not by the processing code. You cannot achieve sub-picosecond resolution because the detector itself cannot resolve time intervals smaller than one TDC clock tick.
 
+### Bin Size Examples for Different Applications
+
+**For pump-probe experiments** (see detailed section below):
+- Fine time resolution: 260 ps - 1 ns bins
+- Small time windows: 1-100 μs
+- High frame rates: 10-60 Hz
+
+**For phase transition detection** (see detailed section below):
+- Moderate time resolution: 100 ns - 1 μs bins (sufficient for Bragg edge resolution)
+- Large time windows: Full frame period (16.67 ms - 1 s)
+- Moderate frame rates: 1-60 Hz (depending on transition time scale)
+- Uses sliding sum for signal-to-noise improvement
+
+**For high hit rate applications**:
+- Standard time resolution: 100 ns - 1 μs bins
+- Full time window coverage
+- High frame rates: 10-60 Hz
+
 ## Memory Requirements
 
 ### Per-Frame Memory Usage
@@ -240,6 +262,101 @@ caput TPX3-TEST:cam1:PrvHstBinWidth 384  # 100 ns
 caput TPX3-TEST:cam1:PrvHstOffset 0
 ```
 
+### For Phase Transition Detection (Neutron Bragg Edges)
+
+**Application Overview:**
+Phase transition detection involves monitoring changes in neutron time-of-flight spectra over time to identify structural phase changes in materials. **Bragg edges** are sharp features in ToF histograms that correspond to crystal lattice spacings (d-spacings) via the relationship:
+
+```
+λ = 2d sin(θ)  (Bragg's law)
+ToF = L / v = L * m / h * λ  (neutron wavelength to ToF conversion)
+```
+
+Where:
+- `λ` = neutron wavelength
+- `d` = crystal lattice spacing
+- `θ` = scattering angle
+- `L` = flight path length
+- `v` = neutron velocity
+- `m` = neutron mass
+- `h` = Planck's constant
+
+**Key Requirements:**
+1. **Signal-to-Noise Ratio**: Phase transitions cause subtle shifts in Bragg edge positions and intensities. High signal-to-noise is critical for detection.
+2. **Temporal Resolution**: Phase transitions can occur over seconds to minutes, requiring frame rates of 1-60 Hz.
+3. **Time-of-Flight Resolution**: Bragg edges require sufficient ToF resolution to resolve lattice spacing changes. Typical requirements: 100 ns - 1 μs bin widths.
+4. **Sliding Sum**: The sum of last N frames (`PrvHstHistogramSumNFrames`) improves signal-to-noise by averaging multiple frames while maintaining temporal resolution.
+
+**Recommended Configuration:**
+- **Bin Width**: 100 ns - 1 μs (384 - 3,840 TDC ticks)
+  - **100 ns bins**: For high-resolution studies requiring precise Bragg edge position measurement
+  - **1 μs bins**: For standard phase transition detection with good signal-to-noise
+- **Time Window**: Full frame period (covers entire neutron pulse or ToF range)
+- **Bin Count**: 10,000 - 1,000,000 bins (depending on time window and bin width)
+- **Frame Rate**: 1-60 Hz (depending on transition time scale)
+  - **Fast transitions (seconds)**: 10-60 Hz
+  - **Slow transitions (minutes)**: 1-10 Hz
+- **Sliding Sum Frames**: 10-100 frames (adjust based on signal-to-noise requirements)
+  - More frames = better signal-to-noise but reduced temporal resolution
+  - Fewer frames = better temporal resolution but lower signal-to-noise
+
+**Example Configurations:**
+
+**High-Resolution Phase Transition Detection:**
+```bash
+# 16.67 ms time window (60 Hz) with 100 ns bins for precise Bragg edge measurement
+caput TPX3-TEST:cam1:PrvHstNumBins 166700
+caput TPX3-TEST:cam1:PrvHstBinWidth 384  # 100 ns
+caput TPX3-TEST:cam1:PrvHstOffset 0
+caput TPX3-TEST:cam1:PrvHstFramesToSum 50  # Sum of last 50 frames
+caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 5  # Update every 5 frames
+```
+
+**Standard Phase Transition Detection:**
+```bash
+# 100 ms time window (10 Hz) with 1 μs bins for good signal-to-noise
+caput TPX3-TEST:cam1:PrvHstNumBins 100000
+caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 μs
+caput TPX3-TEST:cam1:PrvHstOffset 0
+caput TPX3-TEST:cam1:PrvHstFramesToSum 20  # Sum of last 20 frames
+caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 2  # Update every 2 frames
+```
+
+**Slow Phase Transition Monitoring:**
+```bash
+# 1 s time window (1 Hz) with 1 μs bins for long-term monitoring
+caput TPX3-TEST:cam1:PrvHstNumBins 1000000
+caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 μs
+caput TPX3-TEST:cam1:PrvHstOffset 0
+caput TPX3-TEST:cam1:PrvHstFramesToSum 10  # Sum of last 10 frames
+caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 1  # Update every frame
+```
+
+**Using Sliding Sum for Signal-to-Noise Improvement:**
+
+The `PrvHstHistogramSumNFrames` waveform provides a sliding sum of the last N frames, which:
+- **Improves signal-to-noise** by averaging multiple frames
+- **Maintains temporal resolution** by using a sliding window (not cumulative sum)
+- **Enables real-time detection** of Bragg edge shifts during phase transitions
+
+**Monitoring Bragg Edge Shifts:**
+1. Monitor `PrvHstHistogramSumNFrames` waveform for Bragg edge positions
+2. Track edge position changes over time to detect phase transitions
+3. Adjust `PrvHstFramesToSum` to balance signal-to-noise vs temporal resolution
+4. Use `PrvHstSumUpdateInterval` to control update frequency (reduces processing overhead)
+
+**Comparison with Pump-Probe Experiments:**
+
+| Parameter | Pump-Probe | Phase Transition Detection |
+|-----------|------------|---------------------------|
+| **Time Resolution** | Sub-nanosecond (260 ps - 1 ns) | Microsecond (100 ns - 1 μs) |
+| **Frame Rate** | High (10-60 Hz) | Moderate (1-60 Hz) |
+| **Bin Width** | 1-4 TDC ticks (260 ps - 1 ns) | 384-3,840 TDC ticks (100 ns - 1 μs) |
+| **Time Window** | Small (1-100 μs) | Large (full frame period) |
+| **Signal-to-Noise** | Less critical | Critical (uses sliding sum) |
+| **Temporal Scale** | Nanoseconds to microseconds | Seconds to minutes |
+| **Primary Feature** | Fast dynamics | Bragg edge position/intensity |
+
 ### For Standard ToF Applications
 
 **Recommended Configuration:**
@@ -276,25 +393,32 @@ For **high hit rate applications**:
 
 ## Conclusion
 
-The ADTimePix3 histogram processing code is **highly capable** for both high hit rate applications and fine time resolution experiments:
+The ADTimePix3 histogram processing code is **highly capable** for a wide range of Time-of-Flight applications:
 
 1. ✅ **Hit Rate**: Can handle **320-640+ MHits/s** from Cheetah detectors
 2. ✅ **Time Resolution**: Can process down to **260 picoseconds** (1 TDC tick) - suitable for pump-probe experiments
 3. ✅ **Frame Rate**: Can sustain **10,000-50,000+ FPS** depending on bin size
 4. ✅ **Bin Size**: Supports up to **1,000,000 bins** per histogram
-5. ⚠️ **Limitation**: Minimum bin width is **260 ps** (TDC clock period) - cannot achieve sub-picosecond resolution
+5. ✅ **Sliding Sum**: Supports sum of last N frames for improved signal-to-noise in phase transition detection
+6. ⚠️ **Limitation**: Minimum bin width is **260 ps** (TDC clock period) - cannot achieve sub-picosecond resolution
 
 **For pump-probe experiments requiring sub-nanosecond resolution:**
 - ✅ **1 ns bins (4 TDC ticks)**: Fully supported
 - ✅ **260 ps bins (1 TDC tick)**: Native detector resolution - **Recommended**
 - ❌ **Sub-260 ps bins**: Not possible (hardware limitation)
 
+**For phase transition detection using neutron Bragg edges:**
+- ✅ **100 ns - 1 μs bins**: Fully supported for Bragg edge resolution
+- ✅ **Sliding sum feature**: Enables signal-to-noise improvement while maintaining temporal resolution
+- ✅ **Frame rates 1-60 Hz**: Suitable for monitoring transitions over seconds to minutes
+- ✅ **Large bin counts (up to 1M bins)**: Supports full ToF range coverage
+
 **For high hit rate applications (320-640 MHits/s):**
 - ✅ **Processing overhead is minimal** (~50-430 μs per frame)
 - ✅ **Can sustain high frame rates** (10,000-50,000+ FPS for small bins)
 - ✅ **Memory usage is reasonable** (~30 MB for 1M bins)
 
-The code is well-optimized for Time-of-Flight applications and can handle the full capabilities of Cheetah TimePix3 detectors.
+The code is well-optimized for Time-of-Flight applications including pump-probe experiments, phase transition detection, and high hit rate applications. It can handle the full capabilities of Cheetah TimePix3 detectors.
 
 ## References
 
