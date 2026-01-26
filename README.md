@@ -454,3 +454,21 @@ Since these warnings can fill log files, here are several methods to suppress th
 * **`SizeX_RBV` and `SizeY_RBV` showing incorrect values when histogram channel is enabled**: Fixed in R1-5. The histogram channel was setting shared size parameters (`ADSizeX`, `NDArraySizeX`, `ADSizeY`, `NDArraySizeY`) that are also used by image channels, causing histogram bin sizes (e.g., 16000) to overwrite image dimensions (e.g., 512). The driver now preserves these shared parameters and does not set them for histogram data. Since histogram uses NDArray address 5 (separate from image addresses 0 and 1), the NDArray itself contains all necessary size information in its attributes, which plugins can access directly. **No action required** - this has been resolved in R1-5.
 
 * **`NumImages` showing INVALID status**: Fixed in R1-5. The `NumImages` PV was showing INVALID status with value 100000000 (100 million) at IOC startup. The ADDriver base class was initializing `NumImages` to a very large default value, causing INVALID status. The driver now initializes `NumImages` to 0 (unlimited) in the constructor, which is appropriate for continuous mode and prevents the INVALID status. For single mode (ImageMode = 0), the driver automatically sets `NumImages = 1` when switching to single mode. **No action required** - this has been resolved in R1-5. If you see this issue before recompiling, you can manually set `NumImages` to 0: `caput TPX3-TEST:cam1:NumImages 0`.
+
+* **`ArrayCounter_RBV` showing double count when histogram channel enabled**: Fixed in R1-5. When jsonhisto streaming was enabled, `ArrayCounter_RBV` was approximately twice `NumImagesCounter_RBV` (e.g., 46 vs 22). The histogram channel was calling `doCallbacksGenericPointer()`, which automatically increments the shared `NDArrayCounter` parameter. Since histogram uses NDArray address 5 (separate from image addresses 0 and 1) and should not affect the image channel counter, the driver now saves and restores `NDArrayCounter` around histogram callbacks to prevent histogram from incrementing it. `ArrayCounter_RBV` now correctly reflects only image frame counts, matching `NumImagesCounter_RBV` when histogram is enabled. **No action required** - this has been resolved in R1-5.
+
+**Known Issues**:
+
+* **RESNIC Pattern Distortion in Phoebus**: Some images displayed in Phoebus show distorted RESNIC patterns. The expected checkerboard pattern sometimes appears as a different structure (vertical stripes or different geometric patterns). This is an intermittent issue that affects only some frames, not all. The correct checkerboard pattern is visible in some images, while others show distortion. **This may be a SERVAL bug specific to TCP streaming channels when histogram (jsonhisto) is enabled.** The issue may be related to:
+  - SERVAL TCP streaming implementation when multiple channels (image + histogram) are active simultaneously
+  - Data corruption or frame synchronization issues in SERVAL's TCP sender threads when histogram channel competes with image channel
+  - Network bandwidth allocation or timing issues in SERVAL when both channels stream concurrently
+  - Emulator-specific behavior (if using TimePix3 emulator)
+
+  The byte swapping code in the driver appears correct (using `__builtin_bswap16`/`__builtin_bswap32` for network byte order conversion). If you encounter this issue, please report it with:
+  - Which channel (PrvImg or Img) shows distortion
+  - Frame numbers affected
+  - Whether it occurs consistently or intermittently
+  - Whether it only occurs when histogram channel is enabled
+  - Whether you're using emulator or physical detector
+  - SERVAL version and configuration

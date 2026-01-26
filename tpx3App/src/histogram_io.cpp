@@ -680,12 +680,21 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                 this->getAttributes(pHistArray->pAttributeList);
             }
             
+            // Save and restore NDArrayCounter to prevent histogram from incrementing it
+            // Histogram uses address 5 and should not affect the shared NDArrayCounter
+            // which is used by image channels (addresses 0 and 1)
+            int savedArrayCounter = 0;
+            getIntegerParam(NDArrayCounter, &savedArrayCounter);
+            
             // Trigger NDArray callbacks with address 5 for PrvHst
             int arrayCallbacks = 0;
             getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
             if (arrayCallbacks && pHistArray) {
                 doCallbacksGenericPointer(pHistArray, NDArrayData, 5);
             }
+            
+            // Restore NDArrayCounter (doCallbacksGenericPointer may have incremented it)
+            setIntegerParam(NDArrayCounter, savedArrayCounter);
             
             // Release the array (callbacks will increment reference count if needed)
             pHistArray->release();
