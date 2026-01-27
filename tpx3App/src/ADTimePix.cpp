@@ -3036,8 +3036,12 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         if(function == ADNumImages) {
             int imageMode;
             getIntegerParam(ADImageMode,&imageMode);
-            if (imageMode == 0 && value != 1) {status = asynError;
-                ERR("Cannot set numImages in single mode");
+            if (imageMode == 0 && value != 1) {
+                /* In single mode (ADImageMode=0) NumImages must effectively be 1.
+                 * Instead of returning an error (which causes WRITE INVALID on the record),
+                 * clamp the driver parameter back to 1 and accept the write. */
+                setIntegerParam(ADNumImages, 1);
+                LOG_ARGS("Ignoring NumImages=%d in single mode, forcing NumImages=1", value);
             }
         }
         if (status == asynSuccess) status = initAcquisition();
