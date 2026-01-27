@@ -12,6 +12,10 @@ The master branch (under development) is tested with Serval 4.1.1 and 3.3.2
 Driver depends on Serval versions, at this time. The current releases support Serval 4.1.1 and 3.0.0-3.3.2
 
 
+R1-6 (XXX, 2026)
+--------
+
+
 R1-5 (January 27, 2026)
 --------
 
