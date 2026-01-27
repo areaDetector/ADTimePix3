@@ -680,9 +680,11 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                 this->getAttributes(pHistArray->pAttributeList);
             }
             
-            // Save and restore NDArrayCounter to prevent histogram from incrementing it
+            // Prevent histogram from incrementing NDArrayCounter
             // Histogram uses address 5 and should not affect the shared NDArrayCounter
             // which is used by image channels (addresses 0 and 1)
+            // Note: doCallbacksGenericPointer in areaDetector may automatically increment NDArrayCounter
+            // We save the counter before the callback and restore it after to prevent histogram from affecting it
             int savedArrayCounter = 0;
             getIntegerParam(NDArrayCounter, &savedArrayCounter);
             
@@ -693,8 +695,19 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
                 doCallbacksGenericPointer(pHistArray, NDArrayData, 5);
             }
             
-            // Restore NDArrayCounter (doCallbacksGenericPointer may have incremented it)
-            setIntegerParam(NDArrayCounter, savedArrayCounter);
+            // Check if doCallbacksGenericPointer incremented the counter
+            // Only restore if it increased by exactly 1 (suggesting histogram callback incremented it)
+            // If it didn't change or changed by more than 1, don't restore to avoid race conditions
+            int currentArrayCounter = 0;
+            getIntegerParam(NDArrayCounter, &currentArrayCounter);
+            if (currentArrayCounter == savedArrayCounter + 1) {
+                // Counter increased by exactly 1, likely from doCallbacksGenericPointer
+                // Restore it to undo the histogram's increment
+                setIntegerParam(NDArrayCounter, savedArrayCounter);
+            }
+            // Note: If counter didn't change, doCallbacksGenericPointer doesn't increment it (no action needed)
+            // If counter increased by more than 1, another thread (Img channel) may have incremented it
+            // In that case, we don't restore to avoid overwriting the Img channel's increment
             
             // Release the array (callbacks will increment reference count if needed)
             pHistArray->release();
