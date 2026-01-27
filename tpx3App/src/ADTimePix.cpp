@@ -349,20 +349,7 @@ bool ADTimePix::checkPath(std::string &filePath)
   * It also adds a trailing '/' character to the path if one is not present.
   * Returns a error status if the directory does not exist.
   */
-asynStatus ADTimePix::checkBPCPath()
-{
-    asynStatus status;
-    std::string filePath;
-    int pathExists;
-
-    getStringParam(ADTimePixBPCFilePath, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixBPCFilePath, filePath);
-    setIntegerParam(ADTimePixBPCFilePathExists, pathExists);
-    return status;
-}
+/* checkBPCPath() implemented in mask_io.cpp with other BPC/mask path logic */
 
 asynStatus ADTimePix::checkDACSPath()
 {
@@ -1250,34 +1237,7 @@ asynStatus ADTimePix::getServer(){
     return status;
 }
 
-/**
- * Initialize detector - upload Binary Pixel Configuration
- * 
- * serverURL:       the URL of the running SERVAL (string)
- * bpc_file:        an absolute path to the binary pixel configuration file (string), tpx3-demo.bpc
- * 
- * @return: status
- */
-asynStatus ADTimePix::uploadBPC(){
-    const char* functionName = "uploadBPC";
-    asynStatus status = asynSuccess;
-    FLOW("Initializing BPC detector information");
-    std::string bpc_file, filePath, fileName;
-
-//    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.bpc");
-    getStringParam(ADTimePixBPCFilePath, filePath);
-    getStringParam(ADTimePixBPCFileName, fileName);
-    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string(filePath) + std::string(fileName);
-
-    cpr::Response r = cpr::Get(cpr::Url{bpc_file},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
-    printf("\n\nuploadBPC: http_code = %li\n", r.status_code);
-    printf("Text bpc_file: %s\n", r.text.c_str());
-    setIntegerParam(ADTimePixHttpCode, r.status_code); 
-    setStringParam(ADTimePixWriteMsg, r.text.c_str());
-
-    return status;
-}
+/** uploadBPC() implemented in mask_io.cpp with other BPC/mask logic */
 
 /**
  * Initialize detector - upload Chips DACS

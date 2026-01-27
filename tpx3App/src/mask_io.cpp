@@ -269,6 +269,46 @@ int ADTimePix::checkFile(std::string &filePath) {
     return fileStat;
 }
 
+/**
+ * Check BPC file path exists and set BPC_FILE_PATH_EXISTS.
+ * Implemented here with other BPC/mask path logic (see ADTimePix.cpp checkPath).
+ */
+asynStatus ADTimePix::checkBPCPath()
+{
+    asynStatus status;
+    std::string filePath;
+    int pathExists;
+
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    if (filePath.size() == 0) return asynSuccess;
+    pathExists = checkPath(filePath);
+    status = pathExists ? asynSuccess : asynError;
+    setStringParam(ADTimePixBPCFilePath, filePath);
+    setIntegerParam(ADTimePixBPCFilePathExists, pathExists);
+    return status;
+}
+
+/**
+ * Upload Binary Pixel Configuration to SERVAL.
+ * serverURL + /config/load?format=pixelconfig&file= path + fileName.
+ */
+asynStatus ADTimePix::uploadBPC(){
+    asynStatus status = asynSuccess;
+    std::string bpc_file, filePath, fileName;
+
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    getStringParam(ADTimePixBPCFileName, fileName);
+    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string(filePath) + std::string(fileName);
+
+    cpr::Response r = cpr::Get(cpr::Url{bpc_file},
+                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    printf("uploadBPC: http_code=%li\n", r.status_code);
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    setStringParam(ADTimePixWriteMsg, r.text.c_str());
+
+    return status;
+}
+
 /*
 * buf - bpc file read into char array
 * bufSize - number of bytes / elements / pixels in the bpc file

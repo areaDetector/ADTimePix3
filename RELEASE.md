@@ -15,7 +15,7 @@ Driver depends on Serval versions, at this time. The current releases support Se
 R1-6 (XXX, 2026)
 --------
 
-* (Next release; add items here.)
+* **Code Organization - BPC/mask logic in mask_io.cpp**: Moved `checkBPCPath()` and `uploadBPC()` from `ADTimePix.cpp` to `mask_io.cpp` to shorten the main driver file and keep all BPC/mask path and upload logic in one place. `mask_io.cpp` already contained `readBPCfile()`, `writeBPCfile()`, and mask helpers; it now also implements BPC path validation and BPC upload to SERVAL. No functional or PV changes.
 
 R1-5 (January 27, 2026)
 --------
