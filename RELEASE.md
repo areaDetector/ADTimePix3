@@ -12,6 +12,11 @@ The master branch (under development) is tested with Serval 4.1.1 and 3.3.2
 Driver depends on Serval versions, at this time. The current releases support Serval 4.1.1 and 3.0.0-3.3.2
 
 
+R1-6 (XXX, 2026)
+--------
+
+* **Bug Fix - "parameter 51 in list 5, invalid list" asyn Warnings**: The driver was created with `maxAddr=4` (addresses 0–3 only), but the histogram channel uses NDArray address 5. When asyn or plugins accessed parameter 51 (ARRAY_DATA) at address 5, asyn reported "invalid list" because that address did not exist. The driver now uses `maxAddr=6` so that PrvImg=0, Img=1, and PrvHst=5 are all valid. The "parameter 51 in list 5, invalid list" (and similar) messages should no longer appear after recompile and IOC restart. **Root cause (from asynReport)**: "Parameter 51 is undefined, name=ARRAY_DATA" in "list 5" indicated that address (list) 5 was invalid on the TPX3 port, not that parameter 51 was undefined.
+
 R1-5 (XXX, 2026)
 --------
 

@@ -4876,8 +4876,9 @@ asynStatus ADTimePix::readImageFromTCP() {
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
+/* maxAddr=6: PrvImg=0, Img=1, PrvHst=5; address 5 must exist or asyn reports "parameter 51 in list 5, invalid list" */
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize)
-    : ADDriver(portName, 4, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+    : ADDriver(portName, 6, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK,
