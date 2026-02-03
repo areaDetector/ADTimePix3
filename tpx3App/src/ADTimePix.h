@@ -302,6 +302,16 @@
 #define ADTimePixDroppedFramesString         "TPX3_DROPPED_FRAMES"    // (asynInt32,         w)      DroppedFrames
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
 
+    // Measurement.Config (SERVAL 4.1.x): Stem (4D-STEM), TimeOfFlight
+#define ADTimePixStemScanWidthString         "TPX3_STEM_SCAN_WIDTH"        // (asynInt32,    r/w)   Stem.Scan.Width
+#define ADTimePixStemScanHeightString        "TPX3_STEM_SCAN_HEIGHT"       // (asynInt32,    r/w)   Stem.Scan.Height
+#define ADTimePixStemDwellTimeString         "TPX3_STEM_DWELL_TIME"       // (asynFloat64,  r/w)   Stem.Scan.DwellTime [s]
+#define ADTimePixStemRadiusOuterString       "TPX3_STEM_RADIUS_OUTER"      // (asynInt32,    r/w)   Stem.VirtualDetector.RadiusOuter
+#define ADTimePixStemRadiusInnerString       "TPX3_STEM_RADIUS_INNER"      // (asynInt32,    r/w)   Stem.VirtualDetector.RadiusInner
+#define ADTimePixTofTdcReferenceString       "TPX3_TOF_TDC_REFERENCE"      // (asynOctet,    r/w)   TimeOfFlight.TdcReference (comma-sep, e.g. "PN0123,PN0123")
+#define ADTimePixTofMinString                "TPX3_TOF_MIN"               // (asynFloat64,  r/w)   TimeOfFlight.Min
+#define ADTimePixTofMaxString                 "TPX3_TOF_MAX"               // (asynFloat64,  r/w)   TimeOfFlight.Max
+
 // BPC Mask
 #define ADTimePixBPCString               "TPX3_BPC_PEL"               // (asynInt32,         w)      BPC pel for each pixel, read from .bpc file
 #define ADTimePixBPCnString              "TPX3_BPC_PEL_N"             // (asynInt32,         w)      BPC pel number of masked pel from .bpc file
@@ -706,6 +716,16 @@ class ADTimePix : public ADDriver{
         int ADTimePixDroppedFrames;  
         int ADTimePixStatus;
 
+            // Measurement.Config (Stem, TimeOfFlight)
+        int ADTimePixStemScanWidth;
+        int ADTimePixStemScanHeight;
+        int ADTimePixStemDwellTime;
+        int ADTimePixStemRadiusOuter;
+        int ADTimePixStemRadiusInner;
+        int ADTimePixTofTdcReference;
+        int ADTimePixTofMin;
+        int ADTimePixTofMax;
+
             // BPC Mask
         int ADTimePixBPC;
         int ADTimePixBPCn;
@@ -723,6 +743,9 @@ class ADTimePix : public ADDriver{
         int ADTimePixMaskFileName;
         int ADTimePixMaskPel;
         int ADTimePixMaskWrite;
+
+        asynStatus getMeasurementConfig();
+        asynStatus sendMeasurementConfig();
 
         #define ADTIMEPIX_LAST_PARAM ADTimePixMaskWrite  // Last parameter in the list
 

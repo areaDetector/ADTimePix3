@@ -1742,6 +1742,126 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
 }
 
 /**
+ * Read Measurement.Config from SERVAL (GET /measurement/config).
+ * Populates Stem (Scan, VirtualDetector) and TimeOfFlight PVs.
+ * SERVAL 4.1.x; no-op or partial if endpoint/config not present.
+ */
+asynStatus ADTimePix::getMeasurementConfig() {
+    const char* functionName = "getMeasurementConfig";
+    std::string url = this->serverURL + std::string("/measurement/config");
+    cpr::Response r = cpr::Get(cpr::Url{url},
+                               cpr::Header{{"Content-Type", "application/json"}},
+                               cpr::Timeout{5000});
+    if (r.status_code != 200) {
+        LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported)", url.c_str(), r.status_code);
+        return asynError;
+    }
+    try {
+        json config_j = json::parse(r.text.c_str());
+        if (config_j.contains("Stem") && config_j["Stem"].is_object()) {
+            if (config_j["Stem"].contains("Scan") && config_j["Stem"]["Scan"].is_object()) {
+                if (config_j["Stem"]["Scan"].contains("Width") && config_j["Stem"]["Scan"]["Width"].is_number_integer())
+                    setIntegerParam(ADTimePixStemScanWidth, config_j["Stem"]["Scan"]["Width"].get<int>());
+                if (config_j["Stem"]["Scan"].contains("Height") && config_j["Stem"]["Scan"]["Height"].is_number_integer())
+                    setIntegerParam(ADTimePixStemScanHeight, config_j["Stem"]["Scan"]["Height"].get<int>());
+                if (config_j["Stem"]["Scan"].contains("DwellTime") && config_j["Stem"]["Scan"]["DwellTime"].is_number())
+                    setDoubleParam(ADTimePixStemDwellTime, config_j["Stem"]["Scan"]["DwellTime"].get<double>());
+            }
+            if (config_j["Stem"].contains("VirtualDetector") && config_j["Stem"]["VirtualDetector"].is_object()) {
+                if (config_j["Stem"]["VirtualDetector"].contains("RadiusOuter") && config_j["Stem"]["VirtualDetector"]["RadiusOuter"].is_number_integer())
+                    setIntegerParam(ADTimePixStemRadiusOuter, config_j["Stem"]["VirtualDetector"]["RadiusOuter"].get<int>());
+                if (config_j["Stem"]["VirtualDetector"].contains("RadiusInner") && config_j["Stem"]["VirtualDetector"]["RadiusInner"].is_number_integer())
+                    setIntegerParam(ADTimePixStemRadiusInner, config_j["Stem"]["VirtualDetector"]["RadiusInner"].get<int>());
+            }
+        }
+        if (config_j.contains("TimeOfFlight") && config_j["TimeOfFlight"].is_object()) {
+            if (config_j["TimeOfFlight"].contains("TdcReference") && config_j["TimeOfFlight"]["TdcReference"].is_array()) {
+                std::string refs;
+                for (size_t i = 0; i < config_j["TimeOfFlight"]["TdcReference"].size(); ++i) {
+                    if (i > 0) refs += ",";
+                    if (config_j["TimeOfFlight"]["TdcReference"][i].is_string())
+                        refs += config_j["TimeOfFlight"]["TdcReference"][i].get<std::string>();
+                }
+                setStringParam(ADTimePixTofTdcReference, refs.c_str());
+            }
+            if (config_j["TimeOfFlight"].contains("Min") && config_j["TimeOfFlight"]["Min"].is_number())
+                setDoubleParam(ADTimePixTofMin, config_j["TimeOfFlight"]["Min"].get<double>());
+            if (config_j["TimeOfFlight"].contains("Max") && config_j["TimeOfFlight"]["Max"].is_number())
+                setDoubleParam(ADTimePixTofMax, config_j["TimeOfFlight"]["Max"].get<double>());
+        }
+        callParamCallbacks();
+    } catch (const std::exception& e) {
+        ERR_ARGS("getMeasurementConfig parse error: %s", e.what());
+        return asynError;
+    }
+    return asynSuccess;
+}
+
+/**
+ * Write Measurement.Config to SERVAL (PUT /measurement/config).
+ * Builds config from Stem and TimeOfFlight PVs; merges with existing config so
+ * Corrections/Processing are preserved.
+ */
+asynStatus ADTimePix::sendMeasurementConfig() {
+    const char* functionName = "sendMeasurementConfig";
+    std::string url_get = this->serverURL + std::string("/measurement/config");
+    cpr::Response r = cpr::Get(cpr::Url{url_get},
+                               cpr::Header{{"Content-Type", "application/json"}},
+                               cpr::Timeout{5000});
+    json config_j;
+    if (r.status_code == 200) {
+        try {
+            config_j = json::parse(r.text.c_str());
+        } catch (...) {
+            config_j = json::object();
+        }
+    } else {
+        config_j = json::object();
+    }
+    int iVal;
+    double dVal;
+    char strVal[256];
+    getIntegerParam(ADTimePixStemScanWidth, &iVal);
+    config_j["Stem"]["Scan"]["Width"] = iVal;
+    getIntegerParam(ADTimePixStemScanHeight, &iVal);
+    config_j["Stem"]["Scan"]["Height"] = iVal;
+    getDoubleParam(ADTimePixStemDwellTime, &dVal);
+    config_j["Stem"]["Scan"]["DwellTime"] = dVal;
+    getIntegerParam(ADTimePixStemRadiusOuter, &iVal);
+    config_j["Stem"]["VirtualDetector"]["RadiusOuter"] = iVal;
+    getIntegerParam(ADTimePixStemRadiusInner, &iVal);
+    config_j["Stem"]["VirtualDetector"]["RadiusInner"] = iVal;
+    getStringParam(ADTimePixTofTdcReference, sizeof(strVal), strVal);
+    std::string refStr(strVal);
+    json refArr = json::array();
+    size_t start = 0;
+    for (;;) {
+        size_t pos = refStr.find(',', start);
+        std::string part = (pos == std::string::npos) ? refStr.substr(start) : refStr.substr(start, pos - start);
+        if (!part.empty()) refArr.push_back(part);
+        if (pos == std::string::npos) break;
+        start = pos + 1;
+    }
+    if (refArr.empty()) refArr.push_back("PN0123");
+    config_j["TimeOfFlight"]["TdcReference"] = refArr;
+    getDoubleParam(ADTimePixTofMin, &dVal);
+    config_j["TimeOfFlight"]["Min"] = dVal;
+    getDoubleParam(ADTimePixTofMax, &dVal);
+    config_j["TimeOfFlight"]["Max"] = dVal;
+    cpr::Response put_r = cpr::Put(cpr::Url{url_get},
+                                   cpr::Body{config_j.dump().c_str()},
+                                   cpr::Header{{"Content-Type", "application/json"}},
+                                   cpr::Timeout{10000});
+    setIntegerParam(ADTimePixHttpCode, put_r.status_code);
+    setStringParam(ADTimePixWriteMsg, put_r.text.c_str());
+    if (put_r.status_code != 200) {
+        ERR_ARGS("PUT %s failed: %li, %s", url_get.c_str(), put_r.status_code, put_r.text.c_str());
+        return asynError;
+    }
+    return asynSuccess;
+}
+
+/**
  * Optimized fileWriter function
  * 
  * This function configures the detector's data output channels (Raw, Image, and Preview) 
@@ -2886,6 +3006,8 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkPrvImg1Path();    
     } else if (function == ADTimePixPrvHstBase) {
         status = this->checkPrvHstPath();
+    } else if (function == ADTimePixTofTdcReference) {
+        status = this->sendMeasurementConfig();
     }
      /* Do callbacks so higher layers see any changes */
     status = (asynStatus)callParamCallbacks(addr, addr);
@@ -2968,7 +3090,12 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         // status = getHealth();
         status = getDashboard();
         status = getDetector();
+        (void)getMeasurementConfig();   // Refresh Measurement.Config (Stem, TimeOfFlight) if supported
     //    status = getServer();
+    }
+    else if(function == ADTimePixStemScanWidth || function == ADTimePixStemScanHeight
+            || function == ADTimePixStemRadiusOuter || function == ADTimePixStemRadiusInner) {
+        status = sendMeasurementConfig();
     }
     else if(function == ADTimePixWriteBPCFile) { 
         status = uploadBPC();
@@ -3268,11 +3395,13 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
 
     status = setDoubleParam(function, value);
 
-    if(function == ADAcquireTime || function == ADAcquirePeriod || ADTimePixTriggerDelay || ADTimePixGlobalTimestampInterval){
+    if(function == ADAcquireTime || function == ADAcquirePeriod || function == ADTimePixTriggerDelay || function == ADTimePixGlobalTimestampInterval){
         if(acquiring) acquireStop();
         status = initAcquisition();
     }
-
+    else if(function == ADTimePixStemDwellTime || function == ADTimePixTofMin || function == ADTimePixTofMax) {
+        status = sendMeasurementConfig();
+    }
     else{
         if(function < ADTIMEPIX_FIRST_PARAM){
             status = ADDriver::writeFloat64(pasynUser, value);
@@ -5127,7 +5256,16 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixTimeLeftString,                    asynParamFloat64,   &ADTimePixTimeLeft);     
     createParam(ADTimePixFrameCountString,                  asynParamInt32,     &ADTimePixFrameCount);   
     createParam(ADTimePixDroppedFramesString,               asynParamInt32,     &ADTimePixDroppedFrames);
-    createParam(ADTimePixStatusString,                      asynParamOctet,     &ADTimePixStatus);       
+    createParam(ADTimePixStatusString,                      asynParamOctet,     &ADTimePixStatus);
+    // Measurement.Config (Stem, TimeOfFlight)
+    createParam(ADTimePixStemScanWidthString,              asynParamInt32,     &ADTimePixStemScanWidth);
+    createParam(ADTimePixStemScanHeightString,             asynParamInt32,     &ADTimePixStemScanHeight);
+    createParam(ADTimePixStemDwellTimeString,              asynParamFloat64,   &ADTimePixStemDwellTime);
+    createParam(ADTimePixStemRadiusOuterString,            asynParamInt32,     &ADTimePixStemRadiusOuter);
+    createParam(ADTimePixStemRadiusInnerString,            asynParamInt32,     &ADTimePixStemRadiusInner);
+    createParam(ADTimePixTofTdcReferenceString,            asynParamOctet,     &ADTimePixTofTdcReference);
+    createParam(ADTimePixTofMinString,                     asynParamFloat64,   &ADTimePixTofMin);
+    createParam(ADTimePixTofMaxString,                     asynParamFloat64,   &ADTimePixTofMax);
     
     // BPC Mask
     createParam(ADTimePixBPCString,                  asynParamInt32, &ADTimePixBPC);
