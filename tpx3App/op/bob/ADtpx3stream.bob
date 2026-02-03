@@ -1,0 +1,877 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>ADtpx3stream</name>
+  <macros>
+    <P>TPX3-TEST:</P>
+    <R>Stream:</R>
+  </macros>
+  <width>2220</width>
+  <height>1350</height>
+  <widget type="group" version="3.0.0">
+    <name>TPX3_Stream_Control</name>
+    <width>1400</width>
+    <height>1070</height>
+    <widget type="label" version="2.0.0">
+      <name>Title</name>
+      <text>Timepix3 Stream Driver (areaDetector) Control Panel</text>
+      <x>50</x>
+      <y>20</y>
+      <width>1300</width>
+      <height>40</height>
+      <font>
+        <font family="Liberation Sans" style="BOLD" size="28.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="255" green="255" blue="255">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="30" green="144" blue="255">
+        </color>
+      </background_color>
+      <transparent>false</transparent>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>ConnectionControl</name>
+      <x>10</x>
+      <y>80</y>
+      <width>1350</width>
+      <height>120</height>
+      <widget type="label" version="2.0.0">
+        <name>ConnectionControlLabel</name>
+        <text>Connection Control</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>ConnectionStateButton</name>
+        <pv_name>$(P)$(R)CONNECTION_STATE</pv_name>
+        <label>Connect/Disconnect</label>
+        <x>20</x>
+        <y>40</y>
+        <width>150</width>
+        <height>60</height>
+      </widget>
+      <widget type="led" version="2.0.0">
+        <name>ConnectedLED</name>
+        <pv_name>$(P)$(R)STREAM_CONNECTED</pv_name>
+        <x>190</x>
+        <y>50</y>
+        <width>30</width>
+        <height>30</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ConnectedLabel</name>
+        <text>Connected</text>
+        <x>230</x>
+        <y>55</y>
+        <width>80</width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>HostLabel</name>
+        <text>Host:</text>
+        <x>330</x>
+        <y>45</y>
+        <width>50</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>HostInput</name>
+        <pv_name>$(P)$(R)STREAM_HOST</pv_name>
+        <x>380</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>PortLabel</name>
+        <text>Port:</text>
+        <x>520</x>
+        <y>45</y>
+        <width>50</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>PortSpinner</name>
+        <pv_name>$(P)$(R)STREAM_PORT</pv_name>
+        <x>570</x>
+        <y>40</y>
+        <width>80</width>
+        <height>30</height>
+        <minimum>1024.0</minimum>
+        <maximum>65535.0</maximum>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StatusDisplay</name>
+        <pv_name>$(P)$(R)STATUS</pv_name>
+        <x>670</x>
+        <y>40</y>
+        <width>300</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StatusLabel</name>
+        <text>Status</text>
+        <x>990</x>
+        <y>45</y>
+        <width>60</width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StreamTypeLabel</name>
+        <text>Stream Type:</text>
+        <x>1070</x>
+        <y>45</y>
+        <width>100</width>
+      </widget>
+      <widget type="combo" version="2.0.0">
+        <name>StreamTypeCombo</name>
+        <pv_name>$(P)$(R)STREAM_TYPE</pv_name>
+        <x>1170</x>
+        <y>40</y>
+        <width>150</width>
+        <height>30</height>
+        <items>
+          <item>jsonimage</item>
+          <item>jsonhisto</item>
+        </items>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>MainControl</name>
+      <x>10</x>
+      <y>220</y>
+      <width>1350</width>
+      <height>120</height>
+      <widget type="label" version="2.0.0">
+        <name>MainControlLabel</name>
+        <text>Main Control</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>AcquisitionStateButton</name>
+        <pv_name>$(P)$(R)ACQUISITION_STATE</pv_name>
+        <label>Start/Stop</label>
+        <x>20</x>
+        <y>40</y>
+        <width>150</width>
+        <height>60</height>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>ResetButton</name>
+        <pv_name>$(P)$(R)RESET</pv_name>
+        <label>Reset</label>
+        <x>190</x>
+        <y>40</y>
+        <width>120</width>
+        <height>60</height>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>SaveDataButton</name>
+        <pv_name>$(P)$(R)SAVE_DATA</pv_name>
+        <label>Save Data</label>
+        <x>330</x>
+        <y>40</y>
+        <width>120</width>
+        <height>60</height>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>SaveSumDataButton</name>
+        <pv_name>$(P)$(R)SAVE_SUM_DATA</pv_name>
+        <label>Save Sum Data</label>
+        <x>460</x>
+        <y>40</y>
+        <width>120</width>
+        <height>60</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FilenameLabel</name>
+        <text>Filename:</text>
+        <x>300</x>
+        <y>15</y>
+        <width>80</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>FilenameInput</name>
+        <pv_name>$(P)$(R)FILENAME</pv_name>
+        <x>370</x>
+        <y>10</y>
+        <width>780</width>
+        <height>30</height>
+        <format>6</format>
+        <show_units>false</show_units>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ErrorCountLabel</name>
+        <text>Errors:</text>
+        <x>800</x>
+        <y>55</y>
+        <width>60</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ErrorCountDisplay</name>
+        <pv_name>$(P)$(R)ERROR_COUNT</pv_name>
+        <x>880</x>
+        <y>50</y>
+        <width>80</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="255" green="0" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="fileselector" version="2.0.0">
+        <name>File Selector</name>
+        <pv_name>$(P)$(R)FILENAME</pv_name>
+        <x>1150</x>
+        <y>10</y>
+        <width>30</width>
+        <height>30</height>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>DataDisplay</name>
+      <x>10</x>
+      <y>360</y>
+      <width>1350</width>
+      <height>160</height>
+      <widget type="label" version="2.0.0">
+        <name>DataDisplayLabel</name>
+        <text>Data Display</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameCountLabel</name>
+        <text>Frame Count:</text>
+        <x>20</x>
+        <y>45</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameCountDisplay</name>
+        <pv_name>$(P)$(R)FRAME_COUNT</pv_name>
+        <x>120</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TotalCountsLabel</name>
+        <text>Total Counts:</text>
+        <x>260</x>
+        <y>45</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TotalCountsDisplay</name>
+        <pv_name>$(P)$(R)TOTAL_COUNTS</pv_name>
+        <x>380</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ImageWidthLabel</name>
+        <text>Image Width (px):</text>
+        <x>20</x>
+        <y>85</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ImageWidthDisplay</name>
+        <pv_name>$(P)$(R)IMAGE_WIDTH</pv_name>
+        <x>140</x>
+        <y>80</y>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ImageHeightLabel</name>
+        <text>Image Height (px):</text>
+        <x>260</x>
+        <y>85</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ImageHeightDisplay</name>
+        <pv_name>$(P)$(R)IMAGE_HEIGHT</pv_name>
+        <x>380</x>
+        <y>80</y>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>PixelFormatLabel</name>
+        <text>Pixel Format:</text>
+        <x>500</x>
+        <y>85</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>PixelFormatDisplay</name>
+        <pv_name>$(P)$(R)PIXEL_FORMAT</pv_name>
+        <x>600</x>
+        <y>80</y>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FramesToSumLabel</name>
+        <text>Frames to Sum:</text>
+        <x>810</x>
+        <y>85</y>
+        <width>110</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>FramesToSumSpinner</name>
+        <pv_name>$(P)$(R)FRAMES_TO_SUM</pv_name>
+        <x>920</x>
+        <y>80</y>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>100000.0</maximum>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>SumUpdateIntervalLabel</name>
+        <text>Sum Update Interval (frames):</text>
+        <x>720</x>
+        <y>45</y>
+        <width>200</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>SumUpdateIntervalSpinner</name>
+        <pv_name>$(P)$(R)SUM_UPDATE_INTERVAL_FRAMES</pv_name>
+        <x>920</x>
+        <y>40</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>10000.0</maximum>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>FrameData</name>
+      <x>10</x>
+      <y>540</y>
+      <width>1350</width>
+      <height>160</height>
+      <widget type="label" version="2.0.0">
+        <name>FrameDataLabel</name>
+        <text>Frame Data from JSON</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TimeAtFrameLabel</name>
+        <text>Time at Frame (ns):</text>
+        <x>20</x>
+        <y>45</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TimeAtFrameDisplay</name>
+        <pv_name>$(P)$(R)TIME_AT_FRAME_NS</pv_name>
+        <x>160</x>
+        <y>40</y>
+        <width>180</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="220" blue="220">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>9</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="0" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameNumberLabel</name>
+        <text>Frame Number:</text>
+        <x>20</x>
+        <y>85</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameNumberDisplay</name>
+        <pv_name>$(P)$(R)FRAME_NUMBER</pv_name>
+        <x>160</x>
+        <y>80</y>
+        <width>180</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameWidthLabel</name>
+        <text>Frame Width:</text>
+        <x>360</x>
+        <y>45</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameWidthDisplay</name>
+        <pv_name>$(P)$(R)FRAME_WIDTH</pv_name>
+        <x>480</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="255" blue="220">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameHeightLabel</name>
+        <text>Frame Height:</text>
+        <x>620</x>
+        <y>45</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameHeightDisplay</name>
+        <pv_name>$(P)$(R)FRAME_HEIGHT</pv_name>
+        <x>750</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="220" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FramePixelFormatLabel</name>
+        <text>Frame Pixel Format:</text>
+        <x>890</x>
+        <y>45</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FramePixelFormatDisplay</name>
+        <pv_name>$(P)$(R)FRAME_PIXEL_FORMAT</pv_name>
+        <x>1020</x>
+        <y>40</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="220">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="128" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>ImageData</name>
+      <x>10</x>
+      <y>680</y>
+      <width>1350</width>
+      <height>100</height>
+      <widget type="label" version="2.0.0">
+        <name>ImageDataLabel</name>
+        <text>Image Data Arrays</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ImageDataArrayLabel</name>
+        <text>Full Image Data (Accumulated):</text>
+        <x>20</x>
+        <y>40</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ImageDataDisplay</name>
+        <pv_name>$(P)$(R)IMAGE_DATA</pv_name>
+        <x>220</x>
+        <y>40</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="200" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ImageSumNFramesLabel</name>
+        <text>Sum of Last N Frames:</text>
+        <x>20</x>
+        <y>80</y>
+        <width>200</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ImageSumNFramesDisplay</name>
+        <pv_name>$(P)$(R)IMAGE_SUM_N_FRAMES</pv_name>
+        <x>220</x>
+        <y>80</y>
+        <width>1080</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>PerformanceMonitoring</name>
+      <x>10</x>
+      <y>900</y>
+      <width>1350</width>
+      <height>120</height>
+      <widget type="label" version="2.0.0">
+        <name>PerformanceMonitoringLabel</name>
+        <text>Performance Monitoring</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>InfoLabel</name>
+        <text>Real-time monitoring of acquisition rate, processing time, and memory usage</text>
+        <x>320</x>
+        <y>10</y>
+        <width>600</width>
+        <height>30</height>
+        <foreground_color>
+          <color red="100" green="100" blue="100">
+          </color>
+        </foreground_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>AcquisitionRateLabel</name>
+        <text>Acquisition Rate (Hz):</text>
+        <x>40</x>
+        <y>55</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>AcquisitionRateDisplay</name>
+        <pv_name>$(P)$(R)ACQUISITION_RATE</pv_name>
+        <x>190</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ProcessingTimeLabel</name>
+        <text>Processing Time (ms):</text>
+        <x>360</x>
+        <y>55</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ProcessingTimeDisplay</name>
+        <pv_name>$(P)$(R)PROCESSING_TIME_MS</pv_name>
+        <x>520</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>MemoryUsageLabel</name>
+        <text>Memory Usage (MB):</text>
+        <x>720</x>
+        <y>55</y>
+        <width>140</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>MemoryUsageDisplay</name>
+        <pv_name>$(P)$(R)MEMORY_USAGE_MB</pv_name>
+        <x>860</x>
+        <y>50</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+    </widget>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_Accumulated</name>
+    <pv_name>$(P)$(R)image1:ArrayData</pv_name>
+    <x>10</x>
+    <y>1070</y>
+    <width>1300</width>
+    <height>1300</height>
+    <x_axis>
+      <visible>true</visible>
+      <title>X (Width)</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y (Height)</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_Frame</name>
+    <pv_name>$(P)$(R)IMAGE_FRAME</pv_name>
+    <x>1410</x>
+    <y>830</y>
+    <width>800</width>
+    <height>800</height>
+    <x_axis>
+      <visible>true</visible>
+      <title>X (Width)</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y (Height)</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_Sum_N_Frames</name>
+    <pv_name>$(P)$(R)IMAGE_SUM_N_FRAMES</pv_name>
+    <x>1410</x>
+    <y>20</y>
+    <width>800</width>
+    <height>800</height>
+    <x_axis>
+      <visible>true</visible>
+      <title>X (Width)</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y (Height)</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+  </widget>
+</display>
