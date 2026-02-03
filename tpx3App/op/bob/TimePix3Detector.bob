@@ -4,8 +4,8 @@
   <macros>
     <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
   </macros>
-  <width>1000</width>
-  <height>1000</height>
+  <width>1120</width>
+  <height>1580</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -113,7 +113,7 @@ $(pv_value)</tooltip>
       <Chip>CHIP0</Chip>
     </macros>
     <file>Detector/TimePixDetectorChip.opi</file>
-    <x>715</x>
+    <x>725</x>
     <y>30</y>
     <width>200</width>
     <height>530</height>
@@ -132,7 +132,7 @@ $(pv_value)</tooltip>
       <Chip>CHIP2</Chip>
     </macros>
     <file>Detector/TimePixDetectorChip.opi</file>
-    <x>715</x>
+    <x>725</x>
     <y>570</y>
     <width>200</width>
     <height>530</height>
@@ -151,7 +151,7 @@ $(pv_value)</tooltip>
       <Chip>CHIP1</Chip>
     </macros>
     <file>Detector/TimePixDetectorChip.opi</file>
-    <x>920</x>
+    <x>930</x>
     <y>30</y>
     <width>200</width>
     <height>530</height>
@@ -170,7 +170,7 @@ $(pv_value)</tooltip>
       <Chip>CHIP3</Chip>
     </macros>
     <file>Detector/TimePixDetectorChip.opi</file>
-    <x>920</x>
+    <x>930</x>
     <y>570</y>
     <width>200</width>
     <height>530</height>
@@ -224,6 +224,23 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
+    <name>Linking Container_MeasurementConfig</name>
+    <file>Measurement/MeasurementConfig.bob</file>
+    <x>360</x>
+    <y>955</y>
+    <width>360</width>
+    <height>445</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
     <name>Linking Container_18</name>
     <macros>
       <Chip>CHIP2</Chip>
@@ -249,8 +266,8 @@ $(pv_value)</tooltip>
       <Chip>CHIP2</Chip>
     </macros>
     <file>TimePix3API.opi</file>
-    <x>360</x>
-    <y>955</y>
+    <x>2</x>
+    <y>1045</y>
     <width>350</width>
     <height>80</height>
     <resize>4</resize>
@@ -269,8 +286,8 @@ $(pv_value)</tooltip>
       <Chip>CHIP2</Chip>
     </macros>
     <file>TimePix3Alarm.opi</file>
-    <x>360</x>
-    <y>1040</y>
+    <x>2</x>
+    <y>1130</y>
     <width>350</width>
     <height>100</height>
     <resize>4</resize>

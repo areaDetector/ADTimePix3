@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>MeasurementConfig</name>
+  <macros>
+    <R>cam1:</R>
+  </macros>
+  <width>360</width>
+  <height>445</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <widget type="group" version="3.0.0">
+    <name>MeasurementConfig_Group</name>
+    <width>360</width>
+    <height>445</height>
+    <widget type="rectangle" version="2.0.0">
+      <name>MeasurementConfigBorder</name>
+      <width>327</width>
+      <height>412</height>
+      <line_width>1</line_width>
+      <line_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </line_color>
+      <transparent>true</transparent>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>MeasurementConfigTitle</name>
+      <text>Measurement Config (4D-STEM / ToF)</text>
+      <x>10</x>
+      <y>5</y>
+      <width>300</width>
+      <height>24</height>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="30" green="144" blue="255">
+        </color>
+      </background_color>
+      <horizontal_alignment>1</horizontal_alignment>
+      <vertical_alignment>1</vertical_alignment>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>StemGroup</name>
+      <y>35</y>
+      <width>330</width>
+      <height>210</height>
+      <widget type="label" version="2.0.0">
+        <name>StemSectionLabel</name>
+        <text>4D-STEM (Stem)</text>
+        <x>5</x>
+        <y>2</y>
+        <width>160</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StemScanWidthLabel</name>
+        <text>Scan Width:</text>
+        <y>32</y>
+        <width>95</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>StemScanWidthSpinner</name>
+        <pv_name>$(P)$(R)StemScanWidth</pv_name>
+        <x>95</x>
+        <y>28</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>4096.0</maximum>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StemScanWidthRBV</name>
+        <pv_name>$(P)$(R)StemScanWidth_RBV</pv_name>
+        <x>195</x>
+        <y>28</y>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StemScanHeightLabel</name>
+        <text>Scan Height:</text>
+        <y>62</y>
+        <width>95</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>StemScanHeightSpinner</name>
+        <pv_name>$(P)$(R)StemScanHeight</pv_name>
+        <x>95</x>
+        <y>58</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>4096.0</maximum>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StemScanHeightRBV</name>
+        <pv_name>$(P)$(R)StemScanHeight_RBV</pv_name>
+        <x>195</x>
+        <y>58</y>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StemDwellTimeLabel</name>
+        <text>Dwell Time (s):</text>
+        <y>92</y>
+        <width>95</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>StemDwellTimeEntry</name>
+        <pv_name>$(P)$(R)StemDwellTime</pv_name>
+        <x>95</x>
+        <y>88</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>6</precision>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StemDwellTimeRBV</name>
+        <pv_name>$(P)$(R)StemDwellTime_RBV</pv_name>
+        <x>195</x>
+        <y>88</y>
+        <height>28</height>
+        <format>3</format>
+        <precision>6</precision>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StemRadiusOuterLabel</name>
+        <text>Radius Outer:</text>
+        <y>122</y>
+        <width>95</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>StemRadiusOuterSpinner</name>
+        <pv_name>$(P)$(R)StemRadiusOuter</pv_name>
+        <x>95</x>
+        <y>118</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <maximum>4096.0</maximum>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StemRadiusOuterRBV</name>
+        <pv_name>$(P)$(R)StemRadiusOuter_RBV</pv_name>
+        <x>195</x>
+        <y>118</y>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StemRadiusInnerLabel</name>
+        <text>Radius Inner:</text>
+        <y>152</y>
+        <width>95</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>StemRadiusInnerSpinner</name>
+        <pv_name>$(P)$(R)StemRadiusInner</pv_name>
+        <x>95</x>
+        <y>148</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <maximum>4096.0</maximum>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StemRadiusInnerRBV</name>
+        <pv_name>$(P)$(R)StemRadiusInner_RBV</pv_name>
+        <x>195</x>
+        <y>148</y>
+        <height>28</height>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>ToFGroup</name>
+      <y>242</y>
+      <width>330</width>
+      <height>175</height>
+      <widget type="label" version="2.0.0">
+        <name>ToFSectionLabel</name>
+        <text>Time-of-Flight</text>
+        <x>5</x>
+        <y>2</y>
+        <width>160</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TofTdcReferenceLabel</name>
+        <text>TDC Reference:</text>
+        <y>32</y>
+        <width>60</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>TofTdcReferenceEntry</name>
+        <pv_name>$(P)$(R)TofTdcReference</pv_name>
+        <x>70</x>
+        <y>28</y>
+        <width>210</width>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TofTdcReferenceRBV</name>
+        <pv_name>$(P)$(R)TofTdcReference_RBV</pv_name>
+        <x>70</x>
+        <y>58</y>
+        <width>210</width>
+        <height>22</height>
+        <format>6</format>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TofMinLabel</name>
+        <text>ToF Min:</text>
+        <y>88</y>
+        <width>60</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>TofMinEntry</name>
+        <pv_name>$(P)$(R)TofMin</pv_name>
+        <x>70</x>
+        <y>84</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>6</precision>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TofMinRBV</name>
+        <pv_name>$(P)$(R)TofMin_RBV</pv_name>
+        <x>180</x>
+        <y>84</y>
+        <width>120</width>
+        <height>28</height>
+        <format>3</format>
+        <precision>6</precision>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>TofMaxLabel</name>
+        <text>ToF Max:</text>
+        <y>118</y>
+        <width>60</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>TofMaxEntry</name>
+        <pv_name>$(P)$(R)TofMax</pv_name>
+        <x>70</x>
+        <y>114</y>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>6</precision>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>TofMaxRBV</name>
+        <pv_name>$(P)$(R)TofMax_RBV</pv_name>
+        <x>180</x>
+        <y>114</y>
+        <width>120</width>
+        <height>28</height>
+        <format>3</format>
+        <precision>6</precision>
+      </widget>
+    </widget>
+  </widget>
+</display>
