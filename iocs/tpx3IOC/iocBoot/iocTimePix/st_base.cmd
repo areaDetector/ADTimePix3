@@ -96,11 +96,11 @@ dbpf("$(PREFIX)cam1:PrvImgFilePath","tcp://listen@localhost:8089")
 dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImgFileFmt","3")    # 3: jsonimage (TCP streaming)
 dbpf("$(PREFIX)cam1:PrvImgFileMode","1")   # tot
-dbpf("$(PREFIX)cam1:PrvImgIntgSize","5")   # Sum 5 frames, -1,0,1,..,32
+dbpf("$(PREFIX)cam1:PrvImgIntgSize","1")   # Sum 1 frame, -1,0,1,..,32
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","0")   # 0=sum, 1=average
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:PrvImgQueueSize","160")   # Increase from 16 to 160
-dbpf("$(PREFIX)cam1:PrvPeriod","0.2")	# Preview 5 Hz, 1.0=once per second
+dbpf("$(PREFIX)cam1:PrvPeriod","0.5")	# Preview 2 Hz, 1.0=once per second
 dbpf("$(PREFIX)cam1:WritePrvImg","1")   # Select Preview write
 
 dbpf("$(PREFIX)cam1:PrvImg1FilePath","file:/media/nvme/prv")
@@ -143,6 +143,7 @@ dbpf("$(PREFIX)cam1:ImageMode","2")     # areaDetector Continuous
 dbpf("$(PREFIX)cam1:TriggerMode","5")   # Timepix3 CONTINUOUS
 dbpf("$(PREFIX)Pva1:EnableCallbacks","1")     # PVA1 plugin
 dbpf("$(PREFIX)Stats5:EnableCallbacks","1")   # STATS5 plugin
+dbpf("$(PREFIX)cam1:NumImages","1000000000")  # Pseudo-unlimited maximum number of images, 2147483647 = 2^31 - 1; Physical detector unlimited set to 0
 
 #dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
 
