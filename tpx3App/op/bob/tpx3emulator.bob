@@ -4,10 +4,12 @@
   <macros>
     <R>Emulator:</R>
   </macros>
+  <width>1150</width>
+  <height>1040</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Emulator_Control</name>
     <width>1150</width>
-    <height>840</height>
+    <height>1040</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>TPX3 Emulator IOC Control Panel</text>
@@ -104,7 +106,7 @@
     <widget type="group" version="3.0.0">
       <name>ConfigurationSection</name>
       <x>10</x>
-      <y>150</y>
+      <y>140</y>
       <width>1100</width>
       <height>300</height>
       <widget type="label" version="2.0.0">
@@ -290,42 +292,11 @@
       </widget>
     </widget>
     <widget type="group" version="3.0.0">
-      <name>CommandLineSection</name>
-      <x>10</x>
-      <y>670</y>
-      <width>1100</width>
-      <height>120</height>
-      <widget type="label" version="2.0.0">
-        <name>CommandLineTitle</name>
-        <text>Generated Command Line</text>
-        <x>10</x>
-        <y>10</y>
-        <width>200</width>
-        <background_color>
-          <color red="240" green="240" blue="240">
-          </color>
-        </background_color>
-        <border_width>1</border_width>
-        <border_color>
-          <color red="0" green="128" blue="255">
-          </color>
-        </border_color>
-      </widget>
-      <widget type="textupdate" version="2.0.0">
-        <name>CommandLineDisplay</name>
-        <pv_name>$(P)$(R)COMMAND_LINE</pv_name>
-        <x>20</x>
-        <y>40</y>
-        <width>1060</width>
-        <height>60</height>
-        <format>6</format>
-      </widget>
-    </widget>
-    <widget type="group" version="3.0.0">
       <name>FileConfigurationSection</name>
       <x>10</x>
-      <y>460</y>
+      <y>440</y>
       <width>1100</width>
+      <height>450</height>
       <widget type="label" version="2.0.0">
         <name>FileConfigurationTitle</name>
         <text>File Configuration</text>
@@ -384,7 +355,7 @@
         <pv_name>$(P)$(R)JarFile_RBV</pv_name>
         <x>180</x>
         <y>70</y>
-        <width>870</width>
+        <width>880</width>
         <height>30</height>
         <format>6</format>
       </widget>
@@ -430,8 +401,160 @@
         <pv_name>$(P)$(R)ReplayFile_RBV</pv_name>
         <x>180</x>
         <y>145</y>
-        <width>870</width>
+        <width>880</width>
         <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayModeLabel</name>
+        <text>Replay Mode:</text>
+        <x>20</x>
+        <y>190</y>
+        <width>150</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>ReplayMode</name>
+        <pv_name>$(P)$(R)REPLAY_MODE</pv_name>
+        <x>180</x>
+        <y>185</y>
+        <width>200</width>
+        <height>30</height>
+        <format>0</format>
+        <maximum>3.0</maximum>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayModeDesc</name>
+        <text>(0=Single, 1=Repeat N, 2=Forever, 3=File List)</text>
+        <x>390</x>
+        <y>190</y>
+        <width>300</width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>RepeatCountLabel</name>
+        <text>Repeat Count:</text>
+        <x>20</x>
+        <y>230</y>
+        <width>150</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>RepeatCount</name>
+        <pv_name>$(P)$(R)REPEAT_COUNT</pv_name>
+        <x>180</x>
+        <y>225</y>
+        <width>200</width>
+        <height>30</height>
+        <format>0</format>
+        <minimum>1.0</minimum>
+        <maximum>1000.0</maximum>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayFileListLabel</name>
+        <text>Replay File List (comma-separated):</text>
+        <x>20</x>
+        <y>270</y>
+        <width>150</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>ReplayFileList</name>
+        <pv_name>$(P)$(R)REPLAY_FILE_LIST</pv_name>
+        <x>180</x>
+        <y>265</y>
+        <width>880</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayCurrentFileLabel</name>
+        <text>Current File:</text>
+        <x>20</x>
+        <y>310</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ReplayCurrentFile</name>
+        <pv_name>$(P)$(R)REPLAY_CURRENT_FILE</pv_name>
+        <x>180</x>
+        <y>305</y>
+        <width>880</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayIterationLabel</name>
+        <text>Iteration:</text>
+        <x>20</x>
+        <y>350</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ReplayIteration</name>
+        <pv_name>$(P)$(R)REPLAY_ITERATION</pv_name>
+        <x>180</x>
+        <y>345</y>
+        <width>200</width>
+        <height>30</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayRemainingLabel</name>
+        <text>Remaining:</text>
+        <x>400</x>
+        <y>350</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ReplayRemaining</name>
+        <pv_name>$(P)$(R)REPLAY_REMAINING</pv_name>
+        <x>560</x>
+        <y>345</y>
+        <width>200</width>
+        <height>30</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReplayStatusLabel</name>
+        <text>Replay Status:</text>
+        <x>20</x>
+        <y>390</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ReplayStatusMsg</name>
+        <pv_name>$(P)$(R)REPLAY_STATUS_MSG</pv_name>
+        <x>180</x>
+        <y>385</y>
+        <width>880</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>CommandLineSection</name>
+      <x>10</x>
+      <y>890</y>
+      <width>1100</width>
+      <height>120</height>
+      <widget type="label" version="2.0.0">
+        <name>CommandLineTitle</name>
+        <text>Generated Command Line</text>
+        <x>10</x>
+        <y>10</y>
+        <width>200</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="255">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>CommandLineDisplay</name>
+        <pv_name>$(P)$(R)COMMAND_LINE</pv_name>
+        <x>20</x>
+        <y>40</y>
+        <width>1040</width>
+        <height>40</height>
         <format>6</format>
       </widget>
     </widget>
