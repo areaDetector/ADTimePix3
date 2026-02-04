@@ -117,8 +117,10 @@ How to run:
   - run serval
   - Change the IP address in `st.cmd` or `st_base.cmd`.
   - Run `./st.cmd`.
-* There are CSS-Boy, screens under `ADTimePix3/tpx3App/op/`
-  - Phoebus .bob screens have been converted/created but not yet included in the driver.
+* There are CSS-Boy and Phoebus screens under `ADTimePix3/tpx3App/op/`
+  - **Emulator** (`tpx3emulator.bob`): TPX3 Emulator IOC control panel; supports replay of previously collected raw .tpx3 data (Replay File, Replay Mode, file list, etc.). Opened from Detector Config tab.
+  - **Measurement Config** (`Measurement/MeasurementConfig.bob`): SERVAL 4.1.x Measurement.Config — 4D-STEM (Stem scan, virtual detector) and Time-of-Flight (TdcReference, Min, Max). Embedded in TimePix3Detector below Measurement Info.
+  - Phoebus .bob screens have been converted/created; layout may be adjusted manually for best fit.
 
 Adjust chip thresholds
 ----------------

@@ -22,6 +22,10 @@ R1-6 (XXX, 2026)
 * **Driver**: `getMeasurementConfig()` (GET `/measurement/config`, parse Stem and TimeOfFlight into PVs), `sendMeasurementConfig()` (merge PVs into current config, PUT `/measurement/config`). Called when Health is written (with getDetector) and when any of the new PVs are written. Corrections and Processing branches are preserved on PUT (merge with existing config).
 * **Database**: New records in `Measurement.template` for all eight parameters (setpoint + _RBV readback where applicable).
 * **Phoebus screen**: New `Measurement/MeasurementConfig.bob` screen (4D-STEM and ToF sections) with spinners/text entries and readbacks. Embedded in `TimePix3Detector.bob` below Measurement Info so Measurement Config is available from the Detector Status tab. Layout may be adjusted manually for best fit.
+* **Screens (new and updated)**:
+  * **New**: `Measurement/MeasurementConfig.bob` — Measurement.Config (4D-STEM Stem scan/virtual detector, Time-of-Flight). Opened from Detector Status tab (TimePix3Detector) below Measurement Info.
+  * **Updated**: `TimePix3Detector.bob` — embeds MeasurementConfig; size/layout may be adjusted manually.
+  * **Updated**: `tpx3emulator.bob` — title and Replay File label now state replay of previously collected raw .tpx3 data; tooltip added on Replay File. Emulator screen supports replay of raw .tpx3 files (single, repeat N, forever, file list). Opened from Detector Config tab.
 
 R1-5 (January 27, 2026)
 --------
