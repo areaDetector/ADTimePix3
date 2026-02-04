@@ -735,8 +735,9 @@ void ADTimePix::connectionPollThread() {
         getIntegerParam(ADTimePixDetConnected, &detNow);
         // On reconnect: push current PV config to SERVAL (single source of truth), then refresh from SERVAL
         if (servalNow && detNow && (lastServalConnected_ == 0 || lastDetConnected_ == 0)) {
-            (void)fileWriter();   // Push current PV config to SERVAL
-            (void)getServer();    // Refresh PVs from SERVAL
+            (void)fileWriter();       // Push channel config (Raw/Img/PrvImg/PrvHst) from PVs to SERVAL
+            (void)initAcquisition();  // Push detector config (TriggerMode, NumImages, etc.) from PVs to SERVAL
+            (void)getServer();        // Refresh channel state from SERVAL
         }
         lastServalConnected_ = servalNow;
         lastDetConnected_ = detNow;
