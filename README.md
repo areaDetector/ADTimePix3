@@ -117,8 +117,17 @@ The driver monitors SERVAL and detector connection status and can recover when S
 
 * **ServalConnected_RBV / DetConnected_RBV**: Read-only status PVs (in `Dashboard.template`) indicate whether SERVAL is reachable and whether a detector is reported by SERVAL. They are updated by the initial connection check at startup, by the periodic connection poll, and when `RefreshConnection` or Health is triggered.
 * **RefreshConnection**: Boolean output PV. Writing 1 runs a lightweight connection check and updates `ServalConnected_RBV`, `DetConnected_RBV`, and `ADStatusMessage`. Use this to refresh connection status on demand without running the full Health (getDashboard/getDetector) sequence.
-* **Periodic connection poll**: A background thread (default period 5 s) runs a lightweight connection check. On transition from disconnected to connected, the driver calls `getServer()` once to refresh channel config; it does not call `initCamera()` or stop acquisition. On disconnect, status PVs and `ADStatusMessage` are updated; acquisition is not automatically stopped.
-* **Detector initialization**: Customization of detector initialization (e.g. file paths, BPC/DACS, WriteData) is done at startup (e.g. via `st_base.cmd`). On reconnect, only the current PV-based channel config is re-sent to SERVAL via `getServer()`; full initialization is not re-run.
+* **Periodic connection poll**: A background thread (default period 5 s) runs a lightweight connection check. On transition from disconnected to connected, the driver calls `fileWriter()` (push current PV config to SERVAL) then `getServer()` (refresh PVs from SERVAL); it does not call `initCamera()` or stop acquisition. On disconnect, status PVs and `ADStatusMessage` are updated; acquisition is not automatically stopped.
+* **Detector initialization**: Customization of detector initialization (e.g. file paths, BPC/DACS, WriteData) is done at startup (e.g. via `init_detector.cmd` or `st_base.cmd`). On reconnect, the current PV config is re-pushed to SERVAL via `fileWriter()` then refreshed via `getServer()`; full initialization (BPC/DACS load) is not re-run.
+
+Detector initialization (single source of truth)
+------------------------------------------------
+
+Detector initialization uses **EPICS PV values** as the single source of truth: the init script sets PVs, and the driver applies them to SERVAL when `WriteData=1` or when `ApplyConfig` is triggered.
+
+* **init_detector.cmd**: The detector init block (channel paths, formats, modes, BPC/DACS paths, WriteData, ImageMode, TriggerMode, etc.) lives in `iocs/tpx3IOC/iocBoot/iocTimePix/init_detector.cmd`. `st_base.cmd` sources it after `iocInit()`. You can re-run the same init from iocsh after a reconnect: `< init_detector.cmd`.
+* **ApplyConfig**: Boolean output PV. Writing 1 runs `fileWriter()` + `getServer()` (same effect as `WriteData=1`), so you can re-apply the current PV config to SERVAL without toggling WriteData or re-running a script. Use after reconnect or after changing PVs from the OPI.
+* **Driver**: The driver does not use a separate config file; it always builds config from current PVs in `fileWriter()` and sends it to SERVAL via `sendConfiguration()`. So both the init script and the driver use the same source of truth: the EPICS PVs.
 
 How to run:
 -----------

@@ -39,6 +39,16 @@ record(bo, "$(P)$(R)RefreshConnection")
     field(DESC, "Refresh connection status")
 }
 
+# Detector init single source of truth: push current PV config to SERVAL (fileWriter + getServer), same effect as WriteData=1
+record(bo, "$(P)$(R)ApplyConfig")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_APPLY_CONFIG")
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+    field(DESC, "Apply current PV config to SERVAL")
+}
+
 record(int64in, "$(P)$(R)FreeSpace_RBV"){
   field(DTYP, "asynInt64")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FREE_SPACE")

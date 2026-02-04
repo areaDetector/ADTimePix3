@@ -335,7 +335,7 @@
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
 #define ADTimePixPrvHstStreamString           "TPX3_PRV_HST_STREAM"    // (asynInt32,         w)      file:/, http://, tcp://
 #define ADTimePixRefreshConnectionString     "TPX3_REFRESH_CONNECTION" // (asynInt32,         w)      Write 1 to run lightweight connection check
-
+#define ADTimePixApplyConfigString            "TPX3_APPLY_CONFIG"      // (asynInt32,         w)      Write 1 to push current PV config to SERVAL (fileWriter + getServer)
 
 using json = nlohmann::json;
 
@@ -745,11 +745,12 @@ class ADTimePix : public ADDriver{
         int ADTimePixMaskPel;
         int ADTimePixMaskWrite;
         int ADTimePixRefreshConnection;
+        int ADTimePixApplyConfig;
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixRefreshConnection  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixApplyConfig  // Last parameter in the list
 
     private:
 

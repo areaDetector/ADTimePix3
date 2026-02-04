@@ -733,9 +733,10 @@ void ADTimePix::connectionPollThread() {
         int servalNow = 0, detNow = 0;
         getIntegerParam(ADTimePixServalConnected, &servalNow);
         getIntegerParam(ADTimePixDetConnected, &detNow);
-        // On reconnect: optionally refresh channel config (do not call initCamera)
+        // On reconnect: push current PV config to SERVAL (single source of truth), then refresh from SERVAL
         if (servalNow && detNow && (lastServalConnected_ == 0 || lastDetConnected_ == 0)) {
-            (void)getServer();
+            (void)fileWriter();   // Push current PV config to SERVAL
+            (void)getServer();    // Refresh PVs from SERVAL
         }
         lastServalConnected_ = servalNow;
         lastDetConnected_ = detNow;
@@ -3184,6 +3185,11 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         status = checkConnection();
         setIntegerParam(ADTimePixRefreshConnection, 0);  // Reset so PV can be triggered again
     }
+    else if(function == ADTimePixApplyConfig) {
+        status = fileWriter();
+        if (status == asynSuccess) status = getServer();
+        setIntegerParam(ADTimePixApplyConfig, 0);  // Reset so PV can be triggered again
+    }
     else if(function == ADTimePixStemScanWidth || function == ADTimePixStemScanHeight
             || function == ADTimePixStemRadiusOuter || function == ADTimePixStemRadiusInner) {
         status = sendMeasurementConfig();
@@ -5381,6 +5387,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixRaw1StreamString,      asynParamInt32,     &ADTimePixRaw1Stream);
     createParam(ADTimePixPrvHstStreamString,    asynParamInt32,     &ADTimePixPrvHstStream);
     createParam(ADTimePixRefreshConnectionString, asynParamInt32, &ADTimePixRefreshConnection);
+    createParam(ADTimePixApplyConfigString, asynParamInt32, &ADTimePixApplyConfig);
 
     //sets driver version
     char versionString[25];
