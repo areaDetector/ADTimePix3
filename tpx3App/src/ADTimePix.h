@@ -334,6 +334,7 @@
 #define ADTimePixRawStreamString              "TPX3_RAW_STREAM"        // (asynInt32,         w)      file:/, http://, tcp://
 #define ADTimePixRaw1StreamString             "TPX3_RAW1_STREAM"       // (asynInt32,         w)      file:/, http://, tcp://; Serval 3.3.0
 #define ADTimePixPrvHstStreamString           "TPX3_PRV_HST_STREAM"    // (asynInt32,         w)      file:/, http://, tcp://
+#define ADTimePixRefreshConnectionString     "TPX3_REFRESH_CONNECTION" // (asynInt32,         w)      Write 1 to run lightweight connection check
 
 
 using json = nlohmann::json;
@@ -743,11 +744,12 @@ class ADTimePix : public ADDriver{
         int ADTimePixMaskFileName;
         int ADTimePixMaskPel;
         int ADTimePixMaskWrite;
+        int ADTimePixRefreshConnection;
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixMaskWrite  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixRefreshConnection  // Last parameter in the list
 
     private:
 
@@ -880,6 +882,16 @@ class ADTimePix : public ADDriver{
         std::vector<uint64_t> prvHstSumArray64WorkBuffer_; // Working buffer for sum calculation
         std::vector<epicsFloat64> prvHstTimeMsBuffer_;    // For histogram time axis (milliseconds)
 
+        // Connection poll (CONNECT/DISCONNECT)
+        epicsThreadId connectionPollThreadId_;
+        epicsEventId connectionPollEvent_;
+        double connectionPollPeriodSec_;
+        int connectionPollEnable_;
+        int lastServalConnected_;
+        int lastDetConnected_;
+        static void connectionPollThreadC(void* pPvt);
+        void connectionPollThread();
+
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
 
@@ -896,6 +908,8 @@ class ADTimePix : public ADDriver{
         //function used for connecting to a TimePix3 serval URL device
         // NOTE - THIS MAY ALSO NEED TO CHANGE IF SERIAL # NOT USED
         asynStatus initialServerCheckConnection();
+        /** Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, ADStatusMessage. Does not call getServer/getDashboard. */
+        asynStatus checkConnection();
 
         void printConnectedDeviceInfo();
 

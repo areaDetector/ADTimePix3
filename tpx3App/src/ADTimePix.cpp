@@ -20,6 +20,7 @@
 // EPICS includes
 #include <epicsTime.h>
 #include <epicsThread.h>
+#include <epicsEvent.h>
 #include <epicsExit.h>
 #include <epicsString.h>
 #include <epicsStdio.h>
@@ -645,13 +646,13 @@ asynStatus ADTimePix::initialServerCheckConnection(){
             DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump()).c_str();
             setStringParam(ADTimePixDetType, DetType.c_str());
             setStringParam(ADModel, DetType.c_str());
-            setIntegerParam(ADTimePixDetConnected,0);
+            setIntegerParam(ADTimePixDetConnected, 1);  // Detector present
             printf("Detector CONNECTED, Detector=%s, %d\n", Detector.c_str(), strcmp(Detector.c_str(), "null"));
         }
         else {
             printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
             setStringParam(ADTimePixDetType, "null");
-            setIntegerParam(ADTimePixDetConnected,1);
+            setIntegerParam(ADTimePixDetConnected, 0);  // No detector
             connected = false;
         }
     } else {
@@ -659,12 +660,92 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         setIntegerParam(ADTimePixDetConnected,0);
     }
 
+    callParamCallbacks();
     if(connected) return asynSuccess;
     else{
         ERR_ARGS("ERROR: Failed to connect to server %s",this->serverURL.c_str());
         return asynError;
     }
-    callParamCallbacks();   // Apply to EPICS, at end of file
+}
+
+/**
+ * Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, and ADStatusMessage.
+ * Does not call getServer() or full getDashboard(); used by connection poll and RefreshConnection PV.
+ * @return asynSuccess if SERVAL and detector are connected, asynError otherwise
+ */
+asynStatus ADTimePix::checkConnection(){
+    bool servalOk = false;
+    bool detOk = false;
+
+    cpr::Response r = cpr::Get(cpr::Url{this->serverURL},
+                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+
+    if (r.status_code == 200) {
+        servalOk = true;
+        setIntegerParam(ADTimePixServalConnected, 1);
+        std::string dashboard = this->serverURL + std::string("/dashboard");
+        r = cpr::Get(cpr::Url{dashboard},
+                     cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                     cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+        if (r.status_code == 200) {
+            try {
+                json dashboard_j = json::parse(r.text.c_str());
+                std::string Detector = dashboard_j["Detector"].dump();
+                if (strcmp(Detector.c_str(), "null") != 0) {
+                    detOk = true;
+                    setIntegerParam(ADTimePixDetConnected, 1);
+                    std::string DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump());
+                    setStringParam(ADTimePixDetType, DetType.c_str());
+                    setStringParam(ADModel, DetType.c_str());
+                } else {
+                    setIntegerParam(ADTimePixDetConnected, 0);
+                    setStringParam(ADTimePixDetType, "null");
+                }
+            } catch (...) {
+                setIntegerParam(ADTimePixDetConnected, 0);
+                setStringParam(ADTimePixDetType, "null");
+            }
+        } else {
+            setIntegerParam(ADTimePixDetConnected, 0);
+            setStringParam(ADTimePixDetType, "null");
+        }
+    } else {
+        setIntegerParam(ADTimePixServalConnected, 0);
+        setIntegerParam(ADTimePixDetConnected, 0);
+        setStringParam(ADTimePixDetType, "null");
+    }
+
+    if (servalOk && detOk) {
+        setStringParam(ADStatusMessage, "OK");
+    } else {
+        setStringParam(ADStatusMessage, "SERVAL or detector disconnected");
+    }
+    callParamCallbacks();
+    return (servalOk && detOk) ? asynSuccess : asynError;
+}
+
+void ADTimePix::connectionPollThreadC(void* pPvt) {
+    ADTimePix* pDriver = (ADTimePix*)pPvt;
+    if (pDriver) pDriver->connectionPollThread();
+}
+
+void ADTimePix::connectionPollThread() {
+    while (connectionPollEnable_) {
+        epicsEventWaitWithTimeout(connectionPollEvent_, connectionPollPeriodSec_);
+        if (!connectionPollEnable_) break;
+        (void)checkConnection();
+        int servalNow = 0, detNow = 0;
+        getIntegerParam(ADTimePixServalConnected, &servalNow);
+        getIntegerParam(ADTimePixDetConnected, &detNow);
+        // On reconnect: optionally refresh channel config (do not call initCamera)
+        if (servalNow && detNow && (lastServalConnected_ == 0 || lastDetConnected_ == 0)) {
+            (void)getServer();
+        }
+        lastServalConnected_ = servalNow;
+        lastDetConnected_ = detNow;
+    }
 }
 
 /**
@@ -3093,6 +3174,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         (void)getMeasurementConfig();   // Refresh Measurement.Config (Stem, TimeOfFlight) if supported
     //    status = getServer();
     }
+    else if(function == ADTimePixRefreshConnection) {
+        status = checkConnection();
+        setIntegerParam(ADTimePixRefreshConnection, 0);  // Reset so PV can be triggered again
+    }
     else if(function == ADTimePixStemScanWidth || function == ADTimePixStemScanHeight
             || function == ADTimePixStemRadiusOuter || function == ADTimePixStemRadiusInner) {
         status = sendMeasurementConfig();
@@ -5289,6 +5374,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixRawStreamString,       asynParamInt32,     &ADTimePixRawStream);
     createParam(ADTimePixRaw1StreamString,      asynParamInt32,     &ADTimePixRaw1Stream);
     createParam(ADTimePixPrvHstStreamString,    asynParamInt32,     &ADTimePixPrvHstStream);
+    createParam(ADTimePixRefreshConnectionString, asynParamInt32, &ADTimePixRefreshConnection);
 
     //sets driver version
     char versionString[25];
@@ -5442,6 +5528,21 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         }
     }
 
+    // Connection poll (CONNECT/DISCONNECT): lightweight periodic check, optional config refresh on reconnect
+    connectionPollThreadId_ = NULL;
+    connectionPollEvent_ = epicsEventMustCreate(epicsEventEmpty);
+    connectionPollPeriodSec_ = 5.0;
+    connectionPollEnable_ = 1;
+    getIntegerParam(ADTimePixServalConnected, &lastServalConnected_);
+    getIntegerParam(ADTimePixDetConnected, &lastDetConnected_);
+    epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
+    opts.priority = epicsThreadPriorityLow;
+    opts.stackSize = epicsThreadGetStackSize(epicsThreadStackSmall);
+    connectionPollThreadId_ = epicsThreadCreateOpt("connectionPoll", connectionPollThreadC, this, &opts);
+    if (!connectionPollThreadId_) {
+        ERR("Failed to create connection poll thread");
+    }
+
      // when epics is exited, delete the instance of this class
     epicsAtExit(exitCallbackC, this);
 }
@@ -5497,6 +5598,20 @@ ADTimePix::~ADTimePix(){
     if (prvHstMutex_) {
         epicsMutexDestroy(prvHstMutex_);
         prvHstMutex_ = NULL;
+    }
+
+    // Stop connection poll thread
+    connectionPollEnable_ = 0;
+    if (connectionPollEvent_) {
+        epicsEventSignal(connectionPollEvent_);
+    }
+    if (connectionPollThreadId_ != NULL && connectionPollThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(connectionPollThreadId_);
+        connectionPollThreadId_ = NULL;
+    }
+    if (connectionPollEvent_) {
+        epicsEventDestroy(connectionPollEvent_);
+        connectionPollEvent_ = NULL;
     }
     
     disconnect(this->pasynUserSelf);

@@ -110,6 +110,16 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 
 **Note on asyn and histogram**: The driver uses NDArray address 5 for the histogram channel (PrvImg=0, Img=1, PrvHst=5). The driver is constructed with `maxAddr=6` so that address 5 is valid; this prevents "parameter 51 in list 5, invalid list" warnings that occurred when `maxAddr` was 4. The driver also handles the `NDInt64` data type used for histogram data without causing "Illegal Value" status in `DataType_RBV`, and preserves shared size parameters (`SizeX_RBV`, `SizeY_RBV`) so they correctly reflect image dimensions even when histogram streaming is active. See the Troubleshooting section for more details.
 
+CONNECT/DISCONNECT (reconnection without IOC restart)
+-----------------------------------------------------
+
+The driver monitors SERVAL and detector connection status and can recover when SERVAL or the detector reconnects without restarting the IOC.
+
+* **ServalConnected_RBV / DetConnected_RBV**: Read-only status PVs (in `Dashboard.template`) indicate whether SERVAL is reachable and whether a detector is reported by SERVAL. They are updated by the initial connection check at startup, by the periodic connection poll, and when `RefreshConnection` or Health is triggered.
+* **RefreshConnection**: Boolean output PV. Writing 1 runs a lightweight connection check and updates `ServalConnected_RBV`, `DetConnected_RBV`, and `ADStatusMessage`. Use this to refresh connection status on demand without running the full Health (getDashboard/getDetector) sequence.
+* **Periodic connection poll**: A background thread (default period 5 s) runs a lightweight connection check. On transition from disconnected to connected, the driver calls `getServer()` once to refresh channel config; it does not call `initCamera()` or stop acquisition. On disconnect, status PVs and `ADStatusMessage` are updated; acquisition is not automatically stopped.
+* **Detector initialization**: Customization of detector initialization (e.g. file paths, BPC/DACS, WriteData) is done at startup (e.g. via `st_base.cmd`). On reconnect, only the current PV-based channel config is re-sent to SERVAL via `getServer()`; full initialization is not re-run.
+
 How to run:
 -----------
 

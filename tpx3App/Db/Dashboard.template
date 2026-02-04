@@ -29,6 +29,16 @@ record(bi, "$(P)$(R)DetConnected_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# CONNECT/DISCONNECT: trigger lightweight connection check (updates ServalConnected_RBV, DetConnected_RBV, ADStatusMessage)
+record(bo, "$(P)$(R)RefreshConnection")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_REFRESH_CONNECTION")
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+    field(DESC, "Refresh connection status")
+}
+
 record(int64in, "$(P)$(R)FreeSpace_RBV"){
   field(DTYP, "asynInt64")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_FREE_SPACE")
