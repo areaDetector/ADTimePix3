@@ -5566,7 +5566,28 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 ADTimePix::~ADTimePix(){
     static const char* functionName = "~ADTimePix";
     FLOW("ADTimePix driver exiting");
-    
+
+    // Stop callback thread first so it cannot touch driver state during teardown
+    this->acquiring = false;
+    if (this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(this->callbackThreadId);
+        this->callbackThreadId = NULL;
+    }
+
+    // Stop connection poll thread so it cannot run during teardown (avoids SIGSEGV)
+    connectionPollEnable_ = 0;
+    if (connectionPollEvent_) {
+        epicsEventSignal(connectionPollEvent_);
+    }
+    if (connectionPollThreadId_ != NULL && connectionPollThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(connectionPollThreadId_);
+        connectionPollThreadId_ = NULL;
+    }
+    if (connectionPollEvent_) {
+        epicsEventDestroy(connectionPollEvent_);
+        connectionPollEvent_ = NULL;
+    }
+
     // Stop PrvImg TCP streaming
     epicsMutexLock(prvImgMutex_);
     prvImgRunning_ = false;
@@ -5615,20 +5636,6 @@ ADTimePix::~ADTimePix(){
         prvHstMutex_ = NULL;
     }
 
-    // Stop connection poll thread
-    connectionPollEnable_ = 0;
-    if (connectionPollEvent_) {
-        epicsEventSignal(connectionPollEvent_);
-    }
-    if (connectionPollThreadId_ != NULL && connectionPollThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(connectionPollThreadId_);
-        connectionPollThreadId_ = NULL;
-    }
-    if (connectionPollEvent_) {
-        epicsEventDestroy(connectionPollEvent_);
-        connectionPollEvent_ = NULL;
-    }
-    
     disconnect(this->pasynUserSelf);
 }
 
