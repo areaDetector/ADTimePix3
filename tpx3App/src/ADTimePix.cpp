@@ -670,14 +670,17 @@ asynStatus ADTimePix::initialServerCheckConnection(){
 
 /**
  * Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, and ADStatusMessage.
- * Does not call getServer() or full getDashboard(); used by connection poll and RefreshConnection PV.
+ * Uses GET /dashboard as the single source of truth so ServalConnected means "SERVAL reachable"
+ * even when the root URL returns 404/302. Does not call getServer() or full getDashboard().
+ * Used by connection poll and RefreshConnection PV.
  * @return asynSuccess if SERVAL and detector are connected, asynError otherwise
  */
 asynStatus ADTimePix::checkConnection(){
     bool servalOk = false;
     bool detOk = false;
 
-    cpr::Response r = cpr::Get(cpr::Url{this->serverURL},
+    std::string dashboard = this->serverURL + std::string("/dashboard");
+    cpr::Response r = cpr::Get(cpr::Url{dashboard},
                                cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
     setIntegerParam(ADTimePixHttpCode, r.status_code);
@@ -685,29 +688,20 @@ asynStatus ADTimePix::checkConnection(){
     if (r.status_code == 200) {
         servalOk = true;
         setIntegerParam(ADTimePixServalConnected, 1);
-        std::string dashboard = this->serverURL + std::string("/dashboard");
-        r = cpr::Get(cpr::Url{dashboard},
-                     cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                     cpr::Parameters{{"anon", "true"}, {"key", "value"}});
-        if (r.status_code == 200) {
-            try {
-                json dashboard_j = json::parse(r.text.c_str());
-                std::string Detector = dashboard_j["Detector"].dump();
-                if (strcmp(Detector.c_str(), "null") != 0) {
-                    detOk = true;
-                    setIntegerParam(ADTimePixDetConnected, 1);
-                    std::string DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump());
-                    setStringParam(ADTimePixDetType, DetType.c_str());
-                    setStringParam(ADModel, DetType.c_str());
-                } else {
-                    setIntegerParam(ADTimePixDetConnected, 0);
-                    setStringParam(ADTimePixDetType, "null");
-                }
-            } catch (...) {
+        try {
+            json dashboard_j = json::parse(r.text.c_str());
+            std::string Detector = dashboard_j["Detector"].dump();
+            if (strcmp(Detector.c_str(), "null") != 0) {
+                detOk = true;
+                setIntegerParam(ADTimePixDetConnected, 1);
+                std::string DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump());
+                setStringParam(ADTimePixDetType, DetType.c_str());
+                setStringParam(ADModel, DetType.c_str());
+            } else {
                 setIntegerParam(ADTimePixDetConnected, 0);
                 setStringParam(ADTimePixDetType, "null");
             }
-        } else {
+        } catch (...) {
             setIntegerParam(ADTimePixDetConnected, 0);
             setStringParam(ADTimePixDetType, "null");
         }
