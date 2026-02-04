@@ -5552,6 +5552,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.priority = epicsThreadPriorityLow;
     opts.stackSize = epicsThreadGetStackSize(epicsThreadStackSmall);
+    opts.joinable = 1;  // Required so destructor can epicsThreadMustJoin
     connectionPollThreadId_ = epicsThreadCreateOpt("connectionPoll", connectionPollThreadC, this, &opts);
     if (!connectionPollThreadId_) {
         ERR("Failed to create connection poll thread");
