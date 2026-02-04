@@ -12,7 +12,7 @@
     <height>1040</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
-      <text>TPX3 Emulator IOC Control Panel</text>
+      <text>TPX3 Emulator IOC Control Panel (replay of raw .tpx3 data)</text>
       <x>50</x>
       <y>20</y>
       <width>1100</width>
@@ -361,10 +361,11 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>ReplayFileLabel</name>
-        <text>Replay File (Full Path):</text>
+        <text>Replay File (.tpx3, full path):</text>
         <x>20</x>
         <y>115</y>
-        <width>150</width>
+        <width>220</width>
+        <tooltip>Replay previously collected raw .tpx3 data</tooltip>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>ReplayFileNameInput</name>
