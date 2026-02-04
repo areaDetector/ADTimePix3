@@ -16,6 +16,12 @@ R1-6 (XXX, 2026)
 --------
 
 * **Code Organization - BPC/mask logic in mask_io.cpp**: Moved `checkBPCPath()` and `uploadBPC()` from `ADTimePix.cpp` to `mask_io.cpp` to shorten the main driver file and keep all BPC/mask path and upload logic in one place. `mask_io.cpp` already contained `readBPCfile()`, `writeBPCfile()`, and mask helpers; it now also implements BPC path validation and BPC upload to SERVAL. No functional or PV changes.
+* **Measurement.Config PVs (SERVAL 4.1.x – 4D-STEM and Time-of-Flight)**: Added read/write support for SERVAL Measurement.Config via GET/PUT `/measurement/config`. Previously the driver used only Measurement.Info (status, rates, frame count); Measurement.Config was not exposed. New asyn parameters and EPICS records:
+  * **Stem (4D-STEM)**: `StemScanWidth`, `StemScanHeight`, `StemDwellTime` (Scan); `StemRadiusOuter`, `StemRadiusInner` (VirtualDetector). Read/write; values are sent to SERVAL on write and refreshed from SERVAL when "Scan detector/health" (Health PV) is triggered.
+  * **TimeOfFlight**: `TofTdcReference` (comma-separated string, e.g. `PN0123,PN0123`), `TofMin`, `TofMax`. Same read/write and refresh behavior.
+* **Driver**: `getMeasurementConfig()` (GET `/measurement/config`, parse Stem and TimeOfFlight into PVs), `sendMeasurementConfig()` (merge PVs into current config, PUT `/measurement/config`). Called when Health is written (with getDetector) and when any of the new PVs are written. Corrections and Processing branches are preserved on PUT (merge with existing config).
+* **Database**: New records in `Measurement.template` for all eight parameters (setpoint + _RBV readback where applicable).
+* **Phoebus screen**: New `Measurement/MeasurementConfig.bob` screen (4D-STEM and ToF sections) with spinners/text entries and readbacks. Embedded in `TimePix3Detector.bob` below Measurement Info so Measurement Config is available from the Detector Status tab. Layout may be adjusted manually for best fit.
 
 R1-5 (January 27, 2026)
 --------
@@ -90,12 +96,9 @@ R1-3 (September 7, 2025)
 * TDC1/TDC2 reporting for serval 4, and Serval 3.
 * The Serval 4.x.y requires {"Content-Type", "application/json"}, instead of "text/plain", as "Content-Type" when using cpr library.
   * Log Level, ChainMode, Polarity, PeriphClk80, ExternalReferenceClock, etc.
-* Serval 4.1.1/4.1.0 requires changes to the driver.
-  * Server->Detector->Health is an array of kv pairs in Serval v4.1.0, but was kv pairs in Serval v3.3.2.
-* Additional controls in Serval 4.1.1
-  * Server->Measurement->Stem
-    * Scan
-    * Virtual Detector
+* Serval 4.1.x requires changes to the driver.
+  * Server->Detector->Health is an array of kv pairs in Serval 4.1.x, but was kv pairs in Serval v3.3.2.
+
   * Server->Detector->Health->Pressure
   * Server->Detector->Info->ChipType
 
@@ -250,3 +253,5 @@ R0-1 (July 26, 2022)
 
 * First release.
 * Serval 2.3.6 only
+* Additional controls in Serval 4.1.x (Stem/Measurement.Config implemented in R1-6)
+  * Server->Measurement->Stem (Scan, Virtual Detector) — PVs and MeasurementConfig.bob in R1-6
