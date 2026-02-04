@@ -5636,7 +5636,10 @@ ADTimePix::~ADTimePix(){
         prvHstMutex_ = NULL;
     }
 
-    disconnect(this->pasynUserSelf);
+    // Do not call disconnect(this->pasynUserSelf) here. It can trigger asyn disconnect
+    // handling (e.g. callbacks) that may touch driver state or param lists after we have
+    // already torn down our resources, leading to SIGSEGV on IOC exit. The port is torn
+    // down by the base destructors (~asynNDArrayDriver, ~asynPortDriver).
 }
 
 
