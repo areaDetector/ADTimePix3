@@ -778,23 +778,35 @@ asynStatus ADTimePix::getDashboard(){
                                cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
     if(r.status_code == 200) {
-        setIntegerParam(ADTimePixServalConnected,1);
-        setIntegerParam(ADTimePixDetConnected,1);
-
-        json dashboard_j = json::parse(r.text.c_str());
-        // dashboard_j["Server"]["SoftwareVersion"] = "2.4.2";
-        // printf("Text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
-
-        // DiskSpace is an empty array until raw file writing selected, and acquisition starts
-        if (!dashboard_j["Server"]["DiskSpace"].empty()) {
-            setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
-            setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
-            setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
-            setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, false->0
+        setIntegerParam(ADTimePixServalConnected, 1);  // SERVAL reachable (dashboard responded)
+        try {
+            json dashboard_j = json::parse(r.text.c_str());
+            // Detector status: consistent with checkConnection()
+            std::string Detector = dashboard_j["Detector"].dump();
+            if (strcmp(Detector.c_str(), "null") != 0) {
+                setIntegerParam(ADTimePixDetConnected, 1);
+                std::string DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump());
+                setStringParam(ADTimePixDetType, DetType.c_str());
+                setStringParam(ADModel, DetType.c_str());
+            } else {
+                setIntegerParam(ADTimePixDetConnected, 0);
+                setStringParam(ADTimePixDetType, "null");
+            }
+            // DiskSpace is an empty array until raw file writing selected, and acquisition starts
+            if (!dashboard_j["Server"]["DiskSpace"].empty()) {
+                setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
+                setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
+                setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
+                setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, false->0
+            }
+        } catch (...) {
+            setIntegerParam(ADTimePixDetConnected, 0);
+            setStringParam(ADTimePixDetType, "null");
         }
     } else { // Serval not running
-        setIntegerParam(ADTimePixServalConnected,0);
-        setIntegerParam(ADTimePixDetConnected,0);
+        setIntegerParam(ADTimePixServalConnected, 0);
+        setIntegerParam(ADTimePixDetConnected, 0);
+        setStringParam(ADTimePixDetType, "null");
     }
     return status;
 }
