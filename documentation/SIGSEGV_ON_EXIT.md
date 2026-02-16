@@ -1,5 +1,7 @@
 # SIGSEGV on IOC Exit (exit / PrvHst TCP disconnected)
 
+**Resolved in ADCore 3.14.0 and later.** If you use ADCore R3-14 or newer, this issue should no longer occur and no local patches are needed. The notes below apply when using older ADCore versions.
+
 ## What happens
 
 When you type `exit` in the IOC shell, the process can abort with signal 11 (SIGSEGV) after messages like `PrvHst TCP disconnected`. The crash is in **ADCore**: `NDArrayPool::release()` is called after the driver and its pool have already been destroyed.
