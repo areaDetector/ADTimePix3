@@ -12,5 +12,8 @@ autosave/
 envPaths
 mask.bpc
 
+# ADCore 3.14.0
+.iocsh_history
+
 # Documentation files
 documentation/PRVIMG_METADATA_RECOMMENDATIONS.md
