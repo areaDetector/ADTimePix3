@@ -711,7 +711,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             
             // Release the array (callbacks will increment reference count if needed)
             pHistArray->release();
-            
+
             // Restore previous shared parameter values (for image channels)
             setIntegerParam(ADSizeX, savedSizeX);
             setIntegerParam(ADSizeY, savedSizeY);
@@ -720,6 +720,10 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             setIntegerParam(NDDataType, savedDataType);
             setIntegerParam(NDArraySize, savedArraySize);
         } else {
+            // Release array if alloc returned non-null with null pData (avoids pool leak)
+            if (pHistArray) {
+                pHistArray->release();
+            }
             // Restore previous values even if allocation failed
             setIntegerParam(ADSizeX, savedSizeX);
             setIntegerParam(ADSizeY, savedSizeY);

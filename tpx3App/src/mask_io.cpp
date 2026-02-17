@@ -53,8 +53,8 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
 
     std::string BPCFilePath, BPCFileName, maskFileName, fullFileName;
 
-    // buffer for reading BPC file
-    char *bufBPC;
+    // buffer for reading BPC file (caller must free when done)
+    char *bufBPC = NULL;
     int bufBPCSize = 0;
 
     // write new mask
@@ -155,7 +155,13 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             }
         }
     }
- 
+
+    // Free BPC buffer if readBPCfile() allocated it (avoids memory leak)
+    if (bufBPC) {
+        free(bufBPC);
+        bufBPC = NULL;
+    }
+
     callParamCallbacks();
 
     *nIn=nElements;
