@@ -1,6 +1,6 @@
 # SIGSEGV on IOC Exit (exit / PrvHst TCP disconnected)
 
-**Resolved in ADCore 3.14.0 and later.** If you use ADCore R3-14 or newer, this issue should no longer occur and no local patches are needed. The notes below apply when using older ADCore versions.
+**Status:** The issue occurs with unpatched ADCore 3.12.1 and 3.14.0 when acquisition has been run and then `exit` is typed. It is **resolved** by applying the fix below in **ADCore** (not included in upstream 3.14.0). See also [ADTimePix3 issue #5](https://github.com/areaDetector/ADTimePix3/issues/5).
 
 ## What happens
 
@@ -10,20 +10,19 @@ When you type `exit` in the IOC shell, the process can abort with signal 11 (SIG
 
 ## Fix (in ADCore)
 
-The fix is in **ADCore**, not in ADTimePix3:
+The fix is in **ADCore**, not in ADTimePix3. Two parts are needed:
 
-1. **asynNDArrayDriver** stores `maxAddr` in a member `maxAddr_`.
-2. In **~asynNDArrayDriver()**, before `delete pNDArrayPoolPvt_`, the driver nulls **pNDArrayPool** on every entry in **pArrays[]**.
+1. **Destroyed-pool registry** – So that *any* NDArray (including those held by PVA, not only the driver’s `pArrays[]`) can safely no-op when `release()` is called after the pool is deleted:
+   - **NDArray.h**: Declare static methods `NDArrayPool::registerDestroyingPool(NDArrayPool *p)` and `NDArrayPool::isPoolDestroyed(NDArrayPool *p)`.
+   - **NDArrayPool.cpp**: Implement them with a static set of pool pointers (addresses only; never dereference the pool in `isPoolDestroyed`).
+   - **NDArray.cpp**: At the start of `NDArray::release()`, if `isPoolDestroyed(pNDArrayPool)` then set `pNDArrayPool = NULL` and return without calling the pool.
 
-That way, when PVA later calls `array->release()`, **NDArray::release()** sees `pNDArrayPool == NULL` and returns without touching the (already deleted) pool.
+2. **asynNDArrayDriver destructor** – Store `maxAddr` in `maxAddr_`. In **~asynNDArrayDriver()**, before deleting the pool:
+   - Call `NDArrayPool::registerDestroyingPool(pNDArrayPoolPvt_)`.
+   - For each non-null `pArrays[i]` (i = 0 .. maxAddr_-1), set `pArrays[i]->pNDArrayPool = NULL`.
+   - Then `delete pNDArrayPoolPvt_`.
 
-**Files to change in ADCore:**
-
-- `ADCore/ADApp/ADSrc/asynNDArrayDriver.h`: add `int maxAddr_;` (private).
-- `ADCore/ADApp/ADSrc/asynNDArrayDriver.cpp`:
-  - In the constructor initializer list: `maxAddr_(maxAddr)`.
-  - In the destructor, before `delete this->pNDArrayPoolPvt_;`, add:
-    - Loop `i = 0 .. maxAddr_-1`, and for each non-null `pArrays[i]` set `pArrays[i]->pNDArrayPool = NULL`.
+**Files to change in ADCore:** `NDArray.h`, `NDArray.cpp`, `NDArrayPool.cpp`, `asynNDArrayDriver.h`, `asynNDArrayDriver.cpp`. Full patch details are in [issue #5](https://github.com/areaDetector/ADTimePix3/issues/5).
 
 ## Next steps if you still see the crash
 
