@@ -39,6 +39,11 @@ R1-6 (XXX, 2026)
   * **New**: `Measurement/MeasurementConfig.bob` — Measurement.Config (4D-STEM Stem scan/virtual detector, Time-of-Flight). Opened from Detector Status tab (TimePix3Detector) below Measurement Info.
   * **Updated**: `TimePix3Detector.bob` — embeds MeasurementConfig; size/layout may be adjusted manually.
   * **Updated**: `tpx3emulator.bob` — title and Replay File label now state replay of previously collected raw .tpx3 data; tooltip added on Replay File. Emulator screen supports replay of raw .tpx3 files (single, repeat N, forever, file list). Opened from Detector Config tab.
+* **Bug fix – Memory leaks**:
+  * **BPC buffer** (`mask_io.cpp`): `readBPCfile()` allocates a buffer with `malloc()` and passes it to the caller. The buffer was never freed in `readInt32Array()`, leaking memory on every mask/BPC read or write. The buffer is now freed before `readInt32Array()` returns (and `bufBPC` is initialized to `NULL`).
+  * **Histogram NDArray** (`histogram_io.cpp`): When `pNDArrayPool->alloc()` returned a non-null array with null `pData`, the array was not released, leaking a pool reference. The failure path now calls `pHistArray->release()` when `pHistArray` is non-null.
+* **Database**: `Measurement.template` — `TofTdcReference` stringout record uses device support `asynOctetWrite` (not `asynOctet`) so `dbLoadRecords` does not report "no such device support for 'stringout' record type".
+* **ADCore** `iocBoot/commonPlugins.cmd`: request file paths for support modules must use each module’s **Db** folder (e.g. `$(CALC)/calcApp/Db`, `$(SSCAN)/sscanApp/Db`), not the lowercase `db` folder, so save_restore finds the `.req` files (e.g. `sseq_settings.req`, `sseqRecord_settings.req`).
 
 R1-5 (January 27, 2026)
 --------
