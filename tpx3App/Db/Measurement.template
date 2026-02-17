@@ -120,7 +120,7 @@ record(longin, "$(P)$(R)StemRadiusInner_RBV"){
   field(DESC, "Stem virtual detector inner radius RBV")
 }
 record(stringout, "$(P)$(R)TofTdcReference"){
-  field(DTYP, "asynOctet")
+  field(DTYP, "asynOctetWrite")
   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_TOF_TDC_REFERENCE")
   field(DESC, "ToF TDC reference (comma-sep)")
 }
