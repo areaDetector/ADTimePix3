@@ -65,14 +65,14 @@ epicsThreadSleep(2)
 dbpf("$(PREFIX)cam1:WriteData","1")   # Write selected data files to disk and stream to socket
 
 # One Chip calibration
-#dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support/areaDetector/ADTimePix3/vendor/oneChip")
+#dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support2/areaDetector/ADTimePix3/vendor/oneChip")
 #dbpf("$(PREFIX)cam1:BPCFileName","eq.bpc")       # load BPC calibration
-#dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support/areaDetector/ADTimePix3/vendor/oneChip")
+#dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support2/areaDetector/ADTimePix3/vendor/oneChip")
 #dbpf("$(PREFIX)cam1:DACSFileName","eq.dacs")     # load DACS calibration
 # Four chip calibration
-dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support/areaDetector/ADTimePix3/vendor/")
+dbpf("$(PREFIX)cam1:BPCFilePath","/epics/support2/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")       # load BPC calibration
-dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support/areaDetector/ADTimePix3/vendor/")
+dbpf("$(PREFIX)cam1:DACSFilePath","/epics/support2/areaDetector/ADTimePix3/vendor/")
 dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")     # load DACS calibration
 
 # Simplify startup
