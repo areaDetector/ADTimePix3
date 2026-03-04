@@ -15,7 +15,7 @@ Notes:
 * **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * This has only been developed for 2 x 2 chips layout and 1 chip tpx3CAM, since that is what I have access to now.
-* **Serval versions**: The master branch is compatible with Serval 4.x.x. The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 is currently recommended**. Serval 4.1.5-rc2 requires the same version of the TimePix3 Emulator (4.1.5-rc2). For Serval 3.x.x, use the 3.3.2 branch; the driver is Serval-version-specific because Rust features differ. Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
+* **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 is currently recommended** for 4.x. Serval 4.1.5-rc2 requires the same version of the TimePix3 Emulator (4.1.5-rc2). Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
 * The driver has been developed using the TimePix3 Emulator and real detectors (quad-chip and single-chip).
 
 TCP Image Streaming
