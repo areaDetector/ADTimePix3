@@ -98,7 +98,7 @@
       <widget type="label" version="2.0.0">
         <name>ResetLabel</name>
         <text>Reset Accumulation:</text>
-        <x>498</x>
+        <x>300</x>
         <y>5</y>
         <width>160</width>
         <height>25</height>
@@ -108,7 +108,7 @@
         <name>ImageDataResetButton</name>
         <pv_name>$(P)$(R)ImageDataReset</pv_name>
         <bit>-1</bit>
-        <x>668</x>
+        <x>460</x>
         <y>3</y>
         <height>25</height>
         <off_label>No</off_label>
@@ -140,6 +140,62 @@
           </color>
         </foreground_color>
         <vertical_alignment>1</vertical_alignment>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>WriteProcessedLabel</name>
+        <text>Push to file (addr 2,3):</text>
+        <x>614</x>
+        <y>5</y>
+        <width>160</width>
+        <height>25</height>
+      </widget>
+      <widget type="bool_button" version="2.0.0">
+        <name>WriteProcessedImgButton</name>
+        <pv_name>$(P)cam1:WriteProcessedImg</pv_name>
+        <bit>-1</bit>
+        <x>784</x>
+        <y>3</y>
+        <height>25</height>
+        <off_label>No</off_label>
+        <off_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </off_color>
+        <on_label>Write</on_label>
+        <on_color>
+          <color red="100" green="200" blue="255">
+          </color>
+        </on_color>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <actions>
+        </actions>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ProcessedOutputTypeLabel</name>
+        <text>Output type:</text>
+        <x>914</x>
+        <y>5</y>
+        <width>90</width>
+        <height>25</height>
+      </widget>
+      <widget type="combo" version="2.0.0">
+        <name>ProcessedImgOutputTypeCombo</name>
+        <pv_name>$(P)cam1:ProcessedImgOutputType</pv_name>
+        <x>1009</x>
+        <y>3</y>
+        <width>200</width>
+        <height>25</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <items>
+          <item>Sum (64-bit)</item>
+          <item>Average (32-bit)</item>
+        </items>
       </widget>
     </widget>
     <widget type="group" version="3.0.0">
