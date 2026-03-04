@@ -6,8 +6,8 @@
     <DETECTOR_WIDTH>512</DETECTOR_WIDTH>
     <DETECTOR_HEIGHT>512</DETECTOR_HEIGHT>
   </macros>
-  <width>2220</width>
-  <height>1350</height>
+  <width>2135</width>
+  <height>1455</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Image_Control</name>
     <width>1400</width>
@@ -509,10 +509,10 @@
   <widget type="image" version="2.0.0">
     <name>Image_Accumulated</name>
     <pv_name>$(P)$(R)ImageData</pv_name>
-    <x>1410</x>
-    <y>10</y>
-    <width>800</width>
-    <height>800</height>
+    <x>680</x>
+    <y>750</y>
+    <width>700</width>
+    <height>700</height>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
@@ -547,10 +547,10 @@
   <widget type="image" version="2.0.0">
     <name>Image_Frame</name>
     <pv_name>$(P)$(R)ImageFrame</pv_name>
-    <x>1410</x>
-    <y>830</y>
-    <width>800</width>
-    <height>800</height>
+    <x>1420</x>
+    <y>750</y>
+    <width>700</width>
+    <height>700</height>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
@@ -585,10 +585,10 @@
   <widget type="image" version="2.0.0">
     <name>Image_Sum_N_Frames</name>
     <pv_name>$(P)$(R)ImageSumNFrames</pv_name>
-    <x>10</x>
-    <y>720</y>
-    <width>1300</width>
-    <height>1300</height>
+    <x>1420</x>
+    <y>10</y>
+    <width>700</width>
+    <height>700</height>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
