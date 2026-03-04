@@ -4,18 +4,18 @@
   <macros>
     <R>cam1:</R>
   </macros>
-  <width>2230</width>
-  <height>2480</height>
+  <width>2530</width>
+  <height>1418</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
-    <width>1400</width>
-    <height>1150</height>
+    <width>1100</width>
+    <height>1310</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>ADTimePix3 Histogram (PrvHst) Control Panel</text>
-      <x>50</x>
-      <y>20</y>
-      <width>1300</width>
+      <x>38</x>
+      <y>22</y>
+      <width>1004</width>
       <height>40</height>
       <font>
         <font family="Liberation Sans" style="BOLD" size="28.0">
@@ -35,8 +35,8 @@
       <name>ConfigurationControl</name>
       <x>10</x>
       <y>80</y>
-      <width>1350</width>
-      <height>170</height>
+      <width>1052</width>
+      <height>212</height>
       <widget type="label" version="2.0.0">
         <name>ConfigurationControlLabel</name>
         <text>Histogram Configuration</text>
@@ -71,7 +71,7 @@
         <name>PrvHstAccumulationEnableButton</name>
         <pv_name>$(P)$(R)PrvHstAccumulationEnable</pv_name>
         <bit>-1</bit>
-        <x>180</x>
+        <x>159</x>
         <y>40</y>
         <off_label>Disabled</off_label>
         <off_color>
@@ -91,7 +91,7 @@
       <widget type="textupdate" version="2.0.0">
         <name>PrvHstAccumulationEnableStatus</name>
         <pv_name>$(P)$(R)PrvHstAccumulationEnable_RBV</pv_name>
-        <x>290</x>
+        <x>270</x>
         <y>40</y>
         <height>30</height>
         <vertical_alignment>1</vertical_alignment>
@@ -99,16 +99,16 @@
       <widget type="label" version="2.0.0">
         <name>FilePathLabel</name>
         <text>File Path:</text>
-        <x>482</x>
+        <x>406</x>
         <y>45</y>
         <width>80</width>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>FilePathInput</name>
         <pv_name>$(P)$(R)PrvHstFilePath</pv_name>
-        <x>562</x>
+        <x>481</x>
         <y>40</y>
-        <width>300</width>
+        <width>239</width>
         <height>30</height>
         <format>6</format>
         <show_units>false</show_units>
@@ -123,7 +123,7 @@
       <widget type="spinner" version="2.0.0">
         <name>NumBinsSpinner</name>
         <pv_name>$(P)$(R)PrvHstNumBins</pv_name>
-        <x>140</x>
+        <x>130</x>
         <y>90</y>
         <width>120</width>
         <height>30</height>
@@ -137,14 +137,15 @@
       <widget type="label" version="2.0.0">
         <name>BinWidthLabel</name>
         <text>Bin Width (ms):</text>
-        <x>444</x>
+        <x>406</x>
         <y>90</y>
-        <width>120</width>
+        <width>74</width>
+        <height>40</height>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>BinWidthInput</name>
         <pv_name>$(P)$(R)PrvHstBinWidth</pv_name>
-        <x>564</x>
+        <x>483</x>
         <y>90</y>
         <width>120</width>
         <height>30</height>
@@ -158,13 +159,14 @@
       <widget type="label" version="2.0.0">
         <name>OffsetLabel</name>
         <text>Offset (ms):</text>
-        <x>934</x>
+        <x>754</x>
         <y>90</y>
+        <vertical_alignment>2</vertical_alignment>
       </widget>
       <widget type="textentry" version="3.0.0">
         <name>OffsetInput</name>
         <pv_name>$(P)$(R)PrvHstOffset</pv_name>
-        <x>1034</x>
+        <x>857</x>
         <y>90</y>
         <width>120</width>
         <height>30</height>
@@ -178,7 +180,7 @@
       <widget type="textupdate" version="2.0.0">
         <name>NumBinsRBVDisplay</name>
         <pv_name>$(P)$(R)PrvHstNumBins_RBV</pv_name>
-        <x>280</x>
+        <x>270</x>
         <y>90</y>
         <height>30</height>
         <vertical_alignment>1</vertical_alignment>
@@ -191,8 +193,8 @@
       <widget type="textupdate" version="2.0.0">
         <name>BinWidthRBVDisplay</name>
         <pv_name>$(P)$(R)PrvHstBinWidth_RBV</pv_name>
-        <x>704</x>
-        <y>90</y>
+        <x>483</x>
+        <y>130</y>
         <width>120</width>
         <height>30</height>
         <format>3</format>
@@ -207,8 +209,8 @@
       <widget type="textupdate" version="2.0.0">
         <name>OffsetRBVDisplay</name>
         <pv_name>$(P)$(R)PrvHstOffset_RBV</pv_name>
-        <x>1178</x>
-        <y>90</y>
+        <x>857</x>
+        <y>130</y>
         <width>120</width>
         <height>30</height>
         <format>3</format>
@@ -223,18 +225,18 @@
       <widget type="label" version="2.0.0">
         <name>ResetAccumulationLabel</name>
         <text>Reset Accumulation:</text>
-        <x>950</x>
-        <y>42</y>
-        <width>160</width>
-        <height>25</height>
+        <x>754</x>
+        <y>40</y>
+        <width>105</width>
+        <height>40</height>
         <vertical_alignment>1</vertical_alignment>
       </widget>
       <widget type="bool_button" version="2.0.0">
         <name>PrvHstDataResetButton</name>
         <pv_name>$(P)$(R)PrvHstDataReset</pv_name>
         <bit>-1</bit>
-        <x>1120</x>
-        <y>40</y>
+        <x>857</x>
+        <y>45</y>
         <height>25</height>
         <off_label>No</off_label>
         <off_color>
@@ -255,9 +257,9 @@
     <widget type="group" version="3.0.0">
       <name>AcquisitionControl</name>
       <x>10</x>
-      <y>249</y>
-      <width>1350</width>
-      <height>110</height>
+      <y>302</y>
+      <width>1052</width>
+      <height>152</height>
       <widget type="label" version="2.0.0">
         <name>AcquisitionControlLabel</name>
         <text>Acquisition Control</text>
@@ -294,7 +296,7 @@
         <pv_name>$(P)$(R)StatusMessage_RBV</pv_name>
         <x>160</x>
         <y>40</y>
-        <width>400</width>
+        <width>340</width>
         <height>30</height>
         <background_color>
           <color red="200" green="255" blue="200">
@@ -309,15 +311,17 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>StatusLabel</name>
-        <text>Status</text>
-        <x>580</x>
-        <y>45</y>
+        <text>Status:</text>
+        <x>526</x>
+        <y>40</y>
         <width>60</width>
+        <horizontal_alignment>2</horizontal_alignment>
+        <vertical_alignment>2</vertical_alignment>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>ADStatusDisplay</name>
         <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
-        <x>650</x>
+        <x>602</x>
         <y>40</y>
         <height>30</height>
         <background_color>
@@ -330,17 +334,10 @@
           </color>
         </border_color>
       </widget>
-      <widget type="label" version="2.0.0">
-        <name>ADStatusLabel</name>
-        <text>AD Status</text>
-        <x>760</x>
-        <y>45</y>
-        <width>80</width>
-      </widget>
       <widget type="textupdate" version="2.0.0">
         <name>NumImagesDisplay</name>
         <pv_name>$(P)$(R)NumImages</pv_name>
-        <x>850</x>
+        <x>844</x>
         <y>40</y>
         <height>30</height>
         <background_color>
@@ -355,16 +352,18 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>NumImagesLabel</name>
-        <text>Num Images</text>
-        <x>960</x>
-        <y>45</y>
+        <text>Num Images:</text>
+        <x>738</x>
+        <y>40</y>
         <width>90</width>
+        <horizontal_alignment>2</horizontal_alignment>
+        <vertical_alignment>2</vertical_alignment>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>NumImagesCounterDisplay</name>
         <pv_name>$(P)$(R)NumImagesCounter_RBV</pv_name>
-        <x>1060</x>
-        <y>40</y>
+        <x>844</x>
+        <y>80</y>
         <height>30</height>
         <background_color>
           <color red="255" green="255" blue="200">
@@ -378,17 +377,19 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>NumImagesCounterLabel</name>
-        <text>Image Counter</text>
-        <x>1170</x>
-        <y>45</y>
+        <text>Image Counter:</text>
+        <x>720</x>
+        <y>80</y>
         <width>110</width>
+        <horizontal_alignment>2</horizontal_alignment>
+        <vertical_alignment>2</vertical_alignment>
       </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>InfoDisplay</name>
       <x>10</x>
-      <y>1002</y>
-      <width>1350</width>
+      <y>1152</y>
+      <width>1052</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
         <name>InfoDisplayLabel</name>
@@ -411,7 +412,7 @@
         <text>Histogram data is streamed via TCP (jsonhisto format) when PrvHstFilePath is set to tcp://listen@hostname:port and PrvHstFileFmt is set to jsonhisto (4). The histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins.</text>
         <x>20</x>
         <y>40</y>
-        <width>1270</width>
+        <width>970</width>
         <height>40</height>
         <foreground_color>
           <color red="100" green="100" blue="100">
@@ -422,8 +423,8 @@
     <widget type="group" version="3.0.0">
       <name>DataDisplay</name>
       <x>10</x>
-      <y>356</y>
-      <width>1350</width>
+      <y>464</y>
+      <width>1052</width>
       <height>160</height>
       <widget type="label" version="2.0.0">
         <name>DataDisplayLabel</name>
@@ -537,13 +538,13 @@
       <widget type="label" version="2.0.0">
         <name>BinWidthLabel_2</name>
         <text>Bin Offset (ms):</text>
-        <x>540</x>
+        <x>526</x>
         <y>85</y>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>BinWidthDisplay_1</name>
         <pv_name>$(P)$(R)PrvHstBinOffsetMs_RBV</pv_name>
-        <x>640</x>
+        <x>626</x>
         <y>80</y>
         <width>120</width>
         <height>30</height>
@@ -560,14 +561,14 @@
       <widget type="label" version="2.0.0">
         <name>FramesToSumLabel</name>
         <text>Frames to Sum:</text>
-        <x>810</x>
+        <x>780</x>
         <y>85</y>
         <width>110</width>
       </widget>
       <widget type="spinner" version="2.0.0">
         <name>FramesToSumSpinner</name>
         <pv_name>$(P)$(R)PrvHstFramesToSum</pv_name>
-        <x>920</x>
+        <x>890</x>
         <y>80</y>
         <height>30</height>
         <background_color>
@@ -580,14 +581,15 @@
       <widget type="label" version="2.0.0">
         <name>SumUpdateIntervalLabel</name>
         <text>Sum Update Interval (frames):</text>
-        <x>720</x>
-        <y>45</y>
-        <width>200</width>
+        <x>753</x>
+        <y>40</y>
+        <width>140</width>
+        <height>40</height>
       </widget>
       <widget type="spinner" version="2.0.0">
         <name>SumUpdateIntervalSpinner</name>
         <pv_name>$(P)$(R)PrvHstSumUpdateInterval</pv_name>
-        <x>920</x>
+        <x>890</x>
         <y>40</y>
         <height>30</height>
         <background_color>
@@ -601,9 +603,9 @@
     <widget type="group" version="3.0.0">
       <name>FrameData</name>
       <x>10</x>
-      <y>532</y>
-      <width>1350</width>
-      <height>120</height>
+      <y>642</y>
+      <width>1052</width>
+      <height>160</height>
       <widget type="label" version="2.0.0">
         <name>FrameDataLabel</name>
         <text>Frame Data from JSON</text>
@@ -630,7 +632,7 @@
       <widget type="textupdate" version="2.0.0">
         <name>TimeAtFrameDisplay</name>
         <pv_name>$(P)$(R)PrvHstTimeAtFrame_RBV</pv_name>
-        <x>160</x>
+        <x>150</x>
         <y>40</y>
         <width>180</width>
         <height>30</height>
@@ -649,16 +651,17 @@
       <widget type="label" version="2.0.0">
         <name>FrameBinSizeLabel</name>
         <text>Frame Bin Size:</text>
-        <x>360</x>
-        <y>45</y>
+        <x>20</x>
+        <y>82</y>
         <width>120</width>
+        <vertical_alignment>2</vertical_alignment>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameBinSizeDisplay</name>
         <pv_name>$(P)$(R)PrvHstFrameBinSize_RBV</pv_name>
-        <x>480</x>
-        <y>40</y>
-        <width>120</width>
+        <x>150</x>
+        <y>82</y>
+        <width>180</width>
         <height>30</height>
         <background_color>
           <color red="220" green="255" blue="220">
@@ -673,16 +676,16 @@
       <widget type="label" version="2.0.0">
         <name>FrameBinWidthLabel</name>
         <text>Frame Bin Width:</text>
-        <x>620</x>
-        <y>45</y>
+        <x>358</x>
+        <y>40</y>
         <width>130</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameBinWidthDisplay</name>
         <pv_name>$(P)$(R)PrvHstFrameBinWidth_RBV</pv_name>
-        <x>750</x>
+        <x>488</x>
         <y>40</y>
-        <width>120</width>
+        <width>180</width>
         <height>30</height>
         <background_color>
           <color red="220" green="220" blue="255">
@@ -697,16 +700,16 @@
       <widget type="label" version="2.0.0">
         <name>FrameBinOffsetLabel</name>
         <text>Frame Bin Offset:</text>
-        <x>890</x>
-        <y>45</y>
+        <x>358</x>
+        <y>82</y>
         <width>130</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>FrameBinOffsetDisplay</name>
         <pv_name>$(P)$(R)PrvHstFrameBinOffset_RBV</pv_name>
-        <x>1020</x>
-        <y>40</y>
-        <width>120</width>
+        <x>488</x>
+        <y>82</y>
+        <width>180</width>
         <height>30</height>
         <background_color>
           <color red="255" green="255" blue="220">
@@ -722,8 +725,8 @@
     <widget type="group" version="3.0.0">
       <name>HistogramBins</name>
       <x>10</x>
-      <y>655</y>
-      <width>1350</width>
+      <y>812</y>
+      <width>1052</width>
       <widget type="label" version="2.0.0">
         <name>HistogramBinsLabel</name>
         <text>Histogram Data Arrays</text>
@@ -752,7 +755,7 @@
         <pv_name>$(P)$(R)PrvHstHistogramData</pv_name>
         <x>220</x>
         <y>40</y>
-        <width>1080</width>
+        <width>770</width>
         <height>30</height>
         <background_color>
           <color red="200" green="200" blue="255">
@@ -776,7 +779,7 @@
         <pv_name>$(P)$(R)PrvHstHistogramSumNFrames</pv_name>
         <x>220</x>
         <y>80</y>
-        <width>1080</width>
+        <width>770</width>
         <height>30</height>
         <background_color>
           <color red="200" green="255" blue="200">
@@ -800,7 +803,7 @@
         <pv_name>$(P)$(R)PrvHstHistogramTimeMs</pv_name>
         <x>220</x>
         <y>120</y>
-        <width>1080</width>
+        <width>770</width>
         <height>30</height>
         <background_color>
           <color red="255" green="200" blue="200">
@@ -817,8 +820,8 @@
     <widget type="group" version="3.0.0">
       <name>PerformanceMonitoring</name>
       <x>10</x>
-      <y>872</y>
-      <width>1350</width>
+      <y>1022</y>
+      <width>1052</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
         <name>PerformanceMonitoringLabel</name>
@@ -921,10 +924,10 @@
   </widget>
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_Sum</name>
-    <x>1410</x>
-    <y>20</y>
-    <width>800</width>
-    <height>800</height>
+    <x>1100</x>
+    <y>718</y>
+    <width>700</width>
+    <height>700</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
@@ -988,10 +991,10 @@
   </widget>
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_Frame</name>
-    <x>1410</x>
-    <y>840</y>
-    <width>800</width>
-    <height>800</height>
+    <x>1830</x>
+    <y>718</y>
+    <width>700</width>
+    <height>700</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
@@ -1055,10 +1058,10 @@
   </widget>
   <widget type="xyplot" version="3.0.0">
     <name>HistogramPlot_SumNFrames</name>
-    <x>10</x>
-    <y>1160</y>
-    <width>1300</width>
-    <height>1300</height>
+    <x>1110</x>
+    <y>10</y>
+    <width>700</width>
+    <height>700</height>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>
