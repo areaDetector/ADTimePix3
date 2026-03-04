@@ -679,6 +679,28 @@ record(ai, "$(P)$(R)ImgMemoryUsage")
     field(SCAN, "I/O Intr")
 }
 
+record(bo, "$(P)$(R)WriteProcessedImg")
+{
+    field(DESC, "Push processed Img to file plugins")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_WRITE_PROCESSED")
+    field(ZNAM, "No")
+    field(ONAM, "Write")
+    field(VAL, "0")
+}
+
+record(mbbo, "$(P)$(R)ProcessedImgOutputType")
+{
+    field(DESC, "Processed Img: Sum (64b) or Average (32b)")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_PROCESSED_OUTPUT_TYPE")
+    field(ZRST, "Sum (64-bit)")
+    field(ONST, "Average (32-bit)")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(VAL, "0")
+}
+
 # Image Channels[1] file path.
 record(waveform, "$(P)$(R)Img1FilePath")
 {
