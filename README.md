@@ -1,6 +1,6 @@
 # ADTimePix3
 
-An EPICS areaDetector driver for TimePix3 detector from [ASC](https://www.amscins.com/).
+ADTimePix3 is an open-source EPICS areaDetector driver for TimePix3 pixel detectors from [Advanced Scientific Instruments (ASI)](https://www.amscins.com/). It is a **unified driver**: it provides both detector configuration and control via the Serval server and on-IOC data processing. The driver talks to Serval over an HTTP/JSON REST API and acquires data through high-rate TCP streams for raw events, images, and histograms. It supports real-time preview and **image accumulation** (running sum, sum of last N frames), **Time-of-Flight (ToF) histogram** processing and accumulation, pixel masking (Binary Pixel Configuration files, rectangular/circular masks, hot-pixel tools), health and status monitoring, and integration with standard areaDetector plugins for file saving and analysis. Support is included for real detectors (single-chip and 2×2 quad) and the TimePix3 emulator. The driver is developed for Linux 64-bit (tested on Ubuntu and RHEL) and is expected to evolve toward processing of TCP raw events as well. ADTimePix3 is published in [DOE CODE](https://www.osti.gov/doecode/biblio/176778) and can be cited from there.
 
 Additional information:
 * [Documentation](https://areadetector.github.io/areaDetector/ADTimePix3/ADTimePix3.html)
