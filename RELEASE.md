@@ -7,9 +7,15 @@ The repository was transferred a while back to areaDetector organization.
 
 Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
-The master branch (under development) is tested with Serval 4.1.1 and 3.3.2
+The master branch (under development) supports Serval 4.x.x and 3.x.x; latest tested is Serval 4.1.5-rc2 (requires TimePix3 Emulator 4.1.5-rc2). Serval 4.1.5 is recommended for 4.x (dual-image fix).
 
-Driver depends on Serval versions, at this time. The current releases support Serval 4.1.1 and 3.0.0-3.3.2
+Driver depends on Serval versions, at this time. Current releases support Serval 4.1.5-rc2, 4.1.x, and 3.0.0-3.3.2.
+
+
+R1-7 (TBD, 2026)
+--------
+
+* (Placeholder for R1-7 release notes.)
 
 
 R1-6 (March 4, 2026)
