@@ -8,6 +8,19 @@
 - **ProcessedImgOutputType**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N_frames for TIFF). Set to Average for NDFileTIFF compatibility.
 - **Address 2** = running sum (ImgImageData); **Address 3** = sum of last N frames (ImgImageSumNFrames). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
 
+### Troubleshooting: TIFF images identical for different NDArrayAddress
+
+If changing `TIFF1:NDArrayAddress` (e.g. to 0, 1, 2, or 3) produces **binary-identical** files, the file plugin is almost certainly still receiving callbacks only for the address it had at **startup**. In areaDetector, many plugins register for NDArray callbacks once at init using the initial `NDArrayAddress`; changing that PV at runtime often does **not** re-register the plugin for the new address.
+
+**What to do:**
+
+1. **Use separate plugin instances**, each with a fixed address at startup:
+   - Load e.g. TIFF1, TIFF2, TIFF3 (and optionally TIFF4) in `commonPlugins.cmd`, and set **at startup** (in the same cmd or in a startup script):  
+     `TIFF1:NDArrayAddress=0`, `TIFF2:NDArrayAddress=1`, `TIFF3:NDArrayAddress=2`, `TIFF4:NDArrayAddress=3`.  
+   - Then: address 0 = PrvImg, 1 = Img current frame, 2 = running sum (only when `WriteProcessedImg` is pressed), 3 = sum-of-N (only when `WriteProcessedImg` is pressed). Each plugin will then save a different stream.
+2. **Addresses 2 and 3**: Data is sent **only** when `WriteProcessedImg` is set to 1 (one-shot). During normal acquisition, only addresses 0 (PrvImg) and 1 (Img) receive callbacks. So to get files from address 2 or 3, you must press **WriteProcessedImg** (and have that plugin’s Capture/Write enabled); changing only `NDArrayAddress` and running acquisition will not fill address 2/3.
+3. If you must use a single TIFF and switch streams, try **restarting the IOC** after changing `NDArrayAddress` so the plugin re-inits with the new address (not guaranteed on all ADCore versions).
+
 ## Goal
 
 Enable writing to file:
