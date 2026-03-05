@@ -53,7 +53,7 @@ The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulat
 - Configure `ImgFramesToSum` (1-100000, default: 10) to control frame buffer size
 - Configure `ImgSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
 
-**File Saving**: Image data is available via NDArray callbacks for use with areaDetector file plugins (NDFileTIFF, NDFileHDF5, etc.). The accumulated image data arrays (`ImgImageData`, `ImgImageFrame`, `ImgImageSumNFrames`) are also available as EPICS waveform arrays for direct access.
+**File Saving**: Image data is available via NDArray callbacks for use with areaDetector file plugins (NDFileTIFF, NDFileHDF5, etc.). The accumulated image data arrays (`ImgImageData`, `ImgImageFrame`, `ImgImageSumNFrames`) are also available as EPICS waveform arrays for direct access. To save **processed** images (running sum or sum-of-N) to file: set `WriteProcessedImg` to 1 to push the current accumulation as NDArrays on addresses 2 (running sum) and 3 (sum-of-N). Configure file plugins with `NDArrayAddress=2` or `3` (e.g. `TIFF2:NDArrayAddress=2`). Use `ProcessedImgOutputType` = Sum (0, NDInt64 for HDF5) or Average (1, NDInt32 for TIFF).
 
 Histogram Streaming (PrvHst)
 ------------------------------------------

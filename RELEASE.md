@@ -15,7 +15,13 @@ Driver depends on Serval versions, at this time. Current releases support Serval
 R1-7 (TBD, 2026)
 --------
 
-* (Placeholder for R1-7 release notes.)
+* **Processed Img file saving (Option A)**: The driver can push the current image accumulation (running sum and sum-of-N) as NDArrays to file plugins so that `ImgImageData` and `ImgImageSumNFrames` can be saved as TIFF or HDF5.
+  * **WriteProcessedImg** (boolean PV): Writing 1 pushes the current running sum to NDArray address 2 and the current sum-of-N (if available) to address 3. File plugins (NDFileTIFF, NDFileHDF5) with `NDArrayAddress=2` or `3` receive and can save them. One-shot; driver resets the PV to 0 after the push.
+  * **ProcessedImgOutputType** (mbbo): 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum divided by number of frames, for NDFileTIFF). Enables TIFF writing without overflow by storing average counts per frame.
+  * **Driver**: New `pushProcessedImgToPlugins()` builds NDArrays from `imgRunningSum_` and the sum-of-N buffer, optionally converts to average (divide by `imgAccumulatedFrameCount_` or by N for sum-of-N), and calls `doCallbacksGenericPointer(..., 2)` and `(..., 3)`. Shared params (ADSizeX/Y, etc.) are saved/restored so image channels are unchanged; NDArrayCounter is restored so the main counter is not affected. New `imgAccumulatedFrameCount_` tracks frames in the running sum for the average calculation.
+  * **Database**: New records in `Server.template` for `WriteProcessedImg` and `ProcessedImgOutputType` (DESC fields kept ≤40 characters).
+  * **Phoebus**: `ImgAccumulation.bob` — added "Push to file (addr 2,3)" button and "Output type" combo (Sum / Average). Uses `combo` widget type for compatibility.
+  * **Documentation**: `documentation/PROCESSED_IMAGE_FILE_SAVING.md` — Status section added; README "File Saving" under Img accumulation updated with WriteProcessedImg and NDArrayAddress 2/3 usage.
 
 
 R1-6 (March 4, 2026)

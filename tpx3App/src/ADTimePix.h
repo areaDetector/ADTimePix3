@@ -243,6 +243,8 @@
 #define ADTimePixImgTotalCountsString           "TPX3_IMG_TOTAL_COUNTS"     // (asynInt64,         r)      Total counts
 #define ADTimePixImgProcessingTimeString        "TPX3_IMG_PROCESSING_TIME"   // (asynFloat64,       r)      Processing time (ms)
 #define ADTimePixImgMemoryUsageString            "TPX3_IMG_MEMORY_USAGE"    // (asynFloat64,       r)      Memory usage (MB)
+#define ADTimePixWriteProcessedImgString         "TPX3_IMG_WRITE_PROCESSED" // (asynInt32,         w)      Trigger: push ImgImageData/ImgImageSumNFrames as NDArrays to addresses 2 and 3
+#define ADTimePixProcessedImgOutputTypeString    "TPX3_IMG_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDInt64), 1=Average (NDInt32, divide by N)
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -746,11 +748,15 @@ class ADTimePix : public ADDriver{
         int ADTimePixMaskWrite;
         int ADTimePixRefreshConnection;
         int ADTimePixApplyConfig;
+        int ADTimePixWriteProcessedImg;
+        int ADTimePixProcessedImgOutputType;
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
+        /** Push processed Img (running sum and sum-of-N) as NDArrays to addresses 2 and 3 for file plugins. */
+        void pushProcessedImgToPlugins();
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixApplyConfig  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixProcessedImgOutputType  // Last parameter in the list
 
     private:
 
@@ -824,6 +830,7 @@ class ADTimePix : public ADDriver{
         double imgProcessingTime_;                         // Average processing time (ms)
         double imgMemoryUsage_;                           // Memory usage (MB)
         uint64_t imgTotalCounts_;                         // Total counts across all frames
+        uint64_t imgAccumulatedFrameCount_;        // Number of frames added to running sum (for average-per-frame)
         static constexpr size_t IMG_MAX_PROCESSING_TIME_SAMPLES = 10;
         static constexpr size_t IMG_MEMORY_UPDATE_INTERVAL_SEC = 5;
         

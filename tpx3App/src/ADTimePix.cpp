@@ -3191,6 +3191,18 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         if (status == asynSuccess) status = getServer();
         setIntegerParam(ADTimePixApplyConfig, 0);  // Reset so PV can be triggered again
     }
+    else if(function == ADTimePixWriteProcessedImg) {
+        if (value == 1) {
+            pushProcessedImgToPlugins();
+            setIntegerParam(ADTimePixWriteProcessedImg, 0);
+            callParamCallbacks(ADTimePixWriteProcessedImg);
+        }
+    }
+    else if(function == ADTimePixProcessedImgOutputType) {
+        int outputType = value;
+        if (outputType != 0 && outputType != 1) outputType = 0;
+        setIntegerParam(ADTimePixProcessedImgOutputType, outputType);
+    }
     else if(function == ADTimePixStemScanWidth || function == ADTimePixStemScanHeight
             || function == ADTimePixStemRadiusOuter || function == ADTimePixStemRadiusInner) {
         status = sendMeasurementConfig();
@@ -4232,6 +4244,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         imgCurrentFrame_ = frame_data;
         
         imgTotalCounts_ = 0;
+        imgAccumulatedFrameCount_ = 0;
         setInteger64Param(ADTimePixImgTotalCounts, 0);
     }
     
@@ -4263,6 +4276,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         }
     }
     imgTotalCounts_ += frame_total;
+    imgAccumulatedFrameCount_++;
     
     // Add to frame buffer (must be done BEFORE checking update condition)
     imgFrameBuffer_.push_back(frame_data);
@@ -4613,6 +4627,7 @@ void ADTimePix::resetImgAccumulation() {
     imgRunningSum_.reset();
     imgFrameBuffer_.clear();
     imgTotalCounts_ = 0;
+    imgAccumulatedFrameCount_ = 0;
     imgFramesSinceLastSumUpdate_ = 0;
     imgProcessingTime_ = 0.0;
     imgProcessingTimeSamples_.clear();
@@ -4624,6 +4639,100 @@ void ADTimePix::resetImgAccumulation() {
     // Note: Array callbacks will be triggered when next frame arrives and finds empty buffers
     // For immediate update, we could trigger callbacks with zero arrays here, but it's cleaner
     // to wait for the next frame to populate the arrays
+}
+
+void ADTimePix::pushProcessedImgToPlugins() {
+    if (!imgMutex_ || !pNDArrayPool) return;
+    epicsMutexLock(imgMutex_);
+    
+    int outputType = 0;  // 0=Sum (NDInt64), 1=Average (NDInt32)
+    getIntegerParam(ADTimePixProcessedImgOutputType, &outputType);
+    if (outputType != 0 && outputType != 1) outputType = 0;
+    
+    // Save shared params (used by image channels 0 and 1)
+    int savedSizeX = 0, savedSizeY = 0, savedArraySizeX = 0, savedArraySizeY = 0;
+    int savedDataType = 0, savedArraySize = 0;
+    getIntegerParam(ADSizeX, &savedSizeX);
+    getIntegerParam(ADSizeY, &savedSizeY);
+    getIntegerParam(NDArraySizeX, &savedArraySizeX);
+    getIntegerParam(NDArraySizeY, &savedArraySizeY);
+    getIntegerParam(NDDataType, &savedDataType);
+    getIntegerParam(NDArraySize, &savedArraySize);
+    
+    int savedArrayCounter = 0;
+    getIntegerParam(NDArrayCounter, &savedArrayCounter);
+    
+    int arrayCallbacks = 0;
+    getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+    
+    if (imgRunningSum_ && arrayCallbacks) {
+        size_t width = imgRunningSum_->get_width();
+        size_t height = imgRunningSum_->get_height();
+        size_t pixel_count = imgRunningSum_->get_pixel_count();
+        const uint64_t* sum_ptr = imgRunningSum_->get_pixels_64_ptr();
+        
+        // Address 2: running sum (ImgImageData)
+        size_t dims[3] = { width, height, 0 };
+        NDDataType_t dataType = (outputType == 1) ? NDInt32 : NDInt64;
+        NDArray* pArr2 = pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
+        if (pArr2 && pArr2->pData) {
+            epicsUInt32 nFrames = (imgAccumulatedFrameCount_ > 0) ? static_cast<epicsUInt32>(imgAccumulatedFrameCount_) : 1;
+            if (outputType == 0) {
+                epicsInt64* pData = reinterpret_cast<epicsInt64*>(pArr2->pData);
+                for (size_t i = 0; i < pixel_count; i++) pData[i] = static_cast<epicsInt64>(sum_ptr[i]);
+            } else {
+                epicsInt32* pData = reinterpret_cast<epicsInt32*>(pArr2->pData);
+                for (size_t i = 0; i < pixel_count; i++)
+                    pData[i] = (nFrames > 0) ? static_cast<epicsInt32>(sum_ptr[i] / nFrames) : 0;
+            }
+            epicsTimeGetCurrent(&pArr2->epicsTS);
+            pArr2->timeStamp = pArr2->epicsTS.secPastEpoch + pArr2->epicsTS.nsec / 1.e9;
+            if (pArr2->pAttributeList) getAttributes(pArr2->pAttributeList);
+            doCallbacksGenericPointer(pArr2, NDArrayData, 2);
+            pArr2->release();
+        } else if (pArr2) {
+            pArr2->release();
+        }
+        
+        // Address 3: sum of last N frames (ImgImageSumNFrames)
+        size_t nSumFrames = imgFrameBuffer_.size();
+        if (nSumFrames > 0 && imgSumArray64Buffer_.size() >= pixel_count) {
+            NDArray* pArr3 = pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
+            if (pArr3 && pArr3->pData) {
+                const epicsInt64* sumN = imgSumArray64Buffer_.data();
+                epicsUInt32 nN = static_cast<epicsUInt32>(nSumFrames);
+                if (outputType == 0) {
+                    epicsInt64* pData = reinterpret_cast<epicsInt64*>(pArr3->pData);
+                    for (size_t i = 0; i < pixel_count; i++) pData[i] = sumN[i];
+                } else {
+                    epicsInt32* pData = reinterpret_cast<epicsInt32*>(pArr3->pData);
+                    for (size_t i = 0; i < pixel_count; i++)
+                        pData[i] = (nN > 0) ? static_cast<epicsInt32>(sumN[i] / nN) : 0;
+                }
+                epicsTimeGetCurrent(&pArr3->epicsTS);
+                pArr3->timeStamp = pArr3->epicsTS.secPastEpoch + pArr3->epicsTS.nsec / 1.e9;
+                if (pArr3->pAttributeList) getAttributes(pArr3->pAttributeList);
+                doCallbacksGenericPointer(pArr3, NDArrayData, 3);
+                pArr3->release();
+            } else if (pArr3) {
+                pArr3->release();
+            }
+        }
+        
+        // Restore NDArrayCounter so processed-image push does not affect main counter (like histogram)
+        int curCounter = 0;
+        getIntegerParam(NDArrayCounter, &curCounter);
+        int expectedDelta = (imgFrameBuffer_.size() > 0 && imgSumArray64Buffer_.size() >= pixel_count) ? 2 : 1;
+        if (curCounter == savedArrayCounter + expectedDelta) setIntegerParam(NDArrayCounter, savedArrayCounter);
+    }
+    
+    setIntegerParam(ADSizeX, savedSizeX);
+    setIntegerParam(ADSizeY, savedSizeY);
+    setIntegerParam(NDArraySizeX, savedArraySizeX);
+    setIntegerParam(NDArraySizeY, savedArraySizeY);
+    setIntegerParam(NDDataType, savedDataType);
+    setIntegerParam(NDArraySize, savedArraySize);
+    epicsMutexUnlock(imgMutex_);
 }
 
 void ADTimePix::resetPrvHstAccumulation() {
@@ -5389,6 +5498,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstStreamString,    asynParamInt32,     &ADTimePixPrvHstStream);
     createParam(ADTimePixRefreshConnectionString, asynParamInt32, &ADTimePixRefreshConnection);
     createParam(ADTimePixApplyConfigString, asynParamInt32, &ADTimePixApplyConfig);
+    createParam(ADTimePixWriteProcessedImgString, asynParamInt32, &ADTimePixWriteProcessedImg);
+    createParam(ADTimePixProcessedImgOutputTypeString, asynParamInt32, &ADTimePixProcessedImgOutputType);
 
     //sets driver version
     char versionString[25];
@@ -5507,6 +5618,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     imgProcessingTime_ = 0.0;
     imgMemoryUsage_ = 0.0;
     imgTotalCounts_ = 0;
+    imgAccumulatedFrameCount_ = 0;
     
     // Set initial parameter values
     setIntegerParam(ADTimePixImgAccumulationEnable, 1);  // Default: enabled
@@ -5518,6 +5630,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Calculate initial memory usage (will be 0.0 initially since buffers are empty)
     imgMemoryUsage_ = calculateImgMemoryUsageMB();
     setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
+    setIntegerParam(ADTimePixWriteProcessedImg, 0);
+    setIntegerParam(ADTimePixProcessedImgOutputType, 0);  // 0=Sum (NDInt64), 1=Average (NDInt32)
     // Initialize NumImages to 0 (unlimited) for continuous mode
     // This prevents INVALID status from very large default values
     setIntegerParam(ADNumImages, 0);
