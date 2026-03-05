@@ -1,5 +1,13 @@
 # Saving Processed Images and Histograms to File (TIFF/HDF5)
 
+## Status
+
+**Option A is implemented** (driver pushes processed Img as NDArrays on addresses 2 and 3):
+
+- **WriteProcessedImg** (boolean PV): Write 1 to push the current running sum (ImgImageData) and, if available, sum-of-N (ImgImageSumNFrames) as NDArrays to addresses 2 and 3. File plugins (NDFileTIFF, NDFileHDF5) with `NDArrayAddress=2` or `3` will receive and save them.
+- **ProcessedImgOutputType**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N_frames for TIFF). Set to Average for NDFileTIFF compatibility.
+- **Address 2** = running sum (ImgImageData); **Address 3** = sum of last N frames (ImgImageSumNFrames). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
+
 ## Goal
 
 Enable writing to file:
