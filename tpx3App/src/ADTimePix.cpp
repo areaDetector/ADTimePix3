@@ -21,6 +21,7 @@
 #include <epicsTime.h>
 #include <epicsThread.h>
 #include <epicsEvent.h>
+#include <epicsExit.h>
 #include <epicsString.h>
 #include <epicsStdio.h>
 #include <iocsh.h>
@@ -270,6 +271,16 @@ extern "C" int ADTimePixConfigWithFlags(const char* portName, const char* server
     return(asynSuccess);
 }
 
+/*
+ * Called when IOC exits if the driver was not created with ASYN_DESTRUCTIBLE
+ * (e.g. older asyn). Deletes the driver so the destructor runs and threads
+ * and resources are cleaned up. When ASYN_DESTRUCTIBLE is used, asyn performs
+ * teardown and this callback is not registered.
+ */
+static void exitCallbackC(void* pPvt){
+    ADTimePix* pTimePix = (ADTimePix*) pPvt;
+    delete pTimePix;
+}
 
 static void timePixCallbackC(void* pPvt){
     ADTimePix* pTimePix = (ADTimePix*) pPvt;
@@ -5670,8 +5681,14 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         ERR("Failed to create connection poll thread");
     }
 
-    // Teardown on IOC exit is performed by asyn when the driver is created with ASYN_DESTRUCTIBLE (asyn R4-45+, ADCore with destructible support).
-    // We do not register epicsAtExit; asyn calls shutdownPortDriver() then deletes the driver in the correct order.
+    // When ASYN_DESTRUCTIBLE (asyn R4-45+, ADCore destructible support): asyn performs teardown; do not register epicsAtExit.
+    // Otherwise (older asyn or driver created without the flag): register exit callback so the driver is deleted and destructor runs.
+#ifdef ASYN_DESTRUCTIBLE
+    if ((asynFlags_ & ASYN_DESTRUCTIBLE) == 0)
+#endif
+    {
+        epicsAtExit(exitCallbackC, this);
+    }
 }
 
 
