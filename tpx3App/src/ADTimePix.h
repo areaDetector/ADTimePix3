@@ -422,8 +422,11 @@ class ADTimePix : public ADDriver{
     public:
 
         // Constructor - NOTE THERE IS A CHANCE THAT YOUR CAMERA DOES NOT CONNECT WITH SERVAL # AND THIS MUST BE CHANGED
-        ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize);
+        // asynFlags: optional extra asyn flags (e.g. ASYN_DESTRUCTIBLE when using asyn R4-45+ and PR 572); 0 for default.
+        ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags = 0);
 
+        /** Called on IOC shutdown when driver is destructible (asyn R4-45+, ASYN_DESTRUCTIBLE). Stop threads here; destructor does resource cleanup. */
+        virtual void shutdownPortDriver();
 
         // ADDriver overrides
         virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t nChars, size_t *nActual);
@@ -767,6 +770,8 @@ class ADTimePix : public ADDriver{
         std::map<std::string, int> mDetOrientationMap;
 
         std::string serverURL;
+        /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). Used to skip epicsAtExit when destructible. */
+        int asynFlags_;
         // GraphicsMagick Image member removed - TCP streaming used instead
 
         bool acquiring=false;

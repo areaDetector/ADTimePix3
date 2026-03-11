@@ -479,6 +479,26 @@ Since these warnings can fill log files, here are several methods to suppress th
 
 * **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: Fixed in R1-5. The driver was created with `maxAddr=4` (addresses 0–3 only), but the histogram channel uses NDArray address 5. When asyn or plugins accessed parameter 51 (ARRAY_DATA) at address 5, asyn reported "invalid list" because that address did not exist. The driver now uses `maxAddr=6` so that PrvImg=0, Img=1, and PrvHst=5 are all valid. The warning no longer appears when the histogram channel is enabled. **No action required** after recompile and IOC restart.
 
+**SIGSEGV on IOC exit (after acquisition)**:
+
+If the IOC segfaults when you type `exit` after running acquisition (e.g. "Segmentation fault" in `NDArrayPool::release()` or similar), the cause is pvAccess (PVA) still holding NDArrays after the driver and its NDArray pool have been destroyed. Two complementary approaches exist:
+
+1. **ADTimePix3: destructible driver (recommended when using asyn R4-45+ and ADCore with destructible support)**  
+   Use controlled shutdown so the driver is torn down by asyn instead of a manual exit callback:
+   - Build ADTimePix3 with **asyn R4-45 or later** and an **ADCore** that supports destructible drivers (see [ADCore PR 572](https://github.com/areaDetector/ADCore/pull/572) and [destructible.rst](https://github.com/areaDetector/ADCore/blob/master/docs/ADCore/destructible.rst)).
+   - In your IOC startup script, create the driver with **`ADTimePixConfigWithFlags`** and pass **`ASYN_DESTRUCTIBLE`** as the 7th argument (only when your build has `ASYN_DESTRUCTIBLE` defined):
+     ```bash
+     # Example: with asyn R4-45+ and ADCore PR 572 (values: port, serverURL, maxBuffers, maxMemory, priority, stackSize, asynFlags)
+     ADTimePixConfigWithFlags("TPX3", "http://localhost:8080", 50, 0, 0, 0, <ASYN_DESTRUCTIBLE>)
+     ```
+     Replace `<ASYN_DESTRUCTIBLE>` with the numeric value of `ASYN_DESTRUCTIBLE` from your asyn build (e.g. in asyn source, or from `grep ASYN_DESTRUCTIBLE asyn/*.h`). With this, the driver does not register a manual `epicsAtExit` callback; asyn calls `shutdownPortDriver()` then deletes the driver on IOC shutdown, improving shutdown order.
+   - The existing **`ADTimePixConfig`** (6 arguments) remains the default and does not set `ASYN_DESTRUCTIBLE`; it keeps the previous behavior (manual exit callback) for compatibility.
+
+2. **ADCore: safe release when pool is destroyed**  
+   [ADCore PR 570](https://github.com/areaDetector/ADCore/pull/570) makes `NDArray::release()` safe when the pool has already been destroyed (e.g. PVA still holds arrays after the driver is gone). Using ADCore with that fix (or equivalent) is recommended as a **safety net** regardless of shutdown order. It does not require rewriting ADCore from scratch—only the changes in PR 570 (or their equivalent) need to be present.
+
+**Summary**: For an optimal solution that may avoid relying solely on an ADCore change: use **asyn R4-45+**, **ADCore with destructible support (PR 572)** and **ADTimePixConfigWithFlags(..., ASYN_DESTRUCTIBLE)** so the driver is destructible and shutdown is controlled. Still recommend **ADCore PR 570** (or equivalent) so that any late `NDArray::release()` calls (from PVA or elsewhere) do not dereference a destroyed pool.
+
 **Known Issues**:
 
 * **RESNIC Pattern Distortion in Phoebus**: Some images displayed in Phoebus show distorted RESNIC patterns. The expected checkerboard pattern sometimes appears as a different structure (vertical stripes or different geometric patterns). This is an intermittent issue that affects only some frames, not all. The correct checkerboard pattern is visible in some images, while others show distortion. **This may be a SERVAL bug specific to TCP streaming channels when histogram (jsonhisto) is enabled.** The issue may be related to:

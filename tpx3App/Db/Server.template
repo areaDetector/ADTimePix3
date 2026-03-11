@@ -691,7 +691,7 @@ record(bo, "$(P)$(R)WriteProcessedImg")
 
 record(mbbo, "$(P)$(R)ProcessedImgOutputType")
 {
-    field(DESC, "Processed Img: Sum (64b) or Average (32b)")
+    field(DESC, "0=Sum(64b) 1=Avg(32b)")
     field(DTYP, "asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_PROCESSED_OUTPUT_TYPE")
     field(ZRST, "Sum (64-bit)")

@@ -1,4 +1,4 @@
-/**
+/*
  * This is a driver for the TimePix3 pixel array detector 
  * 
  * Author: Kazimierz Gofron
@@ -257,7 +257,13 @@ const char* driverName = "ADTimePix";
  * @return:     status
  */
 extern "C" int ADTimePixConfig(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize){
-    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize);
+    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, 0);
+    return(asynSuccess);
+}
+
+/** Optional config with asyn flags (e.g. ASYN_DESTRUCTIBLE for asyn R4-45+). Use when building with ASYN_DESTRUCTIBLE defined. */
+extern "C" int ADTimePixConfigWithFlags(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags){
+    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, asynFlags);
     return(asynSuccess);
 }
 
@@ -5177,14 +5183,15 @@ asynStatus ADTimePix::readImageFromTCP() {
 //----------------------------------------------------------------------------
 
 /* maxAddr=6: PrvImg=0, Img=1, PrvHst=5; address 5 must exist or asyn reports "parameter 51 in list 5, invalid list" */
-ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize)
+ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
     : ADDriver(portName, 6, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
-        ASYN_MULTIDEVICE | ASYN_CANBLOCK,
+        ASYN_MULTIDEVICE | ASYN_CANBLOCK | asynFlags,
         1,
         priority,
         stackSize),
+      asynFlags_(asynFlags),
       imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
     static const char* functionName = "ADTimePix";
@@ -5672,16 +5679,84 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         ERR("Failed to create connection poll thread");
     }
 
-     // when epics is exited, delete the instance of this class
-    epicsAtExit(exitCallbackC, this);
+    // When using ASYN_DESTRUCTIBLE (asyn R4-45+, ADCore PR 572), asyn deletes the driver on IOC shutdown; do not register exit callback.
+    // Otherwise (old asyn or driver not created with ASYN_DESTRUCTIBLE), register so the driver is deleted on exit.
+#ifdef ASYN_DESTRUCTIBLE
+    if ((asynFlags_ & ASYN_DESTRUCTIBLE) == 0)
+#endif
+    {
+        epicsAtExit(exitCallbackC, this);
+    }
 }
 
+
+void ADTimePix::shutdownPortDriver() {
+    static const char* functionName = "shutdownPortDriver";
+    FLOW("ADTimePix shutdownPortDriver");
+
+    // Stop callback thread first so it cannot touch driver state during teardown
+    this->acquiring = false;
+    if (this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(this->callbackThreadId);
+        this->callbackThreadId = NULL;
+    }
+
+    // Stop connection poll thread
+    connectionPollEnable_ = 0;
+    if (connectionPollEvent_) {
+        epicsEventSignal(connectionPollEvent_);
+    }
+    if (connectionPollThreadId_ != NULL && connectionPollThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(connectionPollThreadId_);
+        connectionPollThreadId_ = NULL;
+    }
+
+    // Stop PrvImg TCP streaming
+    if (prvImgMutex_) {
+        epicsMutexLock(prvImgMutex_);
+        prvImgRunning_ = false;
+        epicsMutexUnlock(prvImgMutex_);
+    }
+    if (prvImgWorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+    prvImgDisconnect();
+
+    // Stop Img TCP streaming
+    if (imgMutex_) {
+        epicsMutexLock(imgMutex_);
+        imgRunning_ = false;
+        epicsMutexUnlock(imgMutex_);
+    }
+    if (imgWorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(imgWorkerThreadId_);
+        imgWorkerThreadId_ = NULL;
+    }
+    imgDisconnect();
+
+    // Stop PrvHst TCP streaming
+    if (prvHstMutex_) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstRunning_ = false;
+        epicsMutexUnlock(prvHstMutex_);
+    }
+    if (prvHstWorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvHstWorkerThreadId_);
+        prvHstWorkerThreadId_ = NULL;
+    }
+    prvHstDisconnect();
+
+#ifdef ASYN_DESTRUCTIBLE
+    asynPortDriver::shutdownPortDriver();
+#endif
+}
 
 ADTimePix::~ADTimePix(){
     static const char* functionName = "~ADTimePix";
     FLOW("ADTimePix driver exiting");
 
-    // Stop callback thread first so it cannot touch driver state during teardown
+    // Stop callback thread first so it cannot touch driver state during teardown (idempotent if shutdownPortDriver already ran)
     this->acquiring = false;
     if (this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf()) {
         epicsThreadMustJoin(this->callbackThreadId);
@@ -5768,6 +5843,7 @@ static const iocshArg ADTimePixConfigArg2 = { "maxBuffers",       iocshArgInt };
 static const iocshArg ADTimePixConfigArg3 = { "maxMemory",        iocshArgInt };
 static const iocshArg ADTimePixConfigArg4 = { "priority",         iocshArgInt };
 static const iocshArg ADTimePixConfigArg5 = { "stackSize",        iocshArgInt };
+static const iocshArg ADTimePixConfigArg6 = { "asynFlags",        iocshArgInt };
 
 
 /* Array of config args */
@@ -5775,20 +5851,30 @@ static const iocshArg * const ADTimePixConfigArgs[] =
         { &ADTimePixConfigArg0, &ADTimePixConfigArg1, &ADTimePixConfigArg2,
         &ADTimePixConfigArg3, &ADTimePixConfigArg4, &ADTimePixConfigArg5 };
 
+static const iocshArg * const ADTimePixConfigWithFlagsArgs[] =
+        { &ADTimePixConfigArg0, &ADTimePixConfigArg1, &ADTimePixConfigArg2,
+        &ADTimePixConfigArg3, &ADTimePixConfigArg4, &ADTimePixConfigArg5, &ADTimePixConfigArg6 };
+
 
 /* what function to call at config */
 static void configADTimePixCallFunc(const iocshArgBuf *args){
     ADTimePixConfig(args[0].sval, args[1].sval, args[2].ival, args[3].ival, args[4].ival, args[5].ival);
 }
 
+static void configADTimePixWithFlagsCallFunc(const iocshArgBuf *args){
+    ADTimePixConfigWithFlags(args[0].sval, args[1].sval, args[2].ival, args[3].ival, args[4].ival, args[5].ival, args[6].ival);
+}
+
 
 /* information about the configuration function */
 static const iocshFuncDef configADTimePix = { "ADTimePixConfig", 6, ADTimePixConfigArgs };
+static const iocshFuncDef configADTimePixWithFlags = { "ADTimePixConfigWithFlags", 7, ADTimePixConfigWithFlagsArgs };
 
 
 /* IOC register function */
 static void ADTimePixRegister(void) {
     iocshRegister(&configADTimePix, configADTimePixCallFunc);
+    iocshRegister(&configADTimePixWithFlags, configADTimePixWithFlagsCallFunc);
 }
 
 
