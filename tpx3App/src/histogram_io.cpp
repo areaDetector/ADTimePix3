@@ -840,17 +840,17 @@ void ADTimePix::prvHstConnect() {
 void ADTimePix::prvHstDisconnect() {
     // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
     // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
-    
     epicsMutexLock(prvHstMutex_);
     prvHstConnected_ = false;
-    epicsMutexUnlock(prvHstMutex_);
-    
-    if (prvHstNetworkClient_) {
+    bool had_client = (prvHstNetworkClient_ != nullptr);
+    if (had_client) {
         prvHstNetworkClient_->disconnect();
         prvHstNetworkClient_.reset();
     }
-    
-    printf("PrvHst TCP disconnected\n");
+    epicsMutexUnlock(prvHstMutex_);
+    if (had_client) {
+        printf("PrvHst TCP disconnected\n");
+    }
 }
 
 void ADTimePix::prvHstWorkerThreadC(void *pPvt) {
