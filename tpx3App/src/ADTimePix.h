@@ -770,7 +770,7 @@ class ADTimePix : public ADDriver{
         std::map<std::string, int> mDetOrientationMap;
 
         std::string serverURL;
-        /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). Used to skip epicsAtExit when destructible. */
+        /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). When set, asyn performs teardown on IOC exit. */
         int asynFlags_;
         // GraphicsMagick Image member removed - TCP streaming used instead
 

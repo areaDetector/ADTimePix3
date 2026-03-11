@@ -483,21 +483,16 @@ Since these warnings can fill log files, here are several methods to suppress th
 
 If the IOC segfaults when you type `exit` after running acquisition (e.g. "Segmentation fault" in `NDArrayPool::release()` or similar), the cause is pvAccess (PVA) still holding NDArrays after the driver and its NDArray pool have been destroyed. Two complementary approaches exist:
 
-1. **ADTimePix3: destructible driver (recommended when using asyn R4-45+ and ADCore with destructible support)**  
-   Use controlled shutdown so the driver is torn down by asyn instead of a manual exit callback:
+1. **ADTimePix3: rely on asyn for teardown (no manual exit handler)**  
+   The driver does **not** register `epicsAtExit`; teardown on IOC exit is performed by asyn when the driver is created with `ASYN_DESTRUCTIBLE` (as recommended in [ADCore PR 570](https://github.com/areaDetector/ADCore/pull/570#issuecomment-4005838864) and [PR 572](https://github.com/areaDetector/ADCore/pull/572)).
    - Build ADTimePix3 with **asyn R4-45 or later** and an **ADCore** that supports destructible drivers (see [ADCore PR 572](https://github.com/areaDetector/ADCore/pull/572) and [destructible.rst](https://github.com/areaDetector/ADCore/blob/master/docs/ADCore/destructible.rst)).
-   - In your IOC startup script, create the driver with **`ADTimePixConfigWithFlags`** and pass **`ASYN_DESTRUCTIBLE`** as the 7th argument (only when your build has `ASYN_DESTRUCTIBLE` defined):
-     ```bash
-     # Example: with asyn R4-45+ and ADCore PR 572 (values: port, serverURL, maxBuffers, maxMemory, priority, stackSize, asynFlags)
-     ADTimePixConfigWithFlags("TPX3", "http://localhost:8080", 50, 0, 0, 0, <ASYN_DESTRUCTIBLE>)
-     ```
-     Replace `<ASYN_DESTRUCTIBLE>` with the numeric value of `ASYN_DESTRUCTIBLE` from your asyn build (e.g. in asyn source, or from `grep ASYN_DESTRUCTIBLE asyn/*.h`). With this, the driver does not register a manual `epicsAtExit` callback; asyn calls `shutdownPortDriver()` then deletes the driver on IOC shutdown, improving shutdown order.
-   - The existing **`ADTimePixConfig`** (6 arguments) remains the default and does not set `ASYN_DESTRUCTIBLE`; it keeps the previous behavior (manual exit callback) for compatibility.
+   - **`ADTimePixConfig`** (6 arguments): when built with `ASYN_DESTRUCTIBLE` defined, it passes that flag to the driver so asyn performs shutdown (`shutdownPortDriver()` then delete). Use this in your IOC startup; no 7th argument needed.
+   - **`ADTimePixConfigWithFlags`** (7 arguments): use when you need to pass other asyn flags or override the default (e.g. pass 0 for asynFlags to avoid destructible behavior if needed).
 
 2. **ADCore: safe release when pool is destroyed**  
-   [ADCore PR 570](https://github.com/areaDetector/ADCore/pull/570) makes `NDArray::release()` safe when the pool has already been destroyed (e.g. PVA still holds arrays after the driver is gone). Using ADCore with that fix (or equivalent) is recommended as a **safety net** regardless of shutdown order. It does not require rewriting ADCore from scratch—only the changes in PR 570 (or their equivalent) need to be present.
+   [ADCore PR 570](https://github.com/areaDetector/ADCore/pull/570) makes `NDArray::release()` safe when the pool has already been destroyed (e.g. PVA still holds arrays after the driver is gone). Using ADCore with that fix (or equivalent) is recommended as a **safety net** regardless of shutdown order.
 
-**Summary**: For an optimal solution that may avoid relying solely on an ADCore change: use **asyn R4-45+**, **ADCore with destructible support (PR 572)** and **ADTimePixConfigWithFlags(..., ASYN_DESTRUCTIBLE)** so the driver is destructible and shutdown is controlled. Still recommend **ADCore PR 570** (or equivalent) so that any late `NDArray::release()` calls (from PVA or elsewhere) do not dereference a destroyed pool.
+**Summary**: Use **asyn R4-45+** and **ADCore with destructible support (PR 572)**; the driver is created destructible by default and asyn performs teardown. Still recommend **ADCore PR 570** (or equivalent) so that any late `NDArray::release()` calls do not dereference a destroyed pool.
 
 **Known Issues**:
 

@@ -21,7 +21,6 @@
 #include <epicsTime.h>
 #include <epicsThread.h>
 #include <epicsEvent.h>
-#include <epicsExit.h>
 #include <epicsString.h>
 #include <epicsStdio.h>
 #include <iocsh.h>
@@ -257,7 +256,11 @@ const char* driverName = "ADTimePix";
  * @return:     status
  */
 extern "C" int ADTimePixConfig(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize){
+#ifdef ASYN_DESTRUCTIBLE
+    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, ASYN_DESTRUCTIBLE);
+#else
     new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, 0);
+#endif
     return(asynSuccess);
 }
 
@@ -265,19 +268,6 @@ extern "C" int ADTimePixConfig(const char* portName, const char* serverURL, int 
 extern "C" int ADTimePixConfigWithFlags(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags){
     new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, asynFlags);
     return(asynSuccess);
-}
-
-
-/*
- * Callback function called when IOC is terminated.
- * Deletes created object
- *
- * @params[in]: pPvt -> pointer to the ADDRIVERNAMESTANDATD object created in ADTimePixConfig
- * @return:     void
- */
-static void exitCallbackC(void* pPvt){
-    ADTimePix* pTimePix = (ADTimePix*) pPvt;
-    delete(pTimePix);
 }
 
 
@@ -2541,10 +2531,12 @@ asynStatus ADTimePix::acquireStart(){
             // Parameter might not exist or be accessible, skip PrvHst setup
             return status;
         }
-        
+        if (writePrvHst == 0) {
+            // PrvHst not enabled: skip all PrvHst setup and messaging
+        } else {
         // Use printf for initial logging to avoid potential issues with LOG_ARGS
         printf("PrvHst: Checking if TCP streaming should start - WritePrvHst=%d\n", writePrvHst);
-        if (writePrvHst != 0) {
+        {
             if (ADTimePixPrvHstBase < 0 || ADTimePixPrvHstFormat < 0 || ADTimePixPrvHstAccumulationEnable < 0) {
                 ERR("PrvHst parameters not initialized");
                 return status;
@@ -2638,8 +2630,7 @@ asynStatus ADTimePix::acquireStart(){
             } else {
                 printf("PrvHst: Path is not TCP (doesn't start with tcp://): %s\n", prvHstPath.c_str());
             }
-        } else {
-            printf("PrvHst: WritePrvHst is disabled (0) - TCP streaming not started\n");
+        }
         }
     } catch (const std::exception& e) {
         printf("PrvHst: Exception in TCP streaming setup: %s\n", e.what());
@@ -5679,14 +5670,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         ERR("Failed to create connection poll thread");
     }
 
-    // When using ASYN_DESTRUCTIBLE (asyn R4-45+, ADCore PR 572), asyn deletes the driver on IOC shutdown; do not register exit callback.
-    // Otherwise (old asyn or driver not created with ASYN_DESTRUCTIBLE), register so the driver is deleted on exit.
-#ifdef ASYN_DESTRUCTIBLE
-    if ((asynFlags_ & ASYN_DESTRUCTIBLE) == 0)
-#endif
-    {
-        epicsAtExit(exitCallbackC, this);
-    }
+    // Teardown on IOC exit is performed by asyn when the driver is created with ASYN_DESTRUCTIBLE (asyn R4-45+, ADCore with destructible support).
+    // We do not register epicsAtExit; asyn calls shutdownPortDriver() then deletes the driver in the correct order.
 }
 
 
