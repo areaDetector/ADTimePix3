@@ -60,6 +60,13 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 #
 
+# Sum of last N frames
+NDFileTIFFConfigure("FileTIFFSum", 30, 0, "TPX3", 2)
+dbLoadRecords("NDFileTIFF.template", "P=TPX3-TEST:,R=TIFFSum:,PORT=FileTIFFSum,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3")
+# Sum of N frames
+NDFileTIFFConfigure("FileTIFFSumN", 30, 0, "TPX3", 3)
+dbLoadRecords("NDFileTIFF.template", "P=TPX3-TEST:,R=TIFFSumN:,PORT=FileTIFFSumN,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3")
+
 set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
 
 iocInit()
@@ -73,8 +80,16 @@ iocInit()
 #asynSetTraceMask($(PORT),0,0x11)
 
 # Set trace mask for FileTIFF1 to show ERROR | FLOW messages
-asynSetTraceMask("FileTIFF1", 0, 0x9)   # ERROR | FLOW
-asynSetTraceIOMask("FileTIFF1", 0, 0x0)
+#asynSetTraceMask("FileTIFF1", 0, 0x9)   # ERROR | FLOW
+#asynSetTraceIOMask("FileTIFF1", 0, 0x0)
+
+# Enable ERROR | FLOW | DRIVERIO
+#asynSetTraceMask("FileTIFF1", 0, 0xB)
+#asynSetTraceIOMask("FileTIFF1", 0, 0x0)
+
+# ERROR+FLOW+DRIVERIO:
+#asynSetTraceMask("FileTIFF1", 0, 0x3)
+#asynSetTraceIOMask("FileTIFF1", 0, 0x0)
 
 # save things every thirty seconds
 create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
