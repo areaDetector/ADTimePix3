@@ -4299,6 +4299,9 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     
     // Increment frame counter for sum update interval
     imgFramesSinceLastSumUpdate_++;
+
+    // Snapshot accumulated frame count to use as NDArray uniqueId (32-bit)
+    epicsInt32 imgUid = static_cast<epicsInt32>(imgAccumulatedFrameCount_);
     
     // Prepare data for callbacks (while holding mutex)
     // Copy data to buffers that will be used for callbacks
@@ -4427,7 +4430,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
             size_t nPixels = imgRunningSum_->get_pixel_count();
             std::memcpy(dst, src, nPixels * sizeof(epicsUInt64));
             // Metadata
-            pArray->uniqueId = frame_data.get_frame_number();
+            pArray->uniqueId = imgUid;
             epicsTimeStamp ts;
             epicsTimeGetCurrent(&ts);
             pArray->timeStamp = ts.secPastEpoch + ts.nsec / 1.e9;
@@ -4457,7 +4460,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
                 for (size_t i = 0; i < nPixels; ++i) {
                     dst[i] = static_cast<epicsUInt64>(src[i]);
                 }
-                pArrayN->uniqueId = frame_data.get_frame_number();
+                pArrayN->uniqueId = imgUid;
                 epicsTimeStamp ts;
                 epicsTimeGetCurrent(&ts);
                 pArrayN->timeStamp = ts.secPastEpoch + ts.nsec / 1.e9;
