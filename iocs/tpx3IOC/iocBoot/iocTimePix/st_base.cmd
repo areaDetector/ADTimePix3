@@ -62,13 +62,19 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 
 set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
 
-#asynSetTraceMask($(PORT),0,0x09)
-#asynSetTraceMask($(PORT),0,0x11)
 iocInit()
 
 # Detector initialization: single source of truth (init_detector.cmd).
 # Re-run from iocsh after reconnect: < init_detector.cmd
 < init_detector.cmd
+
+# Set trace mask for the driver to show ERROR | FLOW messages
+#asynSetTraceMask($(PORT),0,0x09)
+#asynSetTraceMask($(PORT),0,0x11)
+
+# Set trace mask for FileTIFF1 to show ERROR | FLOW messages
+asynSetTraceMask("FileTIFF1", 0, 0x9)   # ERROR | FLOW
+asynSetTraceIOMask("FileTIFF1", 0, 0x0)
 
 # save things every thirty seconds
 create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
