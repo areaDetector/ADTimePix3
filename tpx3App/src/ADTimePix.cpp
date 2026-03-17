@@ -4221,7 +4221,12 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     const char* functionName = "processImgFrame";
     epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
-    
+    // NDArrays to emit after releasing imgMutex_ (addresses 2 and 3)
+    NDArray* pImgSumArray = nullptr;   // running sum (ImgImageData) on addr 2
+    NDArray* pImgSumNArray = nullptr;  // sum of N frames (ImgImageSumNFrames) on addr 3
+    bool emitImgSumArray = false;
+    bool emitImgSumNArray = false;
+
     epicsMutexLock(imgMutex_);
     
     // Initialize running sum if needed
@@ -4409,10 +4414,68 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     
     // Update performance metrics
     updateImgPerformanceMetrics();
-    
+
+    // Prepare NDArray for running sum (addr 2) if requested and pool available
+    if (has_running_sum && image_data_size > 0 && pNDArrayPool) {
+        size_t width = imgRunningSum_->get_width();
+        size_t height = imgRunningSum_->get_height();
+        size_t dims[2] = { width, height };
+        NDArray* pArray = pNDArrayPool->alloc(2, dims, NDUInt64, 0, NULL);
+        if (pArray && pArray->pData) {
+            const uint64_t* src = imgRunningSum_->get_pixels_64_ptr();
+            epicsUInt64* dst = static_cast<epicsUInt64*>(pArray->pData);
+            size_t nPixels = imgRunningSum_->get_pixel_count();
+            std::memcpy(dst, src, nPixels * sizeof(epicsUInt64));
+            // Metadata
+            pArray->uniqueId = frame_data.get_frame_number();
+            epicsTimeStamp ts;
+            epicsTimeGetCurrent(&ts);
+            pArray->timeStamp = ts.secPastEpoch + ts.nsec / 1.e9;
+            updateTimeStamp(&pArray->epicsTS);
+            if (pArray->pAttributeList) {
+                getAttributes(pArray->pAttributeList);
+            }
+            pImgSumArray = pArray;
+            emitImgSumArray = true;
+        } else if (pArray) {
+            pArray->release();
+        }
+    }
+
+    // Prepare NDArray for sum of N frames (addr 3) if requested and pool available
+    if (should_update_sum && image_sum_size > 0 && pNDArrayPool && !imgSumArray64Buffer_.empty()) {
+        // Use current frame dimensions for NDArray shape
+        size_t width = imgCurrentFrame_.get_width();
+        size_t height = imgCurrentFrame_.get_height();
+        size_t dims[2] = { width, height };
+        size_t nPixels = width * height;
+        if (imgSumArray64Buffer_.size() >= nPixels) {
+            NDArray* pArrayN = pNDArrayPool->alloc(2, dims, NDUInt64, 0, NULL);
+            if (pArrayN && pArrayN->pData) {
+                const epicsInt64* src = imgSumArray64Buffer_.data();
+                epicsUInt64* dst = static_cast<epicsUInt64*>(pArrayN->pData);
+                for (size_t i = 0; i < nPixels; ++i) {
+                    dst[i] = static_cast<epicsUInt64>(src[i]);
+                }
+                pArrayN->uniqueId = frame_data.get_frame_number();
+                epicsTimeStamp ts;
+                epicsTimeGetCurrent(&ts);
+                pArrayN->timeStamp = ts.secPastEpoch + ts.nsec / 1.e9;
+                updateTimeStamp(&pArrayN->epicsTS);
+                if (pArrayN->pAttributeList) {
+                    getAttributes(pArrayN->pAttributeList);
+                }
+                pImgSumNArray = pArrayN;
+                emitImgSumNArray = true;
+            } else if (pArrayN) {
+                pArrayN->release();
+            }
+        }
+    }
+
     epicsMutexUnlock(imgMutex_);
     
-    // Trigger callbacks OUTSIDE mutex to avoid deadlocks
+    // Trigger callbacks OUTSIDE mutex to avoid deadlocks (waveform-style arrays)
     if (has_running_sum && image_data_size > 0) {
         doCallbacksInt64Array(imgArrayData64Buffer_.data(), image_data_size, 
                               ADTimePixImgImageData, 0);
@@ -4426,6 +4489,16 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     if (should_update_sum && image_sum_size > 0) {
         doCallbacksInt64Array(imgSumArray64Buffer_.data(), image_sum_size,
                               ADTimePixImgImageSumNFrames, 0);
+    }
+
+    // Emit NDArray streams for ImgImageData (addr 2) and ImgImageSumNFrames (addr 3)
+    if (emitImgSumArray && pImgSumArray) {
+        doCallbacksGenericPointer(pImgSumArray, NDArrayData, 2);
+        pImgSumArray->release();
+    }
+    if (emitImgSumNArray && pImgSumNArray) {
+        doCallbacksGenericPointer(pImgSumNArray, NDArrayData, 3);
+        pImgSumNArray->release();
     }
 }
 
