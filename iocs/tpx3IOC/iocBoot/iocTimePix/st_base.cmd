@@ -68,14 +68,13 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 #dbLoadRecords("NDFileTIFF.template", "P=TPX3-TEST:,R=TIFFSumN:,PORT=FileTIFFSumN,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3")
 
 # HDF5 for running sum (ImgImageData on TPX3 addr 2)
+# dbLoadRecords must be one line: iocsh does not join continued lines into the second argument.
 NDFileHDF5Configure("FileHDFSum", 30, 0, "TPX3", 2)
-dbLoadRecords("NDFileHDF5.template",
-              "P=TPX3-TEST:,R=HDFSum:,PORT=FileHDFSum,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3,XMLSIZE=2048")
+dbLoadRecords("NDFileHDF5.template", "P=TPX3-TEST:,R=HDFSum:,PORT=FileHDFSum,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3,XMLSIZE=2048")
 
 # HDF5 for sum-of-N frames (ImgImageSumNFrames on TPX3 addr 3)
 NDFileHDF5Configure("FileHDFSumN", 30, 0, "TPX3", 3)
-dbLoadRecords("NDFileHDF5.template",
-              "P=TPX3-TEST:,R=HDFSumN:,PORT=FileHDFSumN,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3,XMLSIZE=2048")
+dbLoadRecords("NDFileHDF5.template", "P=TPX3-TEST:,R=HDFSumN:,PORT=FileHDFSumN,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPX3,XMLSIZE=2048")
 
 set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
 
