@@ -4,9 +4,10 @@
 
 **Option A is implemented** (driver pushes processed Img as NDArrays on addresses 2 and 3):
 
-- **WriteProcessedImg** (boolean PV): Write 1 to push the current running sum (ImgImageData) and, if available, sum-of-N (ImgImageSumNFrames) as NDArrays to addresses 2 and 3. File plugins (NDFileTIFF, NDFileHDF5) with `NDArrayAddress=2` or `3` will receive and save them.
-- **ProcessedImgOutputType**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N_frames for TIFF). Set to Average for NDFileTIFF compatibility.
-- **Address 2** = running sum (ImgImageData); **Address 3** = sum of last N frames (ImgImageSumNFrames). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
+- **Per-frame path (`processImgFrame`)**: With Img accumulation enabled, each processed Img frame triggers an NDArray on **address 2** (running sum, NDUInt64) and, when the sum-of-N buffer is updated (see `ImgSumUpdateInterval`), on **address 3** (sum of last N frames, NDUInt64). File plugins with `NDArrayAddress=2` or `3` therefore receive a **continuous stream** during acquisition, not only on a manual trigger.
+- **`ImgImageFrame`**: Exposed as an **INT32 waveform** only; there is **no** dedicated NDArray address for it. For “single frame” file saving comparable to that buffer, use **NDArrayAddress=1** (raw Img stream).
+- **WriteProcessedImg** (boolean PV): Write 1 for an **extra on-demand** push to addresses 2 and 3 via `pushProcessedImgToPlugins()` (running sum and sum-of-N when available), with type controlled by **`ProcessedImgOutputType`**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N for TIFF). Use Average when feeding NDFileTIFF.
+- **Address 2** = running sum (`ImgImageData`); **Address 3** = sum of last N (`ImgImageSumNFrames`). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
 
 ### Troubleshooting: TIFF images identical for different NDArrayAddress
 
@@ -17,8 +18,8 @@ If changing `TIFF1:NDArrayAddress` (e.g. to 0, 1, 2, or 3) produces **binary-ide
 1. **Use separate plugin instances**, each with a fixed address at startup:
    - Load e.g. TIFF1, TIFF2, TIFF3 (and optionally TIFF4) in `commonPlugins.cmd`, and set **at startup** (in the same cmd or in a startup script):  
      `TIFF1:NDArrayAddress=0`, `TIFF2:NDArrayAddress=1`, `TIFF3:NDArrayAddress=2`, `TIFF4:NDArrayAddress=3`.  
-   - Then: address 0 = PrvImg, 1 = Img current frame, 2 = running sum (only when `WriteProcessedImg` is pressed), 3 = sum-of-N (only when `WriteProcessedImg` is pressed). Each plugin will then save a different stream.
-2. **Addresses 2 and 3**: Data is sent **only** when `WriteProcessedImg` is set to 1 (one-shot). During normal acquisition, only addresses 0 (PrvImg) and 1 (Img) receive callbacks. So to get files from address 2 or 3, you must press **WriteProcessedImg** (and have that plugin’s Capture/Write enabled); changing only `NDArrayAddress` and running acquisition will not fill address 2/3.
+   - Then: address 0 = PrvImg, 1 = Img current frame, 2 = running sum, 3 = sum-of-N (2 and 3 update during acquisition when Img accumulation is enabled; `WriteProcessedImg` adds an optional typed push). Each plugin can save a different stream.
+2. **Addresses 2 and 3**: If these never update during acquisition, check that **Img accumulation** is enabled, the Img TCP stream is connected, and **`NDArrayCallbacks`** is enabled on the driver. If plugins still show wrong or empty data, confirm the plugin instance was created with the correct **`NDArrayAddress`** at IOC startup (runtime changes often do not re-register). For a one-shot save with **Sum vs Average** output types, use **`WriteProcessedImg`** and set **`ProcessedImgOutputType`** as needed.
 3. If you must use a single TIFF and switch streams, try **restarting the IOC** after changing `NDArrayAddress` so the plugin re-inits with the new address (not guaranteed on all ADCore versions).
 
 ## Goal
@@ -36,11 +37,14 @@ Enable writing to file:
 
 | Data | PV / source | NDArray to plugins? | Address |
 |------|-------------|----------------------|--------|
-| Img current frame | From TCP stream | Yes | 1 |
-| Img running sum | `ImgImageData` (waveform) | No | — |
-| Img sum-of-N | `ImgImageSumNFrames` (waveform) | No | — |
+| Img current frame | TCP jsonimage stream | Yes | 1 |
+| Img current frame (copy) | `ImgImageFrame` (INT32 waveform) | No (waveform only) | — |
+| Img running sum | `ImgImageData` (INT64 waveform) | Yes (also per frame when accumulation on) | 2 |
+| Img sum-of-N | `ImgImageSumNFrames` (INT64 waveform) | Yes (when sum-of-N updates; see `ImgSumUpdateInterval`) | 3 |
 | PrvHst running sum | `PrvHstHistogramData` (waveform) | Yes (1D NDInt64) | 5 |
 | PrvHst time axis | `PrvHstHistogramTimeMs` (waveform) | No (metadata/attributes could carry it) | — |
+
+**Verification tip:** With stable illumination, the **mean** of a sum-of-N NDArray (address 3) is often about **N times** the mean of a single-frame NDArray (address 1) when `ImgFramesToSum` = N; the running sum (address 2) grows without that fixed ratio until reset.
 
 The driver already builds an NDArray from the histogram running sum and pushes it with `doCallbacksGenericPointer(..., 5)` in `histogram_io.cpp`. File plugins (e.g. NDFileHDF5) with `NDArrayAddress=5` can save `PrvHstHistogramData`. So **processed histogram (PrvHstHistogramData) is already writable** via existing plugins.
 

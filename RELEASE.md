@@ -21,7 +21,7 @@ R1-7 (TBD, 2026)
   * **Driver**: New `pushProcessedImgToPlugins()` builds NDArrays from `imgRunningSum_` and the sum-of-N buffer, optionally converts to average (divide by `imgAccumulatedFrameCount_` or by N for sum-of-N), and calls `doCallbacksGenericPointer(..., 2)` and `(..., 3)`. Shared params (ADSizeX/Y, etc.) are saved/restored so image channels are unchanged; NDArrayCounter is restored so the main counter is not affected. New `imgAccumulatedFrameCount_` tracks frames in the running sum for the average calculation.
   * **Database**: New records in `Server.template` for `WriteProcessedImg` and `ProcessedImgOutputType` (DESC fields kept ≤40 characters).
   * **Phoebus**: `ImgAccumulation.bob` — added "Push to file (addr 2,3)" button and "Output type" combo (Sum / Average). Uses `combo` widget type for compatibility.
-  * **Documentation**: `documentation/PROCESSED_IMAGE_FILE_SAVING.md` — Status section added; README "File Saving" under Img accumulation updated with WriteProcessedImg and NDArrayAddress 2/3 usage.
+  * **Documentation**: `documentation/PROCESSED_IMAGE_FILE_SAVING.md` — Status section added; README "File Saving" under Img accumulation updated with WriteProcessedImg and NDArrayAddress 2/3 usage. **Clarified (doc fix):** addresses 2 and 3 also receive **per-frame** NDArrays from `processImgFrame` when Img accumulation is enabled; `WriteProcessedImg` is an additional on-demand push with Sum/Average typing. Documented that `ImgImageFrame` has no NDArray address (use address 1 for single-frame file saving), optional HDF5 `dbLoadRecords` one-line iocsh note, and a short verification tip (mean ratio addr 3 vs 1 ≈ N).
 
 
 R1-6 (March 4, 2026)
