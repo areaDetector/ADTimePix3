@@ -130,6 +130,82 @@ The driver already builds an NDArray from the histogram running sum and pushes i
 3. Document that e.g. `TIFF2:NDArrayAddress=2` saves processed Img (as average when using divide-by-N); `HDF5_xxx:NDArrayAddress=2` can save full 64-bit sum. Use NDFileHDF5 when you need exact sums or to combine/merge runs.
 4. (Optional) Add per-frame push of address 2/3 if “streaming” processed images to file is required (with performance in mind).
 
+## Runtime NDArrayAddress switching validation (single-plugin test)
+
+This section records a reproducible validation of runtime `NDArrayAddress` switching with **one file plugin instance** (no separate per-address plugin instances).
+
+### Why this test matters
+
+To distinguish between:
+
+- **A)** runtime switching works for one plugin instance (`NDArrayAddress` write takes effect), vs.
+- **B)** plugin effectively stays on the startup subscription.
+
+Using one plugin avoids ambiguity from multiple plugin instances pre-bound to different addresses.
+
+### Test setup
+
+- Driver: ADTimePix3
+- Img address mapping:
+  - `0` = PrvImg preview
+  - `1` = Img current frame stream
+  - `2` = Img running sum
+  - `3` = Img sum-of-last-N
+- `ImgFramesToSum = 10`
+- For strict single-plugin tests, addr2/addr3 helper plugin instances in `st_base.cmd` were commented out.
+
+### HDF5 result (single `HDF1`, runtime address changes)
+
+`A1.h5` (`NDArrayAddress=1`):
+- `dtype=uint16`, `min=0`, `max=6392`, `mean=3047.5551`
+
+`A3.h5` (`NDArrayAddress=3`):
+- `dtype=uint64`, `min=0`, `max=61523`, `mean=30476.0225`
+
+`A2.h5` (`NDArrayAddress=2`):
+- `dtype=uint64`, `min=0`, `max=5078444`, `mean=2538663.8451`
+
+Repeat with helper plugins disabled in startup script:
+
+`B1.h5` (`addr=1`): `uint16`, `mean=3047.7223`  
+`B3.h5` (`addr=3`): `uint64`, `mean=30476.2289`  
+`B2.h5` (`addr=2`): `uint64`, `mean=1883426.3545`
+
+Interpretation:
+- addr3 mean is ~10x addr1 mean (matches `ImgFramesToSum=10`)
+- addr2 is largest (running sum)
+- runtime switching worked for `NDFileHDF5` in this environment.
+
+### TIFF result (single `TIFF1`, runtime address changes)
+
+`T1_001.tif` (`addr=1`):
+- shape `(512,512)`, `dtype=uint16`, `min=0`, `max=6320`, `mean=3047.7019`
+
+`T3_001.tif` (`addr=3`):
+- shape `(512,512)`, `dtype=uint64`, `min=0`, `max=60724`, `mean=30476.2085`
+
+`T2_001.tif` (`addr=2`):
+- shape `(512,512)`, `dtype=uint64`, `min=0`, `max=24024332`, `mean=12010653.5513`
+
+`tiffinfo` confirms:
+- `T1`: 16-bit unsigned TIFF
+- `T2`, `T3`: 64-bit unsigned TIFF
+
+Interpretation:
+- runtime switching also worked for `NDFileTIFF` in this environment.
+
+### Viewer compatibility note (ImageJ/Fiji)
+
+- Some ImageJ/Fiji paths open `uint16` TIFF (`T1`) but fail on `uint64` TIFF (`T2`/`T3`).
+- This is a **viewer compatibility limitation**, not file corruption.
+- `tiffinfo`/`tifffile` validate that `T2`/`T3` are structurally valid TIFF files.
+
+### Practical testing notes
+
+- For waveform string PVs (e.g. file name), use `caput -S`.
+- If Channel Access reports `Identical process variable names on multiple servers`, pin CA to a single IOC (`EPICS_CA_AUTO_ADDR_LIST=NO`, set `EPICS_CA_ADDR_LIST`) before concluding runtime behavior.
+- Keep each `dbLoadRecords("NDFileHDF5.template", "...")` on one line in iocsh scripts.
+
 ## Histogram (PrvHst) — Already Supported; Optional Extensions
 
 - **PrvHstHistogramData** is already sent as an NDArray on **address 5** (running sum, NDInt64). Any file plugin with `NDArrayAddress=5` (e.g. NDFileHDF5) can save it.
