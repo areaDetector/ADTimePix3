@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NDFileNexus (areaDetector) template. This is NOT NDFileHDF5 hdf5_layout XML.
+
+  Root must be NXroot. NXentry, NXdata, one dataset with type="pArray".
+  EPICS: set TemplateFilePath (directory, trailing slash) + TemplateFileName.
+
+  Offline validation: from ADCore XML_schema run xmllint with schematron
+  template.sch against this file (see ADCore docs/ADCore/NDFileNexus.rst).
+-->
+<NXroot>
+  <NXentry name="entry">
+    <NXinstrument name="instrument">
+      <NXdetector name="detector">
+      </NXdetector>
+    </NXinstrument>
+    <NXdata name="data">
+      <data type="pArray">
+        <Attr name="signal" type="CONST" outtype="NX_INT32">1</Attr>
+      </data>
+    </NXdata>
+  </NXentry>
+</NXroot>
