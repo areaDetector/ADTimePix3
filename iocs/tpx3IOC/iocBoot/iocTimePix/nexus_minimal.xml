@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdf5_layout>
+  <!--
+    Schema-compliant NDFileHDF5 XML with NeXus-style attributes.
+    Note: ADCore schema does not support a root-level "default" attribute.
+  -->
+
+  <group name="entry">
+    <attribute name="NX_class" source="constant" value="NXentry" type="string"/>
+    <attribute name="default" source="constant" value="data" type="string"/>
+
+    <group name="data">
+      <attribute name="NX_class" source="constant" value="NXdata" type="string"/>
+      <attribute name="signal" source="constant" value="data" type="string"/>
+
+      <!-- Main detector image -->
+      <dataset name="data" source="detector" det_default="true">
+        <attribute name="interpretation" source="constant" value="image" type="string"/>
+      </dataset>
+    </group>
+
+    <group name="instrument">
+      <attribute name="NX_class" source="constant" value="NXinstrument" type="string"/>
+
+      <group name="detector">
+        <attribute name="NX_class" source="constant" value="NXdetector" type="string"/>
+
+        <!-- Link detector/data to the main NXdata signal -->
+        <hardlink name="data" target="/entry/data/data"/>
+
+        <!-- Optional metadata via NDAttributes (requires they exist) -->
+        <dataset name="frame_number" source="ndattribute" ndattribute="NDArrayUniqueId"/>
+        <dataset name="timestamp" source="ndattribute" ndattribute="NDArrayTimeStamp"/>
+      </group>
+    </group>
+  </group>
+</hdf5_layout>
