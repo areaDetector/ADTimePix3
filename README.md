@@ -5,6 +5,7 @@ ADTimePix3 is an open-source EPICS areaDetector driver for TimePix3 pixel detect
 Additional information:
 * [Documentation](https://areadetector.github.io/areaDetector/ADTimePix3/ADTimePix3.html)
 * [Release notes](RELEASE.md)
+* **Readout stack diagram** (48→64→SERVAL; **ADTimePix3** is a SERVAL-only client; **LUNA** is an optional parallel ASI path not used by this driver): [PNG](documentation/TimePix3_pipeline_48_64_96_caption.png), [SVG source](documentation/TimePix3_pipeline_48_64_96.svg) (regenerate PNG with Inkscape from the SVG if you edit the figure).
 
 Notes:
 ------
@@ -229,6 +230,8 @@ Multi-Chip Support:
 -   Chip-specific DAC settings and temperature monitoring
 
 Pixel Masking:
+
+Masks apply in the IOC on image-domain data from the same **SERVAL** TCP/HTTP path as **Img** / **PrvImg** (see **readout stack diagram** under *Additional information*).
 
 -   Binary Pixel Configuration (BPC) file support
 -   Real-time mask generation (rectangular, circular)

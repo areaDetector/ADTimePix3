@@ -1,5 +1,7 @@
 # Saving Processed Images and Histograms to File (TIFF/HDF5)
 
+**Stack context:** Img and PrvHst file-saving paths use **jsonimage** / **jsonhisto** TCP streams from **SERVAL** (see [readout diagram (PNG)](TimePix3_pipeline_48_64_96_caption.png), [SVG source](TimePix3_pipeline_48_64_96.svg)).
+
 ## Status
 
 **Option A is implemented** (driver pushes processed Img as NDArrays on addresses 2 and 3):
