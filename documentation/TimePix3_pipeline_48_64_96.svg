@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1040" viewBox="0 0 900 1040">
+  <defs>
+    <style type="text/css"><![CDATA[
+      .title { fill: #ffffff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 22px; font-weight: 600; }
+      .sub { fill: #b8b8b8; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; }
+      .cap { fill: #a8a8a8; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+      .warn { fill: #ffaa55; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; font-weight: 600; }
+      .pink { fill: #ff6b9d; font-weight: 700; }
+      .box { fill: none; stroke: #e8e8e8; stroke-width: 2; }
+    ]]></style>
+  </defs>
+  <rect width="900" height="1040" fill="#0a0a0a"/>
+
+  <!-- Chip -->
+  <rect class="box" x="280" y="28" width="340" height="72" rx="6"/>
+  <text class="title" x="450" y="58" text-anchor="middle">Timepix3 Chip</text>
+  <text class="sub" x="450" y="86" text-anchor="middle"><tspan class="pink">48</tspan>-bit packets</text>
+
+  <path d="M 450 100 L 450 124" stroke="#888" stroke-width="2"/>
+  <polygon points="450,132 444,120 456,120" fill="#888"/>
+
+  <!-- Readout -->
+  <rect class="box" x="280" y="136" width="340" height="88" rx="6"/>
+  <text class="title" x="450" y="168" text-anchor="middle">Readout board</text>
+  <text class="sub" x="450" y="196" text-anchor="middle"><tspan class="pink">64</tspan>-bit packets</text>
+  <text class="sub" x="450" y="216" text-anchor="middle" font-size="13px">(wrapped with headers?)</text>
+
+  <path d="M 450 224 L 450 252" stroke="#888" stroke-width="2"/>
+  <polygon points="450,260 444,248 456,248" fill="#888"/>
+
+  <!-- SERVAL -->
+  <rect class="box" x="260" y="260" width="380" height="100" rx="6"/>
+  <text class="title" x="450" y="295" text-anchor="middle">SERVAL</text>
+  <text class="sub" x="450" y="322" text-anchor="middle"><tspan class="pink">64</tspan>-bit TPX3-style streams to clients</text>
+  <text class="sub" x="450" y="346" text-anchor="middle" font-size="13px">HTTP/JSON control + TCP (e.g. jsonimage / jsonhisto)</text>
+
+  <!-- Fork lines from SERVAL -->
+  <path d="M 450 360 L 450 388 L 230 388 L 230 408" stroke="#888" stroke-width="2" fill="none"/>
+  <path d="M 450 360 L 450 388 L 670 388 L 670 408" stroke="#888" stroke-width="2" fill="none"/>
+  <polygon points="230,416 224,404 236,404" fill="#888"/>
+  <polygon points="670,416 664,404 676,404" fill="#888"/>
+
+  <!-- LUNA (parallel / optional) -->
+  <rect class="box" x="40" y="416" width="380" height="118" rx="6"/>
+  <text class="title" x="230" y="448" text-anchor="middle">LUNA (optional ASI path)</text>
+  <text class="sub" x="230" y="476" text-anchor="middle"><tspan class="pink">96</tspan>-bit extended format</text>
+  <text class="sub" x="230" y="498" text-anchor="middle" font-size="13px">(timestamp extension + sorting)</text>
+  <text class="warn" x="230" y="524" text-anchor="middle">Not used by ADTimePix3</text>
+
+  <!-- ADTimePix3 -->
+  <rect class="box" x="480" y="416" width="380" height="118" rx="6"/>
+  <text class="title" x="670" y="448" text-anchor="middle">ADTimePix3 / EPICS IOC</text>
+  <text class="sub" x="670" y="476" text-anchor="middle">Connects only to SERVAL</text>
+  <text class="sub" x="670" y="500" text-anchor="middle" font-size="13px">Same 64-bit TPX3 stream path (no LUNA)</text>
+
+  <!-- Caption -->
+  <text class="cap" x="450" y="580" text-anchor="middle">ASI stack bit widths; ADTimePix3 is a SERVAL client. LUNA is a parallel path, not in the driver.</text>
+</svg>
