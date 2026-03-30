@@ -1,5 +1,6 @@
 #include "histogram_io.h"
 #include "ADTimePix.h"
+#include <NDAttribute.h>
 #include <stdexcept>
 #include <algorithm>
 #include <cstring>
@@ -516,7 +517,8 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         // Update sum of last N frames if needed
         prvHstFramesSinceLastSumUpdate_++;
         bool should_update_sum = (prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_);
-        
+        bool prvHstSumNUpdatedThisFrame = false;
+
         if (should_update_sum && !prvHstFrameBuffer_.empty()) {
                 prvHstFramesSinceLastSumUpdate_ = 0;
         
@@ -545,6 +547,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         
         // Update EPICS PV via callback for sum of N frames
         doCallbacksInt64Array(prvHstSumArray64Buffer_.data(), frame_bin_size, ADTimePixPrvHstHistogramSumNFrames, 0);
+        prvHstSumNUpdatedThisFrame = true;
     }
     
     // Update histogram data PVs via callbacks
@@ -635,15 +638,14 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         epicsMutexLock(prvHstMutex_);
     }
     
-    // Create NDArray for histogram (1D array)
+    // NDArrays for PrvHst file plugins: addr 4=sum-of-N, 5=running sum, 6=current frame, 7=ToF bin centers (ms)
     if (prvHstRunningSum_ && this->pNDArrayPool) {
         size_t bin_size = prvHstRunningSum_->get_bin_size();
         size_t dims[3];
         dims[0] = bin_size;
         dims[1] = 0;
         dims[2] = 0;
-        
-        // Save current shared parameter values (used by image channels)
+
         int savedSizeX = 0, savedSizeY = 0, savedArraySizeX = 0, savedArraySizeY = 0;
         int savedDataType = 0, savedArraySize = 0;
         getIntegerParam(ADSizeX, &savedSizeX);
@@ -652,86 +654,107 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         getIntegerParam(NDArraySizeY, &savedArraySizeY);
         getIntegerParam(NDDataType, &savedDataType);
         getIntegerParam(NDArraySize, &savedArraySize);
-        
-        // Allocate new NDArray for histogram (1D array)
-        NDArray *pHistArray = this->pNDArrayPool->alloc(1, dims, NDInt64, 0, NULL);
-        
-        if (pHistArray && pHistArray->pData) {
-            // Copy histogram data to NDArray
-            epicsInt64* pData = reinterpret_cast<epicsInt64*>(pHistArray->pData);
-            for (size_t i = 0; i < bin_size; ++i) {
-                pData[i] = static_cast<epicsInt64>(prvHstRunningSum_->get_bin_value_64(i));
-            }
-            
-            // Note: We don't set ADSizeX, ADSizeY, NDArraySizeX, NDArraySizeY, NDDataType, or NDArraySize
-            // for histogram data because these are shared parameters used by image channels (addresses 0 and 1).
-            // Histogram uses NDArray address 5, and the NDArray itself contains all necessary size/type information.
-            // Setting these shared parameters would overwrite image channel values, causing incorrect SizeX_RBV/SizeY_RBV.
-            // The NDArray attributes (accessible via getAttributes) contain the correct information for plugins.
-            
-            // Set timestamp
-            epicsTimeStamp timestamp;
-            epicsTimeGetCurrent(&timestamp);
-            pHistArray->timeStamp = timestamp.secPastEpoch + timestamp.nsec / 1.e9;
-            updateTimeStamp(&pHistArray->epicsTS);
-            
-            // Get attributes (includes size information in NDArray)
-            if (pHistArray->pAttributeList) {
-                this->getAttributes(pHistArray->pAttributeList);
-            }
-            
-            // Prevent histogram from incrementing NDArrayCounter
-            // Histogram uses address 5 and should not affect the shared NDArrayCounter
-            // which is used by image channels (addresses 0 and 1)
-            // Note: doCallbacksGenericPointer in areaDetector may automatically increment NDArrayCounter
-            // We save the counter before the callback and restore it after to prevent histogram from affecting it
-            int savedArrayCounter = 0;
-            getIntegerParam(NDArrayCounter, &savedArrayCounter);
-            
-            // Trigger NDArray callbacks with address 5 for PrvHst
-            int arrayCallbacks = 0;
-            getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
-            if (arrayCallbacks && pHistArray) {
-                doCallbacksGenericPointer(pHistArray, NDArrayData, 5);
-            }
-            
-            // Check if doCallbacksGenericPointer incremented the counter
-            // Only restore if it increased by exactly 1 (suggesting histogram callback incremented it)
-            // If it didn't change or changed by more than 1, don't restore to avoid race conditions
-            int currentArrayCounter = 0;
-            getIntegerParam(NDArrayCounter, &currentArrayCounter);
-            if (currentArrayCounter == savedArrayCounter + 1) {
-                // Counter increased by exactly 1, likely from doCallbacksGenericPointer
-                // Restore it to undo the histogram's increment
-                setIntegerParam(NDArrayCounter, savedArrayCounter);
-            }
-            // Note: If counter didn't change, doCallbacksGenericPointer doesn't increment it (no action needed)
-            // If counter increased by more than 1, another thread (Img channel) may have incremented it
-            // In that case, we don't restore to avoid overwriting the Img channel's increment
-            
-            // Release the array (callbacks will increment reference count if needed)
-            pHistArray->release();
 
-            // Restore previous shared parameter values (for image channels)
-            setIntegerParam(ADSizeX, savedSizeX);
-            setIntegerParam(ADSizeY, savedSizeY);
-            setIntegerParam(NDArraySizeX, savedArraySizeX);
-            setIntegerParam(NDArraySizeY, savedArraySizeY);
-            setIntegerParam(NDDataType, savedDataType);
-            setIntegerParam(NDArraySize, savedArraySize);
-        } else {
-            // Release array if alloc returned non-null with null pData (avoids pool leak)
-            if (pHistArray) {
+        int savedArrayCounter = 0;
+        getIntegerParam(NDArrayCounter, &savedArrayCounter);
+
+        int arrayCallbacks = 0;
+        getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+
+        epicsTimeStamp timestamp;
+        epicsTimeGetCurrent(&timestamp);
+        const double tsFloat = timestamp.secPastEpoch + timestamp.nsec / 1.e9;
+
+        int nCb = 0;
+        auto doOneHistNdArray = [&](NDArray* pArr, int addr) {
+            if (!pArr) return;
+            if (pArr->pData && arrayCallbacks) {
+                pArr->timeStamp = tsFloat;
+                updateTimeStamp(&pArr->epicsTS);
+                doCallbacksGenericPointer(pArr, NDArrayData, addr);
+                nCb++;
+            }
+            pArr->release();
+        };
+
+        auto addLinearTimeAttrs = [&](NDArray* pArr) {
+            if (!pArr || !pArr->pAttributeList || bin_size == 0 || prvHstTimeMsBuffer_.size() < bin_size) return;
+            double t0ms = prvHstTimeMsBuffer_[0];
+            double tStepMs = (bin_size > 1) ? (prvHstTimeMsBuffer_[1] - prvHstTimeMsBuffer_[0]) : 0.0;
+            epicsInt32 nBinsA = static_cast<epicsInt32>(bin_size);
+            pArr->pAttributeList->add("PrvHstTimeBin0Ms", "First bin center (ms)", NDAttrFloat64, &t0ms);
+            pArr->pAttributeList->add("PrvHstTimeBinStepMs", "Bin center spacing (ms)", NDAttrFloat64, &tStepMs);
+            pArr->pAttributeList->add("PrvHstNumBins", "Number of bins", NDAttrInt32, &nBinsA);
+        };
+
+        if (bin_size > 0) {
+            NDArray* pHistArray = this->pNDArrayPool->alloc(1, dims, NDInt64, 0, NULL);
+            if (pHistArray && pHistArray->pData) {
+                epicsInt64* pData = reinterpret_cast<epicsInt64*>(pHistArray->pData);
+                for (size_t i = 0; i < bin_size; ++i) {
+                    pData[i] = static_cast<epicsInt64>(prvHstRunningSum_->get_bin_value_64(i));
+                }
+                if (pHistArray->pAttributeList) {
+                    this->getAttributes(pHistArray->pAttributeList);
+                    addLinearTimeAttrs(pHistArray);
+                }
+                doOneHistNdArray(pHistArray, 5);
+            } else if (pHistArray) {
                 pHistArray->release();
             }
-            // Restore previous values even if allocation failed
-            setIntegerParam(ADSizeX, savedSizeX);
-            setIntegerParam(ADSizeY, savedSizeY);
-            setIntegerParam(NDArraySizeX, savedArraySizeX);
-            setIntegerParam(NDArraySizeY, savedArraySizeY);
-            setIntegerParam(NDDataType, savedDataType);
-            setIntegerParam(NDArraySize, savedArraySize);
+
+            NDArray* pTime = this->pNDArrayPool->alloc(1, dims, NDFloat64, 0, NULL);
+            if (pTime && pTime->pData && prvHstTimeMsBuffer_.size() >= bin_size) {
+                epicsFloat64* pT = reinterpret_cast<epicsFloat64*>(pTime->pData);
+                for (size_t i = 0; i < bin_size; ++i) pT[i] = prvHstTimeMsBuffer_[i];
+                if (pTime->pAttributeList) this->getAttributes(pTime->pAttributeList);
+                doOneHistNdArray(pTime, 7);
+            } else if (pTime) {
+                pTime->release();
+            }
+
+            if (prvHstCurrentFrame_ && prvHstCurrentFrame_->get_bin_size() == bin_size) {
+                NDArray* pFr = this->pNDArrayPool->alloc(1, dims, NDInt32, 0, NULL);
+                if (pFr && pFr->pData) {
+                    epicsInt32* pD = reinterpret_cast<epicsInt32*>(pFr->pData);
+                    for (size_t i = 0; i < bin_size; ++i) {
+                        pD[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
+                    }
+                    if (pFr->pAttributeList) this->getAttributes(pFr->pAttributeList);
+                    doOneHistNdArray(pFr, 6);
+                } else if (pFr) {
+                    pFr->release();
+                }
+            }
+
+            if (prvHstSumNUpdatedThisFrame && prvHstSumArray64Buffer_.size() >= bin_size) {
+                NDArray* pSumN = this->pNDArrayPool->alloc(1, dims, NDInt64, 0, NULL);
+                if (pSumN && pSumN->pData) {
+                    epicsInt64* pD = reinterpret_cast<epicsInt64*>(pSumN->pData);
+                    for (size_t i = 0; i < bin_size; ++i) pD[i] = prvHstSumArray64Buffer_[i];
+                    if (pSumN->pAttributeList) {
+                        this->getAttributes(pSumN->pAttributeList);
+                        addLinearTimeAttrs(pSumN);
+                    }
+                    doOneHistNdArray(pSumN, 4);
+                } else if (pSumN) {
+                    pSumN->release();
+                }
+            }
         }
+
+        int currentArrayCounter = 0;
+        getIntegerParam(NDArrayCounter, &currentArrayCounter);
+        if (nCb > 0 && currentArrayCounter == savedArrayCounter + nCb) {
+            setIntegerParam(NDArrayCounter, savedArrayCounter);
+        }
+
+        setIntegerParam(ADSizeX, savedSizeX);
+        setIntegerParam(ADSizeY, savedSizeY);
+        setIntegerParam(NDArraySizeX, savedArraySizeX);
+        setIntegerParam(NDArraySizeY, savedArraySizeY);
+        setIntegerParam(NDDataType, savedDataType);
+        setIntegerParam(NDArraySize, savedArraySize);
     }
     
     // Calculate processing time for this frame

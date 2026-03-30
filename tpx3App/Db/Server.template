@@ -701,6 +701,28 @@ record(mbbo, "$(P)$(R)ProcessedImgOutputType")
     field(VAL, "0")
 }
 
+record(bo, "$(P)$(R)WriteProcessedHst")
+{
+    field(DESC, "Push processed PrvHst to plugins")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_HST_WRITE_PROCESSED")
+    field(ZNAM, "No")
+    field(ONAM, "Write")
+    field(VAL, "0")
+}
+
+record(mbbo, "$(P)$(R)ProcessedHstOutputType")
+{
+    field(DESC, "0=Sum(64b) 1=Avg(32b)")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_HST_PROCESSED_OUTPUT_TYPE")
+    field(ZRST, "Sum (64-bit)")
+    field(ONST, "Average (32-bit)")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(VAL, "0")
+}
+
 # Image Channels[1] file path.
 record(waveform, "$(P)$(R)Img1FilePath")
 {

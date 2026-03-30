@@ -3211,6 +3211,18 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         if (outputType != 0 && outputType != 1) outputType = 0;
         setIntegerParam(ADTimePixProcessedImgOutputType, outputType);
     }
+    else if(function == ADTimePixWriteProcessedHst) {
+        if (value == 1) {
+            pushProcessedHstToPlugins();
+            setIntegerParam(ADTimePixWriteProcessedHst, 0);
+            callParamCallbacks(ADTimePixWriteProcessedHst);
+        }
+    }
+    else if(function == ADTimePixProcessedHstOutputType) {
+        int outputType = value;
+        if (outputType != 0 && outputType != 1) outputType = 0;
+        setIntegerParam(ADTimePixProcessedHstOutputType, outputType);
+    }
     else if(function == ADTimePixStemScanWidth || function == ADTimePixStemScanHeight
             || function == ADTimePixStemRadiusOuter || function == ADTimePixStemRadiusInner) {
         status = sendMeasurementConfig();
@@ -4819,6 +4831,157 @@ void ADTimePix::pushProcessedImgToPlugins() {
     epicsMutexUnlock(imgMutex_);
 }
 
+void ADTimePix::pushProcessedHstToPlugins() {
+    if (!prvHstMutex_ || !pNDArrayPool) return;
+    epicsMutexLock(prvHstMutex_);
+
+    int outputType = 0;
+    getIntegerParam(ADTimePixProcessedHstOutputType, &outputType);
+    if (outputType != 0 && outputType != 1) outputType = 0;
+
+    int savedSizeX = 0, savedSizeY = 0, savedArraySizeX = 0, savedArraySizeY = 0;
+    int savedDataType = 0, savedArraySize = 0;
+    getIntegerParam(ADSizeX, &savedSizeX);
+    getIntegerParam(ADSizeY, &savedSizeY);
+    getIntegerParam(NDArraySizeX, &savedArraySizeX);
+    getIntegerParam(NDArraySizeY, &savedArraySizeY);
+    getIntegerParam(NDDataType, &savedDataType);
+    getIntegerParam(NDArraySize, &savedArraySize);
+
+    int savedArrayCounter = 0;
+    getIntegerParam(NDArrayCounter, &savedArrayCounter);
+
+    int arrayCallbacks = 0;
+    getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+
+    int nCb = 0;
+    epicsTimeStamp ts;
+    epicsTimeGetCurrent(&ts);
+    const double tsFloat = ts.secPastEpoch + ts.nsec / 1.e9;
+
+    auto doHistCallback = [&](NDArray* pArr, int addr) {
+        if (!pArr) return;
+        if (pArr->pData) {
+            pArr->timeStamp = tsFloat;
+            updateTimeStamp(&pArr->epicsTS);
+            if (arrayCallbacks) {
+                doCallbacksGenericPointer(pArr, NDArrayData, addr);
+                nCb++;
+            }
+        }
+        pArr->release();
+    };
+
+    if (prvHstRunningSum_ && arrayCallbacks) {
+        const size_t bin_size = prvHstRunningSum_->get_bin_size();
+        if (bin_size > 0 && prvHstTimeMsBuffer_.size() >= bin_size) {
+            for (size_t i = 0; i < bin_size; ++i) {
+                prvHstTimeMsBuffer_[i] =
+                    (prvHstFrameBinOffset_ + static_cast<int>(i) * prvHstFrameBinWidth_) * TPX3_TDC_CLOCK_PERIOD_SEC * 1e3;
+            }
+        }
+
+        size_t dims[3] = { bin_size, 0, 0 };
+        const epicsUInt64 nFrames = (prvHstFrameCount_ > 0) ? prvHstFrameCount_ : 1ULL;
+        const epicsUInt32 nBuf = static_cast<epicsUInt32>(prvHstFrameBuffer_.size());
+        const epicsUInt32 nForSumN = (nBuf > 0) ? nBuf : 1U;
+
+        if (bin_size > 0) {
+            NDDataType_t dtype5 = (outputType == 1) ? NDInt32 : NDInt64;
+            NDArray* p5 = pNDArrayPool->alloc(1, dims, dtype5, 0, NULL);
+            if (p5 && p5->pData) {
+                if (outputType == 0) {
+                    epicsInt64* pD = reinterpret_cast<epicsInt64*>(p5->pData);
+                    for (size_t i = 0; i < bin_size; ++i)
+                        pD[i] = static_cast<epicsInt64>(prvHstRunningSum_->get_bin_value_64(i));
+                } else {
+                    epicsInt32* pD = reinterpret_cast<epicsInt32*>(p5->pData);
+                    for (size_t i = 0; i < bin_size; ++i) {
+                        uint64_t v = prvHstRunningSum_->get_bin_value_64(i);
+                        pD[i] = static_cast<epicsInt32>(v / nFrames);
+                    }
+                }
+                if (p5->pAttributeList) {
+                    getAttributes(p5->pAttributeList);
+                    double t0ms = prvHstTimeMsBuffer_[0];
+                    double tStepMs = (bin_size > 1) ? (prvHstTimeMsBuffer_[1] - prvHstTimeMsBuffer_[0]) : 0.0;
+                    epicsInt32 nBinsA = static_cast<epicsInt32>(bin_size);
+                    p5->pAttributeList->add("PrvHstTimeBin0Ms", "First bin center (ms)", NDAttrFloat64, &t0ms);
+                    p5->pAttributeList->add("PrvHstTimeBinStepMs", "Bin center spacing (ms)", NDAttrFloat64, &tStepMs);
+                    p5->pAttributeList->add("PrvHstNumBins", "Number of bins", NDAttrInt32, &nBinsA);
+                }
+                doHistCallback(p5, 5);
+            } else if (p5) {
+                p5->release();
+            }
+
+            NDArray* p7 = pNDArrayPool->alloc(1, dims, NDFloat64, 0, NULL);
+            if (p7 && p7->pData) {
+                epicsFloat64* pT = reinterpret_cast<epicsFloat64*>(p7->pData);
+                for (size_t i = 0; i < bin_size; ++i) pT[i] = prvHstTimeMsBuffer_[i];
+                if (p7->pAttributeList) getAttributes(p7->pAttributeList);
+                doHistCallback(p7, 7);
+            } else if (p7) {
+                p7->release();
+            }
+
+            if (prvHstCurrentFrame_ && prvHstCurrentFrame_->get_bin_size() == bin_size) {
+                NDArray* p6 = pNDArrayPool->alloc(1, dims, NDInt32, 0, NULL);
+                if (p6 && p6->pData) {
+                    epicsInt32* pD = reinterpret_cast<epicsInt32*>(p6->pData);
+                    for (size_t i = 0; i < bin_size; ++i)
+                        pD[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
+                    if (p6->pAttributeList) getAttributes(p6->pAttributeList);
+                    doHistCallback(p6, 6);
+                } else if (p6) {
+                    p6->release();
+                }
+            }
+
+            if (!prvHstFrameBuffer_.empty() && prvHstSumArray64Buffer_.size() >= bin_size) {
+                NDDataType_t dtype4 = (outputType == 1) ? NDInt32 : NDInt64;
+                NDArray* p4 = pNDArrayPool->alloc(1, dims, dtype4, 0, NULL);
+                if (p4 && p4->pData) {
+                    const epicsInt64* sumN = prvHstSumArray64Buffer_.data();
+                    if (outputType == 0) {
+                        epicsInt64* pD = reinterpret_cast<epicsInt64*>(p4->pData);
+                        for (size_t i = 0; i < bin_size; ++i) pD[i] = sumN[i];
+                    } else {
+                        epicsInt32* pD = reinterpret_cast<epicsInt32*>(p4->pData);
+                        for (size_t i = 0; i < bin_size; ++i)
+                            pD[i] = static_cast<epicsInt32>(sumN[i] / nForSumN);
+                    }
+                    if (p4->pAttributeList) {
+                        getAttributes(p4->pAttributeList);
+                        double t0ms = prvHstTimeMsBuffer_[0];
+                        double tStepMs = (bin_size > 1) ? (prvHstTimeMsBuffer_[1] - prvHstTimeMsBuffer_[0]) : 0.0;
+                        epicsInt32 nBinsA = static_cast<epicsInt32>(bin_size);
+                        p4->pAttributeList->add("PrvHstTimeBin0Ms", "First bin center (ms)", NDAttrFloat64, &t0ms);
+                        p4->pAttributeList->add("PrvHstTimeBinStepMs", "Bin center spacing (ms)", NDAttrFloat64, &tStepMs);
+                        p4->pAttributeList->add("PrvHstNumBins", "Number of bins", NDAttrInt32, &nBinsA);
+                    }
+                    doHistCallback(p4, 4);
+                } else if (p4) {
+                    p4->release();
+                }
+            }
+        }
+    }
+
+    int curCounter = 0;
+    getIntegerParam(NDArrayCounter, &curCounter);
+    if (nCb > 0 && curCounter == savedArrayCounter + nCb)
+        setIntegerParam(NDArrayCounter, savedArrayCounter);
+
+    setIntegerParam(ADSizeX, savedSizeX);
+    setIntegerParam(ADSizeY, savedSizeY);
+    setIntegerParam(NDArraySizeX, savedArraySizeX);
+    setIntegerParam(NDArraySizeY, savedArraySizeY);
+    setIntegerParam(NDDataType, savedDataType);
+    setIntegerParam(NDArraySize, savedArraySize);
+    epicsMutexUnlock(prvHstMutex_);
+}
+
 void ADTimePix::resetPrvHstAccumulation() {
     // Reset accumulated histogram data
     prvHstRunningSum_.reset();
@@ -5260,9 +5423,10 @@ asynStatus ADTimePix::readImageFromTCP() {
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
-/* maxAddr=6: PrvImg=0, Img=1, PrvHst=5; address 5 must exist or asyn reports "parameter 51 in list 5, invalid list" */
+/* maxAddr=8: eight asyn addr lists, indices 0..7 — PrvImg=0, Img=1, Img sum=2, Img sumN=3,
+ * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF bin centers (ms)=7 */
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
-    : ADDriver(portName, 6, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+    : ADDriver(portName, 8, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK | asynFlags,
@@ -5585,6 +5749,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixApplyConfigString, asynParamInt32, &ADTimePixApplyConfig);
     createParam(ADTimePixWriteProcessedImgString, asynParamInt32, &ADTimePixWriteProcessedImg);
     createParam(ADTimePixProcessedImgOutputTypeString, asynParamInt32, &ADTimePixProcessedImgOutputType);
+    createParam(ADTimePixWriteProcessedHstString, asynParamInt32, &ADTimePixWriteProcessedHst);
+    createParam(ADTimePixProcessedHstOutputTypeString, asynParamInt32, &ADTimePixProcessedHstOutputType);
 
     //sets driver version
     char versionString[25];
@@ -5717,6 +5883,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
     setIntegerParam(ADTimePixWriteProcessedImg, 0);
     setIntegerParam(ADTimePixProcessedImgOutputType, 0);  // 0=Sum (NDInt64), 1=Average (NDInt32)
+    setIntegerParam(ADTimePixWriteProcessedHst, 0);
+    setIntegerParam(ADTimePixProcessedHstOutputType, 0);
     // Initialize NumImages to 0 (unlimited) for continuous mode
     // This prevents INVALID status from very large default values
     setIntegerParam(ADNumImages, 0);

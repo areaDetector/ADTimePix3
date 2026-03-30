@@ -11,7 +11,7 @@
 - **WriteProcessedImg** (boolean PV): Write 1 for an **extra on-demand** push to addresses 2 and 3 via `pushProcessedImgToPlugins()` (running sum and sum-of-N when available), with type controlled by **`ProcessedImgOutputType`**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N for TIFF). Use Average when feeding NDFileTIFF.
 - **Address 2** = running sum (`ImgImageData`); **Address 3** = sum of last N (`ImgImageSumNFrames`). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
 
-**Histogram (PrvHst) — partly implemented:** running sum is already pushed as a **1D** NDArray on **address 5** (see [Histogram file saving](#histogram-prvhst-file-saving)). **Sum-of-last-N**, **single-frame** histogram, and **`PrvHstHistogramTimeMs`** are waveform PVs only today; carrying the ToF axis into files and mirroring `WriteProcessedImg` for histograms are **recommended extensions** documented in the same section (no separate doc).
+**Histogram (PrvHst) — implemented (R1-7):** with PrvHst accumulation enabled, each processed frame pushes **1D** NDArrays on **addresses 4–7** (sum-of-N, running sum, current frame, ToF ms). **`WriteProcessedHst`** / **`ProcessedHstOutputType`** add an on-demand Sum vs Average push. Details: [Histogram (PrvHst) file saving](#histogram-prvhst-file-saving). Driver uses **`maxAddr=8`** (asyn lists **0–7**).
 
 ### Troubleshooting: TIFF images identical for different NDArrayAddress
 
@@ -34,8 +34,7 @@ Enable writing to file:
   - `ImgImageData` (running sum, INT64)
   - `ImgImageSumNFrames` (sum of last N frames, INT64)
 - **Histogram (processed):**
-  - `PrvHstHistogramData` (running sum) — already exposed as NDArray on address 5
-  - Optionally: sum-of-N histogram and/or time axis (`PrvHstHistogramTimeMs`) for context
+  - `PrvHstHistogramData` / `PrvHstHistogramSumNFrames` / `PrvHstHistogramFrame` / `PrvHstHistogramTimeMs` — waveform PVs plus matching NDArray streams on **5**, **4**, **6**, **7** (see table below).
 
 ## Current Behavior
 
@@ -45,14 +44,16 @@ Enable writing to file:
 | Img current frame (copy) | `ImgImageFrame` (INT32 waveform) | No (waveform only) | — |
 | Img running sum | `ImgImageData` (INT64 waveform) | Yes (also per frame when accumulation on) | 2 |
 | Img sum-of-N | `ImgImageSumNFrames` (INT64 waveform) | Yes (when sum-of-N updates; see `ImgSumUpdateInterval`) | 3 |
-| PrvHst running sum | `PrvHstHistogramData` (waveform) | Yes (1D NDInt64) | 5 |
-| PrvHst sum-of-N | `PrvHstHistogramSumNFrames` (waveform) | No (waveform only; extension: new address) | — |
-| PrvHst single frame | `PrvHstHistogramFrame` (waveform) | No (use raw stream extension or new address; not addr 5) | — |
-| PrvHst time axis | `PrvHstHistogramTimeMs` (waveform) | No (extension: NDArray attribute or second dataset) | — |
+| PrvHst sum-of-N | `PrvHstHistogramSumNFrames` (waveform) | Yes when sum-of-N updates (`PrvHstSumUpdateInterval`) | 4 |
+| PrvHst running sum | `PrvHstHistogramData` (waveform) | Yes (1D NDInt64, per frame) | 5 |
+| PrvHst single frame | `PrvHstHistogramFrame` (waveform) | Yes (1D NDInt32, per frame) | 6 |
+| PrvHst time axis | `PrvHstHistogramTimeMs` (waveform) | Yes (1D NDFloat64 bin centers ms, per frame) | 7 |
+
+**Axis metadata:** NDArrays on **4** and **5** include attributes `PrvHstTimeBin0Ms`, `PrvHstTimeBinStepMs`, `PrvHstNumBins` (uniform bin centers). Use a **second** file plugin instance with `NDArrayAddress=7` to store the ToF axis alongside counts on **5** (or **4**).
 
 **Verification tip:** With stable illumination, the **mean** of a sum-of-N NDArray (address 3) is often about **N times** the mean of a single-frame NDArray (address 1) when `ImgFramesToSum` = N; the running sum (address 2) grows without that fixed ratio until reset.
 
-The driver already builds an NDArray from the histogram running sum and pushes it with `doCallbacksGenericPointer(..., 5)` in `histogram_io.cpp`. File plugins (e.g. NDFileHDF5) with `NDArrayAddress=5` can save `PrvHstHistogramData`. So **processed histogram (PrvHstHistogramData) is already writable** via existing plugins.
+**On-demand:** **`WriteProcessedHst`** calls `pushProcessedHstToPlugins()` to push **4** (if sum-of-N buffer non-empty), **5**, **6**, and **7** with **`ProcessedHstOutputType`**: 0 = Sum (`NDInt64`), 1 = Average (`NDInt32`, running sum ÷ `PrvHstFrameCount`, sum-of-N ÷ buffer length).
 
 ## Options for ImgImageData / ImgImageSumNFrames
 
@@ -62,7 +63,7 @@ The driver already builds an NDArray from the histogram running sum and pushes i
 
 **Details:**
 
-- **Addresses (Img):** Driver passes **`maxAddr=6`** to `ADDriver`, i.e. **six** NDArray lists with indices **0–5** (**0** = PrvImg, **1** = Img frame, **2** = running sum, **3** = sum-of-N, **4** = unused, **5** = PrvHst). Img processed streams use **2** and **3** as implemented.
+- **Addresses:** Driver passes **`maxAddr=8`** to `ADDriver` (**eight** lists, indices **0–7**): **0** PrvImg, **1** Img frame, **2** Img running sum, **3** Img sum-of-N, **4** PrvHst sum-of-N, **5** PrvHst running sum, **6** PrvHst frame, **7** PrvHst ToF (ms).
 - **Data type and conversion for TIFF vs HDF5:**
   - **NDFileTIFF** supports NDInt8/16/32, NDUInt8/16/32, NDFloat32/64. It does **not** support NDInt64. So for TIFF, the driver must convert INT64 to a supported type. Three practical options:
     1. **Divide by number of frames (recommended for TIFF):** Compute *average counts per frame* = sum / N_frames (and for sum-of-N: sum / N). The result is a physically meaningful value (counts per pixel per frame) and typically fits in **NDInt32** or **NDUInt32** even for long runs, so NDFileTIFF can write it directly. Use the driver’s frame count (e.g. from the same accumulation path or a dedicated counter); handle N_frames=0 (e.g. write zeros or skip).
@@ -119,7 +120,7 @@ The driver already builds an NDArray from the histogram running sum and pushes i
 
 **Option A (driver pushes NDArrays)** is the best fit:
 
-1. Matches the existing pattern (PrvHst already pushes processed data as NDArray on address 5).
+1. Matches the existing pattern (PrvHst pushes processed data on **addresses 4–7**).
 2. Reuses NDFileTIFF and NDFileHDF5; no new plugin.
 3. Capture/trigger stays inside areaDetector (Capture or dedicated “Write processed” PV).
 4. For **TIFF:** driver can push **average-per-frame** (sum / N_frames, or sum-of-N / N) as NDInt32/NDUInt32 so NDFileTIFF works without overflow and keeps a meaningful value; or NDFloat64. For **HDF5:** push NDInt64 to keep full range when exact sums are needed.
@@ -212,30 +213,22 @@ Interpretation:
 
 ## Histogram (PrvHst) file saving
 
-This section stays in **this** document (together with Img) because the same ideas apply: **NDArray** streams to **NDFileHDF5** / **NDFileTIFF**, separate plugin instances with fixed **`NDArrayAddress` at startup**, and optional **Sum vs average** typing for TIFF compatibility.
+Same conventions as Img: **NDFileHDF5** / **NDFileTIFF** on fixed **`NDArrayAddress` at IOC startup**, **`NDArrayCallbacks`**, and [Troubleshooting](#troubleshooting-tiff-images-identical-for-different-ndarrayaddress) if runtime address changes do nothing.
 
-### What works today
+### Implemented behavior (`histogram_io.cpp` / `ADTimePix.cpp`)
 
-- **`PrvHstHistogramData`** (running sum) is pushed as a **1D** `NDInt64` NDArray on **address 5** in `histogram_io.cpp` (`doCallbacksGenericPointer(..., 5)`). Configure e.g. `HDF5_HST:NDArrayAddress=5` at startup to write that spectrum to HDF5.
-- **`PrvHstHistogramTimeMs`**: ToF bin centers in ms (same length as the histogram). Updated as a **waveform** alongside the running sum; it is **not** currently attached to the NDArray, so default plugin paths save **counts only** unless you add attributes/XML later.
-- **`PrvHstHistogramSumNFrames`** and **`PrvHstHistogramFrame`**: waveform PVs only; **no** NDArray address yet—same situation as **`ImgImageFrame`** before Img got addresses 2/3.
+- **Per frame** (PrvHst accumulation on): **4** = sum-of-N (`NDInt64`, only when the sum-of-N buffer is recomputed this frame), **5** = running sum (`NDInt64`), **6** = current frame (`NDInt32`), **7** = ToF bin centers in ms (`NDFloat64`). **`NDArrayCounter`** is restored after the batch so image counters are unchanged (same pattern as before, extended for multiple callbacks per frame).
+- **Attributes on 4 and 5:** `PrvHstTimeBin0Ms`, `PrvHstTimeBinStepMs`, `PrvHstNumBins` describe a **uniform** time axis (matches `PrvHstHistogramTimeMs`).
+- **On-demand:** **`WriteProcessedHst`** → **`pushProcessedHstToPlugins()`** pushes **4** (if buffer non-empty), **5**, **6**, **7** with **`ProcessedHstOutputType`**: Sum vs Average (`NDInt32`, divide by frame count or sum-of-N length).
 
 ### HDF5 vs TIFF for 1D histograms
 
-- **HDF5** is the natural format: one dataset for **counts**, one for **`tof_ms`** (or store axis as **NDArray attributes** mapped to datasets in HDF5 XML, if your ADCore layout supports it).
-- **NDFileTIFF** targets **2D images**. A 1D spectrum is often written as a **1×N** or **N×1** image; many tools do not treat axis units as ToF. Prefer **HDF5** for archival ToF spectra; use TIFF only if you accept “pseudo-image” semantics and often **average**/**Float32** counts for range (NDFileTIFF does not support **NDInt64**).
+- **HDF5:** Preferred; use one plugin instance per address (e.g. **5** = counts, **7** = axis) or map NDAttributes to datasets in HDF5 XML where supported.
+- **TIFF:** Still a **1×N** “image” for 1D data; **NDInt64** is not supported—use **`ProcessedHstOutputType`** = Average or save **`NDFloat64`** axis on **7** separately.
 
-### Parity with `WriteProcessedImg` / `ProcessedImgOutputType`
+### IOC example (conceptual)
 
-- **Same idea, different PVs:** For histograms, add dedicated records (e.g. **`WriteProcessedHst`**, **`ProcessedHstOutputType`**) rather than reusing **`WriteProcessedImg`**, so Img (2D) and Hst (1D) triggers stay clear for operators and screens.
-- **Output type:** mirror Img: **Sum** (`NDInt64`) for HDF5, **Average** (e.g. sum / accumulated frame count, or sum-of-N / N) as **`NDInt32`** / **`NDFloat64`** for TIFF.
-
-### Recommended extensions (implementation plan)
-
-1. **ToF axis on addr 5:** When building the histogram NDArray, attach **`PrvHstHistogramTimeMs`** as an NDArray **attribute** (e.g. `tof_bin_center_ms`, float64 array), or push a **second NDArray** on another address if attributes are awkward for your HDF5 template.
-2. **Extra addresses for sum-of-N and single frame:** Push **`PrvHstHistogramSumNFrames`** and **`PrvHstHistogramFrame`** via **`doCallbacksGenericPointer`**. With **`maxAddr=6`**, only index **4** is free inside **0–5**; two extra histogram streams require **increasing `maxAddr`** in the `ADTimePix` `ADDriver(...)` constructor (then use new indices such as **6** and **7**). Reuse the **save/restore shared image parameters** pattern already used around address **5** so PrvHst callbacks do not corrupt **ADSizeX** / **NDArraySizeX** for Img.
-3. **Per-frame vs on-demand:** Same trade-off as Img: stream every processed histogram frame, and/or a one-shot **`WriteProcessedHst`** to snapshot running sum + sum-of-N (+ optional average mode).
-4. **Docs / IOC:** Add second (or third) **NDFileHDF5** instance in `commonPlugins.cmd` with **`NDArrayAddress`** fixed at init for each Hst stream; document **runtime address** caveats (same as [Troubleshooting](#troubleshooting-tiff-images-identical-for-different-ndarrayaddress) for Img).
+Load multiple `NDFileHDF5` records with e.g. `HDF5_HST_RUN:NDArrayAddress=5`, `HDF5_HST_T:NDArrayAddress=7` set **before** `iocInit` (or in the same `commonPlugins.cmd` line block as other plugins).
 
 ## Summary
 
@@ -246,6 +239,6 @@ This section stays in **this** document (together with Img) because the same ide
 | **HDF5 (full 64-bit)** | Push NDInt64 when exact sums, merging runs, or quantitative analysis is needed. |
 | **Other types** | NDFloat64 (one type for both); 16-bit scaling; configurable “sum vs average” PV; store N_frames in attributes. |
 | **New plugin (Option B)** | Only if you want to avoid any driver changes and are willing to maintain a plugin that reads waveform PVs. |
-| **PrvHst** | Running sum writable via **address 5**; see [Histogram (PrvHst) file saving](#histogram-prvhst-file-saving) for ToF axis, sum-of-N, single frame, and `WriteProcessedHst`-style extensions. |
+| **PrvHst** | **Addresses 4–7** (sum-of-N, running sum, frame, ToF ms); **`WriteProcessedHst`**; see [Histogram (PrvHst) file saving](#histogram-prvhst-file-saving). |
 
 Implementing Option A (driver-side NDArray push for addresses 2 and 3, with on-demand or per-frame trigger) is the most straightforward way to get TIFF/HDF5 writing of `ImgImageData` and `ImgImageSumNFrames`. For TIFF, use **average = sum / N_frames** (and sum-of-N / N) as 32-bit; for HDF5, use **NDInt64** when full range is needed.
