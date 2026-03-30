@@ -23,7 +23,7 @@ If changing `TIFF1:NDArrayAddress` (e.g. to 0, 1, 2, or 3) produces **binary-ide
    - Load e.g. TIFF1, TIFF2, TIFF3 (and optionally TIFF4) in `commonPlugins.cmd`, and set **at startup** (in the same cmd or in a startup script):  
      `TIFF1:NDArrayAddress=0`, `TIFF2:NDArrayAddress=1`, `TIFF3:NDArrayAddress=2`, `TIFF4:NDArrayAddress=3`.  
    - Then: address 0 = PrvImg, 1 = Img current frame, 2 = running sum, 3 = sum-of-N (2 and 3 update during acquisition when Img accumulation is enabled; `WriteProcessedImg` adds an optional typed push). Each plugin can save a different stream.
-2. **Addresses 2 and 3**: If these never update during acquisition, check that **Img accumulation** is enabled, the Img TCP stream is connected, and **`NDArrayCallbacks`** is enabled on the driver. If plugins still show wrong or empty data, confirm the plugin instance was created with the correct **`NDArrayAddress`** at IOC startup (runtime changes often do not re-register). For a one-shot save with **Sum vs Average** output types, use **`WriteProcessedImg`** and set **`ProcessedImgOutputType`** as needed.
+2. **Addresses 2 and 3**: If these never update during acquisition, check that **Img accumulation** is enabled, the Img TCP stream is connected, and **`ArrayCallbacks`** is **Enable** on the driver (EPICS PV `$(P)$(R)ArrayCallbacks`; the driver asyn parameter is `NDArrayCallbacks`). If plugins still show wrong or empty data, confirm the plugin instance was created with the correct **`NDArrayAddress`** at IOC startup (runtime changes often do not re-register). For a one-shot save with **Sum vs Average** output types, use **`WriteProcessedImg`** and set **`ProcessedImgOutputType`** as needed.
 3. If you must use a single TIFF and switch streams, try **restarting the IOC** after changing `NDArrayAddress` so the plugin re-inits with the new address (not guaranteed on all ADCore versions).
 
 ## Goal
@@ -213,7 +213,7 @@ Interpretation:
 
 ## Histogram (PrvHst) file saving
 
-Same conventions as Img: **NDFileHDF5** / **NDFileTIFF** on fixed **`NDArrayAddress` at IOC startup**, **`NDArrayCallbacks`**, and [Troubleshooting](#troubleshooting-tiff-images-identical-for-different-ndarrayaddress) if runtime address changes do nothing.
+Same conventions as Img: **NDFileHDF5** / **NDFileTIFF** on fixed **`NDArrayAddress` at IOC startup**, **`ArrayCallbacks`** = Enable (`$(P)$(R)ArrayCallbacks`), and [Troubleshooting](#troubleshooting-tiff-images-identical-for-different-ndarrayaddress) if runtime address changes do nothing.
 
 ### Implemented behavior (`histogram_io.cpp` / `ADTimePix.cpp`)
 
@@ -229,6 +229,34 @@ Same conventions as Img: **NDFileHDF5** / **NDFileTIFF** on fixed **`NDArrayAddr
 ### IOC example (conceptual)
 
 Load multiple `NDFileHDF5` records with e.g. `HDF5_HST_RUN:NDArrayAddress=5`, `HDF5_HST_T:NDArrayAddress=7` set **before** `iocInit` (or in the same `commonPlugins.cmd` line block as other plugins).
+
+### Troubleshooting: `NDPluginFile::writeInt32: ERROR, no valid array to write`
+
+This message means **`NDWriteFile` ran while the HDF plugin had no NDArray latched** (`pArrays[0]` is NULL). The NeXus/XML layout is not consulted until a valid array exists, so switching XML alone does not fix it.
+
+**Typical causes (PrvHst histogram):**
+
+1. **`NDArrayAddress` does not match the histogram stream.** Processed histogram NDArrays use **4** (sum-of-N), **5** (running sum, same logical data as `PrvHstHistogramData` for Sum mode), **6** (current frame), **7** (`PrvHstHistogramTimeMs`). If `HDF1:NDArrayAddress` is still **0** or **1** (image streams), the plugin never receives a PrvHst array. Set the address **at IOC startup** (or use a dedicated HDF instance created with that address); runtime changes are unreliable on some builds.
+2. **`ArrayCallbacks` disabled** on the detector (`$(P)$(R)ArrayCallbacks`, asyn `NDArrayCallbacks`). `pushProcessedHstToPlugins()` does not call `doCallbacksGenericPointer` when this is off, so file plugins see nothing.
+3. **No callback yet before `NDWriteFile`.** The plugin must receive **at least one** NDArray on its address before a one-shot write. After starting the IOC, pulse **`WriteProcessedHst`** (with PrvHst accumulation enabled and data present), **or** rely on per-frame callbacks during acquisition, **then** trigger the HDF plugin (`Capture` / `NDWriteFile` as appropriate).
+4. **No histogram data / running sum.** `pushProcessedHstToPlugins()` only builds arrays when **`prvHstRunningSum_`** exists and **`bin_size > 0`**. Enable PrvHst accumulation and ensure frames are processed before writing.
+
+**Minimal check sequence (example prefix `TPX3-TEST:cam1:`):**
+
+- `caget TPX3-TEST:cam1:ArrayCallbacks` (or `...ArrayCallbacks_RBV`) → should be **Enable** (there is no `NDArrayCallbacks` PV name in the database)
+- `caget TPX3-TEST:HDF1:NDArrayAddress` → **5** for running-sum counts (or **7** for the time axis only)
+- `caput TPX3-TEST:cam1:WriteProcessedHst 1` → pushes **4–7** (as applicable)
+- Then run the HDF capture / `NDWriteFile` path so the write uses the latched array.
+
+### Saving counts and time axis in one HDF5 file
+
+**One `NDFileHDF5` instance consumes one NDArray per write** (one primary `det_default` dataset from that array). The waveform PVs `PrvHstHistogramData` and `PrvHstHistogramTimeMs` are not read directly by the plugin; they mirror the same buffers as addresses **5** and **7**.
+
+Practical options:
+
+- **Uniform bins:** NDArrays on **4** and **5** include attributes **`PrvHstTimeBin0Ms`**, **`PrvHstTimeBinStepMs`**, **`PrvHstNumBins`**. You can store counts from address **5** and add the axis scalars as extra datasets in the HDF5 layout (`source="ndattribute"`). The repository includes **`iocs/tpx3IOC/iocBoot/iocTimePix/nexus_prvhst_histogram.xml`** as an example (counts + three scalar datasets). Reconstruct \(t_i = \texttt{time\_bin0\_ms} + i \times \texttt{time\_bin\_step\_ms}\).
+- **Full `PrvHstHistogramTimeMs` vector:** use a **second** NDFileHDF5 record with **`NDArrayAddress=7`**, or merge two HDF5 files / copy the `/entry/data` group from the second file into the first with **h5py** / **HDF5 tools**.
+- **`nexus_minimal.xml`:** Still valid for storing the **counts** NDArray; rename the dataset or interpretation in XML if you prefer (optional). It does **not** by itself add the time vector; use attributes as above or a second plugin instance.
 
 ## Summary
 

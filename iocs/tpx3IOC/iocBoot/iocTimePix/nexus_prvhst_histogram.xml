@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdf5_layout>
+  <!--
+    PrvHst running-sum / sum-of-N NDArray (address 4 or 5) with uniform ToF axis metadata.
+
+    The counts come from the incoming NDArray (det_default). Bin centers can be reconstructed as:
+      t[i] = PrvHstTimeBin0Ms + i * PrvHstTimeBinStepMs
+    (matches PrvHstHistogramTimeMs when bins are uniform.)
+
+    For the full time array as written by the driver on address 7, use a second NDFileHDF5
+    instance with NDArrayAddress=7 or merge files in post-processing.
+  -->
+
+  <group name="entry">
+    <attribute name="NX_class" source="constant" value="NXentry" type="string"/>
+    <attribute name="default" source="constant" value="data" type="string"/>
+
+    <group name="data">
+      <attribute name="NX_class" source="constant" value="NXdata" type="string"/>
+      <attribute name="signal" source="constant" value="counts" type="string"/>
+
+      <dataset name="counts" source="detector" det_default="true">
+        <attribute name="interpretation" source="constant" value="spectrum" type="string"/>
+      </dataset>
+
+      <!-- Uniform axis metadata (present on NDArrays from addresses 4 and 5) -->
+      <dataset name="time_bin0_ms" source="ndattribute" ndattribute="PrvHstTimeBin0Ms" type="float"/>
+      <dataset name="time_bin_step_ms" source="ndattribute" ndattribute="PrvHstTimeBinStepMs" type="float"/>
+      <dataset name="num_bins" source="ndattribute" ndattribute="PrvHstNumBins" type="int"/>
+    </group>
+
+    <group name="instrument">
+      <attribute name="NX_class" source="constant" value="NXinstrument" type="string"/>
+      <group name="detector">
+        <attribute name="NX_class" source="constant" value="NXdetector" type="string"/>
+        <hardlink name="counts" target="/entry/data/counts"/>
+      </group>
+    </group>
+  </group>
+</hdf5_layout>
