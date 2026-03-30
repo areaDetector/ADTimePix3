@@ -9,7 +9,7 @@
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
     <width>1100</width>
-    <height>1310</height>
+    <height>1365</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>ADTimePix3 Histogram (PrvHst) Control Panel</text>
@@ -36,7 +36,7 @@
       <x>10</x>
       <y>80</y>
       <width>1052</width>
-      <height>212</height>
+      <height>262</height>
       <widget type="label" version="2.0.0">
         <name>ConfigurationControlLabel</name>
         <text>Histogram Configuration</text>
@@ -253,11 +253,67 @@
           </color>
         </background_color>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>WriteProcessedHstLabel</name>
+        <text>Push to file (NDArray 4-7):</text>
+        <x>20</x>
+        <y>175</y>
+        <width>210</width>
+        <height>25</height>
+      </widget>
+      <widget type="bool_button" version="2.0.0">
+        <name>WriteProcessedHstButton</name>
+        <pv_name>$(P)$(R)WriteProcessedHst</pv_name>
+        <bit>-1</bit>
+        <x>235</x>
+        <y>173</y>
+        <height>25</height>
+        <off_label>No</off_label>
+        <off_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </off_color>
+        <on_label>Write</on_label>
+        <on_color>
+          <color red="100" green="200" blue="255">
+          </color>
+        </on_color>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <actions>
+        </actions>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ProcessedHstOutputTypeLabel</name>
+        <text>Output type:</text>
+        <x>365</x>
+        <y>175</y>
+        <width>90</width>
+        <height>25</height>
+      </widget>
+      <widget type="combo" version="2.0.0">
+        <name>ProcessedHstOutputTypeCombo</name>
+        <pv_name>$(P)$(R)ProcessedHstOutputType</pv_name>
+        <x>460</x>
+        <y>173</y>
+        <width>200</width>
+        <height>25</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <items>
+          <item>Sum (64-bit)</item>
+          <item>Average (32-bit)</item>
+        </items>
+      </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>AcquisitionControl</name>
       <x>10</x>
-      <y>302</y>
+      <y>352</y>
       <width>1052</width>
       <height>152</height>
       <widget type="label" version="2.0.0">
@@ -388,7 +444,7 @@
     <widget type="group" version="3.0.0">
       <name>InfoDisplay</name>
       <x>10</x>
-      <y>1152</y>
+      <y>1202</y>
       <width>1052</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
@@ -409,7 +465,7 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>InfoText</name>
-        <text>Histogram data is streamed via TCP (jsonhisto format) when PrvHstFilePath is set to tcp://listen@hostname:port and PrvHstFileFmt is set to jsonhisto (4). The histogram data is available via NDArray callbacks (NDArrayAddress=5) for use with areaDetector plugins.</text>
+        <text>Histogram data is streamed via TCP (jsonhisto) when PrvHstFilePath is tcp://listen@hostname:port and PrvHstFileFmt is jsonhisto (4). With accumulation enabled, NDArrays go to addresses 4-7 (sum-of-N, running sum, frame, ToF ms). Use separate file plugins per address at IOC init. Push to file (NDArray 4-7) / Output type mirror Img accumulation (Sum vs Average).</text>
         <x>20</x>
         <y>40</y>
         <width>970</width>
@@ -423,7 +479,7 @@
     <widget type="group" version="3.0.0">
       <name>DataDisplay</name>
       <x>10</x>
-      <y>464</y>
+      <y>514</y>
       <width>1052</width>
       <height>160</height>
       <widget type="label" version="2.0.0">
@@ -603,7 +659,7 @@
     <widget type="group" version="3.0.0">
       <name>FrameData</name>
       <x>10</x>
-      <y>642</y>
+      <y>692</y>
       <width>1052</width>
       <height>160</height>
       <widget type="label" version="2.0.0">
@@ -725,7 +781,7 @@
     <widget type="group" version="3.0.0">
       <name>HistogramBins</name>
       <x>10</x>
-      <y>812</y>
+      <y>862</y>
       <width>1052</width>
       <widget type="label" version="2.0.0">
         <name>HistogramBinsLabel</name>
@@ -820,7 +876,7 @@
     <widget type="group" version="3.0.0">
       <name>PerformanceMonitoring</name>
       <x>10</x>
-      <y>1022</y>
+      <y>1072</y>
       <width>1052</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
