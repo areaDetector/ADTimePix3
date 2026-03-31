@@ -106,7 +106,9 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 - Configure `PrvHstFramesToSum` (1-100000, default: 10) to control frame buffer size
 - Configure `PrvHstSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
 
-**File Saving**: Histogram data is available via NDArray callbacks on **addresses 4–7** (see **NDArray callbacks** under Histogram Streaming) for areaDetector file plugins. The same data is mirrored on waveform PVs (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) for displays and CA clients. Use **`WriteProcessedHst`** / **`ProcessedHstOutputType`** for an on-demand typed push (Sum vs Average), similar to processed images.
+**File Saving**: Histogram data is available via NDArray callbacks on **addresses 4–7** (see **NDArray callbacks** under Histogram Streaming) for areaDetector file plugins. The same data is mirrored on waveform PVs (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) for displays and CA clients. Use **`WriteProcessedHst`** / **`ProcessedHstOutputType`** for an on-demand typed push (Sum vs Average), similar to processed images. For HDF5 layout examples, see `iocs/tpx3IOC/iocBoot/iocTimePix/nexus_minimal.xml` and `iocs/tpx3IOC/iocBoot/iocTimePix/nexus_prvhst_histogram.xml` (counts + uniform ToF-axis metadata via NDAttributes).
+
+**Callback control PV name**: The EPICS PV is `$(P)$(R)ArrayCallbacks` (and `_RBV`), while `NDArrayCallbacks` is the internal driver/asyn parameter name used in code and logs.
 
 **Integration Notes**:
 - The jsonhisto integration follows the same pattern as the standalone histogram IOC (`/epics/iocs/histogram/tpx3HistogramApp/src/tpx3HistogramDriver.cpp`)

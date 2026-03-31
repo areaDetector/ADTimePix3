@@ -12,7 +12,7 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x; latest te
 Driver depends on Serval versions, at this time. Current releases support Serval 4.1.5-rc2, 4.1.x, and 3.0.0-3.3.2.
 
 
-R1-7 (TBD, 2026)
+R1-6-1 (March 31, 2026)
 --------
 
 * **Processed Img file saving (Option A)**: The driver can push the current image accumulation (running sum and sum-of-N) as NDArrays to file plugins so that `ImgImageData` and `ImgImageSumNFrames` can be saved as TIFF or HDF5.
@@ -26,6 +26,10 @@ R1-7 (TBD, 2026)
   * **NeXus-style file output**: IOC boot examples `iocs/tpx3IOC/iocBoot/iocTimePix/nexus_minimal.xml` (NDFileHDF5 `hdf5_layout`) and `nexus_plugin_template.xml` (NDFileNexus `NXroot` template, validated with ADCore `XML_schema/template.sch`). README documents that HDF5 and Nexus plugins use different XML dialects, template PVs, and `TemplateFilePath` concatenation rules.
   * **Readout stack diagram**: `documentation/TimePix3_pipeline_48_64_96_caption.png` (PNG) and `documentation/TimePix3_pipeline_48_64_96.svg` (editable source). Shows chip → readout → SERVAL and the **ADTimePix3** / EPICS path vs optional **LUNA** (96-bit) path not used by the driver; README links to both files under *Additional information*.
   * **PrvHst NDArray file streams (addresses 4–7)**: With PrvHst accumulation enabled, `processPrvHstFrame` pushes **1D** NDArrays each frame: **4** = sum of last N (`NDInt64`, when the sum-of-N buffer updates), **5** = running sum (`NDInt64`), **6** = current frame (`NDInt32`), **7** = ToF bin centers in ms (`NDFloat64`, parallel to `PrvHstHistogramTimeMs`). Arrays on **4** and **5** add NDAttributes `PrvHstTimeBin0Ms`, `PrvHstTimeBinStepMs`, `PrvHstNumBins` (uniform axis metadata). **`WriteProcessedHst`** / **`ProcessedHstOutputType`** mirror processed Img: one-shot push with Sum (`NDInt64`) vs Average (`NDInt32`, divide by frame count or sum-of-N buffer length). **`pushProcessedHstToPlugins()`** in `ADTimePix.cpp`; **`ADDriver(..., maxAddr=8, ...)`** so lists **0–7** exist. Records in `Server.template`. See `documentation/PROCESSED_IMAGE_FILE_SAVING.md` and README Histogram sections.
+* **PrvHst NeXus/HDF5 1D ToF example layout**: Added `iocs/tpx3IOC/iocBoot/iocTimePix/nexus_prvhst_histogram.xml` (`hdf5_layout`) for NDFileHDF5. The main detector dataset stores counts (address 5 by default), with uniform ToF axis metadata from NDAttributes (`PrvHstTimeBin0Ms`, `PrvHstTimeBinStepMs`, `PrvHstNumBins`) so clients can reconstruct bin centers without requiring a second full axis dataset.
+* **HDF5 write troubleshooting (PrvHst)**: Documented and validated the `NDPluginFile::writeInt32: ERROR, no valid array to write` path in `documentation/PROCESSED_IMAGE_FILE_SAVING.md`. Clarifies that `NDWriteFile` requires at least one latched NDArray on the selected plugin address, and adds a minimal check sequence for `ArrayCallbacks`, `HDF1:NDArrayAddress`, and `WriteProcessedHst`.
+* **PV naming clarification for callbacks**: Updated docs to distinguish EPICS PV `$(P)$(R)ArrayCallbacks` / `_RBV` from internal driver/asyn parameter `NDArrayCallbacks`, avoiding "channel not found" confusion when testing from CA clients.
+* **Phoebus histogram plot artifact fix**: Updated `tpx3App/op/bob/Acquire/PrvHstHistogram.bob` XY traces to points-only rendering (no line interpolation) to avoid line-to-origin artifacts when waveform `NELM` exceeds valid `NORD`.
 
 
 R1-6 (March 4, 2026)
