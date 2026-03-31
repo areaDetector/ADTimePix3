@@ -12,6 +12,10 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x; latest te
 Driver depends on Serval versions, at this time. Current releases support Serval 4.1.5-rc2, 4.1.x, and 3.0.0-3.3.2.
 
 
+R1-7 (TBD, 2026)
+--------
+
+
 R1-6-1 (March 31, 2026)
 --------
 
