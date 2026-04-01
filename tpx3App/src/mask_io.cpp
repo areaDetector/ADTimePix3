@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include <algorithm>
 // Area Detector include
 #include "ADTimePix.h"
 
@@ -6,6 +7,21 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                 size_t nElements, size_t *nIn)
 {   
 	int reason = pasynUser->reason;
+
+    if (reason == ADTimePixPixelConfigDiff) {
+        epicsMutexLock(pixelConfigDiffMutex_);
+        size_t n = pixelConfigDiff_.size();
+        size_t ncpy = std::min(nElements, n);
+        for (size_t i = 0; i < ncpy; ++i) {
+            value[i] = pixelConfigDiff_[i];
+        }
+        for (size_t i = ncpy; i < nElements; ++i) {
+            value[i] = 0;
+        }
+        epicsMutexUnlock(pixelConfigDiffMutex_);
+        *nIn = nElements;
+        return asynSuccess;
+    }
     
     // Handle Img channel accumulation arrays
     if (reason == ADTimePixImgImageFrame) {

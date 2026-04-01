@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>$(BL) Mask</name>
-  <width>710</width>
-  <height>610</height>
+  <width>1380</width>
+  <height>1020</height>
   <background_color>
     <color red="240" green="240" blue="240">
     </color>
@@ -13,7 +13,7 @@
   <grid_step_y>6</grid_step_y>
   <widget type="embedded" version="2.0.0">
     <name>Mask BPC</name>
-    <file>MaskStatus.opi</file>
+    <file>MaskStatus.bob</file>
     <x>5</x>
     <y>5</y>
     <width>700</width>
@@ -25,6 +25,23 @@
     <border_width>1</border_width>
     <border_color>
       <color red="0" green="0" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>PixelConfig vs BPC</name>
+    <file>PixelConfigMaskPanel.bob</file>
+    <x>715</x>
+    <y>5</y>
+    <width>660</width>
+    <height>1010</height>
+    <resize>1</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="180">
       </color>
     </border_color>
   </widget>

@@ -39,6 +39,14 @@ record(waveform, "$(P)$(R)BPCmasked"){
 #    field(autosaveFields, "VAL")
 }
 
+# |SERVAL PixelConfig byte − BPC file byte| (driver fills on RefreshPixelConfig)
+record(waveform, "$(P)$(R)PixelConfigDiff"){
+    field(DTYP, "asyn$(TYPE)ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PIXEL_CONFIG_DIFF")
+    field(FTVL, "$(FTVL)")
+    field(NELM, "$(NELEMENTS)")
+}
+
 # AreaDetector Image where mask is created
 record(waveform, "$(P)$(R)MaskBPC"){
     field(DTYP, "asyn$(TYPE)ArrayIn")

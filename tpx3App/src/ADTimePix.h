@@ -252,6 +252,7 @@
 #define ADTimePixPixelConfigMatchBPCString       "TPX3_PIXEL_CONFIG_MATCH_BPC"  // (asynInt32,   r)      -1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch
 #define ADTimePixPixelConfigMismatchBytesString  "TPX3_PIXEL_CONFIG_MISMATCH"   // (asynInt64,   r)      Number of differing bytes (if mismatch)
 #define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
+#define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32,   r)      |SERVAL byte − BPC file byte| per pel (waveform; after refresh)
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -767,6 +768,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixPixelConfigMatchBPC;
         int ADTimePixPixelConfigMismatchBytes;
         int ADTimePixPixelConfigStatus;
+        int ADTimePixPixelConfigDiff;
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
@@ -775,7 +777,7 @@ class ADTimePix : public ADDriver{
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */
         void pushProcessedHstToPlugins();
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixPixelConfigStatus  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixPixelConfigDiff  // Last parameter in the list
 
     private:
 
@@ -784,6 +786,10 @@ class ADTimePix : public ADDriver{
         epicsEventId endEventId;
         
         std::map<std::string, int> mDetOrientationMap;
+
+        /** |SERVAL PixelConfig − on-disk BPC| per detector index (same layout as BPC waveform). */
+        epicsMutexId pixelConfigDiffMutex_;
+        std::vector<epicsInt32> pixelConfigDiff_;
 
         std::string serverURL;
         /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). When set, asyn performs teardown on IOC exit. */

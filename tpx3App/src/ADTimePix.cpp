@@ -1086,6 +1086,14 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
 
     for (int chip = 0; chip < nChips; chip++) {
         char statusMsg[256];
+        {
+            epicsMutexLock(pixelConfigDiffMutex_);
+            const size_t off = static_cast<size_t>(chip) * kPixelConfigBytes;
+            for (size_t i = 0; i < kPixelConfigBytes && off + i < pixelConfigDiff_.size(); ++i) {
+                pixelConfigDiff_[off + i] = 0;
+            }
+            epicsMutexUnlock(pixelConfigDiffMutex_);
+        }
         std::string url = serverURL + "/detector/chips/" + std::to_string(chip) + "/PixelConfig";
         cpr::Response r =
             cpr::Get(cpr::Url{url}, cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
@@ -1155,6 +1163,17 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
             for (size_t i = 0; i < ncmp; i++) {
                 if (decoded[i] != static_cast<unsigned char>(bpcBuf[offset + i])) mismatch++;
             }
+            epicsMutexLock(pixelConfigDiffMutex_);
+            for (size_t i = 0; i < kPixelConfigBytes && offset + i < pixelConfigDiff_.size(); ++i) {
+                unsigned char sv = (i < decoded.size()) ? decoded[i] : 0;
+                unsigned char fv = (static_cast<int>(offset + i) < bpcSize)
+                                       ? static_cast<unsigned char>(bpcBuf[offset + i])
+                                       : 0;
+                int a = static_cast<int>(sv);
+                int b = static_cast<int>(fv);
+                pixelConfigDiff_[offset + i] = static_cast<epicsInt32>(a > b ? a - b : b - a);
+            }
+            epicsMutexUnlock(pixelConfigDiffMutex_);
             if (mismatch > 0) {
                 setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 0);
                 setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, mismatch);
@@ -1188,6 +1207,13 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
         free(bpcBuf);
         bpcBuf = NULL;
     }
+    int pixCount = 262144;
+    getIntegerParam(ADTimePixPixCount, &pixCount);
+    if (pixCount < 1) pixCount = 262144;
+    size_t ncb = static_cast<size_t>(pixCount);
+    if (ncb > pixelConfigDiff_.size()) ncb = pixelConfigDiff_.size();
+    doCallbacksInt32Array(pixelConfigDiff_.data(), ncb, ADTimePixPixelConfigDiff, 0);
+
     return status;
 }
 
@@ -5584,6 +5610,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         1,
         priority,
         stackSize),
+      pixelConfigDiffMutex_(NULL),
       asynFlags_(asynFlags),
       imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
@@ -5907,6 +5934,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPixelConfigMatchBPCString, asynParamInt32, &ADTimePixPixelConfigMatchBPC);
     createParam(ADTimePixPixelConfigMismatchBytesString, asynParamInt64, &ADTimePixPixelConfigMismatchBytes);
     createParam(ADTimePixPixelConfigStatusString, asynParamOctet, &ADTimePixPixelConfigStatus);
+    createParam(ADTimePixPixelConfigDiffString, asynParamInt32, &ADTimePixPixelConfigDiff);
 
     //sets driver version
     char versionString[25];
@@ -5950,6 +5978,11 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     if (!prvHstMutex_) {
         ERR("Failed to create PrvHst mutex");
     }
+    pixelConfigDiffMutex_ = epicsMutexMustCreate();
+    if (!pixelConfigDiffMutex_) {
+        ERR("Failed to create PixelConfig diff mutex");
+    }
+    pixelConfigDiff_.assign(262144, 0);
     prvHstNetworkClient_.reset();
     prvHstHost_ = "";
     prvHstPort_ = 0;
@@ -6225,6 +6258,11 @@ ADTimePix::~ADTimePix(){
     if (prvHstMutex_) {
         epicsMutexDestroy(prvHstMutex_);
         prvHstMutex_ = NULL;
+    }
+
+    if (pixelConfigDiffMutex_) {
+        epicsMutexDestroy(pixelConfigDiffMutex_);
+        pixelConfigDiffMutex_ = NULL;
     }
 
     // Do not call disconnect(this->pasynUserSelf) here. It can trigger asyn disconnect

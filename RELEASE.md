@@ -17,7 +17,7 @@ R1-6-2 (TBD, 2026)
 
 * **IOC boot — deployment-independent calibration paths**: `iocs/tpx3IOC/iocBoot/iocTimePix/init_detector.cmd` sets `BPCFilePath` and `DACSFilePath` using `$(ADTIMEPIX)/vendor/` (with `tpx3-demo.bpc` / `tpx3-demo.dacs`) instead of hard-coded site paths, so the same script works when the module is installed under different trees.
 
-* **PixelConfig readback (layout 2, on-demand)**: New `RefreshPixelConfig` (dashboard): writes 1 to GET `/detector/chips/<i>/PixelConfig` for each chip, JSON-decode the base64 string, and optionally compare decoded bytes to the on-disk BPC file (`BPCFilePath` + `BPCFileName`, chip * 65536 byte offset for multi-chip files). Per-chip readbacks: `PixelConfigLen_RBV`, `PixelConfigMatchBPC_RBV` (-1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch), `PixelConfigMismatchBytes_RBV`, `PixelConfigStatus_RBV`. Not merged into DAC refresh; not polled at 1 Hz.
+* **PixelConfig readback (layout 2, on-demand)**: New `RefreshPixelConfig` (dashboard): writes 1 to GET `/detector/chips/<i>/PixelConfig` for each chip, JSON-decode the base64 string, and optionally compare decoded bytes to the on-disk BPC file (`BPCFilePath` + `BPCFileName`, chip * 65536 byte offset for multi-chip files). Per-chip readbacks: `PixelConfigLen_RBV`, `PixelConfigMatchBPC_RBV` (-1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch), `PixelConfigMismatchBytes_RBV`, `PixelConfigStatus_RBV`. Waveform `PixelConfigDiff` (same `NELEMENTS` as `BPC` in `MaskBPC.template`) holds **|SERVAL byte − BPC byte|** per index after each refresh; Phoebus `Mask/Mask.bob` embeds `PixelConfigMaskPanel.bob` with refresh control and 512×512 / 256×256 heatmaps. Not merged into DAC refresh; not polled at 1 Hz.
 
 
 R1-6-1 (March 31, 2026)
