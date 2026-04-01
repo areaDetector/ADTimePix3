@@ -109,6 +109,21 @@
         <height>30</height>
         <format>6</format>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>ReleaseVersionLabel</name>
+        <text>IOC Version</text>
+        <x>430</x>
+        <y>10</y>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ReleaseVersionDisplay</name>
+        <pv_name>$(P)$(R)RELEASE_VERSION</pv_name>
+        <x>300</x>
+        <y>5</y>
+        <width>80</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>HTTPConfigurationSection</name>
@@ -677,7 +692,7 @@
       <x>10</x>
       <y>860</y>
       <width>1350</width>
-      <height>130</height>
+      <height>160</height>
       <widget type="label" version="2.0.0">
         <name>JARFileConfigurationTitle</name>
         <text>JAR File Configuration</text>
@@ -743,11 +758,35 @@
         <height>30</height>
         <format>6</format>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>JavaXmxLabel</name>
+        <text>JVM -Xmx [20g]:</text>
+        <x>20</x>
+        <y>78</y>
+        <width>120</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>JavaXmxEntry</name>
+        <pv_name>$(P)$(R)JAVA_XMX</pv_name>
+        <x>140</x>
+        <y>73</y>
+        <width>80</width>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>JavaXmxEnableButton</name>
+        <pv_name>$(P)$(R)JAVA_XMX_ENABLE</pv_name>
+        <label>Enable</label>
+        <x>240</x>
+        <y>73</y>
+        <width>80</width>
+      </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>CommandLineSection</name>
       <x>10</x>
-      <y>990</y>
+      <y>1020</y>
       <width>1350</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
@@ -779,7 +818,7 @@
     <widget type="group" version="3.0.0">
       <name>HelpSection</name>
       <x>10</x>
-      <y>1120</y>
+      <y>1150</y>
       <width>1350</width>
       <widget type="label" version="2.0.0">
         <name>HelpTitle</name>

@@ -5,11 +5,11 @@
     <R>Emulator:</R>
   </macros>
   <width>1150</width>
-  <height>1040</height>
+  <height>1140</height>
   <widget type="group" version="3.0.0">
     <name>TPX3_Emulator_Control</name>
     <width>1150</width>
-    <height>1040</height>
+    <height>1140</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>TPX3 Emulator IOC Control Panel (replay of raw .tpx3 data)</text>
@@ -296,7 +296,7 @@
       <x>10</x>
       <y>440</y>
       <width>1100</width>
-      <height>450</height>
+      <height>550</height>
       <widget type="label" version="2.0.0">
         <name>FileConfigurationTitle</name>
         <text>File Configuration</text>
@@ -360,10 +360,82 @@
         <format>6</format>
       </widget>
       <widget type="label" version="2.0.0">
+        <name>JavaXmxLabel</name>
+        <text>JVM -Xmx (e.g. 20g):</text>
+        <x>20</x>
+        <y>470</y>
+        <width>150</width>
+      </widget>
+      <widget type="textentry" version="3.0.0">
+        <name>JavaXmxEntry</name>
+        <pv_name>$(P)$(R)JAVA_XMX</pv_name>
+        <x>180</x>
+        <y>470</y>
+        <height>30</height>
+        <format>6</format>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>JavaXmxEnable</name>
+        <pv_name>$(P)$(R)JAVA_XMX_ENABLE</pv_name>
+        <label>Enable</label>
+        <x>300</x>
+        <y>470</y>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ChipMaskLabel</name>
+        <text>Chip mask (1-15):</text>
+        <x>20</x>
+        <y>430</y>
+        <width>120</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>ChipMask</name>
+        <pv_name>$(P)$(R)CHIP_MASK</pv_name>
+        <x>180</x>
+        <y>430</y>
+        <width>80</width>
+        <height>30</height>
+        <format>0</format>
+        <minimum>1.0</minimum>
+        <maximum>15.0</maximum>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>ChipMaskEnable</name>
+        <pv_name>$(P)$(R)CHIP_MASK_ENABLE</pv_name>
+        <label>Enable</label>
+        <x>300</x>
+        <y>430</y>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>CmdPortLabel</name>
+        <text>Cmd port (-DcmdPort):</text>
+        <x>500</x>
+        <y>435</y>
+        <width>80</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>CmdPort</name>
+        <pv_name>$(P)$(R)CMD_PORT</pv_name>
+        <x>580</x>
+        <y>430</y>
+        <width>80</width>
+        <height>30</height>
+        <format>0</format>
+        <minimum>1.0</minimum>
+        <maximum>65535.0</maximum>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>CmdPortEnable</name>
+        <pv_name>$(P)$(R)CMD_PORT_ENABLE</pv_name>
+        <label>Enable</label>
+        <x>680</x>
+        <y>430</y>
+      </widget>
+      <widget type="label" version="2.0.0">
         <name>ReplayFileLabel</name>
         <text>Replay File (.tpx3, full path):</text>
         <x>20</x>
-        <y>115</y>
+        <y>110</y>
         <width>220</width>
         <tooltip>Replay previously collected raw .tpx3 data</tooltip>
       </widget>
@@ -530,7 +602,7 @@
     <widget type="group" version="3.0.0">
       <name>CommandLineSection</name>
       <x>10</x>
-      <y>890</y>
+      <y>990</y>
       <width>1100</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
