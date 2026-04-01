@@ -15,6 +15,8 @@ Driver depends on Serval versions, at this time. Current releases support Serval
 R1-7 (TBD, 2026)
 --------
 
+* **IOC boot — deployment-independent calibration paths**: `iocs/tpx3IOC/iocBoot/iocTimePix/init_detector.cmd` sets `BPCFilePath` and `DACSFilePath` using `$(ADTIMEPIX)/vendor/` (with `tpx3-demo.bpc` / `tpx3-demo.dacs`) instead of hard-coded site paths, so the same script works when the module is installed under different trees.
+
 
 R1-6-1 (March 31, 2026)
 --------
