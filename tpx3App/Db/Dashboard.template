@@ -39,6 +39,16 @@ record(bo, "$(P)$(R)RefreshConnection")
     field(DESC, "Refresh connection status")
 }
 
+# On-demand: GET PixelConfig per chip from SERVAL; compare to BPC file (BPCFilePath/BPCFileName)
+record(bo, "$(P)$(R)RefreshPixelConfig")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_REFRESH_PIXEL_CONFIG")
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+    field(DESC, "Refresh PixelConfig vs BPC file")
+}
+
 # Detector init single source of truth: push current PV config to SERVAL (fileWriter + getServer), same effect as WriteData=1
 record(bo, "$(P)$(R)ApplyConfig")
 {

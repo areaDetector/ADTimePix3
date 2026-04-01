@@ -144,3 +144,29 @@ record(longin, "$(P)$(R)$(C)_Temp_RBV"){
   field(SCAN, "I/O Intr")
   info(archive, "Monitor, 00:00:01, VAL")
 }
+
+# PixelConfig from SERVAL (refresh via $(P)$(R)RefreshPixelConfig on dashboard)
+record(longin, "$(P)$(R)$(C)_PixelConfigLen_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_LEN")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Decoded PixelConfig bytes")
+}
+record(longin, "$(P)$(R)$(C)_PixelConfigMatchBPC_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_MATCH_BPC")
+  field(SCAN, "I/O Intr")
+  field(DESC, "-1 err 0 mismatch 1 match 2 no BPC 3 size")
+}
+record(int64in, "$(P)$(R)$(C)_PixelConfigMismatchBytes_RBV"){
+  field(DTYP, "asynInt64")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_MISMATCH")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Differing bytes if mismatch")
+}
+record(stringin, "$(P)$(R)$(C)_PixelConfigStatus_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_STATUS")
+  field(SCAN, "I/O Intr")
+  field(DESC, "PixelConfig refresh status")
+}

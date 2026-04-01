@@ -247,6 +247,11 @@
 #define ADTimePixProcessedImgOutputTypeString    "TPX3_IMG_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDInt64), 1=Average (NDInt32, divide by N)
 #define ADTimePixWriteProcessedHstString         "TPX3_HST_WRITE_PROCESSED" // (asynInt32,         w)      Trigger: push PrvHst NDArrays (addrs 4–7) for file plugins
 #define ADTimePixProcessedHstOutputTypeString    "TPX3_HST_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDInt64), 1=Average (NDInt32, divide by frame count)
+#define ADTimePixRefreshPixelConfigString        "TPX3_REFRESH_PIXEL_CONFIG"     // (asynInt32,   w)      Write 1: GET PixelConfig per chip from SERVAL; optional compare to BPC on disk
+#define ADTimePixPixelConfigLenString            "TPX3_PIXEL_CONFIG_LEN"         // (asynInt32,   r)      Decoded PixelConfig byte length
+#define ADTimePixPixelConfigMatchBPCString       "TPX3_PIXEL_CONFIG_MATCH_BPC"  // (asynInt32,   r)      -1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch
+#define ADTimePixPixelConfigMismatchBytesString  "TPX3_PIXEL_CONFIG_MISMATCH"   // (asynInt64,   r)      Number of differing bytes (if mismatch)
+#define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -757,6 +762,11 @@ class ADTimePix : public ADDriver{
         int ADTimePixProcessedImgOutputType;
         int ADTimePixWriteProcessedHst;
         int ADTimePixProcessedHstOutputType;
+        int ADTimePixRefreshPixelConfig;
+        int ADTimePixPixelConfigLen;
+        int ADTimePixPixelConfigMatchBPC;
+        int ADTimePixPixelConfigMismatchBytes;
+        int ADTimePixPixelConfigStatus;
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
@@ -765,7 +775,7 @@ class ADTimePix : public ADDriver{
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */
         void pushProcessedHstToPlugins();
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixProcessedHstOutputType  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixPixelConfigStatus  // Last parameter in the list
 
     private:
 
@@ -961,6 +971,8 @@ class ADTimePix : public ADDriver{
         asynStatus uploadDACS();
         asynStatus writeDac(int chip, const std::string &dac, int value);
         asynStatus fetchDacs(json &data, int chip);
+        /** GET /detector/chips/<i>/PixelConfig for each chip: JSON string -> base64 decode; compare slice to BPC file if available. */
+        asynStatus refreshPixelConfigFromServal();
         asynStatus fileWriter();
         
         // TCP streaming methods for PrvImg channel

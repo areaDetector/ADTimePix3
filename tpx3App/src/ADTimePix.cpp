@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <cstring>
+#include <cctype>
 
 #include <sys/stat.h>
 
@@ -68,6 +69,31 @@
 using namespace std;
 using json = nlohmann::json;
 // Add any additional namespaces here
+
+namespace {
+constexpr size_t kPixelConfigBytes = 65536;
+
+bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
+    static const char kChars[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    out.clear();
+    int val = 0;
+    int valb = -8;
+    for (unsigned char c : in) {
+        if (std::isspace(static_cast<unsigned char>(c))) continue;
+        if (c == '=') break;
+        const char* p = std::strchr(kChars, static_cast<char>(c));
+        if (!p) return false;
+        val = (val << 6) + static_cast<int>(p - kChars);
+        valb += 6;
+        if (valb >= 0) {
+            out.push_back(static_cast<uint8_t>((val >> valb) & 0xFF));
+            valb -= 8;
+        }
+    }
+    return true;
+}
+}  // namespace
 
 // NetworkClient class implementation
 NetworkClient::NetworkClient() : socket_fd_(-1), connected_(false) {}
@@ -1044,6 +1070,125 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     }
 
     return asynSuccess;
+}
+
+asynStatus ADTimePix::refreshPixelConfigFromServal() {
+    const char* functionName = "refreshPixelConfigFromServal";
+    FLOW_ARGS("%s: fetch per chip, compare to BPC on disk", functionName);
+    asynStatus status = asynSuccess;
+    char* bpcBuf = NULL;
+    int bpcSize = 0;
+    readBPCfile(&bpcBuf, &bpcSize);
+
+    int nChips = 1;
+    getIntegerParam(ADTimePixNumberOfChips, &nChips);
+    if (nChips < 1) nChips = 1;
+
+    for (int chip = 0; chip < nChips; chip++) {
+        char statusMsg[256];
+        std::string url = serverURL + "/detector/chips/" + std::to_string(chip) + "/PixelConfig";
+        cpr::Response r =
+            cpr::Get(cpr::Url{url}, cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
+                     cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+
+        if (r.status_code != 200) {
+            epicsSnprintf(statusMsg, sizeof(statusMsg), "HTTP %ld", (long)r.status_code);
+            setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
+            setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+            setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+            callParamCallbacks(chip);
+            ERR_ARGS("chip %d PixelConfig GET failed: %s", chip, statusMsg);
+            continue;
+        }
+
+        try {
+            json j = json::parse(r.text);
+            if (!j.is_string()) {
+                setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+                epicsSnprintf(statusMsg, sizeof(statusMsg), "JSON is not a string");
+                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+                callParamCallbacks(chip);
+                ERR_ARGS("chip %d PixelConfig: expected JSON string", chip);
+                continue;
+            }
+            std::string b64 = j.get<std::string>();
+            std::vector<uint8_t> decoded;
+            if (!decodeBase64(b64, decoded)) {
+                setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+                setStringParam(chip, ADTimePixPixelConfigStatus, "Base64 decode failed");
+                callParamCallbacks(chip);
+                ERR_ARGS("chip %d PixelConfig: base64 decode failed", chip);
+                continue;
+            }
+
+            const int decLen = static_cast<int>(decoded.size());
+            setIntegerParam(chip, ADTimePixPixelConfigLen, decLen);
+
+            if (!bpcBuf || bpcSize <= 0) {
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 2);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+                setStringParam(chip, ADTimePixPixelConfigStatus, "OK, no BPC file");
+                callParamCallbacks(chip);
+                continue;
+            }
+
+            const size_t offset = static_cast<size_t>(chip) * kPixelConfigBytes;
+            if (offset >= static_cast<size_t>(bpcSize)) {
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+                epicsSnprintf(statusMsg, sizeof(statusMsg),
+                              "BPC too small for chip (need offset %zu, have %d)", offset,
+                              bpcSize);
+                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+                callParamCallbacks(chip);
+                continue;
+            }
+
+            const size_t fileSliceLen = static_cast<size_t>(bpcSize) - offset;
+            const size_t ncmp = decoded.size() < fileSliceLen ? decoded.size() : fileSliceLen;
+            epicsInt64 mismatch = 0;
+            for (size_t i = 0; i < ncmp; i++) {
+                if (decoded[i] != static_cast<unsigned char>(bpcBuf[offset + i])) mismatch++;
+            }
+            if (mismatch > 0) {
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 0);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, mismatch);
+                epicsSnprintf(statusMsg, sizeof(statusMsg), "Mismatch %lld bytes",
+                              (long long)mismatch);
+                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+            } else if (decoded.size() != fileSliceLen) {
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+                epicsSnprintf(statusMsg, sizeof(statusMsg), "Length mismatch (decoded %d, file %zu)",
+                              decLen, fileSliceLen);
+                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+            } else {
+                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 1);
+                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+                setStringParam(chip, ADTimePixPixelConfigStatus, "OK, matches BPC");
+            }
+            callParamCallbacks(chip);
+        } catch (const std::exception& e) {
+            setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
+            setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+            epicsSnprintf(statusMsg, sizeof(statusMsg), "Parse error: %.200s", e.what());
+            setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+            callParamCallbacks(chip);
+            ERR_ARGS("chip %d PixelConfig: %s", chip, e.what());
+        }
+    }
+
+    if (bpcBuf) {
+        free(bpcBuf);
+        bpcBuf = NULL;
+    }
+    return status;
 }
 
 asynStatus ADTimePix::getDetector(){
@@ -3193,6 +3338,12 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     else if(function == ADTimePixRefreshConnection) {
         status = checkConnection();
         setIntegerParam(ADTimePixRefreshConnection, 0);  // Reset so PV can be triggered again
+    }
+    else if(function == ADTimePixRefreshPixelConfig) {
+        if (addr == 0 && value == 1) {
+            status = refreshPixelConfigFromServal();
+            setIntegerParam(0, ADTimePixRefreshPixelConfig, 0);
+        }
     }
     else if(function == ADTimePixApplyConfig) {
         status = fileWriter();
@@ -5751,6 +5902,11 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixProcessedImgOutputTypeString, asynParamInt32, &ADTimePixProcessedImgOutputType);
     createParam(ADTimePixWriteProcessedHstString, asynParamInt32, &ADTimePixWriteProcessedHst);
     createParam(ADTimePixProcessedHstOutputTypeString, asynParamInt32, &ADTimePixProcessedHstOutputType);
+    createParam(ADTimePixRefreshPixelConfigString, asynParamInt32, &ADTimePixRefreshPixelConfig);
+    createParam(ADTimePixPixelConfigLenString, asynParamInt32, &ADTimePixPixelConfigLen);
+    createParam(ADTimePixPixelConfigMatchBPCString, asynParamInt32, &ADTimePixPixelConfigMatchBPC);
+    createParam(ADTimePixPixelConfigMismatchBytesString, asynParamInt64, &ADTimePixPixelConfigMismatchBytes);
+    createParam(ADTimePixPixelConfigStatusString, asynParamOctet, &ADTimePixPixelConfigStatus);
 
     //sets driver version
     char versionString[25];
