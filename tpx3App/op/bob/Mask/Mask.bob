@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>$(BL) Mask</name>
-  <width>1380</width>
+  <width>2080</width>
   <height>1020</height>
   <background_color>
     <color red="240" green="240" blue="240">
@@ -31,7 +31,12 @@
   <widget type="embedded" version="2.0.0">
     <name>PixelConfig vs BPC</name>
     <file>PixelConfigMaskPanel.bob</file>
-    <x>715</x>
+    <macros>
+      <Sys>$(Sys)</Sys>
+      <Dev>$(Dev)</Dev>
+      <Cam>$(Cam)</Cam>
+    </macros>
+    <x>1415</x>
     <y>5</y>
     <width>660</width>
     <height>1010</height>
