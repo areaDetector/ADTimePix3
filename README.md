@@ -5,6 +5,7 @@ ADTimePix3 is an open-source EPICS areaDetector driver for TimePix3 pixel detect
 Additional information:
 * [Documentation](https://areadetector.github.io/areaDetector/ADTimePix3/ADTimePix3.html)
 * [Release notes](RELEASE.md)
+* **PixelConfig vs on-disk BPC** (SERVAL live config vs `.bpc` file, `PixelConfigDiff` / mask layout): [documentation/PIXELCONFIG_BPC_DIFF.md](documentation/PIXELCONFIG_BPC_DIFF.md)
 * **Readout stack diagram** (48→64→SERVAL; **ADTimePix3** is a SERVAL-only client; **LUNA** is an optional parallel ASI path not used by this driver): [PNG](documentation/TimePix3_pipeline_48_64_96_caption.png), [SVG source](documentation/TimePix3_pipeline_48_64_96.svg) (regenerate PNG with Inkscape from the SVG if you edit the figure).
 
 Notes:
@@ -239,6 +240,7 @@ Masks apply in the IOC on image-domain data from the same **SERVAL** TCP/HTTP pa
 -   Real-time mask generation (rectangular, circular)
 -   Positive/negative masking modes
 -   Hot pixel detection and correction
+-   **SERVAL vs file check**: `RefreshPixelConfig` compares per-chip PixelConfig from SERVAL to the on-disk BPC; **`PixelConfigDiff`** shows |Δ| in **image** order (same mapping as **`MaskBPC`**). See [documentation/PIXELCONFIG_BPC_DIFF.md](documentation/PIXELCONFIG_BPC_DIFF.md).
 
 Detector Health Monitoring:
 
