@@ -252,7 +252,7 @@
 #define ADTimePixPixelConfigMatchBPCString       "TPX3_PIXEL_CONFIG_MATCH_BPC"  // (asynInt32,   r)      -1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch
 #define ADTimePixPixelConfigMismatchBytesString  "TPX3_PIXEL_CONFIG_MISMATCH"   // (asynInt64,   r)      Number of differing bytes (if mismatch)
 #define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
-#define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32,   r)      |SERVAL byte − BPC file byte| per pel (waveform; after refresh)
+#define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32Array, r)   |SERVAL−BPC| per image pel; layout=bcp2ImgIndex (same as MaskBPC)
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 

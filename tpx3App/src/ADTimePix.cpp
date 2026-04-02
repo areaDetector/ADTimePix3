@@ -15,6 +15,7 @@
 #include <string.h>
 #include <cstring>
 #include <cctype>
+#include <algorithm>
 
 #include <sys/stat.h>
 
@@ -1084,16 +1085,18 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     getIntegerParam(ADTimePixNumberOfChips, &nChips);
     if (nChips < 1) nChips = 1;
 
+    /* Same layout as MaskBPC readInt32Array: linear .bpc index -> image via bcp2ImgIndex (orientation, quad). */
+    int rowsLay = 0, colsLay = 0, xChipsLay = 0, yChipsLay = 0, pelWidth = 0;
+    rowsCols(&rowsLay, &colsLay, &xChipsLay, &yChipsLay, &pelWidth);
+
+    {
+        epicsMutexLock(pixelConfigDiffMutex_);
+        std::fill(pixelConfigDiff_.begin(), pixelConfigDiff_.end(), 0);
+        epicsMutexUnlock(pixelConfigDiffMutex_);
+    }
+
     for (int chip = 0; chip < nChips; chip++) {
         char statusMsg[256];
-        {
-            epicsMutexLock(pixelConfigDiffMutex_);
-            const size_t off = static_cast<size_t>(chip) * kPixelConfigBytes;
-            for (size_t i = 0; i < kPixelConfigBytes && off + i < pixelConfigDiff_.size(); ++i) {
-                pixelConfigDiff_[off + i] = 0;
-            }
-            epicsMutexUnlock(pixelConfigDiffMutex_);
-        }
         std::string url = serverURL + "/detector/chips/" + std::to_string(chip) + "/PixelConfig";
         cpr::Response r =
             cpr::Get(cpr::Url{url}, cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
@@ -1167,14 +1170,16 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                 if (decoded[i] != static_cast<unsigned char>(bpcBuf[offset + i])) mismatch++;
             }
             epicsMutexLock(pixelConfigDiffMutex_);
-            for (size_t i = 0; i < kPixelConfigBytes && offset + i < pixelConfigDiff_.size(); ++i) {
+            for (size_t i = 0; i < kPixelConfigBytes; ++i) {
+                const int bpcLin = static_cast<int>(offset + i);
+                const int imgIdx = bcp2ImgIndex(bpcLin, pelWidth);
+                if (imgIdx < 0 || static_cast<size_t>(imgIdx) >= pixelConfigDiff_.size()) continue;
                 unsigned char sv = (i < decoded.size()) ? decoded[i] : 0;
-                unsigned char fv = (static_cast<int>(offset + i) < bpcSize)
-                                       ? static_cast<unsigned char>(bpcBuf[offset + i])
-                                       : 0;
+                unsigned char fv = (bpcLin < bpcSize) ? static_cast<unsigned char>(bpcBuf[bpcLin]) : 0;
                 int a = static_cast<int>(sv);
                 int b = static_cast<int>(fv);
-                pixelConfigDiff_[offset + i] = static_cast<epicsInt32>(a > b ? a - b : b - a);
+                pixelConfigDiff_[static_cast<size_t>(imgIdx)] =
+                    static_cast<epicsInt32>(a > b ? a - b : b - a);
             }
             epicsMutexUnlock(pixelConfigDiffMutex_);
             if (mismatch > 0) {
@@ -1210,11 +1215,8 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
         free(bpcBuf);
         bpcBuf = NULL;
     }
-    int pixCount = 262144;
-    getIntegerParam(ADTimePixPixCount, &pixCount);
-    if (pixCount < 1) pixCount = 262144;
-    size_t ncb = static_cast<size_t>(pixCount);
-    if (ncb > pixelConfigDiff_.size()) ncb = pixelConfigDiff_.size();
+    /* Waveform PixelConfigDiff: image-ordered samples (bcp2ImgIndex), same as MaskBPC mask image. */
+    const size_t ncb = pixelConfigDiff_.size();
     /* asyn waveform interrupt copies data only if auxStatus is asynSuccess (devAsynXXXArray.cpp). */
     setParamStatus(0, ADTimePixPixelConfigDiff, asynSuccess);
     doCallbacksInt32Array(pixelConfigDiff_.data(), ncb, ADTimePixPixelConfigDiff, 0);
@@ -5939,7 +5941,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPixelConfigMatchBPCString, asynParamInt32, &ADTimePixPixelConfigMatchBPC);
     createParam(ADTimePixPixelConfigMismatchBytesString, asynParamInt64, &ADTimePixPixelConfigMismatchBytes);
     createParam(ADTimePixPixelConfigStatusString, asynParamOctet, &ADTimePixPixelConfigStatus);
-    createParam(ADTimePixPixelConfigDiffString, asynParamInt32, &ADTimePixPixelConfigDiff);
+    createParam(ADTimePixPixelConfigDiffString, asynParamInt32Array, &ADTimePixPixelConfigDiff);
 
     //sets driver version
     char versionString[25];

@@ -47,6 +47,8 @@ record(bo, "$(P)$(R)RefreshPixelConfig")
     field(ZNAM, "No")
     field(ONAM, "Yes")
     field(DESC, "Refresh PixelConfig vs BPC file")
+    # Same pattern as BPC/MaskBPC: after driver fills buffer, process waveform so VAL/NORD update (caget, Phoebus).
+    field(FLNK, "$(P)$(R)PixelConfigDiff.PROC CA")
 }
 
 # Detector init single source of truth: push current PV config to SERVAL (fileWriter + getServer), same effect as WriteData=1

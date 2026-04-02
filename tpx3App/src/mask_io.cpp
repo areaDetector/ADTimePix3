@@ -506,7 +506,10 @@ int ADTimePix::bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
     chipPelWidth = chipPelWidthIn;
     bpcIndex = bpcIndexIn;
     chipPelCount = (chipPelWidth) * (chipPelWidth);
-    chip = (bpcIndex + 1) / chipPelCount;
+    /* 0-based chip from linear BPC index: [0,chipPelCount) -> 0, etc. Do not use (bpcIndex+1)/chipPelCount;
+     * that maps the last pel of each chip (e.g. 65535) to the next chip and bpcIndex 262143 -> chip 4,
+     * falsely tripping "detector larger than 2x2" and misplacing boundary pixels. */
+    chip = (chipPelCount > 0) ? (bpcIndex / chipPelCount) : 0;
 
     if (numChips == 1) { // single chip TimePix3
         if (detOrientation == 0) {  // UP detector orientation
