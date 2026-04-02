@@ -116,11 +116,19 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                 readBPCfile(&bufBPC, &bufBPCSize);
                 rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
                 if (bufBPCSize > 0) {
-                    for(size_t i = 0; i < nElements; i++){
-                        if (bufBPC[i] & (1 << 0)) {
-                        //    value[i] |= 1 << 1;     // masked pel -> 2; bcpIndex
-                            value[bcp2ImgIndex(i, PelWidth)] |= 1 << 1;     // masked pel -> 2; imgIndex
-                //            printf("mask bufBPC[%ld]=%d\n",i,value[i]);
+                    /* Same image <-> file map as mask write / PixelConfigDiff: pelIndex(i,j), not bcp2ImgIndex. */
+                    for (size_t v = 0; v < nElements; ++v) {
+                        value[v] = 0;
+                    }
+                    for (int j = 0; j < COLS; ++j) {
+                        for (int i = 0; i < ROWS; ++i) {
+                            const size_t idx = static_cast<size_t>(j) * static_cast<size_t>(COLS) +
+                                               static_cast<size_t>(i);
+                            if (idx >= nElements) continue;
+                            const int k = pelIndex(i, j);
+                            if (k >= 0 && k < bufBPCSize && (bufBPC[k] & (1 << 0))) {
+                                value[idx] |= 1 << 1;
+                            }
                         }
                     }
                 }

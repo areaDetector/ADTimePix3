@@ -34,7 +34,7 @@ The driver does **not** guess which side is “correct”; it reports **equality
 
 - **`BPC` PV** (`TPX3_BPC_PEL`): **Linear file order**—index `k` is byte `k` in the `.bpc` file.
 - **`PixelConfigDiff`**: **Image order** = **`j × cols + i`** (same row-major convention as **`maskCircle`** / mask write), sample **`(i, j)`** = **`abs(SERVAL[k] − BPC[k])`** where **`k = pelIndex(i, j)`**. That is the **same** mapping used when a mask is written into the `.bpc` file (`pelIndex` in `mask_io.cpp`). **`DetOrient` / `TPX3_DET_ORIENTATION`** is included in **`pelIndex`**, so rotated layouts match the mask editor.
-- **`MaskBPC` when read from disk** (masked bits highlighted): still uses **`bcp2ImgIndex(k, …)`** to place file byte `k` on the image; that path may not match **`pelIndex`** for every orientation. The **in-memory** mask (`maskCircle`, etc.) and **`PixelConfigDiff`** are consistent with **`pelIndex`**.
+- **`MaskBPC` when read from disk** (“read from bpc” / **`MaskPel`**): fills **`value[j*COLS+i]`** from **`bufBPC[pelIndex(i, j)]`**, same as mask **write** and **`PixelConfigDiff`** (no **`bcp2ImgIndex`** on this path).
 
 ## `PixelConfigDiff` values
 
