@@ -719,8 +719,6 @@ int ADTimePix::pelIndex(int i, int j) {
     getIntegerParam(ADTimePixNumberOfChips, &numChips);
     findChip(i, j, &X_CHIP, &Y_CHIP, &PelWidth);
 
-    callParamCallbacks();
-
     // TODO: 2x4 chip detector
     // One-chip TimePix3 detector
     if (numChips == 1) {

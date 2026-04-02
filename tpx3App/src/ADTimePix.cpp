@@ -1085,15 +1085,14 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     getIntegerParam(ADTimePixNumberOfChips, &nChips);
     if (nChips < 1) nChips = 1;
 
-    /* Same layout as MaskBPC readInt32Array: linear .bpc index -> image via bcp2ImgIndex (orientation, quad). */
+    /* Image layout must match mask save (pelIndex): bcp2ImgIndex() is not the inverse of pelIndex for all
+     * quad orientations (e.g. LEFT), so PixelConfigDiff is filled by (i,j) -> file k = pelIndex(i,j). */
     int rowsLay = 0, colsLay = 0, xChipsLay = 0, yChipsLay = 0, pelWidth = 0;
     rowsCols(&rowsLay, &colsLay, &xChipsLay, &yChipsLay, &pelWidth);
+    (void)pelWidth;
 
-    {
-        epicsMutexLock(pixelConfigDiffMutex_);
-        std::fill(pixelConfigDiff_.begin(), pixelConfigDiff_.end(), 0);
-        epicsMutexUnlock(pixelConfigDiffMutex_);
-    }
+    std::vector<uint8_t> serValLinear(262144u, 0);
+    std::vector<char> chipDecoded(static_cast<size_t>(nChips > 0 ? nChips : 1), 0);
 
     for (int chip = 0; chip < nChips; chip++) {
         char statusMsg[256];
@@ -1169,19 +1168,10 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
             for (size_t i = 0; i < ncmp; i++) {
                 if (decoded[i] != static_cast<unsigned char>(bpcBuf[offset + i])) mismatch++;
             }
-            epicsMutexLock(pixelConfigDiffMutex_);
-            for (size_t i = 0; i < kPixelConfigBytes; ++i) {
-                const int bpcLin = static_cast<int>(offset + i);
-                const int imgIdx = bcp2ImgIndex(bpcLin, pelWidth);
-                if (imgIdx < 0 || static_cast<size_t>(imgIdx) >= pixelConfigDiff_.size()) continue;
-                unsigned char sv = (i < decoded.size()) ? decoded[i] : 0;
-                unsigned char fv = (bpcLin < bpcSize) ? static_cast<unsigned char>(bpcBuf[bpcLin]) : 0;
-                int a = static_cast<int>(sv);
-                int b = static_cast<int>(fv);
-                pixelConfigDiff_[static_cast<size_t>(imgIdx)] =
-                    static_cast<epicsInt32>(a > b ? a - b : b - a);
+            chipDecoded[static_cast<size_t>(chip)] = 1;
+            for (size_t i = 0; i < decoded.size() && i < kPixelConfigBytes && offset + i < serValLinear.size(); ++i) {
+                serValLinear[offset + i] = decoded[i];
             }
-            epicsMutexUnlock(pixelConfigDiffMutex_);
             if (mismatch > 0) {
                 setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 0);
                 setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, mismatch);
@@ -1211,11 +1201,37 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
         }
     }
 
+    if (bpcBuf && bpcSize > 0) {
+        epicsMutexLock(pixelConfigDiffMutex_);
+        std::fill(pixelConfigDiff_.begin(), pixelConfigDiff_.end(), 0);
+        for (int j = 0; j < rowsLay; ++j) {
+            for (int i = 0; i < colsLay; ++i) {
+                const size_t imgLin = static_cast<size_t>(j) * static_cast<size_t>(colsLay) + static_cast<size_t>(i);
+                if (imgLin >= pixelConfigDiff_.size()) continue;
+                const int k = pelIndex(i, j);
+                if (k < 0 || k >= bpcSize || static_cast<size_t>(k) >= serValLinear.size()) {
+                    pixelConfigDiff_[imgLin] = 0;
+                    continue;
+                }
+                const int chipOfK = k / static_cast<int>(kPixelConfigBytes);
+                if (chipOfK < 0 || chipOfK >= nChips ||
+                    static_cast<size_t>(chipOfK) >= chipDecoded.size() || !chipDecoded[static_cast<size_t>(chipOfK)]) {
+                    pixelConfigDiff_[imgLin] = 0;
+                    continue;
+                }
+                const int a = static_cast<int>(serValLinear[static_cast<size_t>(k)]);
+                const int b = static_cast<int>(static_cast<unsigned char>(bpcBuf[k]));
+                pixelConfigDiff_[imgLin] = static_cast<epicsInt32>(a > b ? a - b : b - a);
+            }
+        }
+        epicsMutexUnlock(pixelConfigDiffMutex_);
+    }
+
     if (bpcBuf) {
         free(bpcBuf);
         bpcBuf = NULL;
     }
-    /* Waveform PixelConfigDiff: image-ordered samples (bcp2ImgIndex), same as MaskBPC mask image. */
+    /* Waveform PixelConfigDiff: row-major image (j*cols+i), same convention as maskCircle / mask write; file index via pelIndex. */
     const size_t ncb = pixelConfigDiff_.size();
     /* asyn waveform interrupt copies data only if auxStatus is asynSuccess (devAsynXXXArray.cpp). */
     setParamStatus(0, ADTimePixPixelConfigDiff, asynSuccess);

@@ -33,9 +33,8 @@ The driver does **not** guess which side is “correct”; it reports **equality
 ## Waveform indexing: `BPC` vs `MaskBPC` vs `PixelConfigDiff`
 
 - **`BPC` PV** (`TPX3_BPC_PEL`): **Linear file order**—index `k` is byte `k` in the `.bpc` file.
-- **`MaskBPC`** and **`PixelConfigDiff`**: **Image / detector layout order**—index is the same 2D arrangement used for the mask image. The driver maps linear file index `k` with **`bcp2ImgIndex(k, pelWidth)`**, using **`DetectorOrientation`** and chip count (1 or 4), consistent with **`rowsCols()`** / mask code in `mask_io.cpp`.
-
-So for Phoebus **512×512** displays, **`PixelConfigDiff`** should **line up spatially with `MaskBPC`**, not with a naive row-major scan of raw `BPC`.
+- **`PixelConfigDiff`**: **Image order** = **`j × cols + i`** (same row-major convention as **`maskCircle`** / mask write), sample **`(i, j)`** = **`abs(SERVAL[k] − BPC[k])`** where **`k = pelIndex(i, j)`**. That is the **same** mapping used when a mask is written into the `.bpc` file (`pelIndex` in `mask_io.cpp`). **`DetOrient` / `TPX3_DET_ORIENTATION`** is included in **`pelIndex`**, so rotated layouts match the mask editor.
+- **`MaskBPC` when read from disk** (masked bits highlighted): still uses **`bcp2ImgIndex(k, …)`** to place file byte `k` on the image; that path may not match **`pelIndex`** for every orientation. The **in-memory** mask (`maskCircle`, etc.) and **`PixelConfigDiff`** are consistent with **`pelIndex`**.
 
 ## `PixelConfigDiff` values
 
@@ -48,4 +47,4 @@ Each element is **`abs(byte_SERVAL − byte_BPC)`** for the same logical pel aft
 
 ## Release history
 
-See **`RELEASE.md`**, section **R1-6-2**, for implementation details (asyn array type, callback length, `bcp2ImgIndex` chip-index fix).
+See **`RELEASE.md`**, section **R1-6-2**, for implementation details (asyn array type, callback length, `bcp2ImgIndex` chip-index fix, **`pelIndex`**-based **`PixelConfigDiff`**).
