@@ -1157,8 +1157,11 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                 continue;
             }
 
-            const size_t fileSliceLen = static_cast<size_t>(bpcSize) - offset;
-            const size_t ncmp = decoded.size() < fileSliceLen ? decoded.size() : fileSliceLen;
+            /* One chip = kPixelConfigBytes in file; do not use (bpcSize - offset) alone or a
+             * 4×64KiB file makes chip0 "slice" 262144B and decoded 65536B always "length mismatch". */
+            const size_t bytesFromOffset = static_cast<size_t>(bpcSize) - offset;
+            const size_t chipFileLen = std::min(kPixelConfigBytes, bytesFromOffset);
+            const size_t ncmp = decoded.size() < chipFileLen ? decoded.size() : chipFileLen;
             epicsInt64 mismatch = 0;
             for (size_t i = 0; i < ncmp; i++) {
                 if (decoded[i] != static_cast<unsigned char>(bpcBuf[offset + i])) mismatch++;
@@ -1180,11 +1183,11 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                 epicsSnprintf(statusMsg, sizeof(statusMsg), "Mismatch %lld bytes",
                               (long long)mismatch);
                 setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
-            } else if (decoded.size() != fileSliceLen) {
+            } else if (decoded.size() != chipFileLen) {
                 setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
                 setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                epicsSnprintf(statusMsg, sizeof(statusMsg), "Length mismatch (decoded %d, file %zu)",
-                              decLen, fileSliceLen);
+                epicsSnprintf(statusMsg, sizeof(statusMsg),
+                              "Length mismatch (decoded %d, chip file %zu)", decLen, chipFileLen);
                 setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
             } else {
                 setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 1);
@@ -1212,6 +1215,8 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     if (pixCount < 1) pixCount = 262144;
     size_t ncb = static_cast<size_t>(pixCount);
     if (ncb > pixelConfigDiff_.size()) ncb = pixelConfigDiff_.size();
+    /* asyn waveform interrupt copies data only if auxStatus is asynSuccess (devAsynXXXArray.cpp). */
+    setParamStatus(0, ADTimePixPixelConfigDiff, asynSuccess);
     doCallbacksInt32Array(pixelConfigDiff_.data(), ncb, ADTimePixPixelConfigDiff, 0);
 
     return status;

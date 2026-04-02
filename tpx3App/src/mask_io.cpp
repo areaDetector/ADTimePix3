@@ -20,6 +20,7 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         }
         epicsMutexUnlock(pixelConfigDiffMutex_);
         *nIn = nElements;
+        setParamStatus(0, ADTimePixPixelConfigDiff, asynSuccess);
         return asynSuccess;
     }
     

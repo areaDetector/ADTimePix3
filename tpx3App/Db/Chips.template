@@ -168,5 +168,6 @@ record(stringin, "$(P)$(R)$(C)_PixelConfigStatus_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_STATUS")
   field(SCAN, "I/O Intr")
+  field(SIZV, "256")
   field(DESC, "PixelConfig refresh status")
 }
