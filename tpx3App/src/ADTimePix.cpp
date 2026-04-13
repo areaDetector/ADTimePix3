@@ -35,35 +35,35 @@
 
 // Error message formatters
 #define ERR(msg)                                                                                 \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, functionName, \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, __func__, \
               msg)
 
 #define ERR_ARGS(fmt, ...)                                                              \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
-              functionName, __VA_ARGS__)
+              __func__, __VA_ARGS__)
 
 // Warning message formatters
 #define WARN(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, functionName, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, __func__, msg)
 
 #define WARN_ARGS(fmt, ...)                                                            \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
-              functionName, __VA_ARGS__)
+              __func__, __VA_ARGS__)
 
 // Log message formatters
 #define LOG(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, functionName, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, __func__, msg)
 
 #define LOG_ARGS(fmt, ...)                                                                       \
-    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, functionName, \
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, __func__, \
               __VA_ARGS__)
 
 // Flow message formatters
 #define FLOW(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, functionName, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, __func__, msg)
 
 #define FLOW_ARGS(fmt,...) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, functionName, __VA_ARGS__)
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__)
 
 #define delim "/"
 
@@ -314,33 +314,15 @@ static void timePixCallbackC(void* pPvt){
     pTimePix->timePixCallback();
 }
 
-
-/**
- * Simple function that prints all information about a connected camera
- * 
- * @return: void
- */
-void ADTimePix::printConnectedDeviceInfo(){
-    printf("--------------------------------------\n");
-    printf("Connected to ADTimePix device\n");
-    printf("--------------------------------------\n");
-    // Add any information you wish to print about the device here
-    printf("--------------------------------------\n");
-}
-
 // -----------------------------------------------------------------------
 // std strip quotes around string Functions
 // ../ADTimePix.cpp:97:6: error: specializing member 'std::__cxx11::basic_string<char>::quotes' requires 'template<>' syntax
 // -----------------------------------------------------------------------
 static string strip_quotes(string str) {
-    if (str.length() > 1 ) {
+    if (str.length() > 1 )
         return str.substr(1, str.length() - 2);
-    }
-    else
     return str;
-}   
-
-
+}
 
 /** Checks whether the directory specified exists.
   *
@@ -488,7 +470,6 @@ asynStatus ADTimePix::checkRaw1Path()
 
 asynStatus ADTimePix::checkImgPath()
 {
-    static const char* functionName = "checkImgPath";
     asynStatus status = checkChannelPath(ADTimePixImgBase, -1, ADTimePixImgFilePathExists,
                           "Img", "Img file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://listen@hostname:port");
     
@@ -525,7 +506,6 @@ asynStatus ADTimePix::checkImg1Path()
 
 asynStatus ADTimePix::checkPrvImgPath()
 {
-    static const char* functionName = "checkPrvImgPath";
     asynStatus status = checkChannelPath(ADTimePixPrvImgBase, -1, ADTimePixPrvImgFilePathExists,
                           "PrvImg", "PrvImg file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://listen@hostname:port");
     
@@ -555,7 +535,6 @@ asynStatus ADTimePix::checkPrvImgPath()
 }
 
 bool ADTimePix::parseTcpPath(const std::string& filePath, std::string& host, int& port) {
-    static const char* functionName = "parseTcpPath";
     // Parse tcp://listen@hostname:port or tcp://hostname:port
     // Examples: tcp://listen@localhost:8089, tcp://127.0.0.1:8089
     
@@ -621,7 +600,6 @@ asynStatus ADTimePix::checkPrvHstPath() // file:/, http://, tcp:// format
  * @return:     status          -> success if connected, error if not connected
  */
 asynStatus ADTimePix::initialServerCheckConnection(){
-    const char* functionName = "initialServerCheckConnection";
     bool connected = false;
 
 
@@ -784,7 +762,6 @@ void ADTimePix::connectionPollThread() {
  * @return: status
  */
 asynStatus ADTimePix::getDashboard(){
-    const char* functionName = "getDashboard";
     asynStatus status = asynSuccess;
     FLOW("Collecting detector information");
     std::string dashboard;
@@ -848,7 +825,6 @@ asynStatus ADTimePix::getDashboard(){
 }
 
 asynStatus ADTimePix::getHealth(){
-    const char* functionName = "getHealth";
     asynStatus status = asynSuccess;
     FLOW("Checking Health");
     std::string health;
@@ -1074,8 +1050,7 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
 }
 
 asynStatus ADTimePix::refreshPixelConfigFromServal() {
-    const char* functionName = "refreshPixelConfigFromServal";
-    FLOW_ARGS("%s: fetch per chip, compare to BPC on disk", functionName);
+    FLOW_ARGS("fetch per chip, compare to BPC on disk");
     asynStatus status = asynSuccess;
     char* bpcBuf = NULL;
     int bpcSize = 0;
@@ -1241,7 +1216,6 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
 }
 
 asynStatus ADTimePix::getDetector(){
-    const char* functionName = "getDetector";
     asynStatus status = asynSuccess;
     FLOW("Reading Detector Health, info, config, layout, chips");
     std::string detector;
@@ -1390,7 +1364,6 @@ asynStatus ADTimePix::getDetector(){
  * @return: status
  */
 asynStatus ADTimePix::getServer(){
-    const char* functionName = "getServer";
     asynStatus status = asynSuccess;
     FLOW("Reading detector streams");
     std::string server;
@@ -1538,7 +1511,6 @@ asynStatus ADTimePix::getServer(){
  * @return: status
  */
 asynStatus ADTimePix::uploadDACS(){
-    const char* functionName = "uploadDACS";
     asynStatus status = asynSuccess;
     FLOW("Initializing Chips/DACS detector information");
     std::string dacs_file, filePath, fileName;
@@ -1571,7 +1543,6 @@ static const json SPLIT_STRATEGIES = {"single_file", "frame"};
  * Helper function to safely get integer parameters
  */
 asynStatus ADTimePix::getParameterSafely(int param, int& value) {
-    const char* functionName = "getParameterSafely";
     asynStatus status = getIntegerParam(param, &value);
     if (status != asynSuccess) {
         ERR_ARGS("Failed to get integer parameter %d (status=%d) - parameter may not be initialized", param, status);
@@ -1585,7 +1556,6 @@ asynStatus ADTimePix::getParameterSafely(int param, int& value) {
  * Helper function to safely get string parameters
  */
 asynStatus ADTimePix::getParameterSafely(int param, std::string& value) {
-    const char* functionName = "getParameterSafely";
     asynStatus status = getStringParam(param, value);
     if (status != asynSuccess) {
         ERR_ARGS("Failed to get string parameter %d", param);
@@ -1597,7 +1567,6 @@ asynStatus ADTimePix::getParameterSafely(int param, std::string& value) {
  * Helper function to safely get double parameters
  */
 asynStatus ADTimePix::getParameterSafely(int param, double& value) {
-    const char* functionName = "getParameterSafely";
     asynStatus status = getDoubleParam(param, &value);
     if (status != asynSuccess) {
         ERR_ARGS("Failed to get double parameter %d", param);
@@ -1623,7 +1592,6 @@ bool ADTimePix::validateArrayIndex(int index, int maxSize) {
  * Configure a raw data channel
  */
 asynStatus ADTimePix::configureRawChannel(int channelIndex, json& server_j) {
-    const char* functionName = "configureRawChannel";
     
     int writeChannel, rawStream;
     std::string fileStr;
@@ -1688,15 +1656,14 @@ asynStatus ADTimePix::configureRawChannel(int channelIndex, json& server_j) {
  * Configure an image channel
  */
 asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& server_j) {
-    const char* functionName = "configureImageChannel";
-    
+
     int writeChannel, intNum;
     std::string fileStr;
-    
+
     // Determine which image channel we're configuring
     bool isPreview = (jsonPath.find("Preview") != std::string::npos);
     bool isChannel1 = (jsonPath.find("[1]") != std::string::npos);
-    
+
     // Get write parameter based on channel type
     int writeParam;
     if (!isPreview) {
@@ -1706,13 +1673,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     } else {
         writeParam = ADTimePixWritePrvImg1;
     }
-    
+
     if (getParameterSafely(writeParam, writeChannel) != asynSuccess) {
         // If parameter retrieval fails, assume channel is disabled
         writeChannel = 0;
     }
     if (writeChannel == 0) return asynSuccess; // Channel not enabled
-    
+
     // Configure base path and file pattern
     int baseParam, filePatParam;
     if (!isPreview) {
@@ -1730,9 +1697,9 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         baseParam = ADTimePixPrvImg1Base;
         filePatParam = ADTimePixPrvImg1FilePat;
     }
-    
+
     if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
-    
+
     // Use correct JSON structure based on channel type
     if (!isPreview) {
         // Main image channel
@@ -1743,7 +1710,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["Base"] = fileStr;
     }
-    
+
     if (getParameterSafely(filePatParam, fileStr) != asynSuccess) return asynError;
     
     if (!isPreview) {
@@ -1753,7 +1720,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["FilePattern"] = fileStr;
     }
-    
+
     // Configure format and mode
     int formatParam, modeParam;
     if (!isPreview) {
@@ -1771,13 +1738,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         formatParam = ADTimePixPrvImg1Format;
         modeParam = ADTimePixPrvImg1Mode;
     }
-    
+
     if (getParameterSafely(formatParam, intNum) != asynSuccess) return asynError;
     if (!validateArrayIndex(intNum, IMG_FORMATS.size())) {
         ERR_ARGS("Invalid format index: %d", intNum);
         return asynError;
     }
-    
+
     if (!isPreview) {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Image"][channelIndex]["Format"] = IMG_FORMATS[intNum];
@@ -1785,13 +1752,13 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["Format"] = IMG_FORMATS[intNum];
     }
-    
+
     if (getParameterSafely(modeParam, intNum) != asynSuccess) return asynError;
     if (!validateArrayIndex(intNum, IMG_MODES.size())) {
         ERR_ARGS("Invalid mode index: %d", intNum);
         return asynError;
     }
-    
+
     if (!isPreview) {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Image"][channelIndex]["Mode"] = IMG_MODES[intNum];
@@ -1799,7 +1766,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["Mode"] = IMG_MODES[intNum];
     }
-    
+
     // Configure integration settings
     int intSizeParam, intModeParam;
     if (!isPreview) {
@@ -1817,7 +1784,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         intSizeParam = ADTimePixPrvImg1IntSize;
         intModeParam = ADTimePixPrvImg1IntMode;
     }
-    
+
     if (getParameterSafely(intSizeParam, intNum) != asynSuccess) return asynError;
     if (validateIntegrationSize(intNum)) {
         if (!isPreview) {
@@ -1831,7 +1798,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         ERR_ARGS("Invalid integration size: %d", intNum);
         return asynError;
     }
-    
+
     if (intNum != 0 && intNum != 1) {
         if (getParameterSafely(intModeParam, intNum) != asynSuccess) return asynError;
         if (!validateArrayIndex(intNum, INTEGRATION_MODES.size())) {
@@ -1846,7 +1813,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
             server_j["Preview"]["ImageChannels"][channelIndex]["IntegrationMode"] = INTEGRATION_MODES[intNum];
         }
     }
-    
+
     // Configure stop on disk limit and queue size
     int stopOnDiskParam, queueSizeParam;
     if (!isPreview) {
@@ -1864,7 +1831,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         stopOnDiskParam = ADTimePixPrvImg1StpOnDskLim;
         queueSizeParam = ADTimePixPrvImg1QueueSize;
     }
-    
+
     if (getParameterSafely(stopOnDiskParam, intNum) != asynSuccess) return asynError;
     if (!validateArrayIndex(intNum, STOP_ON_DISK_LIMIT.size())) {
         ERR_ARGS("Invalid stop on disk limit index: %d", intNum);
@@ -1878,7 +1845,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["StopMeasurementOnDiskLimit"] = STOP_ON_DISK_LIMIT[intNum];
     }
-    
+
     if (getParameterSafely(queueSizeParam, intNum) != asynSuccess) return asynError;
     
     if (!isPreview) {
@@ -1888,7 +1855,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["QueueSize"] = intNum;
     }
-    
+
     return asynSuccess;
 }
 
@@ -1896,11 +1863,10 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
  * Configure preview settings
  */
 asynStatus ADTimePix::configurePreviewSettings(json& server_j) {
-    const char* functionName = "configurePreviewSettings";
-    
+
     double doubleNum;
     int intNum;
-    
+
     // Configure period and sampling mode
     if (getParameterSafely(ADTimePixPrvPeriod, doubleNum) != asynSuccess) return asynError;
     server_j["Preview"]["Period"] = doubleNum;
@@ -1911,7 +1877,7 @@ asynStatus ADTimePix::configurePreviewSettings(json& server_j) {
         return asynError;
     }
     server_j["Preview"]["SamplingMode"] = SAMPLING_MODES[intNum];
-    
+
     return asynSuccess;
 }
 
@@ -1919,7 +1885,6 @@ asynStatus ADTimePix::configurePreviewSettings(json& server_j) {
  * Configure histogram channel
  */
 asynStatus ADTimePix::configureHistogramChannel(json& server_j) {
-    const char* functionName = "configureHistogramChannel";
     
     int writeChannel, intNum;
     double doubleNum;
@@ -2006,7 +1971,6 @@ asynStatus ADTimePix::configureHistogramChannel(json& server_j) {
  * Send configuration to server with retry logic
  */
 asynStatus ADTimePix::sendConfiguration(const json& config) {
-    const char* functionName = "sendConfiguration";
     
     std::string server = this->serverURL + "/server/destination";
     
@@ -2037,7 +2001,6 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
  * SERVAL 4.1.x; no-op or partial if endpoint/config not present.
  */
 asynStatus ADTimePix::getMeasurementConfig() {
-    const char* functionName = "getMeasurementConfig";
     std::string url = this->serverURL + std::string("/measurement/config");
     cpr::Response r = cpr::Get(cpr::Url{url},
                                cpr::Header{{"Content-Type", "application/json"}},
@@ -2093,7 +2056,6 @@ asynStatus ADTimePix::getMeasurementConfig() {
  * Corrections/Processing are preserved.
  */
 asynStatus ADTimePix::sendMeasurementConfig() {
-    const char* functionName = "sendMeasurementConfig";
     std::string url_get = this->serverURL + std::string("/measurement/config");
     cpr::Response r = cpr::Get(cpr::Url{url_get},
                                cpr::Header{{"Content-Type", "application/json"}},
@@ -2160,7 +2122,6 @@ asynStatus ADTimePix::sendMeasurementConfig() {
  * @return: status
  */
 asynStatus ADTimePix::fileWriter(){
-    const char* functionName = "fileWriter";
     FLOW("Configuring file writer channels");
     
     // Build configuration JSON
@@ -2265,7 +2226,6 @@ asynStatus ADTimePix::fileWriter(){
  * @return: status
  */
 asynStatus ADTimePix::initCamera(){
-    const char* functionName = "initCamera";
     asynStatus status = asynSuccess;
     FLOW("Initializing detector");
     
@@ -2327,7 +2287,6 @@ asynStatus ADTimePix::initCamera(){
  * @return: status
  */
 asynStatus ADTimePix::initAcquisition(){
-    const char* functionName = "initAcquisition";
     asynStatus status = asynSuccess;
     FLOW("Initializing Acquisition");
     
@@ -2494,7 +2453,6 @@ asynStatus ADTimePix::initAcquisition(){
  * @return: status  -> error if no device, camera values not set, or execute command fails. Otherwise, success
  */
 asynStatus ADTimePix::acquireStart(){
-    static const char* functionName = "acquireStart";
     asynStatus status = asynSuccess;
 
     // Ensure any existing PrvImg TCP connection is disconnected before starting new measurement
@@ -2855,7 +2813,6 @@ asynStatus ADTimePix::acquireStart(){
 
 void ADTimePix::timePixCallback(){
 
-    const char* functionName = "timePixCallback";
 
     int numImages;
     int imageCounter;
@@ -3053,7 +3010,6 @@ void ADTimePix::timePixCallback(){
  * @return: status  -> error if no camera or command fails to execute, success otherwise
  */ 
 asynStatus ADTimePix::acquireStop(){
-    static const char* functionName = "acquireStop";
     asynStatus status;
     std::string API_Ver;
 
@@ -3271,7 +3227,6 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
     int function;
     const char *paramName;
     asynStatus status = asynSuccess;
-    const char *functionName = "writeOctet";
 
     status = parseAsynUser(pasynUser, &function, &addr, &paramName);
     if (status != asynSuccess) return status;
@@ -3306,7 +3261,7 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
     if (status)
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                   "%s:%s: status=%d, function=%d, paramName=%s, value=%s",
-                  driverName, functionName, status, function, paramName, value);
+                  driverName, __func__, status, function, paramName, value);
     else
         LOG_ARGS("function=%d, paramName=%s, value=%s", function, paramName, value);
     *nActual = nChars;
@@ -3325,7 +3280,6 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     int function = pasynUser->reason;
     int acquiring;
     int status = asynSuccess;
-    static const char* functionName = "writeInt32";
     int addr = 0;
     this->getAddress(pasynUser, &addr);
 
@@ -3720,7 +3674,6 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
     int function = pasynUser->reason;
     int acquiring;
     int status = asynSuccess;
-    static const char* functionName = "writeFloat64";
     getIntegerParam(ADAcquire, &acquiring);
 
     status = setDoubleParam(function, value);
@@ -3758,7 +3711,6 @@ asynStatus ADTimePix::writeFloat64(asynUser* pasynUser, epicsFloat64 value){
  * @return: void
  */
 void ADTimePix::report(FILE* fp, int details){
-    const char* functionName = "report";
     int height;
     int width;
     ERR("reporting to external log file");
@@ -3792,7 +3744,6 @@ void ADTimePix::prvImgWorkerThreadC(void *pPvt) {
 }
 
 void ADTimePix::prvImgWorkerThread() {
-    static const char* functionName = "prvImgWorkerThread";
     constexpr double RECONNECT_DELAY_SEC = 1.0;
     
     if (!prvImgMutex_) {
@@ -3980,7 +3931,6 @@ void ADTimePix::imgWorkerThreadC(void *pPvt) {
 }
 
 void ADTimePix::imgWorkerThread() {
-    static const char* functionName = "imgWorkerThread";
     constexpr double RECONNECT_DELAY_SEC = 1.0;
     
     if (!imgMutex_) {
@@ -4163,7 +4113,6 @@ void ADTimePix::imgWorkerThread() {
 }
 
 bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
-    const char* functionName = "processImgDataLine";
     
     // Skip any leading whitespace or binary data
     char* json_start = line_buffer;
@@ -4430,7 +4379,6 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
 }
 
 void ADTimePix::processImgFrame(const ImageData& frame_data) {
-    const char* functionName = "processImgFrame";
     epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
     // NDArrays to emit after releasing imgMutex_ (addresses 2 and 3)
@@ -4718,7 +4666,6 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
 }
 
 void ADTimePix::updateImgDisplayData() {
-    const char* functionName = "updateImgDisplayData";
     
     // Update IMAGE_DATA (running sum)
     if (imgRunningSum_) {
@@ -5245,7 +5192,6 @@ void ADTimePix::resetPrvHstAccumulation() {
 }
 
 bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size_t total_read) {
-    const char* functionName = "processPrvImgDataLine";
     
     // Skip any leading whitespace or binary data
     char* json_start = line_buffer;
@@ -5479,7 +5425,6 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
 }
 
 void ADTimePix::imgConnect() {
-    static const char* functionName = "imgConnect";
     
     if (!imgMutex_) {
         ERR("Img TCP: Mutex not initialized");
@@ -5527,7 +5472,6 @@ void ADTimePix::imgDisconnect() {
 }
 
 void ADTimePix::prvImgConnect() {
-    static const char* functionName = "prvImgConnect";
     
     if (!prvImgMutex_) {
         ERR("PrvImg TCP: Mutex not initialized");
@@ -5564,7 +5508,6 @@ void ADTimePix::prvImgConnect() {
 }
 
 void ADTimePix::prvImgDisconnect() {
-    const char* functionName = "prvImgDisconnect";
     
     epicsMutexLock(prvImgMutex_);
     prvImgConnected_ = false;
@@ -5579,7 +5522,6 @@ void ADTimePix::prvImgDisconnect() {
 }
 
 asynStatus ADTimePix::readImageFromTCP() {
-    const char* functionName = "readImageFromTCP";
     
     // Check if we should use TCP streaming
     std::string filePath;
@@ -5637,7 +5579,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
       asynFlags_(asynFlags),
       imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
-    static const char* functionName = "ADTimePix";
 
     mDetOrientationMap["UP"] =      0;
     mDetOrientationMap["RIGHT"] =   1;
@@ -6149,7 +6090,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 
 
 void ADTimePix::shutdownPortDriver() {
-    static const char* functionName = "shutdownPortDriver";
     FLOW("ADTimePix shutdownPortDriver");
 
     // Stop callback thread first so it cannot touch driver state during teardown
@@ -6211,7 +6151,6 @@ void ADTimePix::shutdownPortDriver() {
 }
 
 ADTimePix::~ADTimePix(){
-    static const char* functionName = "~ADTimePix";
     FLOW("ADTimePix driver exiting");
 
     // Stop callback thread first so it cannot touch driver state during teardown (idempotent if shutdownPortDriver already ran)
