@@ -446,7 +446,7 @@
       <x>10</x>
       <y>1202</y>
       <width>1052</width>
-      <height>120</height>
+      <height>130</height>
       <widget type="label" version="2.0.0">
         <name>InfoDisplayLabel</name>
         <text>Histogram Information</text>
@@ -469,7 +469,7 @@
         <x>20</x>
         <y>40</y>
         <width>970</width>
-        <height>40</height>
+        <height>60</height>
         <foreground_color>
           <color red="100" green="100" blue="100">
           </color>
