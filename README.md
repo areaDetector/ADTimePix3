@@ -20,6 +20,15 @@ Notes:
 * **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 is currently recommended** for 4.x. Serval 4.1.5-rc2 requires the same version of the TimePix3 Emulator (4.1.5-rc2). Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
 * The driver has been developed using the TimePix3 Emulator and real detectors (quad-chip and single-chip).
 
+Driver logging (asyn)
+---------------------
+
+Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers in `tpx3App/src/ADTimePix.cpp` use **`ADTPX3_FUNC`** in the log prefix: on **GCC/Clang** it defaults to **`__PRETTY_FUNCTION__`** (signature-rich); on other compilers it uses **`__func__`**.
+
+* **Shorter prefixes**: define **`ADTPX3_LOG_SHORT`** when building the driver library so prefixes use **`__func__` only** (see commented `USR_CPPFLAGS` line in `tpx3App/src/Makefile`).
+* **`WARN` visibility**: by default **`WARN` / `WARN_ARGS`** use **`ASYN_TRACE_WARNING`**. The port’s asyn **trace mask** must include the **warning** bit for those lines to appear. If your site only enables **ERROR**-level trace and you need the old behavior, build with **`ADTPX3_WARN_AS_ERROR`** so `WARN*` is emitted at **`ASYN_TRACE_ERROR`** (commented example in the same `Makefile`).
+* **Release detail**: see **Driver logging (asyn)** under [RELEASE.md](RELEASE.md) (upcoming R1-6-2 section).
+
 TCP Image Streaming
 --------------------
 
