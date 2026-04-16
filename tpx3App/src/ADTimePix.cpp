@@ -40,7 +40,7 @@
 
 #define ERR_ARGS(fmt, ...)                                                              \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
-              __func__, __VA_ARGS__)
+              __func__, ##__VA_ARGS__)
 
 // Warning message formatters
 #define WARN(msg) \
@@ -48,7 +48,7 @@
 
 #define WARN_ARGS(fmt, ...)                                                            \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
-              __func__, __VA_ARGS__)
+              __func__, ##__VA_ARGS__)
 
 // Log message formatters
 #define LOG(msg) \
@@ -56,14 +56,14 @@
 
 #define LOG_ARGS(fmt, ...)                                                                       \
     asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, __func__, \
-              __VA_ARGS__)
+              ##__VA_ARGS__)
 
 // Flow message formatters
 #define FLOW(msg) \
     asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, __func__, msg)
 
 #define FLOW_ARGS(fmt,...) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, __func__, __VA_ARGS__)
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, __func__, ##__VA_ARGS__)
 
 #define delim "/"
 
