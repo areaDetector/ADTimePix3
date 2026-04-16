@@ -43,6 +43,14 @@
 #  define ADTPX3_FUNC __func__
 #endif
 
+// WARN* asyn trace: default ASYN_TRACE_WARNING. Define ADTPX3_WARN_AS_ERROR (see Makefile)
+// so WARN* uses ASYN_TRACE_ERROR and shows up when only ERROR-level trace is enabled.
+#if defined(ADTPX3_WARN_AS_ERROR)
+#  define ADTPX3_WARN_TRACE ASYN_TRACE_ERROR
+#else
+#  define ADTPX3_WARN_TRACE ASYN_TRACE_WARNING
+#endif
+
 // Error message formatters
 #define ERR(msg)                                                                                 \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, ADTPX3_FUNC, \
@@ -54,10 +62,10 @@
 
 // Warning message formatters
 #define WARN(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_WARNING, "WARN | %s::%s: %s\n", driverName, ADTPX3_FUNC, msg)
+    asynPrint(pasynUserSelf, ADTPX3_WARN_TRACE, "WARN | %s::%s: %s\n", driverName, ADTPX3_FUNC, msg)
 
 #define WARN_ARGS(fmt, ...)                                                            \
-    asynPrint(pasynUserSelf, ASYN_TRACE_WARNING, "WARN | %s::%s: " fmt "\n", driverName, \
+    asynPrint(pasynUserSelf, ADTPX3_WARN_TRACE, "WARN | %s::%s: " fmt "\n", driverName, \
               ADTPX3_FUNC, ##__VA_ARGS__)
 
 // Log message formatters

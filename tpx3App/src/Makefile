@@ -10,6 +10,8 @@ endif
 USR_CPPFLAGS += -std=c++11
 # Shorter asyn log prefixes (__func__ only; avoids long __PRETTY_FUNCTION__ on GCC/Clang):
 # USR_CPPFLAGS += -DADTPX3_LOG_SHORT
+# Route WARN / WARN_ARGS through ASYN_TRACE_ERROR (visible when only ERROR trace is on):
+# USR_CPPFLAGS += -DADTPX3_WARN_AS_ERROR
 
 INC += ADTimePix.h
 
