@@ -8,6 +8,8 @@ USR_CPPFLAGS += -D__X64
 endif
 
 USR_CPPFLAGS += -std=c++11
+# Shorter asyn log prefixes (__func__ only; avoids long __PRETTY_FUNCTION__ on GCC/Clang):
+# USR_CPPFLAGS += -DADTPX3_LOG_SHORT
 
 INC += ADTimePix.h
 

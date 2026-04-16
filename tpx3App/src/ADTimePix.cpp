@@ -33,8 +33,11 @@
 // Area Detector include
 #include "ADTimePix.h"
 
-// Function name for log prefixes: GCC/Clang get signature-qualified context; else ISO __func__.
-#if defined(__GNUC__) || defined(__clang__)
+// Log context: GCC/Clang default to __PRETTY_FUNCTION__ (class + signature). Define
+// ADTPX3_LOG_SHORT (e.g. USR_CPPFLAGS += -DADTPX3_LOG_SHORT) for short __func__ only.
+#if defined(ADTPX3_LOG_SHORT)
+#  define ADTPX3_FUNC __func__
+#elif defined(__GNUC__) || defined(__clang__)
 #  define ADTPX3_FUNC __PRETTY_FUNCTION__
 #else
 #  define ADTPX3_FUNC __func__
