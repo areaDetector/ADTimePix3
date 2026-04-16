@@ -33,37 +33,44 @@
 // Area Detector include
 #include "ADTimePix.h"
 
+// Function name for log prefixes: GCC/Clang get signature-qualified context; else ISO __func__.
+#if defined(__GNUC__) || defined(__clang__)
+#  define ADTPX3_FUNC __PRETTY_FUNCTION__
+#else
+#  define ADTPX3_FUNC __func__
+#endif
+
 // Error message formatters
 #define ERR(msg)                                                                                 \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, __func__, \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, ADTPX3_FUNC, \
               msg)
 
 #define ERR_ARGS(fmt, ...)                                                              \
     asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
-              __func__, ##__VA_ARGS__)
+              ADTPX3_FUNC, ##__VA_ARGS__)
 
 // Warning message formatters
 #define WARN(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, __func__, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACE_WARNING, "WARN | %s::%s: %s\n", driverName, ADTPX3_FUNC, msg)
 
 #define WARN_ARGS(fmt, ...)                                                            \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
-              __func__, ##__VA_ARGS__)
+    asynPrint(pasynUserSelf, ASYN_TRACE_WARNING, "WARN | %s::%s: " fmt "\n", driverName, \
+              ADTPX3_FUNC, ##__VA_ARGS__)
 
 // Log message formatters
 #define LOG(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, __func__, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, ADTPX3_FUNC, msg)
 
 #define LOG_ARGS(fmt, ...)                                                                       \
-    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, __func__, \
+    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, ADTPX3_FUNC, \
               ##__VA_ARGS__)
 
 // Flow message formatters
 #define FLOW(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, __func__, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, ADTPX3_FUNC, msg)
 
 #define FLOW_ARGS(fmt,...) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, __func__, ##__VA_ARGS__)
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, ADTPX3_FUNC, ##__VA_ARGS__)
 
 #define delim "/"
 
@@ -3261,7 +3268,7 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
     if (status)
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                   "%s:%s: status=%d, function=%d, paramName=%s, value=%s",
-                  driverName, __func__, status, function, paramName, value);
+                  driverName, ADTPX3_FUNC, status, function, paramName, value);
     else
         LOG_ARGS("function=%d, paramName=%s, value=%s", function, paramName, value);
     *nActual = nChars;
