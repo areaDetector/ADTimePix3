@@ -17,3 +17,6 @@ mask.bpc
 
 # Documentation files
 documentation/PRVIMG_METADATA_RECOMMENDATIONS.md
+# pixi environments
+.pixi/*
+!.pixi/config.toml

@@ -1,0 +1,136 @@
+name: CI
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@8ca4608ef7f4daeb54f5205b20d0b7cb42f11143  # v0.8.14
+        with:
+          pixi-version: v0.56.0
+          cache: false
+          frozen: true
+
+      - name: Run linting checks
+        run: pixi run pre-commit run --all-files
+
+  build-and-test:
+    name: Build and Test ADTimePix3 on EL${{ matrix.rhel_version }}
+
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rhel_version: [8, 9, 10]
+    container:
+      image: ghcr.io/nsls2/epics-alma${{ matrix.rhel_version }}:latest
+      options: --user root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@8ca4608ef7f4daeb54f5205b20d0b7cb42f11143  # v0.8.14
+        with:
+          pixi-version: v0.56.0
+          cache: false
+          frozen: true
+
+      - name: Create CONFIG_SITE.local
+        run: |
+          cat > configure/CONFIG_SITE.local << EOF
+          # CONFIG_SITE.local for GitHub Actions CI
+          CHECK_RELEASE=NO
+          BUILD_IOCS=YES
+          BUILD_TESTS=YES
+
+          WITH_BOOST=NO
+          WITH_PVA=YES
+          WITH_QSRV=YES
+          WITH_BLOSC=YES
+          BLOSC_EXTERNAL=YES
+          WITH_BITSHUFFLE=NO
+          WITH_GRAPHICSMAGICK=NO
+          WITH_HDF5=YES
+          HDF5_EXTERNAL=YES
+          WITH_JSON=YES
+          WITH_JPEG=YES
+          JPEG_EXTERNAL=YES
+          WITH_NETCDF=NO
+          WITH_NEXUS=NO
+          WITH_OPENCV=NO
+          WITH_SZIP=YES
+          SZIP_EXTERNAL=YES
+          WITH_TIFF=YES
+          TIFF_EXTERNAL=YES
+          XML2_EXTERNAL=YES
+          WITH_ZLIB=YES
+          ZLIB_EXTERNAL=YES
+
+          # Enable coverage flags for unit tests
+          USR_CXX_FLAGS_Linux += --coverage
+          USR_LD_FLAGS_Linux += --coverage
+
+          EOF
+
+          echo "CONFIG_SITE.local created:"
+          cat configure/CONFIG_SITE.local
+
+      - name: Create RELEASE.local
+        run: |
+          cat > configure/RELEASE.local << EOF
+          # RELEASE.local for GitHub Actions CI
+          ADSUPPORT=/usr/lib64/epics
+          ADCORE=/usr/lib64/epics
+          ASYN=/usr/lib64/epics
+          AUTOSAVE=/usr/lib64/epics
+          BUSY=/usr/lib64/epics
+          CALC=/usr/lib64/epics
+          DEVIOCSTATS=/usr/lib64/epics
+          SSCAN=/usr/lib64/epics
+          STREAM=/usr/lib64/epics
+          SNCSEQ=/usr/lib64/epics
+          RECCASTER=/usr/lib64/epics
+
+          # EPICS_BASE should always be last
+          EPICS_BASE=/usr/lib64/epics
+
+          EOF
+
+          echo "RELEASE.local created:"
+          cat configure/RELEASE.local
+
+      - name: Install required system packages
+        run: |
+          dnf -y install curl-devel zeromq-devel zlib-devel blosc-devel hdf5-devel libtiff-devel libjpeg-devel libaec-devel libxml2-devel
+
+      - name: Build ADTimePix3 driver and unit tests
+        run: |
+          make -j4
+
+      # TODO: add coverage reporting to CI once it is working & codecov enabled
+      # - name: Get coverage info
+      #   run: |
+      #     pixi run get-coverage-info
+
+      # - name: Show coverage summary
+      #   run: |
+      #     pixi run lcov -l coverage.info
