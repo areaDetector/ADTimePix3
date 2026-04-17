@@ -653,37 +653,44 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         printf("Status code: %li\n", r.status_code);
         printf("Text:\n %s\n", r.text.c_str());
 
-        json dashboard_j = json::parse(r.text.c_str());
-    //    printf("Dashboard text JSON: %s\n", dashboard_j.dump(3,' ', true).c_str());
-
-        // strip double quote from beginning and end of string
-        std::string API_Ver, API_TS;
-        API_Ver = strip_quotes(dashboard_j["Server"]["SoftwareVersion"].dump()).c_str();
-        API_TS = strip_quotes(dashboard_j["Server"]["SoftwareTimestamp"].dump()).c_str();
-
-        //sets Serval Firmware Version, manufacturer, TimeStamp PV
-        setStringParam(ADSDKVersion, API_Ver.c_str());
-        setStringParam(ADManufacturer, "ASI");
-        setStringParam(ADTimePixFWTimeStamp, API_TS.c_str());
-
-        // printf("After Serval Version!\n");
-
-        // Is Detector connected?
-        std::string Detector, DetType;
-        Detector = dashboard_j["Detector"].dump().c_str();
-
-        if (strcmp(Detector.c_str(), "null")) {
-            DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump()).c_str();
-            setStringParam(ADTimePixDetType, DetType.c_str());
-            setStringParam(ADModel, DetType.c_str());
-            setIntegerParam(ADTimePixDetConnected, 1);  // Detector present
-            printf("Detector CONNECTED, Detector=%s, %d\n", Detector.c_str(), strcmp(Detector.c_str(), "null"));
-        }
-        else {
-            printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
-            setStringParam(ADTimePixDetType, "null");
-            setIntegerParam(ADTimePixDetConnected, 0);  // No detector
+        if (r.status_code != 200) {
+            ERR_ARGS("Dashboard GET failed HTTP %ld", (long)r.status_code);
+            setIntegerParam(ADTimePixDetConnected, 0);
             connected = false;
+        } else {
+            try {
+                json dashboard_j = json::parse(r.text.c_str());
+
+                // strip double quote from beginning and end of string
+                std::string API_Ver, API_TS;
+                API_Ver = strip_quotes(dashboard_j["Server"]["SoftwareVersion"].dump()).c_str();
+                API_TS = strip_quotes(dashboard_j["Server"]["SoftwareTimestamp"].dump()).c_str();
+
+                setStringParam(ADSDKVersion, API_Ver.c_str());
+                setStringParam(ADManufacturer, "ASI");
+                setStringParam(ADTimePixFWTimeStamp, API_TS.c_str());
+
+                std::string Detector, DetType;
+                Detector = dashboard_j["Detector"].dump().c_str();
+
+                if (strcmp(Detector.c_str(), "null")) {
+                    DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump()).c_str();
+                    setStringParam(ADTimePixDetType, DetType.c_str());
+                    setStringParam(ADModel, DetType.c_str());
+                    setIntegerParam(ADTimePixDetConnected, 1);
+                    printf("Detector CONNECTED, Detector=%s, %d\n", Detector.c_str(),
+                           strcmp(Detector.c_str(), "null"));
+                } else {
+                    printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
+                    setStringParam(ADTimePixDetType, "null");
+                    setIntegerParam(ADTimePixDetConnected, 0);
+                    connected = false;
+                }
+            } catch (const std::exception& e) {
+                ERR_ARGS("Dashboard JSON parse failed: %s", e.what());
+                setIntegerParam(ADTimePixDetConnected, 0);
+                connected = false;
+            }
         }
     } else {
         setIntegerParam(ADTimePixServalConnected,0);
@@ -851,9 +858,19 @@ asynStatus ADTimePix::getHealth(){
     // printf("Health, %s\n", health.c_str());
     cpr::Response r = cpr::Get(cpr::Url{health},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
 
-    json health_j = json::parse(r.text.c_str());
+    if (r.status_code != 200) {
+        ERR_ARGS("Health GET failed HTTP %ld", (long)r.status_code);
+        return asynError;
+    }
+    json health_j;
+    try {
+        health_j = json::parse(r.text.c_str());
+    } catch (const std::exception& e) {
+        ERR_ARGS("Health JSON parse failed: %s", e.what());
+        return asynError;
+    }
     // printf("Text JSON: %s\n", health_j.dump(3,' ', true).c_str());
     // printf("%lf\n", health_j["ChipTemperatures"].get<double>());
     // printf("Chip Temperatures %s, %s\n", health_j["ChipTemperatures"].dump().c_str(), health_j["VDD"][1].dump().c_str());
@@ -991,10 +1008,18 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
 
     if (r.status_code != 200) {
         std::cerr << "Request failed with status code: " << r.status_code << std::endl;
-        status = asynError;
+        ERR_ARGS("writeDac GET chip %d dacs failed HTTP %ld (body is not JSON)", chip,
+                 (long)r.status_code);
+        return asynError;
     }
 
-    json dacsRead_j = json::parse(r.text.c_str());
+    json dacsRead_j;
+    try {
+        dacsRead_j = json::parse(r.text.c_str());
+    } catch (const std::exception& e) {
+        ERR_ARGS("writeDac GET: JSON parse failed: %s", e.what());
+        return asynError;
+    }
     dacsRead_j[dac] = value;
     // printf("dacs=%s\n",dacsRead_j.dump(3,' ', true).c_str());
     std::string json_data = dacsRead_j.dump(3,' ', true).c_str();
@@ -2863,7 +2888,26 @@ void ADTimePix::timePixCallback(){
     session.SetOption(parameters);
     cpr::Response r = session.Get();
 
-    json measurement_j = json::parse(r.text.c_str());
+    json measurement_j = json::object();
+    if (r.status_code != 200) {
+        ERR_ARGS("timePixCallback: GET /measurement failed HTTP %ld (SERVAL/detector unavailable?)",
+                 (long)r.status_code);
+        setStringParam(ADStatusMessage, "Measurement HTTP error; acquisition stopped");
+        setIntegerParam(ADStatus, ADStatusIdle);
+        this->acquiring = false;
+        callParamCallbacks();
+        return;
+    }
+    try {
+        measurement_j = json::parse(r.text.c_str());
+    } catch (const std::exception& e) {
+        ERR_ARGS("timePixCallback: measurement JSON parse failed: %s", e.what());
+        setStringParam(ADStatusMessage, "Invalid measurement JSON; acquisition stopped");
+        setIntegerParam(ADStatus, ADStatusIdle);
+        this->acquiring = false;
+        callParamCallbacks();
+        return;
+    }
 
     // Safely extract measurement info with null checks
     if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
@@ -2919,9 +2963,19 @@ void ADTimePix::timePixCallback(){
         // Wait for new frame
         while(frameCounter == new_frame_num){
             r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplication" of sessions
-                        
-            measurement_j = json::parse(r.text.c_str());
-            
+
+            if (r.status_code != 200) {
+                WARN_ARGS("timePixCallback: poll /measurement HTTP %ld", (long)r.status_code);
+                break;
+            }
+            try {
+                measurement_j = json::parse(r.text.c_str());
+            } catch (const std::exception& e) {
+                ERR_ARGS("timePixCallback: poll JSON parse failed: %s", e.what());
+                this->acquiring = false;
+                break;
+            }
+
             // Safely extract measurement info with null checks
             if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
                 if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
