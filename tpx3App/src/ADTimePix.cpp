@@ -834,12 +834,23 @@ asynStatus ADTimePix::getDashboard(){
                 setIntegerParam(ADTimePixDetConnected, 0);
                 setStringParam(ADTimePixDetType, "null");
             }
-            // DiskSpace is an empty array until raw file writing selected, and acquisition starts
+            // DiskSpace is an empty array until raw file writing selected, and acquisition starts.
+            // SERVAL may omit or null individual fields (e.g. WriteSpeed) — avoid .get on null (json type_error.302).
             if (!dashboard_j["Server"]["DiskSpace"].empty()) {
-                setInteger64Param(ADTimePixFreeSpace,   dashboard_j["Server"]["DiskSpace"][0]["FreeSpace"].get<long>());
-                setDoubleParam(ADTimePixWriteSpeed,     dashboard_j["Server"]["DiskSpace"][0]["WriteSpeed"].get<double>());
-                setInteger64Param(ADTimePixLowerLimit,  dashboard_j["Server"]["DiskSpace"][0]["LowerLimit"].get<long>());
-                setIntegerParam(ADTimePixLLimReached,   int(dashboard_j["Server"]["DiskSpace"][0]["DiskLimitReached"]));   // bool->int true->1, false->0
+                const json& ds0 = dashboard_j["Server"]["DiskSpace"][0];
+                if (ds0.contains("FreeSpace") && ds0["FreeSpace"].is_number_integer())
+                    setInteger64Param(ADTimePixFreeSpace, ds0["FreeSpace"].get<long>());
+                if (ds0.contains("WriteSpeed") && ds0["WriteSpeed"].is_number())
+                    setDoubleParam(ADTimePixWriteSpeed, ds0["WriteSpeed"].get<double>());
+                if (ds0.contains("LowerLimit") && ds0["LowerLimit"].is_number_integer())
+                    setInteger64Param(ADTimePixLowerLimit, ds0["LowerLimit"].get<long>());
+                if (ds0.contains("DiskLimitReached") && !ds0["DiskLimitReached"].is_null()) {
+                    const json& dl = ds0["DiskLimitReached"];
+                    if (dl.is_boolean())
+                        setIntegerParam(ADTimePixLLimReached, dl.get<bool>() ? 1 : 0);
+                    else if (dl.is_number_integer())
+                        setIntegerParam(ADTimePixLLimReached, dl.get<int>());
+                }
             }
         } catch (...) {
             setIntegerParam(ADTimePixDetConnected, 0);
@@ -879,11 +890,12 @@ asynStatus ADTimePix::getHealth(){
     // printf("%lf\n", health_j["ChipTemperatures"].get<double>());
     // printf("Chip Temperatures %s, %s\n", health_j["ChipTemperatures"].dump().c_str(), health_j["VDD"][1].dump().c_str());
     
-    setDoubleParam(ADTimePixLocalTemp, health_j["LocalTemperature"].get<double>());
-    setDoubleParam(ADTimePixFPGATemp, health_j["FPGATemperature"].get<double>());
-    setDoubleParam(ADTimePixFan1Speed, health_j["Fan1Speed"].get<double>());
-    setDoubleParam(ADTimePixFan2Speed, health_j["Fan2Speed"].get<double>());
-    setDoubleParam(ADTimePixBiasVoltage, health_j["BiasVoltage"].get<double>());
+    auto hjD = [](const json& j, double def) -> double { return j.is_number() ? j.get<double>() : def; };
+    setDoubleParam(ADTimePixLocalTemp, hjD(health_j["LocalTemperature"], 0.0));
+    setDoubleParam(ADTimePixFPGATemp, hjD(health_j["FPGATemperature"], 0.0));
+    setDoubleParam(ADTimePixFan1Speed, hjD(health_j["Fan1Speed"], 0.0));
+    setDoubleParam(ADTimePixFan2Speed, hjD(health_j["Fan2Speed"], 0.0));
+    setDoubleParam(ADTimePixBiasVoltage, hjD(health_j["BiasVoltage"], 0.0));
 
     setStringParam(ADTimePixChipTemperature, health_j["ChipTemperatures"].dump().c_str());
     setStringParam(ADTimePixVDD, health_j["VDD"].dump().c_str());
@@ -1286,41 +1298,56 @@ asynStatus ADTimePix::getDetector(){
 
         // printf("Number of chips=%d\n", detector_j["Info"]["NumberOfChips"].get<int>());
 
-        // Detector health PVs
+        auto jsonDbl = [](const json& j, double def) -> double {
+            return j.is_number() ? j.get<double>() : def;
+        };
+        auto jsonInt = [](const json& j, int def) -> int {
+            if (j.is_number_integer()) return j.get<int>();
+            if (j.is_number_unsigned()) return static_cast<int>(j.get<unsigned>());
+            return def;
+        };
+
+        // Detector health PVs — SERVAL may send null for unavailable sensors (e.g. BiasVoltage when BIAS ADC offline).
         if (API_Ver[0] == '4') {    // Serval version 4
 //            printf("Serval version 4, %s,%s\n", API_Ver.c_str(), detector_j.dump(3,' ', true).c_str());
-            setDoubleParam(ADTimePixLocalTemp, detector_j["Health"][0]["LocalTemperature"].get<double>());
-            setDoubleParam(ADTimePixFPGATemp, detector_j["Health"][0]["FPGATemperature"].get<double>());
-            setDoubleParam(ADTimePixFan1Speed, detector_j["Health"][0]["Fan1Speed"].get<double>());
-            setDoubleParam(ADTimePixFan2Speed, detector_j["Health"][0]["Fan2Speed"].get<double>());
-            setDoubleParam(ADTimePixBiasVoltage, detector_j["Health"][0]["BiasVoltage"].get<double>());
-            setIntegerParam(ADTimePixHumidity,   detector_j["Health"][0]["Humidity"].get<int>());
-            setStringParam(ADTimePixChipTemperature, detector_j["Health"][0]["ChipTemperatures"].dump().c_str());
-            setStringParam(ADTimePixVDD, detector_j["Health"][0]["VDD"].dump().c_str());
-            setStringParam(ADTimePixAVDD, detector_j["Health"][0]["AVDD"].dump().c_str());
+            const json& H0 = detector_j["Health"][0];
+            setDoubleParam(ADTimePixLocalTemp, jsonDbl(H0["LocalTemperature"], 0.0));
+            setDoubleParam(ADTimePixFPGATemp, jsonDbl(H0["FPGATemperature"], 0.0));
+            setDoubleParam(ADTimePixFan1Speed, jsonDbl(H0["Fan1Speed"], 0.0));
+            setDoubleParam(ADTimePixFan2Speed, jsonDbl(H0["Fan2Speed"], 0.0));
+            setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H0["BiasVoltage"], 0.0));
+            setIntegerParam(ADTimePixHumidity, jsonInt(H0["Humidity"], 0));
+            setStringParam(ADTimePixChipTemperature, H0["ChipTemperatures"].dump().c_str());
+            setStringParam(ADTimePixVDD, H0["VDD"].dump().c_str());
+            setStringParam(ADTimePixAVDD, H0["AVDD"].dump().c_str());
 
             // VDD, AVDD voltages
-            for (int i = 0; i < 3; i++){
-                setDoubleParam(i, ADTimePixChipN_VDD,        detector_j["Health"][0]["VDD"][i].get<double>());
-                setDoubleParam(i, ADTimePixChipN_AVDD,       detector_j["Health"][0]["AVDD"][i].get<double>());
+            for (int i = 0; i < 3; i++) {
+                if (H0["VDD"].is_array() && (size_t)i < H0["VDD"].size() && H0["VDD"][(size_t)i].is_number())
+                    setDoubleParam(i, ADTimePixChipN_VDD, H0["VDD"][(size_t)i].get<double>());
+                if (H0["AVDD"].is_array() && (size_t)i < H0["AVDD"].size() && H0["AVDD"][(size_t)i].is_number())
+                    setDoubleParam(i, ADTimePixChipN_AVDD, H0["AVDD"][(size_t)i].get<double>());
             }
 
         }
         else {  // Serval version 3 or 2
-            setDoubleParam(ADTimePixLocalTemp, detector_j["Health"]["LocalTemperature"].get<double>());
-            setDoubleParam(ADTimePixFPGATemp, detector_j["Health"]["FPGATemperature"].get<double>());
-            setDoubleParam(ADTimePixFan1Speed, detector_j["Health"]["Fan1Speed"].get<double>());
-            setDoubleParam(ADTimePixFan2Speed, detector_j["Health"]["Fan2Speed"].get<double>());
-            setDoubleParam(ADTimePixBiasVoltage, detector_j["Health"]["BiasVoltage"].get<double>());
-            setIntegerParam(ADTimePixHumidity,   detector_j["Health"]["Humidity"].get<int>());
-            setStringParam(ADTimePixChipTemperature, detector_j["Health"]["ChipTemperatures"].dump().c_str());
-            setStringParam(ADTimePixVDD, detector_j["Health"]["VDD"].dump().c_str());
-            setStringParam(ADTimePixAVDD, detector_j["Health"]["AVDD"].dump().c_str());
+            const json& H = detector_j["Health"];
+            setDoubleParam(ADTimePixLocalTemp, jsonDbl(H["LocalTemperature"], 0.0));
+            setDoubleParam(ADTimePixFPGATemp, jsonDbl(H["FPGATemperature"], 0.0));
+            setDoubleParam(ADTimePixFan1Speed, jsonDbl(H["Fan1Speed"], 0.0));
+            setDoubleParam(ADTimePixFan2Speed, jsonDbl(H["Fan2Speed"], 0.0));
+            setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H["BiasVoltage"], 0.0));
+            setIntegerParam(ADTimePixHumidity, jsonInt(H["Humidity"], 0));
+            setStringParam(ADTimePixChipTemperature, H["ChipTemperatures"].dump().c_str());
+            setStringParam(ADTimePixVDD, H["VDD"].dump().c_str());
+            setStringParam(ADTimePixAVDD, H["AVDD"].dump().c_str());
 
             // VDD, AVDD voltages
-            for (int i = 0; i < 3; i++){
-                setDoubleParam(i, ADTimePixChipN_VDD,        detector_j["Health"]["VDD"][i].get<double>());
-                setDoubleParam(i, ADTimePixChipN_AVDD,       detector_j["Health"]["AVDD"][i].get<double>());
+            for (int i = 0; i < 3; i++) {
+                if (H["VDD"].is_array() && (size_t)i < H["VDD"].size() && H["VDD"][(size_t)i].is_number())
+                    setDoubleParam(i, ADTimePixChipN_VDD, H["VDD"][(size_t)i].get<double>());
+                if (H["AVDD"].is_array() && (size_t)i < H["AVDD"].size() && H["AVDD"][(size_t)i].is_number())
+                    setDoubleParam(i, ADTimePixChipN_AVDD, H["AVDD"][(size_t)i].get<double>());
             }
         }
 
