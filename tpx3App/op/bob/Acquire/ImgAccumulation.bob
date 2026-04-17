@@ -3,8 +3,8 @@
   <name>ImgAccumulation</name>
   <macros>
     <R>cam1:Img</R>
-    <DETECTOR_WIDTH>512</DETECTOR_WIDTH>
-    <DETECTOR_HEIGHT>512</DETECTOR_HEIGHT>
+    <!-- Detector record prefix for PixCount_RBV (same as ADTimePix3.template); not the Img channel suffix. -->
+    <Cam>cam1:</Cam>
   </macros>
   <width>2135</width>
   <height>1455</height>
@@ -12,9 +12,26 @@
     <name>TPX3_Image_Control</name>
     <width>1400</width>
     <height>710</height>
-    <widget type="label" version="2.0.0">
-      <name>Title</name>
-      <text>ADTimePix3 Image Accumulation Control Panel</text>
+      <widget type="label" version="2.0.0">
+        <name>RasterHint</name>
+        <text>Image raster: 256×256 vs 512×512 is selected automatically from $(P)$(Cam)PixCount_RBV (65536 vs 262144), same as Mask.bob.</text>
+        <x>50</x>
+        <y>62</y>
+        <width>1200</width>
+        <height>22</height>
+        <font>
+          <font family="Liberation Sans" style="REGULAR" size="12.0">
+          </font>
+        </font>
+        <foreground_color>
+          <color red="80" green="80" blue="80">
+          </color>
+        </foreground_color>
+        <transparent>true</transparent>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>Title</name>
+        <text>ADTimePix3 Image Accumulation Control Panel</text>
       <x>50</x>
       <y>20</y>
       <width>1300</width>
@@ -563,12 +580,13 @@
     </widget>
   </widget>
   <widget type="image" version="2.0.0">
-    <name>Image_Accumulated</name>
+    <name>Image_Accumulated_512</name>
     <pv_name>$(P)$(R)ImageData</pv_name>
     <x>680</x>
     <y>750</y>
     <width>700</width>
     <height>700</height>
+    <visible>false</visible>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
@@ -597,16 +615,72 @@
         </font>
       </scale_font>
     </y_axis>
+    <rules>
+      <rule name="vis512" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <data_width>512</data_width>
     <data_height>512</data_height>
   </widget>
   <widget type="image" version="2.0.0">
-    <name>Image_Frame</name>
+    <name>Image_Accumulated_256</name>
+    <pv_name>$(P)$(R)ImageData</pv_name>
+    <x>680</x>
+    <y>750</y>
+    <width>700</width>
+    <height>700</height>
+    <visible>false</visible>
+    <x_axis>
+      <visible>true</visible>
+      <title>X (Width)</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y (Height)</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <rules>
+      <rule name="vis256" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <data_width>256</data_width>
+    <data_height>256</data_height>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_Frame_512</name>
     <pv_name>$(P)$(R)ImageFrame</pv_name>
     <x>1420</x>
     <y>750</y>
     <width>700</width>
     <height>700</height>
+    <visible>false</visible>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
@@ -635,16 +709,72 @@
         </font>
       </scale_font>
     </y_axis>
+    <rules>
+      <rule name="vis512" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <data_width>512</data_width>
     <data_height>512</data_height>
   </widget>
   <widget type="image" version="2.0.0">
-    <name>Image_Sum_N_Frames</name>
+    <name>Image_Frame_256</name>
+    <pv_name>$(P)$(R)ImageFrame</pv_name>
+    <x>1420</x>
+    <y>750</y>
+    <width>700</width>
+    <height>700</height>
+    <visible>false</visible>
+    <x_axis>
+      <visible>true</visible>
+      <title>X (Width)</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y (Height)</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <rules>
+      <rule name="vis256" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <data_width>256</data_width>
+    <data_height>256</data_height>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_Sum_N_Frames_512</name>
     <pv_name>$(P)$(R)ImageSumNFrames</pv_name>
     <x>1420</x>
     <y>10</y>
     <width>700</width>
     <height>700</height>
+    <visible>false</visible>
     <x_axis>
       <visible>true</visible>
       <title>X (Width)</title>
@@ -673,7 +803,62 @@
         </font>
       </scale_font>
     </y_axis>
+    <rules>
+      <rule name="vis512" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <data_width>512</data_width>
     <data_height>512</data_height>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_Sum_N_Frames_256</name>
+    <pv_name>$(P)$(R)ImageSumNFrames</pv_name>
+    <x>1420</x>
+    <y>10</y>
+    <width>700</width>
+    <height>700</height>
+    <visible>false</visible>
+    <x_axis>
+      <visible>true</visible>
+      <title>X (Width)</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y (Height)</title>
+      <minimum>0.0</minimum>
+      <maximum>256.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <rules>
+      <rule name="vis256" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <data_width>256</data_width>
+    <data_height>256</data_height>
   </widget>
 </display>
