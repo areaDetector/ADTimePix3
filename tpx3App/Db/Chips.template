@@ -156,7 +156,7 @@ record(longin, "$(P)$(R)$(C)_PixelConfigMatchBPC_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_MATCH_BPC")
   field(SCAN, "I/O Intr")
-  field(DESC, "-1 err 0 mismatch 1 match 2 no BPC 3 size")
+  field(DESC, "-1 err 0!= 1= 2 noBPC 3sz")
 }
 record(int64in, "$(P)$(R)$(C)_PixelConfigMismatchBytes_RBV"){
   field(DTYP, "asynInt64")
@@ -164,10 +164,12 @@ record(int64in, "$(P)$(R)$(C)_PixelConfigMismatchBytes_RBV"){
   field(SCAN, "I/O Intr")
   field(DESC, "Differing bytes if mismatch")
 }
-record(stringin, "$(P)$(R)$(C)_PixelConfigStatus_RBV"){
+# Octet status string (may exceed stringin 40-char VAL); use CHAR waveform
+record(waveform, "$(P)$(R)$(C)_PixelConfigStatus_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_CONFIG_STATUS")
+  field(FTVL, "CHAR")
+  field(NELM, "256")
   field(SCAN, "I/O Intr")
-  field(SIZV, "256")
   field(DESC, "PixelConfig refresh status")
 }
