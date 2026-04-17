@@ -406,6 +406,8 @@ The ADTimePix3 driver provides a comprehensive, production-ready interface for T
 Troubleshooting
 ---------------
 
+**SERVAL HTTP errors and IOC stability (R1-6-2+)**: If the detector is not connected or SERVAL returns an error status (e.g. HTTP **409**), the response body may be **plain text** (not JSON). Older builds could crash the IOC with a **`json::parse_error`** / **`SIGABRT`** after a line like **`Request failed with status code: 409`**. Current code treats bad status or non-JSON bodies as driver errors and **does not abort** the IOC; check **`ADStatusMessage`**, **`TPX3_HTTP_CODE`**, SERVAL logs, and wiring. Normal acquisition still requires a healthy detector and SERVAL.
+
 **Known Warnings (Harmless)**:
 
 * **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`** (or parameter 52, 50, etc.): **Fixed in R1-5.** The message means asyn was asked for parameter 51 (ARRAY_DATA) at "list 5" (address 5) on port TPX3, but address 5 did not exist. The driver was built with `maxAddr=4` (valid addresses 0–3), while the histogram channel uses NDArray address 5. In R1-5 the driver was changed to use `maxAddr=6`, so address 5 is valid and this warning no longer appears when the histogram channel is enabled. **Root cause (from asynReport):** "Parameter 51 is undefined, name=ARRAY_DATA" in "list 5" referred to the *address* (list 5 = address 5) being invalid on the TPX3 port, not to parameter 51 itself. **Why did the parameter number vary (51 vs 52)?** Different builds (e.g. Ubuntu 22.04 vs Red Hat 9) can have different ADCore/asyn parameter order, so the reported parameter index can differ; the underlying issue was always the invalid address. **No action required** if you are on R1-5 or later.
