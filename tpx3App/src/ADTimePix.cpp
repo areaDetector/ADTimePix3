@@ -766,6 +766,10 @@ void ADTimePix::connectionPollThread() {
     while (connectionPollEnable_) {
         epicsEventWaitWithTimeout(connectionPollEvent_, connectionPollPeriodSec_);
         if (!connectionPollEnable_) break;
+        if (connectionPollSkipOnce_) {
+            connectionPollSkipOnce_ = 0;
+            continue;
+        }
         (void)checkConnection();
         int servalNow = 0, detNow = 0;
         getIntegerParam(ADTimePixServalConnected, &servalNow);
@@ -6122,7 +6126,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 // asynSuccess = 0, so use !0 for true/connected    
     else{
         asynStatus connected = initialServerCheckConnection();
- //       if(!connected){   // readability: in UNIX 0 is success for a command, but in C++ 0 is "false"
         if(connected == asynSuccess) {
             FLOW("Acquiring device information");
         //    getDashboard(serverURL); 
@@ -6141,6 +6144,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     connectionPollEnable_ = 1;
     getIntegerParam(ADTimePixServalConnected, &lastServalConnected_);
     getIntegerParam(ADTimePixDetConnected, &lastDetConnected_);
+    /* Skip first poll checkConnection: initialServerCheckConnection already GET /dashboard when URL set. */
+    connectionPollSkipOnce_ = (strlen(serverURL) > 0) ? 1 : 0;
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.priority = epicsThreadPriorityLow;
     opts.stackSize = epicsThreadGetStackSize(epicsThreadStackSmall);

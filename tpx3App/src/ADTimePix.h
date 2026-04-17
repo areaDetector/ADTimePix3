@@ -924,6 +924,8 @@ class ADTimePix : public ADDriver{
         int connectionPollEnable_;
         int lastServalConnected_;
         int lastDetConnected_;
+        /** If 1, connectionPollThread skips one checkConnection (constructor just ran initialServerCheckConnection). */
+        int connectionPollSkipOnce_ = 0;
         static void connectionPollThreadC(void* pPvt);
         void connectionPollThread();
 
