@@ -232,9 +232,17 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
                         return true;
         }
         
-        int bin_size = j["binSize"];
-                int bin_width = j["binWidth"];
-                int bin_offset = j["binOffset"];
+        // binWidth/binOffset may be null in malformed or edge-case frames — avoid .get<int>() abort
+        auto histInt = [](const json& o, const char* key, int def) -> int {
+            if (!o.contains(key) || o[key].is_null()) return def;
+            const json& v = o[key];
+            if (v.is_number_integer()) return v.get<int>();
+            if (v.is_number()) return static_cast<int>(v.get<double>());
+            return def;
+        };
+        int bin_size = histInt(j, "binSize", 0);
+        int bin_width = histInt(j, "binWidth", 0);
+        int bin_offset = histInt(j, "binOffset", 0);
                 // Extract additional frame data
                 int frame_number = j.value("frameNumber", 0);
                         double time_at_frame = j.value("timeAtFrame", 0.0);

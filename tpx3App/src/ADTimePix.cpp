@@ -1054,6 +1054,48 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     return status;
 }
 
+namespace {
+
+/**
+ * Serval 4: GET /detector returns Health as an array (often one entry per board / connection).
+ * Each Health[i].ChipTemperatures only lists chips on that board (e.g. four temps per board).
+ * Indexing Health[0].ChipTemperatures[chip] with global chip 4..7 yields null / wrong slot and
+ * nlohmann throws type_error.302 on .get<int>(). Walk Health[] and map global chip index.
+ */
+int chipTemperatureFromHealthV4(const json& detector, int chip) {
+    if (chip < 0 || !detector.contains("Health") || !detector["Health"].is_array()) return 0;
+    size_t offset = 0;
+    for (size_t hi = 0; hi < detector["Health"].size(); ++hi) {
+        const json& block = detector["Health"][hi];
+        if (!block.is_object() || !block.contains("ChipTemperatures") ||
+            !block["ChipTemperatures"].is_array())
+            continue;
+        const json& ct = block["ChipTemperatures"];
+        const size_t n = ct.size();
+        if ((size_t)chip < offset + n) {
+            const json& tj = ct[chip - offset];
+            if (tj.is_number_integer()) return tj.get<int>();
+            if (tj.is_number()) return static_cast<int>(tj.get<double>());
+            return 0;
+        }
+        offset += n;
+    }
+    return 0;
+}
+
+/** Serval 3: single Health object; ChipTemperatures may be a flat array (one per chip). */
+int chipTemperatureFromHealthV3(const json& detector, int chip) {
+    if (chip < 0 || !detector.contains("Health") || !detector["Health"].is_object()) return 0;
+    const json& ct = detector["Health"]["ChipTemperatures"];
+    if (!ct.is_array() || (size_t)chip >= ct.size()) return 0;
+    const json& tj = ct[(size_t)chip];
+    if (tj.is_number_integer()) return tj.get<int>();
+    if (tj.is_number()) return static_cast<int>(tj.get<double>());
+    return 0;
+}
+
+} // namespace
+
 /**
  * Fetch DACs values and update PVs readback
  *
@@ -1087,11 +1129,10 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     setIntegerParam(chip, ADTimePixVthresholdCoarse,   data["Chips"][chip]["DACs"]["Vthreshold_coarse"].get<int>());
     setIntegerParam(chip, ADTimePixVthresholdFine,     data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
 
-    if (API_Ver[0] == '4') {    // Serval version 4, Health is an array
-        setIntegerParam(chip, ADTimePixChipNTemperature,   data["Health"][0]["ChipTemperatures"][chip].get<int>());
-    }
-    else {  // Serval version 3 or 2, Health is a dictionary
-        setIntegerParam(chip, ADTimePixChipNTemperature,   data["Health"]["ChipTemperatures"][chip].get<int>());
+    if (API_Ver[0] == '4') {    // Serval version 4, Health is an array (multi-board: temps per board)
+        setIntegerParam(chip, ADTimePixChipNTemperature, chipTemperatureFromHealthV4(data, chip));
+    } else {  // Serval version 3 or 2, Health is a dictionary
+        setIntegerParam(chip, ADTimePixChipNTemperature, chipTemperatureFromHealthV3(data, chip));
     }
 
     if (data["Chips"][chip]["Adjust"].is_null()) {  // Serval version 3, Adjust is typically not present / null.
