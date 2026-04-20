@@ -13,11 +13,25 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
 - **Database:** `ADTimePix3.template` adds `BChBoard2Id_RBV`, `IpAddr2_RBV`, `Chip5_RBV`…`Chip8_RBV`.
 - **Mask / BPC indexing (`mask_io.cpp`):** For `numChips == 8` and **DetectorOrientation UP (0)** only, `pelIndex` and `bcp2ImgIndex` use a **rectangular mosaic**: BPC chip order `chip = Y_CHIP * xChips + X_CHIP` with `xChips` / `yChips` from `rowsCols()` (`RowLen` and chip count from Serval). Intra-chip pixel order matches **single-chip UP** (same convention as one quadrant of the existing 2×2 implementation).
 
+## Mask BPC database (`MASK_BPC_NELEMENTS`)
+
+`st_base.cmd` loads `MaskBPC.template` with `NELEMENTS=$(MASK_BPC_NELEMENTS)`. That macro **must** be defined in **`unique.cmd`** before the database load (after `< envPaths` and `< unique.cmd`). If it is missing, iocsh reports `macLib: macro MASK_BPC_NELEMENTS is undefined` and mask-related PVs never connect.
+
+`unique.cmd` documents three standard sizes (pick **one** active `epicsEnvSet`):
+
+| Chips | Typical mosaic | Image (px) | `MASK_BPC_NELEMENTS` |
+|-------|----------------|------------|----------------------|
+| 1 | 1×1 | 256×256 | 65536 |
+| 4 | 2×2 | 512×512 | 262144 |
+| 8 | 2×4 | 1024×512 | 524288 |
+
+`envPaths` does **not** set this macro; it only notes that `unique.cmd` must define it.
+
 ## Verify on hardware
 
 - **BPC ↔ image mapping:** The 8-chip branch assumes linear chip order matches Serval’s concatenated BPC and a uniform grid. If your `Layout` uses per-chip rotations like the 2×2 module, confirm masks and PixelConfigDiff on real data; extend orientations using `Layout` JSON if needed.
 - **Phoebus / BOY:** Screens still embed four chip panels in places; add tabs, a chip selector, or extra embeds for `CHIP4`…`CHIP7`. Extend `TimePixDetectorVoltages.opi` (and BOB equivalents) if operators need `Pwr3`–`Pwr5` on screen.
-- **`unique.cmd`:** Set `MASK_BPC_NELEMENTS` to `524288` for 8-chip (see commented lines beside `65536` / `262144`). Increase `EPICS_CA_MAX_ARRAY_BYTES` and ND plugin `NELEMENTS` if needed.
+- **Large images:** For 8-chip, set `MASK_BPC_NELEMENTS` to `524288` (or larger if `PixCount` is greater), and raise `EPICS_CA_MAX_ARRAY_BYTES` and ND plugin `NELEMENTS` if waveforms exceed limits.
 
 ## Calibration
 

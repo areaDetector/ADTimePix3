@@ -28,6 +28,7 @@ When moving development to the **support2** tree with **ADCore 3.14.0**, use thi
 - **Driver and app:** `tpx3App/src/`, `tpx3App/Db/`, `tpx3App/op/`, etc., in support2.
 - **IOC scripts:** `iocs/tpx3IOC/iocBoot/iocTimePix/` (e.g. `st.cmd`, `st_base.cmd`, `init_detector.cmd`) in support2.
 - **Documentation:** `README.md`, `RELEASE.md`, `documentation/*.md` in support2.
+- **Eight-chip / dual SPIDR:** See [documentation/8chip-migration.md](8chip-migration.md) (IOC `load_chips.cmd`, `MASK_BPC_NELEMENTS` in `unique.cmd`, driver health/boards, mask indexing). Ensure `unique.cmd` defines `MASK_BPC_NELEMENTS` so `MaskBPC.template` loads.
 
 If you need to backport a fix to the **support** tree later, do it by cherry-pick or selective copy from support2, not the other way around.
 
@@ -52,6 +53,7 @@ So you do **not** need to “move” these from support to support2; they are al
 
 - [ ] support2 ADTimePix3 builds with support2 ADCore 3.14.0 (no ADCore patches applied).
 - [ ] `st.cmd` (and thus `st_base.cmd`) runs and exits cleanly (no SIGSEGV on `exit`).
+- [ ] `unique.cmd` sets **`MASK_BPC_NELEMENTS`** (65536 / 262144 / 524288) so `MaskBPC.template` loads; mask PVs connect.
 - [ ] RELEASE (and RELEASE.local if any) in support2 point to the intended support2 modules.
 - [ ] All new changes are made in support2; support tree is only for legacy or backport if needed.
 - [ ] Documentation in support2 is updated when you add or change features.
