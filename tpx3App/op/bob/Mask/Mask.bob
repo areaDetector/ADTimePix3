@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>$(BL) Mask</name>
-  <width>2080</width>
+  <width>2480</width>
   <height>1020</height>
   <background_color>
     <color red="240" green="240" blue="240">
@@ -38,8 +38,8 @@
     </macros>
     <x>1415</x>
     <y>5</y>
-    <width>660</width>
-    <height>1010</height>
+    <width>1040</width>
+    <height>1660</height>
     <resize>1</resize>
     <transparent>true</transparent>
     <actions>
@@ -105,6 +105,81 @@
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <data_width>512</data_width>
+    <data_height>512</data_height>
+    <autoscale>false</autoscale>
+    <maximum>4.0</maximum>
+    <rois>
+      <roi>
+        <name>ROI 0</name>
+        <color>
+          <color red="255" green="0" blue="0">
+          </color>
+        </color>
+        <visible>true</visible>
+        <interactive>true</interactive>
+        <x_pv>$(Sys)$(Dev)$(Cam)MaskMinX</x_pv>
+        <y_pv>$(Sys)$(Dev)$(Cam)MaskMinY</y_pv>
+        <width_pv>$(Sys)$(Dev)$(Cam)MaskSizeX</width_pv>
+        <height_pv>$(Sys)$(Dev)$(Cam)MaskSizeY</height_pv>
+        <file></file>
+      </roi>
+    </rois>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>MaskBPC_8chip</name>
+    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <x>720</x>
+    <y>5</y>
+    <width>1234</width>
+    <height>563</height>
+    <visible>false</visible>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X Axis</title>
+      <minimum>0.0</minimum>
+      <maximum>1024.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y Axis</title>
+      <minimum>512.0</minimum>
+      <maximum>0.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <actions>
+    </actions>
+    <rules>
+      <rule name="Rule8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <data_width>1024</data_width>
     <data_height>512</data_height>
     <autoscale>false</autoscale>
     <maximum>4.0</maximum>
@@ -239,6 +314,65 @@
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <data_width>512</data_width>
+    <data_height>512</data_height>
+    <autoscale>false</autoscale>
+    <maximum>32.0</maximum>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>BPC_8chip</name>
+    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <x>720</x>
+    <y>580</y>
+    <width>1234</width>
+    <height>563</height>
+    <visible>false</visible>
+    <background_color>
+      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
+      </color>
+    </background_color>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X Axis</title>
+      <minimum>0.0</minimum>
+      <maximum>1024.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y Axis</title>
+      <minimum>512.0</minimum>
+      <maximum>0.0</maximum>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+    </y_axis>
+    <actions>
+    </actions>
+    <rules>
+      <rule name="RuleB8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <data_width>1024</data_width>
     <data_height>512</data_height>
     <autoscale>false</autoscale>
     <maximum>32.0</maximum>
