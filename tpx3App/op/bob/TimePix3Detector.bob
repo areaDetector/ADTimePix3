@@ -4,8 +4,8 @@
   <macros>
     <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
   </macros>
-  <width>1120</width>
-  <height>1580</height>
+  <width>1550</width>
+  <height>1400</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -171,6 +171,82 @@ $(pv_value)</tooltip>
     </macros>
     <file>Detector/TimePixDetectorChip.opi</file>
     <x>930</x>
+    <y>570</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_CHIP4</name>
+    <macros>
+      <Chip>CHIP4</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>1135</x>
+    <y>30</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_CHIP5</name>
+    <macros>
+      <Chip>CHIP5</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>1340</x>
+    <y>30</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_CHIP6</name>
+    <macros>
+      <Chip>CHIP6</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>1135</x>
+    <y>570</y>
+    <width>200</width>
+    <height>530</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_CHIP7</name>
+    <macros>
+      <Chip>CHIP7</Chip>
+    </macros>
+    <file>Detector/TimePixDetectorChip.opi</file>
+    <x>1340</x>
     <y>570</y>
     <width>200</width>
     <height>530</height>
