@@ -37,6 +37,7 @@ R1-6-2 (TBD, 2026)
   * **Database**: **`ADTimePix3.template`** — **`BChBoard2Id_RBV`**, **`IpAddr2_RBV`**, **`Chip5_RBV`…`Chip8_RBV`**. New asyn parameter names in **`ADTimePix.h`** / **`createParam`**.
   * **Mask / BPC (`mask_io.cpp`)**: For **`numChips == 8`** and **DetectorOrientation UP (0)** only, **`pelIndex`** and **`bcp2ImgIndex`** use a rectangular mosaic with **`chip = Y_CHIP * xChips + X_CHIP`** from **`rowsCols()`**; intra-chip order matches single-chip **UP**. Other orientations for eight tiles remain TODO (verify on hardware vs Serval **`Layout`**).
   * **Documentation**: **`documentation/8chip-migration.md`**; README and **`documentation/MIGRATION_SUPPORT2.md`** updated (**`MASK_BPC_NELEMENTS`** checklist, links).
+  * **Phoebus / OPI (8-chip UX)**: **`TimePix3Detector.bob`** embeds **`CHIP0`…`CHIP7`** (operator-adjustable layout); **`Acquire/DetectorConfig.bob`** adds Vth panels for **`CHIP4`…`CHIP7`**; **`Acquire/ImgAccumulation.bob`**, **`Mask/PixelConfigMaskPanel.bob`**, and **`Mask/Mask.bob`** add **1024×512** image variants when **`PixCount_RBV`** matches the 8-chip mosaic (**524288**); **`Detector/TimePixDetectorVoltages.opi`** lists second-board rails **`Pwr3`…`Pwr5`** (same file under **`op/bob/Detector`** and **`op/opi/Detector`**).
 
 * **Phoebus histogram InfoDisplay layout tweak**: Manually adjusted the layout in `tpx3App/op/bob/Acquire/PrvHstHistogram.bob` so InfoDisplay text fits properly (increased container/text height).
 
