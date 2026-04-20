@@ -30,7 +30,7 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
 ## Verify on hardware
 
 - **BPC ↔ image mapping:** The 8-chip branch assumes linear chip order matches Serval’s concatenated BPC and a uniform grid. If your `Layout` uses per-chip rotations like the 2×2 module, confirm masks and PixelConfigDiff on real data; extend orientations using `Layout` JSON if needed.
-- **Phoebus / BOY:** Screens still embed four chip panels in places; add tabs, a chip selector, or extra embeds for `CHIP4`…`CHIP7`. Extend `TimePixDetectorVoltages.opi` (and BOB equivalents) if operators need `Pwr3`–`Pwr5` on screen.
+- **Phoebus:** `TimePix3Detector.bob` embeds eight chip panels in a **4×2** grid (geometry maintained in the BOB). See also `DetectorConfig.bob` (Vth), mask / accumulation BOBs for **1024×512** at `PixCount_RBV == 524288`, and `TimePixDetectorVoltages.opi` for **Pwr3–Pwr5** (`op/bob/Detector`, `op/opi/Detector`).
 - **Large images:** For 8-chip, set `MASK_BPC_NELEMENTS` to `524288` (or larger if `PixCount` is greater), and raise `EPICS_CA_MAX_ARRAY_BYTES` and ND plugin `NELEMENTS` if waveforms exceed limits.
 
 ## Calibration
