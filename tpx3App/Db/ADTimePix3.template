@@ -160,6 +160,38 @@ record(stringin, "$(P)$(R)Chip4_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_CH4")
   field(SCAN, "I/O Intr")
 }
+record(stringin, "$(P)$(R)BChBoard2Id_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS2_ID")
+  field(SCAN, "I/O Intr")
+  field(DESC, "2nd SPIDR ChipboardId")
+}
+record(stringin, "$(P)$(R)IpAddr2_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS2_IP")
+  field(SCAN, "I/O Intr")
+  field(DESC, "2nd SPIDR IP")
+}
+record(stringin, "$(P)$(R)Chip5_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_CH5")
+  field(SCAN, "I/O Intr")
+}
+record(stringin, "$(P)$(R)Chip6_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_CH6")
+  field(SCAN, "I/O Intr")
+}
+record(stringin, "$(P)$(R)Chip7_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_CH7")
+  field(SCAN, "I/O Intr")
+}
+record(stringin, "$(P)$(R)Chip8_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_CH8")
+  field(SCAN, "I/O Intr")
+}
 
 record(longin, "$(P)$(R)AcqModes_RBV"){
   field(DTYP, "asynInt32")

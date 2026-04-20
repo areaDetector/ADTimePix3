@@ -1358,16 +1358,56 @@ asynStatus ADTimePix::getDetector(){
             setDoubleParam(ADTimePixFan2Speed, jsonDbl(H0["Fan2Speed"], 0.0));
             setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H0["BiasVoltage"], 0.0));
             setIntegerParam(ADTimePixHumidity, jsonInt(H0["Humidity"], 0));
-            setStringParam(ADTimePixChipTemperature, H0["ChipTemperatures"].dump().c_str());
-            setStringParam(ADTimePixVDD, H0["VDD"].dump().c_str());
-            setStringParam(ADTimePixAVDD, H0["AVDD"].dump().c_str());
 
-            // VDD, AVDD voltages
+            json chipTempsMerged = json::array();
+            if (detector_j["Health"].is_array()) {
+                for (const auto& hb : detector_j["Health"]) {
+                    if (hb.is_object() && hb.contains("ChipTemperatures") && hb["ChipTemperatures"].is_array()) {
+                        for (const auto& te : hb["ChipTemperatures"]) chipTempsMerged.push_back(te);
+                    }
+                }
+            }
+            if (!chipTempsMerged.empty())
+                setStringParam(ADTimePixChipTemperature, chipTempsMerged.dump().c_str());
+            else
+                setStringParam(ADTimePixChipTemperature, H0["ChipTemperatures"].dump().c_str());
+
+            if (detector_j["Health"].is_array() && detector_j["Health"].size() > 1) {
+                json vddM = json::array();
+                json avddM = json::array();
+                for (const auto& hb : detector_j["Health"]) {
+                    if (hb.is_object() && hb.contains("VDD") && hb["VDD"].is_array()) vddM.push_back(hb["VDD"]);
+                    if (hb.is_object() && hb.contains("AVDD") && hb["AVDD"].is_array()) avddM.push_back(hb["AVDD"]);
+                }
+                setStringParam(ADTimePixVDD, vddM.dump().c_str());
+                setStringParam(ADTimePixAVDD, avddM.dump().c_str());
+            } else {
+                setStringParam(ADTimePixVDD, H0["VDD"].dump().c_str());
+                setStringParam(ADTimePixAVDD, H0["AVDD"].dump().c_str());
+            }
+
+            // VDD, AVDD per rail: asyn ADDR 0–2 board 0, ADDR 3–5 board 1 (second SPIDR)
             for (int i = 0; i < 3; i++) {
                 if (H0["VDD"].is_array() && (size_t)i < H0["VDD"].size() && H0["VDD"][(size_t)i].is_number())
                     setDoubleParam(i, ADTimePixChipN_VDD, H0["VDD"][(size_t)i].get<double>());
                 if (H0["AVDD"].is_array() && (size_t)i < H0["AVDD"].size() && H0["AVDD"][(size_t)i].is_number())
                     setDoubleParam(i, ADTimePixChipN_AVDD, H0["AVDD"][(size_t)i].get<double>());
+            }
+            if (detector_j["Health"].is_array() && detector_j["Health"].size() > 1) {
+                const json& H1 = detector_j["Health"][1];
+                for (int i = 0; i < 3; i++) {
+                    int addr = i + 3;
+                    if (H1["VDD"].is_array() && (size_t)i < H1["VDD"].size() && H1["VDD"][(size_t)i].is_number())
+                        setDoubleParam(addr, ADTimePixChipN_VDD, H1["VDD"][(size_t)i].get<double>());
+                    if (H1["AVDD"].is_array() && (size_t)i < H1["AVDD"].size() && H1["AVDD"][(size_t)i].is_number())
+                        setDoubleParam(addr, ADTimePixChipN_AVDD, H1["AVDD"][(size_t)i].get<double>());
+                }
+            } else {
+                for (int i = 0; i < 3; i++) {
+                    int addr = i + 3;
+                    setDoubleParam(addr, ADTimePixChipN_VDD, 0.0);
+                    setDoubleParam(addr, ADTimePixChipN_AVDD, 0.0);
+                }
             }
 
         }
@@ -1410,12 +1450,59 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADMaxSizeX,     detector_j["Info"]["PixCount"].get<int>() / detector_j["Info"]["NumberOfRows"].get<int>());  // Sensor Size X
         setIntegerParam(ADTimePixMpxType,       detector_j["Info"]["MpxType"].get<int>());
 
-        setStringParam(ADTimePixBoardsID,   strip_quotes(detector_j["Info"]["Boards"][0]["ChipboardId"].dump().c_str()));
-        setStringParam(ADTimePixBoardsIP,   strip_quotes(detector_j["Info"]["Boards"][0]["IpAddress"].dump().c_str()));
-        setStringParam(ADTimePixBoardsCh1,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][0].dump().c_str()));
-        setStringParam(ADTimePixBoardsCh2,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][1].dump().c_str()));
-        setStringParam(ADTimePixBoardsCh3,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][2].dump().c_str()));
-        setStringParam(ADTimePixBoardsCh4,  strip_quotes(detector_j["Info"]["Boards"][0]["Chips"][3].dump().c_str()));
+        if (detector_j["Info"].contains("Boards") && detector_j["Info"]["Boards"].is_array() &&
+            !detector_j["Info"]["Boards"].empty()) {
+            const json& B0 = detector_j["Info"]["Boards"][0];
+            setStringParam(ADTimePixBoardsID, strip_quotes(B0["ChipboardId"].dump().c_str()));
+            setStringParam(ADTimePixBoardsIP, strip_quotes(B0["IpAddress"].dump().c_str()));
+            if (B0.contains("Chips") && B0["Chips"].is_array() && B0["Chips"].size() > 0) {
+                setStringParam(ADTimePixBoardsCh1, strip_quotes(B0["Chips"][0].dump().c_str()));
+                setStringParam(ADTimePixBoardsCh2, B0["Chips"].size() > 1 ? strip_quotes(B0["Chips"][1].dump().c_str()) : "");
+                setStringParam(ADTimePixBoardsCh3, B0["Chips"].size() > 2 ? strip_quotes(B0["Chips"][2].dump().c_str()) : "");
+                setStringParam(ADTimePixBoardsCh4, B0["Chips"].size() > 3 ? strip_quotes(B0["Chips"][3].dump().c_str()) : "");
+            } else {
+                setStringParam(ADTimePixBoardsCh1, "");
+                setStringParam(ADTimePixBoardsCh2, "");
+                setStringParam(ADTimePixBoardsCh3, "");
+                setStringParam(ADTimePixBoardsCh4, "");
+            }
+            if (detector_j["Info"]["Boards"].size() > 1) {
+                const json& B1 = detector_j["Info"]["Boards"][1];
+                setStringParam(ADTimePixBoards2ID, strip_quotes(B1["ChipboardId"].dump().c_str()));
+                setStringParam(ADTimePixBoards2IP, strip_quotes(B1["IpAddress"].dump().c_str()));
+                if (B1.contains("Chips") && B1["Chips"].is_array() && B1["Chips"].size() >= 4) {
+                    setStringParam(ADTimePixBoardsCh5, strip_quotes(B1["Chips"][0].dump().c_str()));
+                    setStringParam(ADTimePixBoardsCh6, strip_quotes(B1["Chips"][1].dump().c_str()));
+                    setStringParam(ADTimePixBoardsCh7, strip_quotes(B1["Chips"][2].dump().c_str()));
+                    setStringParam(ADTimePixBoardsCh8, strip_quotes(B1["Chips"][3].dump().c_str()));
+                } else {
+                    setStringParam(ADTimePixBoardsCh5, "");
+                    setStringParam(ADTimePixBoardsCh6, "");
+                    setStringParam(ADTimePixBoardsCh7, "");
+                    setStringParam(ADTimePixBoardsCh8, "");
+                }
+            } else {
+                setStringParam(ADTimePixBoards2ID, "");
+                setStringParam(ADTimePixBoards2IP, "");
+                setStringParam(ADTimePixBoardsCh5, "");
+                setStringParam(ADTimePixBoardsCh6, "");
+                setStringParam(ADTimePixBoardsCh7, "");
+                setStringParam(ADTimePixBoardsCh8, "");
+            }
+        } else {
+            setStringParam(ADTimePixBoardsID, "");
+            setStringParam(ADTimePixBoardsIP, "");
+            setStringParam(ADTimePixBoardsCh1, "");
+            setStringParam(ADTimePixBoardsCh2, "");
+            setStringParam(ADTimePixBoardsCh3, "");
+            setStringParam(ADTimePixBoardsCh4, "");
+            setStringParam(ADTimePixBoards2ID, "");
+            setStringParam(ADTimePixBoards2IP, "");
+            setStringParam(ADTimePixBoardsCh5, "");
+            setStringParam(ADTimePixBoardsCh6, "");
+            setStringParam(ADTimePixBoardsCh7, "");
+            setStringParam(ADTimePixBoardsCh8, "");
+        }
 
         setIntegerParam(ADTimePixSuppAcqModes,  detector_j["Info"]["SuppAcqModes"].get<int>());
         setDoubleParam(ADTimePixClockReadout,   detector_j["Info"]["ClockReadout"].get<double>());
@@ -5785,6 +5872,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixBoardsCh2String,       asynParamOctet, &ADTimePixBoardsCh2);
     createParam(ADTimePixBoardsCh3String,       asynParamOctet, &ADTimePixBoardsCh3);
     createParam(ADTimePixBoardsCh4String,       asynParamOctet, &ADTimePixBoardsCh4);
+    createParam(ADTimePixBoards2IDString,         asynParamOctet, &ADTimePixBoards2ID);
+    createParam(ADTimePixBoards2IPString,         asynParamOctet, &ADTimePixBoards2IP);
+    createParam(ADTimePixBoardsCh5String,       asynParamOctet, &ADTimePixBoardsCh5);
+    createParam(ADTimePixBoardsCh6String,       asynParamOctet, &ADTimePixBoardsCh6);
+    createParam(ADTimePixBoardsCh7String,       asynParamOctet, &ADTimePixBoardsCh7);
+    createParam(ADTimePixBoardsCh8String,       asynParamOctet, &ADTimePixBoardsCh8);
 
     createParam(ADTimePixSuppAcqModesString,    asynParamInt32,     &ADTimePixSuppAcqModes);
     createParam(ADTimePixClockReadoutString,    asynParamFloat64,   &ADTimePixClockReadout);

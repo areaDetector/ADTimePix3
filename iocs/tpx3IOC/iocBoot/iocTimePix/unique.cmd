@@ -30,10 +30,19 @@ epicsEnvSet("HIST_SIZE",                "4096")
 epicsEnvSet("XSIZE",                    "256")
 epicsEnvSet("YSIZE",                    "256")
 epicsEnvSet("NELMT",                    "65536")
-# Mask BPC waveforms (st_base MaskBPC.template): default 262144 is set in envPaths. Override if needed:
-# epicsEnvSet("MASK_BPC_NELEMENTS", "65536")     # 1 chip 256×256
-# epicsEnvSet("MASK_BPC_NELEMENTS", "262144")    # 4 chips 512×512 (same as envPaths default)
-# epicsEnvSet("MASK_BPC_NELEMENTS", "524288")    # 8 chips: 2×512×512 (= 262144*2)
+# --- Mask BPC waveform size (st_base.cmd → MaskBPC.template, macro NELEMENTS) ---
+# Must be >= detector PixCount (mask upload / compare / PixelConfigDiff). Too small: DB load fails, PVs invalid.
+#
+#   Chips   Typical mosaic   Image (px)   PixCount = NELEMENTS
+#   -----   --------------   ----------   -----------------------
+#     1     1 × 1            256 × 256            65536
+#     4     2 × 2            512 × 512           262144
+#     8     2 × 4            1024 × 512          524288
+#
+# Pick exactly one active line for your detector (comment the others):
+#epicsEnvSet("MASK_BPC_NELEMENTS", "65536") # 1 chip 256×256
+epicsEnvSet("MASK_BPC_NELEMENTS", "262144") # 4 chips 512×512
+#epicsEnvSet("MASK_BPC_NELEMENTS", "524288") # 8 chips 1024×512
 epicsEnvSet("NDTYPE",                   "Int16")  #'Int8' (8bit B/W, Color) | 'Int16' (16bit B/W)
 epicsEnvSet("NDFTVL",                   "SHORT") #'UCHAR' (8bit B/W, Color) | 'SHORT' (16bit B/W)
 epicsEnvSet("CBUFFS",                   "500")

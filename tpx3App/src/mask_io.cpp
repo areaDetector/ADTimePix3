@@ -706,8 +706,30 @@ int ADTimePix::bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
             printf("bpc2ImgIndex: Quad chip 2x2 not met mask conditions\n");
         }
         imgIndex = i + 2*chipPelWidth*j;
-    } else { // octet 2x4 TimePix3, or another arangement. Not 1 or 2x2 chip(s).
-        printf("TODO: Octet 2x4 or another chip arangement\n");
+    } else if (numChips == 8) {
+        /* 2×4 (or 4×2) mosaic: uniform grid, BPC chip order chip = Y_CHIP * xChips + X_CHIP,
+         * intra-chip mapping matches single-chip UP (same convention as one tile of the 2×2 case).
+         * Only DetectorOrientation UP (0); other orientations need per-layout tables like 2×2. */
+        if (detOrientation != 0) {
+            printf("bcp2ImgIndex: 8-chip BPC mapping implemented only for DetectorOrientation UP (0)\n");
+            return -1;
+        }
+        int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, w = 0;
+        rowsCols(&ROWS, &COLS, &xChips, &yChips, &w);
+        if (xChips * yChips != 8 || chipPelCount <= 0 || chip < 0 || chip > 7) {
+            printf("bcp2ImgIndex: 8-chip requires eight tiles (xChips*yChips==8) and chip index 0..7\n");
+            return -1;
+        }
+        int local = bpcIndex - chip * chipPelCount;
+        int lx = local % w;
+        int ly = local / w;
+        int X_CHIP = chip % xChips;
+        int Y_CHIP = chip / xChips;
+        i = X_CHIP * w + lx;
+        j = Y_CHIP * w + (w - 1 - ly);
+        imgIndex = i + (xChips * w) * j;
+    } else {
+        printf("bcp2ImgIndex: chip count %d not supported for BPC↔image mapping\n", numChips);
         imgIndex = -1;
     }
 
@@ -879,8 +901,25 @@ int ADTimePix::pelIndex(int i, int j) {
         } else {
             printf("Mask computations are for 2x2 detector only\n");
         }
+    } else if (numChips == 8) {
+        if (detOrientation != 0) {
+            printf("pelIndex: 8-chip BPC mapping implemented only for DetectorOrientation UP (0)\n");
+            index = -1;
+        } else {
+            int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, Pel = 0;
+            rowsCols(&ROWS, &COLS, &xChips, &yChips, &Pel);
+            if (xChips * yChips != 8 || Pel <= 0 || X_CHIP >= xChips || Y_CHIP >= yChips) {
+                printf("pelIndex: 8-chip geometry mismatch (expect xChips*yChips==8)\n");
+                index = -1;
+            } else {
+                int lx = i - X_CHIP * Pel;
+                int ly = j - Y_CHIP * Pel;
+                int chipIdx = Y_CHIP * xChips + X_CHIP;
+                index = chipIdx * Pel * Pel + lx + ((Pel - 1) - ly) * Pel;
+            }
+        }
     } else {
-        printf("Mask: Neither 1,4 -chip mask.\n");
+        printf("Mask: chip count %d not supported (supported: 1, 4, 8).\n", numChips);
     }
 
     return index;

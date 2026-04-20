@@ -80,6 +80,12 @@
 #define ADTimePixBoardsCh2String            "TPX3_BOARDS_CH2"       // (asynOctet,         r)      Boards->Chip2{Id,Name}
 #define ADTimePixBoardsCh3String            "TPX3_BOARDS_CH3"       // (asynOctet,         r)      Boards->Chip3{Id,Name}
 #define ADTimePixBoardsCh4String            "TPX3_BOARDS_CH4"       // (asynOctet,         r)      Boards->Chip4{Id,Name}
+#define ADTimePixBoards2IDString            "TPX3_BOARDS2_ID"       // (asynOctet,         r)      Boards[1]->ChipboardId (2nd SPIDR)
+#define ADTimePixBoards2IPString            "TPX3_BOARDS2_IP"       // (asynOctet,         r)      Boards[1]->IpAddress
+#define ADTimePixBoardsCh5String            "TPX3_BOARDS_CH5"       // (asynOctet,         r)      Boards[1] chip global 5 / local 0
+#define ADTimePixBoardsCh6String            "TPX3_BOARDS_CH6"       // (asynOctet,         r)      Boards[1] chip 6 / local 1
+#define ADTimePixBoardsCh7String            "TPX3_BOARDS_CH7"       // (asynOctet,         r)      Boards[1] chip 7 / local 2
+#define ADTimePixBoardsCh8String            "TPX3_BOARDS_CH8"       // (asynOctet,         r)      Boards[1] chip 8 / local 3
 
 #define ADTimePixSuppAcqModesString         "TPX3_ACQ_MODES"        // (asynInt32,         r)      SuppAcqModes
 #define ADTimePixClockReadoutString         "TPX3_CLOCK_READ"       // (asynFloat64,       r)      ClockReadout
@@ -504,7 +510,13 @@ class ADTimePix : public ADDriver{
         int ADTimePixBoardsCh1;            
         int ADTimePixBoardsCh2;            
         int ADTimePixBoardsCh3;           
-        int ADTimePixBoardsCh4;            
+        int ADTimePixBoardsCh4;
+        int ADTimePixBoards2ID;
+        int ADTimePixBoards2IP;
+        int ADTimePixBoardsCh5;
+        int ADTimePixBoardsCh6;
+        int ADTimePixBoardsCh7;
+        int ADTimePixBoardsCh8;
          
         int ADTimePixSuppAcqModes;         
         int ADTimePixClockReadout;         
