@@ -458,6 +458,14 @@
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="visLab512" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>PixelConfigDiff512</name>
@@ -596,7 +604,7 @@
     <name>ImgLab1024</name>
     <text>|Δ| (1024×512, 8-chip mosaic)</text>
     <x>5</x>
-    <y>1112</y>
+    <y>288</y>
     <width>400</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
@@ -610,14 +618,22 @@
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="visLab1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>PixelConfigDiff1024</name>
     <pv_name>$(Sys)$(Dev)$(Cam)PixelConfigDiff</pv_name>
     <x>5</x>
-    <y>1134</y>
-    <width>1024</width>
-    <height>512</height>
+    <y>310</y>
+    <width>700</width>
+    <height>350</height>
     <visible>false</visible>
     <background_color>
       <color name="Transparent" red="255" green="255" blue="255" alpha="0">
