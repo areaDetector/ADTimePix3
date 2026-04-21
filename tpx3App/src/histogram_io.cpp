@@ -1,5 +1,6 @@
 #include "histogram_io.h"
 #include "ADTimePix.h"
+#include "ADTimePixLog.h"
 #include <NDAttribute.h>
 #include <stdexcept>
 #include <algorithm>
@@ -7,34 +8,8 @@
 #include <cstdio>
 #include <iostream>
 #include <json.hpp>
-#include <asynDriver.h>
 
 using json = nlohmann::json;
-
-// Error message formatters (same as ADTimePix.cpp)
-#define ERR(msg)                                                                                 \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, functionName, \
-              msg)
-
-#define ERR_ARGS(fmt, ...)                                                              \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
-              functionName, __VA_ARGS__)
-
-// Warning message formatters
-#define WARN(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, functionName, msg)
-
-#define WARN_ARGS(fmt, ...)                                                            \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
-              functionName, __VA_ARGS__)
-
-// Log message formatters
-#define LOG(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: %s\n", driverName, functionName, msg)
-
-#define LOG_ARGS(fmt, ...)                                                                       \
-    asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER, "%s::%s: " fmt "\n", driverName, functionName, \
-              __VA_ARGS__)
 
 // Driver name constant (extern from ADTimePix.cpp)
 extern const char* driverName;

@@ -14,6 +14,7 @@ USR_CPPFLAGS += -std=c++11
 # USR_CPPFLAGS += -DADTPX3_WARN_AS_ERROR
 
 INC += ADTimePix.h
+INC += ADTimePixLog.h
 
 # GraphicsMagick removed - TCP streaming is used instead
 # GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
