@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>PixelConfig vs BPC</name>
-  <width>1040</width>
+  <width>750</width>
   <height>850</height>
   <background_color>
     <color red="240" green="240" blue="240">
@@ -106,7 +106,7 @@
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP0_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>70</y>
-    <width>460</width>
+    <width>500</width>
     <height>22</height>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
@@ -119,10 +119,22 @@
     <x>5</x>
     <y>96</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH1Len</name>
@@ -131,9 +143,21 @@
     <y>94</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH1Match</name>
@@ -142,21 +166,45 @@
     <y>94</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH1Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP1_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>94</y>
-    <width>460</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>L2</name>
@@ -164,10 +212,22 @@
     <x>5</x>
     <y>120</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH2Len</name>
@@ -176,9 +236,21 @@
     <y>118</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH2Match</name>
@@ -187,21 +259,45 @@
     <y>118</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH2Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP2_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>118</y>
-    <width>460</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>L3</name>
@@ -209,10 +305,22 @@
     <x>5</x>
     <y>144</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH3Len</name>
@@ -221,9 +329,21 @@
     <y>142</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH3Match</name>
@@ -232,21 +352,45 @@
     <y>142</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH3Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP3_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>142</y>
-    <width>460</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis2plusChips" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>L4</name>
@@ -254,10 +398,19 @@
     <x>5</x>
     <y>168</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH4Len</name>
@@ -266,9 +419,18 @@
     <y>166</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH4Match</name>
@@ -277,21 +439,39 @@
     <y>166</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH4Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP4_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>166</y>
-    <width>840</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>L5</name>
@@ -299,10 +479,19 @@
     <x>5</x>
     <y>192</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH5Len</name>
@@ -311,9 +500,18 @@
     <y>190</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH5Match</name>
@@ -322,21 +520,39 @@
     <y>190</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH5Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP5_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>190</y>
-    <width>840</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>L6</name>
@@ -344,10 +560,19 @@
     <x>5</x>
     <y>216</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH6Len</name>
@@ -356,9 +581,18 @@
     <y>214</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH6Match</name>
@@ -367,21 +601,39 @@
     <y>214</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH6Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP6_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>214</y>
-    <width>840</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>L7</name>
@@ -389,10 +641,19 @@
     <x>5</x>
     <y>240</y>
     <width>50</width>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH7Len</name>
@@ -401,9 +662,18 @@
     <y>238</y>
     <width>72</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH7Match</name>
@@ -412,21 +682,39 @@
     <y>238</y>
     <width>40</width>
     <height>22</height>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH7Stat</name>
     <pv_name>$(Sys)$(Dev)$(Cam)CHIP7_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>238</y>
-    <width>840</width>
+    <width>500</width>
     <height>22</height>
+    <visible>false</visible>
     <format>6</format>
     <vertical_alignment>1</vertical_alignment>
     <actions>
     </actions>
+    <rules>
+      <rule name="Vis1024" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="label" version="2.0.0">
     <name>Leg</name>
@@ -446,6 +734,7 @@
     <x>5</x>
     <y>288</y>
     <width>120</width>
+    <visible>false</visible>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
       </font>
@@ -454,7 +743,6 @@
       <color red="0" green="0" blue="200">
       </color>
     </foreground_color>
-    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
@@ -531,6 +819,7 @@
     <x>5</x>
     <y>288</y>
     <width>120</width>
+    <visible>false</visible>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
       </font>
@@ -539,7 +828,6 @@
       <color red="0" green="0" blue="200">
       </color>
     </foreground_color>
-    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
@@ -616,6 +904,7 @@
     <x>5</x>
     <y>288</y>
     <width>400</width>
+    <visible>false</visible>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
       </font>
@@ -624,7 +913,6 @@
       <color red="0" green="0" blue="200">
       </color>
     </foreground_color>
-    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
