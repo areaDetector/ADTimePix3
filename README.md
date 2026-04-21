@@ -506,6 +506,8 @@ Since these warnings can fill log files, here are several methods to suppress th
 
 * **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: Fixed in R1-5. The driver was created with `maxAddr=4` (addresses 0–3 only), but the histogram channel uses NDArray address 5. When asyn or plugins accessed parameter 51 (ARRAY_DATA) at address 5, asyn reported "invalid list" because that address did not exist. The driver now uses **`maxAddr=8`** (R1-7; was `maxAddr=6` from R1-5 through R1-6) so lists **0–7** are valid, including PrvHst **4–7**. The warning no longer appears when the histogram channel is enabled. **No action required** after recompile and IOC restart.
 
+* **Histogram appears connected but does not accumulate (timing reference required)**: If `PrvHst` frame metadata updates but histogram bins stay near zero, verify the ToF timing reference path. For the TimePix3 emulator, start Java with **`-Dtdc=0`** (TDC selection), which was required in local tests for `jsonhisto` accumulation to populate correctly. For physical detectors, ensure **TDC1 and/or TDC2** receive valid time reference pulses; without those reference pulses, ToF bins can remain near zero even though streaming and metadata PVs update.
+
 **SIGSEGV on IOC exit (after acquisition)**:
 
 If the IOC segfaults when you type `exit` after running acquisition (e.g. "Segmentation fault" in `NDArrayPool::release()` or similar), the cause is pvAccess (PVA) still holding NDArrays after the driver and its NDArray pool have been destroyed. Two complementary approaches exist:
