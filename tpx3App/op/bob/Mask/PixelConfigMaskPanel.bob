@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>PixelConfig vs BPC</name>
   <width>1040</width>
-  <height>1660</height>
+  <height>850</height>
   <background_color>
     <color red="240" green="240" blue="240">
     </color>
@@ -454,6 +454,7 @@
       <color red="0" green="0" blue="200">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
@@ -528,7 +529,7 @@
     <name>ImgLab256</name>
     <text>|Δ| (256×256)</text>
     <x>5</x>
-    <y>830</y>
+    <y>288</y>
     <width>120</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
@@ -538,16 +539,25 @@
       <color red="0" green="0" blue="200">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
     </actions>
+    <rules>
+      <rule name="visLab256" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>PixelConfigDiff256</name>
     <pv_name>$(Sys)$(Dev)$(Cam)PixelConfigDiff</pv_name>
     <x>5</x>
-    <y>850</y>
+    <y>310</y>
     <width>256</width>
     <height>256</height>
     <visible>false</visible>
@@ -614,6 +624,7 @@
       <color red="0" green="0" blue="200">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>

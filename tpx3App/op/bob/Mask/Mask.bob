@@ -29,17 +29,18 @@
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>PixelConfig vs BPC</name>
+    <name>PixelConfig vs BPC (8-chip)</name>
     <file>PixelConfigMaskPanel.bob</file>
     <macros>
       <Sys>$(Sys)</Sys>
       <Dev>$(Dev)</Dev>
       <Cam>$(Cam)</Cam>
     </macros>
-    <x>1755</x>
+    <x>1430</x>
     <y>5</y>
-    <width>720</width>
+    <width>1040</width>
     <height>1010</height>
+    <visible>false</visible>
     <resize>1</resize>
     <transparent>true</transparent>
     <actions>
@@ -49,6 +50,48 @@
       <color red="0" green="128" blue="180">
       </color>
     </border_color>
+    <rules>
+      <rule name="embedPixCfg8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>PixelConfig vs BPC</name>
+    <file>PixelConfigMaskPanel.bob</file>
+    <macros>
+      <Sys>$(Sys)</Sys>
+      <Dev>$(Dev)</Dev>
+      <Cam>$(Cam)</Cam>
+    </macros>
+    <x>1960</x>
+    <y>5</y>
+    <width>515</width>
+    <height>1010</height>
+    <visible>false</visible>
+    <resize>1</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="180">
+      </color>
+    </border_color>
+    <rules>
+      <rule name="embedPixCfg14" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>Intensity Graph_2</name>
@@ -450,6 +493,7 @@
       <color red="0" green="0" blue="255">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
@@ -484,6 +528,7 @@
       <color red="0" green="0" blue="255">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
@@ -515,6 +560,7 @@
       <color red="255" green="0" blue="0">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
@@ -549,6 +595,7 @@
       <color red="255" green="0" blue="0">
       </color>
     </foreground_color>
+    <visible>false</visible>
     <vertical_alignment>1</vertical_alignment>
     <wrap_words>false</wrap_words>
     <actions>
