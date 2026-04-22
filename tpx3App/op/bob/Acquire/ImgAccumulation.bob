@@ -3,7 +3,6 @@
   <name>ImgAccumulation</name>
   <macros>
     <R>cam1:Img</R>
-    <!-- Detector record prefix for PixCount_RBV (same as ADTimePix3.template); not the Img channel suffix. -->
     <Cam>cam1:</Cam>
   </macros>
   <width>2135</width>
@@ -12,26 +11,25 @@
     <name>TPX3_Image_Control</name>
     <width>1400</width>
     <height>710</height>
-      <widget type="label" version="2.0.0">
-        <name>RasterHint</name>
-        <text>Image raster: 256×256, 512×512, or 1024×512 (8-chip) is selected from $(P)$(Cam)PixCount_RBV (65536, 262144, 524288), same as Mask.bob.</text>
-        <x>50</x>
-        <y>62</y>
-        <width>1200</width>
-        <height>22</height>
-        <font>
-          <font family="Liberation Sans" style="REGULAR" size="12.0">
-          </font>
+    <widget type="label" version="2.0.0">
+      <name>RasterHint</name>
+      <text>Image raster: 256×256, 512×512, or 1024×512 (8-chip) is selected from $(P)$(Cam)PixCount_RBV (65536, 262144, 524288), same as Mask.bob.</text>
+      <x>50</x>
+      <y>62</y>
+      <width>1200</width>
+      <height>22</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="12.0">
         </font>
-        <foreground_color>
-          <color red="80" green="80" blue="80">
-          </color>
-        </foreground_color>
-        <transparent>true</transparent>
-      </widget>
-      <widget type="label" version="2.0.0">
-        <name>Title</name>
-        <text>ADTimePix3 Image Accumulation Control Panel</text>
+      </font>
+      <foreground_color>
+        <color red="80" green="80" blue="80">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Title</name>
+      <text>ADTimePix3 Image Accumulation Control Panel</text>
       <x>50</x>
       <y>20</y>
       <width>1300</width>
@@ -1001,5 +999,74 @@
     </rules>
     <data_width>1024</data_width>
     <data_height>512</data_height>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>FrameSum</name>
+    <text>Frames Sum</text>
+    <x>750</x>
+    <y>720</y>
+    <width>141</width>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </foreground_color>
+    <vertical_alignment>1</vertical_alignment>
+    <wrap_words>false</wrap_words>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Frame</name>
+    <text>Frame</text>
+    <x>1480</x>
+    <y>720</y>
+    <width>141</width>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </foreground_color>
+    <vertical_alignment>1</vertical_alignment>
+    <wrap_words>false</wrap_words>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>FrameLastN</name>
+    <text>Last-N Sum</text>
+    <x>1480</x>
+    <y>690</y>
+    <width>141</width>
+    <font>
+      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </foreground_color>
+    <vertical_alignment>1</vertical_alignment>
+    <wrap_words>false</wrap_words>
+    <actions>
+    </actions>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
   </widget>
 </display>
