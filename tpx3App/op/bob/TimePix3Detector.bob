@@ -108,7 +108,7 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_12</name>
+    <name>LC_Chip0</name>
     <macros>
       <Chip>CHIP0</Chip>
     </macros>
@@ -117,17 +117,32 @@ $(pv_value)</tooltip>
     <y>30</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_13</name>
+    <name>LC_Chip2</name>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
@@ -136,17 +151,32 @@ $(pv_value)</tooltip>
     <y>570</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_14</name>
+    <name>LC_Chip1</name>
     <macros>
       <Chip>CHIP1</Chip>
     </macros>
@@ -155,17 +185,32 @@ $(pv_value)</tooltip>
     <y>30</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_15</name>
+    <name>LC_Chip3</name>
     <macros>
       <Chip>CHIP3</Chip>
     </macros>
@@ -174,17 +219,32 @@ $(pv_value)</tooltip>
     <y>570</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_CHIP4</name>
+    <name>LC_CHIP4</name>
     <macros>
       <Chip>CHIP4</Chip>
     </macros>
@@ -193,17 +253,32 @@ $(pv_value)</tooltip>
     <y>30</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_CHIP5</name>
+    <name>LC_CHIP5</name>
     <macros>
       <Chip>CHIP5</Chip>
     </macros>
@@ -212,17 +287,32 @@ $(pv_value)</tooltip>
     <y>30</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_CHIP6</name>
+    <name>LC_CHIP6</name>
     <macros>
       <Chip>CHIP6</Chip>
     </macros>
@@ -231,17 +321,32 @@ $(pv_value)</tooltip>
     <y>570</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_CHIP7</name>
+    <name>LC_CHIP7</name>
     <macros>
       <Chip>CHIP7</Chip>
     </macros>
@@ -250,10 +355,25 @@ $(pv_value)</tooltip>
     <y>570</y>
     <width>200</width>
     <height>530</height>
+    <visible>false</visible>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
     </actions>
+    <rules>
+      <rule name="VisChips8" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==65536">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==262144">
+          <value>false</value>
+        </exp>
+        <exp bool_exp="pv0==524288">
+          <value>true</value>
+        </exp>
+        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+      </rule>
+    </rules>
     <border_color>
       <color red="0" green="128" blue="255">
       </color>
