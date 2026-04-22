@@ -2,6 +2,9 @@
 #include <algorithm>
 // Area Detector include
 #include "ADTimePix.h"
+#include "ADTimePixLog.h"
+
+extern const char* driverName;  // defined in ADTimePix.cpp (same as histogram_io.cpp)
 
 asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                 size_t nElements, size_t *nIn)
@@ -96,15 +99,15 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         getStringParam(ADTimePixMaskFileName, maskFileName);
 
         if (maskReset_val == 1) {            
-            printf("The readInt32Array reset 0, %ld\n", nElements);
+            FLOW_ARGS("MaskBPC: reset (waveform nElements=%zu)", nElements);
             maskReset(value, maskOnOff_val);              
         }
         else if (maskRectangle_val == 1) {
-            printf("The readInt32Array rectangle, %ld\n", nElements);
+            FLOW_ARGS("MaskBPC: rectangle (waveform nElements=%zu)", nElements);
             maskRectangle(value, maskRectangle_MinX, maskRectangle_SizeX, maskRectangle_MinY, maskRectangle_SizeY, maskOnOff_val);
         }
         else if (maskCircle_val == 1) {
-            printf("The readInt32Array circle, %ld\n", nElements);
+            FLOW_ARGS("MaskBPC: circle (waveform nElements=%zu)", nElements);
             maskCircle(value, maskRectangle_MinX, maskRectangle_MinY, maskCircle_Radius, maskOnOff_val);
         }
         else if (maskBPCfile_val == 1) {
@@ -151,11 +154,12 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                 writeBPCfile(&bufBPC, &bufBPCSize);
             }
             else {
-                    printf("Mask Write: BPC directory does not exist,%d,%s\n", pathExists, BPCFilePath.c_str());
+                    WARN_ARGS("Mask write: BPC path not ready (pathExists=%d) for \"%s\"", pathExists,
+                              BPCFilePath.c_str());
                 }
         }
         else {
-            printf("The readInt32Array no mask, %ld\n", nElements);
+            FLOW_ARGS("MaskBPC: no draw op (nElements=%zu)", nElements);
         }
     }
     else if (reason == ADTimePixBPC) {
@@ -333,7 +337,7 @@ asynStatus ADTimePix::uploadBPC(){
 
     cpr::Response r = cpr::Get(cpr::Url{bpc_file},
                            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
-    printf("uploadBPC: http_code=%li\n", r.status_code);
+    LOG_ARGS("uploadBPC: http_code=%ld file=%s%s", (long)r.status_code, filePath.c_str(), fileName.c_str());
     setIntegerParam(ADTimePixHttpCode, r.status_code);
     setStringParam(ADTimePixWriteMsg, r.text.c_str());
 
@@ -400,7 +404,8 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
         }
     }
     setIntegerParam(ADTimePixBPCn, nMaskedPel);
-    printf("ReadBPC: Masked pixels=%d, nRead=%d\n", nMaskedPel, nRead);
+    LOG_ARGS("ReadBPC: file=\"%s\" bytes read=%d bytes with mask bit0 set=%d (used for BPCn)",
+             fullFileName.c_str(), nRead, nMaskedPel);
 
     callParamCallbacks();
 
@@ -422,7 +427,9 @@ asynStatus ADTimePix::writeBPCfile(char **buf, int *bufSize) {
     getStringParam(ADTimePixMaskFileName, maskFile);
     fullFileName = filePath + maskFile;
 
-    printf("Mask:%d,%ld,%ld\n",checkFile(filePath), strlen(filePath.c_str()), strlen(maskFile.c_str()));
+    /* checkFile: 0=missing, 1=directory, 2=file, ... (see checkFile) */
+    LOG_ARGS("Mask write: BPCFilePath type=%d (1=dir) path=\"%s\" maskName=\"%s\"",
+             checkFile(filePath), filePath.c_str(), maskFile.c_str());
 
     pathExists = checkFile(filePath);
     maskExists = checkFile(fullFileName);
@@ -435,14 +442,17 @@ asynStatus ADTimePix::writeBPCfile(char **buf, int *bufSize) {
 
     if (pathExists == 1) {
         if (maskExists == 2) {
-            printf("Mask: overwriting=%s,%d,%d\n", fullFileName.c_str(), pathExists, maskExists);
+            LOG_ARGS("Mask: overwriting file \"%s\" (pathExists=%d, maskFileExistsAsFile=%d)", fullFileName.c_str(),
+                     pathExists, maskExists);
         }
         else {
-            printf("Mask: writing new=%s,%d,%d\n", fullFileName.c_str(), pathExists, maskExists);
+            LOG_ARGS("Mask: writing new file \"%s\" (pathExists=%d, maskStat=%d)", fullFileName.c_str(), pathExists,
+                     maskExists);
         }
     }
     else {
-        printf("Mask: Path does not exist, exiting,%d\n", pathExists);
+        ERR_ARGS("Mask: BPCFilePath is not a directory (pathExists=%d), aborting write to \"%s\"",
+                 pathExists, filePath.c_str());
         return asynSuccess;
     }
 
@@ -468,8 +478,8 @@ asynStatus ADTimePix::writeBPCfile(char **buf, int *bufSize) {
 
     callParamCallbacks();
 
-    if(status){
-        printf("WriteBPC: Unable to uplad BPC\n");
+    if (status) {
+        ERR("WriteBPC: uploadBPC to SERVAL failed");
         return asynError;
     }
 

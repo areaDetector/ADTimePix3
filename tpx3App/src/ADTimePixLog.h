@@ -4,8 +4,10 @@
 #include <asynDriver.h>
 
 /**
- * asynPrint helpers for ADTimePix:: implementation files (ADTimePix.cpp, histogram_io.cpp, etc.).
- * Requires: pasynUserSelf, and driverName in scope (asynPortDriver / ADTimePix).
+ * asynPrint helpers for ADTimePix:: implementation files (ADTimePix.cpp, histogram_io.cpp,
+ * mask_io.cpp, etc.).
+ * Requires: pasynUserSelf, and driverName in scope (asynPortDriver / ADTimePix). TUs other than
+ * ADTimePix.cpp must declare: extern const char* driverName;
  *
  * Log context: GCC/Clang default to __PRETTY_FUNCTION__ (class + signature). Define
  * ADTPX3_LOG_SHORT (e.g. USR_CPPFLAGS += -DADTPX3_LOG_SHORT) for short __func__ only.
