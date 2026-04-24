@@ -16,6 +16,10 @@
 #include <cstring>
 #include <cctype>
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
 
 #include <sys/stat.h>
 
@@ -1100,6 +1104,166 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     return asynSuccess;
 }
 
+namespace {
+std::string stripBpcExtForMaskedJson(const std::string& fileName)
+{
+    if (fileName.size() < 4) return fileName;
+    std::string suf = fileName.substr(fileName.size() - 4);
+    for (char& c : suf) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+    if (suf == ".bpc") return fileName.substr(0, fileName.size() - 4);
+    return fileName;
+}
+
+std::string utcIso8601Now()
+{
+    std::time_t t = std::time(nullptr);
+    std::tm g;
+#if defined(_WIN32)
+    gmtime_s(&g, &t);
+#else
+    gmtime_r(&t, &g);
+#endif
+    std::ostringstream oss;
+    oss << std::put_time(&g, "%Y-%m-%dT%H:%M:%SZ");
+    return oss.str();
+}
+}  // namespace
+
+void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSize)
+{
+    const char* okEmpty = "Skipped: no BPC buffer";
+    if (!bpcBuf || bpcSize <= 0) {
+        setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
+        setIntegerParam(0, ADTimePixMaskedPelsCount, 0);
+        setStringParam(0, ADTimePixMaskedPelsExportStatus, okEmpty);
+        callParamCallbacks(0);
+        return;
+    }
+
+    std::string filePath, fileName;
+    getStringParam(ADTimePixBPCFilePath, filePath);
+    getStringParam(ADTimePixBPCFileName, fileName);
+    if (fileName.empty()) {
+        setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
+        setIntegerParam(0, ADTimePixMaskedPelsCount, 0);
+        setStringParam(0, ADTimePixMaskedPelsExportStatus, "Skipped: BPCFileName empty");
+        callParamCallbacks(0);
+        return;
+    }
+
+    const std::string outPath = filePath + stripBpcExtForMaskedJson(fileName) + "_masked_pels.json";
+    int rows = 0, cols = 0, xChips = 0, yChips = 0, pelW = 0;
+    rowsCols(&rows, &cols, &xChips, &yChips, &pelW);
+    (void)rows;
+    (void)xChips;
+    (void)yChips;
+    int nChips = 1;
+    getIntegerParam(ADTimePixNumberOfChips, &nChips);
+    int detOr = 0;
+    getIntegerParam(ADTimePixDetectorOrientation, &detOr);
+    const int chipPelCount = pelW * pelW;
+
+    json root;
+    root["format_version"] = 1;
+    root["source"]["bpc_path"] = filePath + fileName;
+    root["source"]["num_chips"] = nChips;
+    root["source"]["detector_orientation"] = detOr;
+    root["source"]["chip_pel_width"] = pelW;
+    root["source"]["tool"] = "ADTimePix RefreshPixelConfig mask export";
+    root["source"]["exported_at_utc"] = utcIso8601Now();
+
+    {
+        std::string detType;
+        getStringParam(ADTimePixDetType, detType);
+        if (!detType.empty()) root["detector"]["type"] = detType;
+    }
+    json acq;
+    acq["BPCFilePath"] = filePath;
+    acq["BPCFileName"] = fileName;
+    acq["detector_orientation"] = detOr;
+    root["acquisition"] = acq;
+
+    json mlist = json::array();
+    json badpixels = json::array();
+    int counter = 0;
+    int skippedUnmapped = 0;
+
+    for (int pos = 0; pos < bpcSize; ++pos) {
+        const unsigned char byte = static_cast<unsigned char>(bpcBuf[pos]);
+        if ((byte & 1u) == 0) continue;
+
+        int chip = 0;
+        int lx = 0, ly = 0;
+        if (chipPelCount > 0) {
+            chip = pos / chipPelCount;
+            const int local = pos - chip * chipPelCount;
+            lx = local % pelW;
+            ly = local / pelW;
+        }
+
+        const int imgIdx = bcp2ImgIndex(pos, pelW);
+        if (imgIdx < 0 || cols <= 0) {
+            skippedUnmapped++;
+            continue;
+        }
+        const int ii = imgIdx % cols;
+        const int jj = imgIdx / cols;
+
+        counter++;
+        json row;
+        row["index"] = counter;
+        row["bpc_index"] = pos;
+        row["value"] = static_cast<int>(byte);
+        row["chip"] = chip;
+        row["lx"] = lx;
+        row["ly"] = ly;
+        row["i"] = ii;
+        row["j"] = jj;
+        mlist.push_back(row);
+
+        json bp;
+        bp["Pixel"] = json::array({ii, jj});
+        bp["Median"] = json::array({1, 1});
+        badpixels.push_back(bp);
+    }
+
+    root["counts"]["masked_pels"] = counter;
+    if (skippedUnmapped > 0) {
+        root["counts"]["skipped_unmapped_bcp_index"] = skippedUnmapped;
+    }
+    root["masked_pels"] = mlist;
+    root["Bad pixels"] = badpixels;
+
+    std::ofstream ofs(outPath.c_str(), std::ios::binary | std::ios::trunc);
+    if (!ofs) {
+        char emsg[256];
+        epicsSnprintf(emsg, sizeof(emsg), "Write failed: %s", outPath.c_str());
+        setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
+        setIntegerParam(0, ADTimePixMaskedPelsCount, 0);
+        setStringParam(0, ADTimePixMaskedPelsExportStatus, emsg);
+        ERR_ARGS("exportMaskedPelsJson: %s", emsg);
+        callParamCallbacks(0);
+        return;
+    }
+    ofs << root.dump(2);
+    ofs.close();
+
+    setStringParam(0, ADTimePixMaskedPelsJsonPath, outPath.c_str());
+    setIntegerParam(0, ADTimePixMaskedPelsCount, counter);
+    {
+        char smsg[160];
+        if (skippedUnmapped > 0) {
+            epicsSnprintf(smsg, sizeof(smsg), "OK: %d masked pels, %d index unmapped", counter,
+                          skippedUnmapped);
+        } else {
+            epicsSnprintf(smsg, sizeof(smsg), "OK: wrote %d masked pels", counter);
+        }
+        setStringParam(0, ADTimePixMaskedPelsExportStatus, smsg);
+    }
+    FLOW_ARGS("masked pels JSON %s (%d entries)", outPath.c_str(), counter);
+    callParamCallbacks(0);
+}
+
 asynStatus ADTimePix::refreshPixelConfigFromServal() {
     FLOW_ARGS("fetch per chip, compare to BPC on disk");
     asynStatus status = asynSuccess;
@@ -1251,6 +1415,10 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
             }
         }
         epicsMutexUnlock(pixelConfigDiffMutex_);
+    }
+
+    if (bpcBuf && bpcSize > 0) {
+        exportMaskedPelsJsonFromBpcBuffer(bpcBuf, bpcSize);
     }
 
     if (bpcBuf) {
@@ -6087,6 +6255,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPixelConfigMismatchBytesString, asynParamInt64, &ADTimePixPixelConfigMismatchBytes);
     createParam(ADTimePixPixelConfigStatusString, asynParamOctet, &ADTimePixPixelConfigStatus);
     createParam(ADTimePixPixelConfigDiffString, asynParamInt32Array, &ADTimePixPixelConfigDiff);
+    createParam(ADTimePixMaskedPelsJsonPathString, asynParamOctet, &ADTimePixMaskedPelsJsonPath);
+    createParam(ADTimePixMaskedPelsCountString, asynParamInt32, &ADTimePixMaskedPelsCount);
+    createParam(ADTimePixMaskedPelsExportStatusString, asynParamOctet, &ADTimePixMaskedPelsExportStatus);
 
     //sets driver version
     char versionString[25];

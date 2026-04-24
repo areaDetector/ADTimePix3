@@ -259,6 +259,9 @@
 #define ADTimePixPixelConfigMismatchBytesString  "TPX3_PIXEL_CONFIG_MISMATCH"   // (asynInt64,   r)      Number of differing bytes (if mismatch)
 #define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
 #define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32Array, r)   |SERVAL−BPC| at pelIndex(i,j); row-major j*cols+i (maskCircle convention)
+#define ADTimePixMaskedPelsJsonPathString        "TPX3_MASKED_PELS_JSON_RBV"     // (asynOctet,   r)      Full path to last _masked_pels.json (RefreshPixelConfig)
+#define ADTimePixMaskedPelsCountString           "TPX3_MASKED_PELS_COUNT_RBV"   // (asynInt32,   r)      Count of BPC pels with bit0 set in export
+#define ADTimePixMaskedPelsExportStatusString   "TPX3_MASKED_PELS_EXPORT_STATUS_RBV" // (asynOctet,   r)  OK / skipped / I/O error message
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
 #define ADTimePixPrvImg1FilePatString         "TPX3_PRV_IMG1PAT"            // (asynOctet,        w)      Preview ImageChannels FilePattern 
@@ -781,6 +784,9 @@ class ADTimePix : public ADDriver{
         int ADTimePixPixelConfigMismatchBytes;
         int ADTimePixPixelConfigStatus;
         int ADTimePixPixelConfigDiff;
+        int ADTimePixMaskedPelsJsonPath;
+        int ADTimePixMaskedPelsCount;
+        int ADTimePixMaskedPelsExportStatus;
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
@@ -789,7 +795,7 @@ class ADTimePix : public ADDriver{
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */
         void pushProcessedHstToPlugins();
 
-        #define ADTIMEPIX_LAST_PARAM ADTimePixPixelConfigDiff  // Last parameter in the list
+        #define ADTIMEPIX_LAST_PARAM ADTimePixMaskedPelsExportStatus  // Last parameter in the list
 
     private:
 
@@ -1044,6 +1050,8 @@ class ADTimePix : public ADDriver{
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
         int pelIndex(int x, int y);
         int bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
+        /** Write <BPCFilePath><stem>_masked_pels.json from in-memory BPC (bit0 = masked). Called from refreshPixelConfig when BPC is loaded. */
+        void exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSize);
 };
 
 // Stores number of additional PV parameters are added by the driver

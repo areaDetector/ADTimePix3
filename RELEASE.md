@@ -42,6 +42,8 @@ R1-6-2 (TBD, 2026)
 
 * **Phoebus histogram InfoDisplay layout tweak**: Manually adjusted the layout in `tpx3App/op/bob/Acquire/PrvHstHistogram.bob` so InfoDisplay text fits properly (increased container/text height).
 
+* **Masked pels JSON export (`RefreshPixelConfig`)**: When a BPC file is read successfully during **`RefreshPixelConfig`**, the driver writes **`<BPCFilePath><stem>_masked_pels.json`** (stem = **`BPCFileName`** with a trailing **`.bpc`** removed, case-insensitive) containing **`format_version`**, **`source`**, optional **`detector`/`acquisition`**, **`masked_pels`** (BPC index, chip, `lx`/`ly`, image **`i`/`j`** via **`bcp2ImgIndex`**), and **`Bad pixels`** (median 1×1) for **NDPluginBadPixel**. Readbacks: **`TPX3_MASKED_PELS_JSON_RBV`**, **`TPX3_MASKED_PELS_COUNT_RBV`**, **`TPX3_MASKED_PELS_EXPORT_STATUS_RBV`** (`File.template` as **`MaskedPelsJson_RBV`**, etc.). Phoebus: **`op/bob/Mask/PixelConfigMaskPanel.bob`** shows count / status / path; **`Mask.bob`** embedded panel height updated to **920** px. See **`documentation/MASKED_PIXELS_JSON_AND_STREAMING.md`**.
+
 
 R1-6-1 (March 31, 2026)
 --------

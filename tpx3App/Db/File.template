@@ -86,6 +86,30 @@ record(waveform, "$(P)$(R)BPCFileName_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Last _masked_pels.json path (written on RefreshPixelConfig when BPC is read; see documentation/MASKED_PIXELS_JSON_AND_STREAMING.md)
+record(waveform, "$(P)$(R)MaskedPelsJson_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASKED_PELS_JSON_RBV")
+    field(FTVL, "CHAR")
+    field(NELM, "512")
+    field(SCAN, "I/O Intr")
+}
+record(longin, "$(P)$(R)MaskedPelsCount_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASKED_PELS_COUNT_RBV")
+    field(SCAN, "I/O Intr")
+}
+record(waveform, "$(P)$(R)MaskedPelsExportStatus_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASKED_PELS_EXPORT_STATUS_RBV")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 record(waveform, "$(P)$(R)DACSFileName")
 {
     field(PINI, "YES")
