@@ -86,19 +86,24 @@ The mask list is defined by the **.bpc** and **geometry** (`num_chips`, orientat
 
 Rationale: **Data acquisition** pipelines often need “what detector + what calibration file + what key EPICS setpoints” in one place. Putting a **redundant snapshot** in the mask JSON is convenient for **one-file** hand-off to analysis; the **archiver** remains authoritative for time series.
 
-## Driver / IOC integration (planned)
+## Driver / IOC integration (implemented)
 
 ### File location and name
 
-- **Directory:** use the same base directory as the calibration file — **`BPCFilePath`** (e.g. `TPX3-TEST:cam1:BPCFilePath`).
-- **Filename:** derive from **`BPCFileName`**: e.g. replace a trailing **`*.bpc`** with a fixed suffix such as **`_masked_pels.json`** (e.g. `Eq_neg_cfg1.bpc` → `Eq_neg_cfg1_masked_pels.json`). If the calibration name does not end in `.bpc`, append **`_masked_pels.json`** to the full basename. Document any implementation corner cases in **RELEASE.md**.
-- A readback PV (e.g. full path to the last-written JSON) is useful for **`NDPluginBadPixel`’s** `BAD_PIXEL_FILE_NAME` and for clients.
+- **Directory:** the same as the calibration file — **`BPCFilePath`** (e.g. `TPX3-TEST:cam1:BPCFilePath`).
+- **Filename:** derive from **`BPCFileName`**: replace a trailing **`*.bpc`** (case-insensitive) with **`_masked_pels.json`** (e.g. `Eq_neg_cfg1.bpc` → `Eq_neg_cfg1_masked_pels.json`). If the name has no **`.bpc`** suffix, **`_masked_pels.json`** is appended to the full basename.
+- **Readback PVs (asyn → EPICS in `tpx3App/Db/File.template`):**
+  - **`TPX3_MASKED_PELS_JSON_RBV`:** full path to the file last written (record `MaskedPelsJson_RBV`).
+  - **`TPX3_MASKED_PELS_COUNT_RBV`:** number of pels with bit 0 set (record `MaskedPelsCount_RBV`).
+  - **`TPX3_MASKED_PELS_EXPORT_STATUS_RBV`:** short status (record `MaskedPelsExportStatus_RBV`), e.g. `OK: wrote N…`, `Skipped:…`, or `Write failed:…`.
+- Use **`MaskedPelsJson_RBV`** for **`NDPluginBadPixel`** `BAD_PIXEL_FILE_NAME` (or a symlink) when you want the plugin to load the same file.
+- **Phoebus:** **`tpx3App/op/bob/Mask/PixelConfigMaskPanel.bob`** (embedded from **`Mask.bob`**) shows **Count**, **Status**, and **Path** after a refresh. **`Mask.bob`** does not list them again (same embedded panel). No change required to **`MaskStatus.bob`** for this feature.
 
 This keeps the mask artifact next to the BPC the IOC is configured to use, which matches operator expectations and backup policies.
 
 ### Trigger: export when `RefreshPixelConfig` is processed
 
-The driver action **`TPX3_REFRESH_PIXEL_CONFIG`** (record **`RefreshPixelConfig`** on the dashboard, e.g. `TPX3-TEST:cam1:RefreshPixelConfig`) already:
+The driver action **`TPX3_REFRESH_PIXEL_CONFIG`** (record **`RefreshPixelConfig`**, e.g. `TPX3-TEST:cam1:RefreshPixelConfig`) already:
 
 - GETs per-chip **PixelConfig** from SERVAL, and  
 - **Reads the on-disk BPC** (when present) to compare bytes and fill **`PixelConfigDiff`**.
@@ -127,4 +132,4 @@ The driver action **`TPX3_REFRESH_PIXEL_CONFIG`** (record **`RefreshPixelConfig`
 
 ## Release / tracking
 
-When this export is implemented in the driver or IOC, add a **RELEASE.md** entry. Document at minimum: **`BPCFileName`**-derived `*_masked_pels.json` next to **`BPCFilePath`**, the **`RefreshPixelConfig`** (or other) trigger, readback PVs for the written path and export status, and **`format_version`** behavior.
+Documented in **RELEASE.md** (section **R1-6-2**): `*_masked_pels.json` next to **`BPCFilePath`**, trigger **`RefreshPixelConfig`**, readback PVs, **`format_version` == 1**.
