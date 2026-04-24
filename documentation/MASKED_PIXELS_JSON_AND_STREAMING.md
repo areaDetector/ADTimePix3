@@ -2,11 +2,11 @@
 
 This document describes how to **publish** calibration-derived masked pels (bit 0 in the `.bpc` byte) for three audiences:
 
-1. **ADCore** image correction — `NDPluginBadPixel` and its expected JSON.
-2. **Downstream analysis** — dense image coordinates and stable cross-refs.
-3. **Event / TCP streaming (future)** — chip id and local tile coordinates `(lx, ly)` and file position for serialization and debugging.
+1. **ADCore** image correction -- `NDPluginBadPixel` and its expected JSON.
+2. **Downstream analysis** -- dense image coordinates and stable cross-refs.
+3. **Event / TCP streaming (future)** -- chip id and local tile coordinates `(lx, ly)` and file position for serialization and debugging.
 
-It builds on the offline tool chain under `maskTpx3/xyChip` — especially **`check_bit.c`** and **`xyChip.sh`**, which list masked bytes with the same **global image** `(i, j)` convention as `ADTimePix::bcp2ImgIndex` in `mask_io.cpp` (see comments in `check_bit.c`).
+It builds on the offline tool chain under `maskTpx3/xyChip` -- especially **`check_bit.c`** and **`xyChip.sh`**, which list masked bytes with the same **global image** `(i, j)` convention as `ADTimePix::bcp2ImgIndex` in `mask_io.cpp` (see comments in `check_bit.c`).
 
 ## Why not only the `NDPluginBadPixel` JSON?
 
@@ -14,7 +14,7 @@ It builds on the offline tool chain under `maskTpx3/xyChip` — especially **`ch
 
 That format is **minimal and plugin-specific**: it has **no** chip index, no BPC file offset, no serial index, and no `lx, ly` on the ASIC. For **streaming**, hardware paths often key events by **chip and local address** (or a linear id derived from the same layout as the `.bpc`). For **reproducibility** and support tickets, you want a **stable counter** and the **on-disk** `Position` (BPC index) used by calibration tools.
 
-**Recommendation:** use **one “expanded” JSON** that contains both:
+**Recommendation:** use **one "expanded" JSON** that contains both:
 
 - A **`"Bad pixels"`** array: **sufficient** for `NDPluginBadPixel` (same file, no second sync step).
 - A **`"masked_pels"`** (or `entries`) array: **authoritative** list with chip, BPC index, value, local coords, image coords, and a **serial** `index` for cross-reference.
@@ -27,10 +27,10 @@ Alternatively, maintain **two** files (e.g. `tpx3_mask_full.json` + `bad_pixel_p
 
 | Field | Meaning |
 |-------|--------|
-| **BPC / `Position`** | Linear byte index in the `.bpc` file, chip0 block then chip1, …; within a chip, row-major with **x (column within tile) fast**, **y (row within tile) slow** — as in `bcp_position_to_chip_local` in `check_bit.c`. |
-| **`chip`, `lx`, `ly`** | Chip id in file order; local pixel inside the `chip_pel_width × chip_pel_width` tile. |
-| **`i`, `j` (image)** | **Column, row** in the **global** assembled image, **top-left origin** — same as printed by `check_bit` and documented as matching **`bcp2ImgIndex`** in `mask_io.cpp`. |
-| **Mask / PixelConfigDiff image PVs** | Row-major `j * cols + i` with mapping **`pelIndex(i, j)`** to file index — this is the path used for mask *editing* and `PixelConfigDiff`, and is **not** always the inverse of `bcp2ImgIndex` for every orientation. See `documentation/PIXELCONFIG_BPC_DIFF.md` and `mask_io.cpp` comments. |
+| **BPC / `Position`** | Linear byte index in the `.bpc` file, chip0 block then chip1, ...; within a chip, row-major with **x (column within tile) fast**, **y (row within tile) slow** -- as in `bcp_position_to_chip_local` in `check_bit.c`. |
+| **`chip`, `lx`, `ly`** | Chip id in file order; local pixel inside the `chip_pel_width x chip_pel_width` tile. |
+| **`i`, `j` (image)** | **Column, row** in the **global** assembled image, **top-left origin** -- same as printed by `check_bit` and documented as matching **`bcp2ImgIndex`** in `mask_io.cpp`. |
+| **Mask / PixelConfigDiff image PVs** | Row-major `j * cols + i` with mapping **`pelIndex(i, j)`** to file index -- this is the path used for mask *editing* and `PixelConfigDiff`, and is **not** always the inverse of `bcp2ImgIndex` for every orientation. See `documentation/PIXELCONFIG_BPC_DIFF.md` and `mask_io.cpp` comments. |
 
 When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** with the **same** `(i, j)` as the dense image and `NDArray` dimensions (column `i`, row `j`).
 
@@ -70,7 +70,7 @@ When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** wit
 ```
 
 - **`index`**: 1-based serial, matching a human `check_bit` run (optional; can also be 0-based if documented).
-- **`Bad pixels`**: generated from the same rows; correction mode is a **policy** choice (median vs replace) — not implied by the BPC alone.
+- **`Bad pixels`**: generated from the same rows; correction mode is a **policy** choice (median vs replace) -- not implied by the BPC alone.
 - Optional top-level objects **`detector`** and **`acquisition`** (or a single **`epics_snapshot`**) can follow the **Optional metadata** section below.
 
 ## Optional metadata for detector and data acquisition
@@ -80,22 +80,22 @@ The mask list is defined by the **.bpc** and **geometry** (`num_chips`, orientat
 | Section | Purpose |
 |--------|--------|
 | **`source` (expanded)** | Already may include BPC path, `num_chips`, `detector_orientation`, `chip_pel_width`, export timestamp. Add **host / IOC** or **git hash** only if you need traceability. |
-| **`detector` (optional)** | Stable instrument identity: detector model, **serial number**, firmware/serval version strings — values available from existing PVs if the driver exposes them. Use for **provenance** in acquired data files. |
-| **`acquisition` or `epics_snapshot` (optional)** | A **small, curated** set of PVs relevant to “how this mask relates to a run”: e.g. same-prefix **`BPCFileName`**, **`BPCFilePath`**, `TPX3_DET_ORIENTATION`, threshold or bias PVs, **acquisition time mode** if applicable. **Avoid** duplicating an entire run log or rapidly changing readbacks unless you need them for debugging. |
+| **`detector` (optional)** | Stable instrument identity: detector model, **serial number**, firmware/serval version strings -- values available from existing PVs if the driver exposes them. Use for **provenance** in acquired data files. |
+| **`acquisition` or `epics_snapshot` (optional)** | A **small, curated** set of PVs relevant to "how this mask relates to a run": e.g. same-prefix **`BPCFileName`**, **`BPCFilePath`**, `TPX3_DET_ORIENTATION`, threshold or bias PVs, **acquisition time mode** if applicable. **Avoid** duplicating an entire run log or rapidly changing readbacks unless you need them for debugging. |
 | **Policy** | Prefer **versioned** `format_version` and **optional** objects so old consumers ignore unknown fields. If run-specific data belongs elsewhere (NeXus, EPICS archiver), keep this file **light** and reference an external id instead of pasting long blobs. |
 
-Rationale: **Data acquisition** pipelines often need “what detector + what calibration file + what key EPICS setpoints” in one place. Putting a **redundant snapshot** in the mask JSON is convenient for **one-file** hand-off to analysis; the **archiver** remains authoritative for time series.
+Rationale: **Data acquisition** pipelines often need "what detector + what calibration file + what key EPICS setpoints" in one place. Putting a **redundant snapshot** in the mask JSON is convenient for **one-file** hand-off to analysis; the **archiver** remains authoritative for time series.
 
 ## Driver / IOC integration (implemented)
 
 ### File location and name
 
-- **Directory:** the same as the calibration file — **`BPCFilePath`** (e.g. `TPX3-TEST:cam1:BPCFilePath`).
-- **Filename:** derive from **`BPCFileName`**: replace a trailing **`*.bpc`** (case-insensitive) with **`_masked_pels.json`** (e.g. `Eq_neg_cfg1.bpc` → `Eq_neg_cfg1_masked_pels.json`). If the name has no **`.bpc`** suffix, **`_masked_pels.json`** is appended to the full basename.
-- **Readback PVs (asyn → EPICS in `tpx3App/Db/File.template`):**
+- **Directory:** the same as the calibration file -- **`BPCFilePath`** (e.g. `TPX3-TEST:cam1:BPCFilePath`).
+- **Filename:** derive from **`BPCFileName`**: replace a trailing **`*.bpc`** (case-insensitive) with **`_masked_pels.json`** (e.g. `Eq_neg_cfg1.bpc` -> `Eq_neg_cfg1_masked_pels.json`). If the name has no **`.bpc`** suffix, **`_masked_pels.json`** is appended to the full basename.
+- **Readback PVs (asyn -> EPICS in `tpx3App/Db/File.template`):**
   - **`TPX3_MASKED_PELS_JSON_RBV`:** full path to the file last written (record `MaskedPelsJson_RBV`).
   - **`TPX3_MASKED_PELS_COUNT_RBV`:** number of pels with bit 0 set (record `MaskedPelsCount_RBV`).
-  - **`TPX3_MASKED_PELS_EXPORT_STATUS_RBV`:** short status (record `MaskedPelsExportStatus_RBV`), e.g. `OK: wrote N…`, `Skipped:…`, or `Write failed:…`.
+  - **`TPX3_MASKED_PELS_EXPORT_STATUS_RBV`:** short status (record `MaskedPelsExportStatus_RBV`), e.g. `OK: wrote N...`, `Skipped:...`, or `Write failed:...`.
 - Use **`MaskedPelsJson_RBV`** for **`NDPluginBadPixel`** `BAD_PIXEL_FILE_NAME` (or a symlink) when you want the plugin to load the same file.
 - **Phoebus:** **`tpx3App/op/bob/Mask/PixelConfigMaskPanel.bob`** (embedded from **`Mask.bob`**) shows **Count**, **Status**, and **Path** after a refresh. **`Mask.bob`** does not list them again (same embedded panel). No change required to **`MaskStatus.bob`** for this feature.
 
@@ -110,25 +110,25 @@ The driver action **`TPX3_REFRESH_PIXEL_CONFIG`** (record **`RefreshPixelConfig`
 
 **Writing the single-file mask JSON in the same code path (after a successful BPC read used for that comparison) is a reasonable integration point:**
 
-- **Alignment:** the operator already uses **Refresh** when they care that **SERVAL**, **on-disk BPC**, and **live** config are in step; emitting the **mask list from the same file** the driver just read keeps “what’s on disk for this path/name” in lockstep with that workflow.
+- **Alignment:** the operator already uses **Refresh** when they care that **SERVAL**, **on-disk BPC**, and **live** config are in step; emitting the **mask list from the same file** the driver just read keeps "what's on disk for this path/name" in lockstep with that workflow.
 - **No extra file selection:** `BPCFilePath` + `BPCFileName` are already in context.
 
 **Caveats (document for operators):**
 
 1. The exported mask is **from the on-disk .bpc** (bit 0 pels), not from the decoded **SERVAL** PixelConfig alone. If SERVAL and file **diverge**, the JSON still describes the **file**; mismatch is visible via existing **`PixelConfigMatchBPC_***` PVs. This matches **`NDPluginBadPixel`** and file-based analysis, but should be explicit in the docstring/release notes.
-2. **Side effects:** Refresh may already trigger network traffic to each chip. Adding a local JSON write is cheap; if a site needs **re-export without SERVAL round-trips**, a **separate** “export mask JSON only” action (or PROC) can be added later.
+2. **Side effects:** Refresh may already trigger network traffic to each chip. Adding a local JSON write is cheap; if a site needs **re-export without SERVAL round-trips**, a **separate** "export mask JSON only" action (or PROC) can be added later.
 3. If **`BPCFilePath`/`BPCFileName`** are empty or the file is missing, the driver should **skip** or **error** the export and set status PVs clearly (same as no-BPC for PixelConfig compare).
 
 ### Other integration steps (unchanged in intent)
 
-1. **Image pipeline:** set **`NDPluginBadPixel`’s** `BAD_PIXEL_FILE_NAME` to the written JSON (manually, via an alias/substitution, or automation when the readback path updates).
+1. **Image pipeline:** set **`NDPluginBadPixel`'s** `BAD_PIXEL_FILE_NAME` to the written JSON (manually, via an alias/substitution, or automation when the readback path updates).
 2. **Streaming / offline:** consumers load **`masked_pels`** (or a columnar export derived from it) to filter or relabel events by `chip` / `(lx,ly)` or global `(i,j)`.
 
 ## Related documentation
 
-- `documentation/PIXELCONFIG_BPC_DIFF.md` — `BPC` vs `MaskBPC` vs `PixelConfigDiff`, `pelIndex` vs `bcp2ImgIndex`.
-- ADCore: `ADApp/pluginSrc/NDPluginBadPixel.cpp` — JSON format for `"Bad pixels"`.
-- Off-repo reference: `maskTpx3/xyChip/check_bit.c`, `xyChip.sh` — reference listing for validation and tooling.
+- `documentation/PIXELCONFIG_BPC_DIFF.md` -- `BPC` vs `MaskBPC` vs `PixelConfigDiff`, `pelIndex` vs `bcp2ImgIndex`.
+- ADCore: `ADApp/pluginSrc/NDPluginBadPixel.cpp` -- JSON format for `"Bad pixels"`.
+- Off-repo reference: `maskTpx3/xyChip/check_bit.c`, `xyChip.sh` -- reference listing for validation and tooling.
 
 ## Release / tracking
 
