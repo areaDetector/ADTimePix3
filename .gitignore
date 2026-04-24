@@ -16,7 +16,7 @@ mask.bpc
 .iocsh_history
 
 # Documentation files
-documentation/PRVIMG_METADATA_RECOMMENDATIONS.md
+# documentation/PRVIMG_METADATA_RECOMMENDATIONS.md
 
 # json files
 *.json
