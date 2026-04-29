@@ -7,7 +7,7 @@ ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
 USR_CPPFLAGS += -D__X64
 endif
 
-USR_CPPFLAGS += -std=c++11
+USR_CPPFLAGS += -std=c++17
 # Shorter asyn log prefixes (__func__ only; avoids long __PRETTY_FUNCTION__ on GCC/Clang):
 # USR_CPPFLAGS += -DADTPX3_LOG_SHORT
 # Route WARN / WARN_ARGS through ASYN_TRACE_ERROR (visible when only ERROR trace is on):

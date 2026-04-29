@@ -3,16 +3,22 @@
 
 #include <cstdint>
 #include <fstream>
+#include <functional>
 #include <future>
+#include <list>
 #include <memory>
-#include <queue>
+#include <optional>
+#include <variant>
 
 #include "cpr/accept_encoding.h"
+#include "cpr/async_wrapper.h"
 #include "cpr/auth.h"
 #include "cpr/bearer.h"
 #include "cpr/body.h"
+#include "cpr/body_view.h"
 #include "cpr/callback.h"
 #include "cpr/connect_timeout.h"
+#include "cpr/connection_pool.h"
 #include "cpr/cookies.h"
 #include "cpr/cprtypes.h"
 #include "cpr/curlholder.h"
@@ -30,27 +36,33 @@
 #include "cpr/range.h"
 #include "cpr/redirect.h"
 #include "cpr/reserve_size.h"
+#include "cpr/resolve.h"
 #include "cpr/response.h"
+#include "cpr/sse.h"
 #include "cpr/ssl_options.h"
 #include "cpr/timeout.h"
 #include "cpr/unix_socket.h"
 #include "cpr/user_agent.h"
+#include "cpr/util.h"
 #include "cpr/verbose.h"
 
 namespace cpr {
 
-using AsyncResponse = std::future<Response>;
+using AsyncResponse = AsyncWrapper<Response>;
+using Content = std::variant<std::monostate, cpr::Payload, cpr::Body, cpr::BodyView, cpr::Multipart>;
 
 class Interceptor;
+class MultiPerform;
 
 class Session : public std::enable_shared_from_this<Session> {
   public:
     Session();
     Session(const Session& other) = delete;
+    Session(Session&& old) = delete;
 
     ~Session() = default;
 
-    Session& operator=(Session&& old) noexcept = default;
+    Session& operator=(Session&& old) noexcept = delete;
     Session& operator=(const Session& other) = delete;
 
     void SetUrl(const Url& url);
@@ -58,8 +70,11 @@ class Session : public std::enable_shared_from_this<Session> {
     void SetParameters(Parameters&& parameters);
     void SetHeader(const Header& header);
     void UpdateHeader(const Header& header);
+    [[nodiscard]] Header& GetHeader();
+    [[nodiscard]] const Header& GetHeader() const;
     void SetTimeout(const Timeout& timeout);
     void SetConnectTimeout(const ConnectTimeout& timeout);
+    void SetConnectionPool(const ConnectionPool& pool);
     void SetAuth(const Authentication& auth);
 // Only supported with libcurl >= 7.61.0.
 // As an alternative use SetHeader and add the token manually.
@@ -79,6 +94,7 @@ class Session : public std::enable_shared_from_this<Session> {
     void SetCookies(const Cookies& cookies);
     void SetBody(Body&& body);
     void SetBody(const Body& body);
+    void SetBodyView(BodyView body);
     void SetLowSpeed(const LowSpeed& low_speed);
     void SetVerifySsl(const VerifySsl& verify);
     void SetUnixSocket(const UnixSocket& unix_socket);
@@ -88,17 +104,34 @@ class Session : public std::enable_shared_from_this<Session> {
     void SetWriteCallback(const WriteCallback& write);
     void SetProgressCallback(const ProgressCallback& progress);
     void SetDebugCallback(const DebugCallback& debug);
+    void SetServerSentEventCallback(const ServerSentEventCallback& sse);
     void SetVerbose(const Verbose& verbose);
     void SetInterface(const Interface& iface);
     void SetLocalPort(const LocalPort& local_port);
     void SetLocalPortRange(const LocalPortRange& local_port_range);
     void SetHttpVersion(const HttpVersion& version);
     void SetRange(const Range& range);
+    void SetResolve(const Resolve& resolve);
+    void SetResolves(const std::vector<Resolve>& resolves);
     void SetMultiRange(const MultiRange& multi_range);
     void SetReserveSize(const ReserveSize& reserve_size);
     void SetAcceptEncoding(const AcceptEncoding& accept_encoding);
     void SetAcceptEncoding(AcceptEncoding&& accept_encoding);
     void SetLimitRate(const LimitRate& limit_rate);
+
+    /**
+     * Returns a reference to the content sent in previous request.
+     **/
+    [[nodiscard]] const Content& GetContent() const;
+
+    /**
+     * Removes the content sent in previous request from internal state, so it will not be sent with the next request.
+     * Call this before doing a request that is specified not to send a body, e.g. GET.
+     **/
+    void RemoveContent();
+
+    // For cancellable requests
+    void SetCancellationParam(std::shared_ptr<std::atomic_bool> param);
 
     // Used in templated functions
     void SetOption(const Url& url);
@@ -108,6 +141,7 @@ class Session : public std::enable_shared_from_this<Session> {
     void SetOption(const Timeout& timeout);
     void SetOption(const ConnectTimeout& timeout);
     void SetOption(const Authentication& auth);
+    void SetOption(const ConnectionPool& pool);
 // Only supported with libcurl >= 7.61.0.
 // As an alternative use SetHeader and add the token manually.
 #if LIBCURL_VERSION_NUM >= 0x073D00
@@ -127,11 +161,13 @@ class Session : public std::enable_shared_from_this<Session> {
     void SetOption(const Cookies& cookies);
     void SetOption(Body&& body);
     void SetOption(const Body& body);
+    void SetOption(BodyView body);
     void SetOption(const ReadCallback& read);
     void SetOption(const HeaderCallback& header);
     void SetOption(const WriteCallback& write);
     void SetOption(const ProgressCallback& progress);
     void SetOption(const DebugCallback& debug);
+    void SetOption(const ServerSentEventCallback& sse);
     void SetOption(const LowSpeed& low_speed);
     void SetOption(const VerifySsl& verify);
     void SetOption(const Verbose& verbose);
@@ -146,6 +182,8 @@ class Session : public std::enable_shared_from_this<Session> {
     void SetOption(const ReserveSize& reserve_size);
     void SetOption(const AcceptEncoding& accept_encoding);
     void SetOption(AcceptEncoding&& accept_encoding);
+    void SetOption(const Resolve& resolve);
+    void SetOption(const std::vector<Resolve>& resolves);
 
     cpr_off_t GetDownloadFileLength();
     /**
@@ -180,19 +218,19 @@ class Session : public std::enable_shared_from_this<Session> {
     AsyncResponse PutAsync();
 
     template <typename Then>
-    auto GetCallback(Then then) -> std::future<decltype(then(Get()))>;
+    auto GetCallback(Then then);
     template <typename Then>
-    auto PostCallback(Then then) -> std::future<decltype(then(Post()))>;
+    auto PostCallback(Then then);
     template <typename Then>
-    auto PutCallback(Then then) -> std::future<decltype(then(Put()))>;
+    auto PutCallback(Then then);
     template <typename Then>
-    auto HeadCallback(Then then) -> std::future<decltype(then(Head()))>;
+    auto HeadCallback(Then then);
     template <typename Then>
-    auto DeleteCallback(Then then) -> std::future<decltype(then(Delete()))>;
+    auto DeleteCallback(Then then);
     template <typename Then>
-    auto OptionsCallback(Then then) -> std::future<decltype(then(Options()))>;
+    auto OptionsCallback(Then then);
     template <typename Then>
-    auto PatchCallback(Then then) -> std::future<decltype(then(Patch()))>;
+    auto PatchCallback(Then then);
 
     std::shared_ptr<CurlHolder> GetCurlHolder();
     std::string GetFullRequestUrl();
@@ -204,16 +242,23 @@ class Session : public std::enable_shared_from_this<Session> {
     void PreparePatch();
     void PreparePost();
     void PreparePut();
+    void PrepareDownload(const WriteCallback& write);
+    void PrepareDownload(std::ofstream& file);
     Response Complete(CURLcode curl_error);
+    Response CompleteDownload(CURLcode curl_error);
 
     void AddInterceptor(const std::shared_ptr<Interceptor>& pinterceptor);
 
-  private:
-    // Interceptors should be able to call the private procceed() function
-    friend Interceptor;
+    std::shared_ptr<Session> GetSharedPtrFromThis();
 
-    bool hasBodyOrPayload_{false};
+  private:
+    // Interceptors should be able to call the private proceed() function
+    friend Interceptor;
+    friend MultiPerform;
+
+
     bool chunkedTransferEncoding_{false};
+    Content content_{std::monostate{}};
     std::shared_ptr<CurlHolder> curl_;
     Url url_;
     Parameters parameters_;
@@ -221,68 +266,100 @@ class Session : public std::enable_shared_from_this<Session> {
     ProxyAuthentication proxyAuth_;
     Header header_;
     AcceptEncoding acceptEncoding_;
-    /**
-     * Will be set by the read callback.
-     * Ensures that the "Transfer-Encoding" is set to "chunked", if not overriden in header_.
-     **/
-    ReadCallback readcb_;
-    HeaderCallback headercb_;
-    WriteCallback writecb_;
-    ProgressCallback progresscb_;
-    DebugCallback debugcb_;
+
+
+    struct Callbacks {
+        /**
+         * Will be set by the read callback.
+         * Ensures that the "Transfer-Encoding" is set to "chunked", if not overriden in header_.
+         **/
+        ReadCallback readcb_;
+        HeaderCallback headercb_;
+        WriteCallback writecb_;
+        ProgressCallback progresscb_;
+        DebugCallback debugcb_;
+        CancellationCallback cancellationcb_;
+        ServerSentEventCallback ssecb_;
+    };
+
+    std::unique_ptr<Callbacks> cbs_{std::make_unique<Callbacks>()};
+
     size_t response_string_reserve_size_{0};
     std::string response_string_;
     std::string header_string_;
-    std::queue<std::shared_ptr<Interceptor>> interceptors_;
+    // Container type is required to keep iterator valid on elem insertion. E.g. list but not vector.
+    using InterceptorsContainer = std::list<std::shared_ptr<Interceptor>>;
+    InterceptorsContainer interceptors_;
+    // Currently running interceptor
+    InterceptorsContainer::const_iterator current_interceptor_;
+    // Interceptor within the chain where to start with each repeated request
+    InterceptorsContainer::const_iterator first_interceptor_;
+    bool isUsedInMultiPerform{false};
+    bool isCancellable{false};
+
+#if SUPPORT_SSL_NO_REVOKE
+    bool sslNoRevoke_{false};
+#endif
 
     Response makeDownloadRequest();
     Response makeRequest();
     Response proceed();
+    const std::optional<Response> intercept();
+    /**
+     * Prepares the curl object for a request with everything used by all requests.
+     **/
+    void prepareCommonShared();
+    /**
+     * Prepares the curl object for a request with everything used by all non download related requests.
+     **/
     void prepareCommon();
-    void SetHeaderInternal();
-    std::shared_ptr<Session> GetSharedPtrFromThis();
+    /**
+     * Prepares the curl object for a request with everything used by the download request.
+     **/
+    void prepareCommonDownload();
+    void prepareHeader();
+    void prepareProxy();
+    CURLcode DoEasyPerform();
+    void prepareBodyPayloadOrMultipart() const;
+    /**
+     * Returns true in case content_ is of type cpr::Body or cpr::Payload.
+     **/
+    [[nodiscard]] bool hasBodyOrPayload() const;
 };
 
 template <typename Then>
-auto Session::GetCallback(Then then) -> std::future<decltype(then(Get()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Get()); }, std::move(then));
+auto Session::GetCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Get()); }, std::move(then));
 }
 
 template <typename Then>
-auto Session::PostCallback(Then then) -> std::future<decltype(then(Post()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Post()); }, std::move(then));
+auto Session::PostCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Post()); }, std::move(then));
 }
 
 template <typename Then>
-auto Session::PutCallback(Then then) -> std::future<decltype(then(Put()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Put()); }, std::move(then));
+auto Session::PutCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Put()); }, std::move(then));
 }
 
 template <typename Then>
-auto Session::HeadCallback(Then then) -> std::future<decltype(then(Head()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Head()); }, std::move(then));
+auto Session::HeadCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Head()); }, std::move(then));
 }
 
 template <typename Then>
-auto Session::DeleteCallback(Then then) -> std::future<decltype(then(Delete()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Delete()); }, std::move(then));
+auto Session::DeleteCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Delete()); }, std::move(then));
 }
 
 template <typename Then>
-auto Session::OptionsCallback(Then then) -> std::future<decltype(then(Options()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Options()); }, std::move(then));
+auto Session::OptionsCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Options()); }, std::move(then));
 }
 
 template <typename Then>
-auto Session::PatchCallback(Then then) -> std::future<decltype(then(Patch()))> {
-    auto shared_this = GetSharedPtrFromThis();
-    return async([shared_this](Then then_inner) { return then_inner(shared_this->Patch()); }, std::move(then));
+auto Session::PatchCallback(Then then) {
+    return async([shared_this = GetSharedPtrFromThis()](Then then_inner) { return then_inner(shared_this->Patch()); }, std::move(then));
 }
 
 } // namespace cpr
