@@ -3173,9 +3173,13 @@ void ADTimePix::timePixCallback(){
 
     string measurement = this->serverURL + std::string("/measurement");   
     cpr::Url url = cpr::Url{measurement};
-    cpr::Session session;       //  Stateful piece of the library is needed for while loop. This avoids open connections otherwise generated in while loop below.
+    // One Session for the whole callback: the inner "wait for new frame" loop issues many GETs
+    // to the same /measurement URL. Reusing session.Get() avoids per-request cpr::Get(...) churn
+    // (fresh CurlHolder each time) and reduces TCP connection/socket churn under tight polling.
+    cpr::Session session;
     session.SetOption(url);
-    cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};   // Reserve space for at least 1 million characters
+    // Pre-size response buffer so repeated large JSON bodies do not reallocate every poll.
+    cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};
     session.SetOption(reserveSize);
     //session.SetReserveSize(reserveSize);
     cpr::Authentication authentication = cpr::Authentication("user", "pass", cpr::AuthMode::BASIC);
@@ -3257,7 +3261,7 @@ void ADTimePix::timePixCallback(){
 
         // Wait for new frame
         while(frameCounter == new_frame_num){
-            r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplication" of sessions
+            r = session.Get();  // same Session as initial GET; see setup above
 
             if (r.status_code != 200) {
                 logHttpWarning("timePixCallback poll GET /measurement", "GET", measurement, (long)r.status_code,
