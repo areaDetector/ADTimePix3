@@ -335,8 +335,11 @@ asynStatus ADTimePix::uploadBPC(){
     getStringParam(ADTimePixBPCFileName, fileName);
     bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string(filePath) + std::string(fileName);
 
-    cpr::Response r = cpr::Get(cpr::Url{bpc_file},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    cpr::Response r = servalHttpGetAuthOnly(bpc_file);
+    if (r.status_code != 200) {
+        logHttpFailure("uploadBPC GET /config/load pixelconfig", "GET", bpc_file, (long)r.status_code, r.text);
+        status = asynError;
+    }
     LOG_ARGS("uploadBPC: http_code=%ld file=%s%s", (long)r.status_code, filePath.c_str(), fileName.c_str());
     setIntegerParam(ADTimePixHttpCode, r.status_code);
     setStringParam(ADTimePixWriteMsg, r.text.c_str());

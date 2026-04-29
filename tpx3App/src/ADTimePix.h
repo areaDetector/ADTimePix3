@@ -1045,6 +1045,9 @@ class ADTimePix : public ADDriver{
         asynStatus configureHistogramChannel(json& server_j);
         asynStatus sendConfiguration(const json& config);
 
+        /** SERVAL auth-only GET (same as internal servalGetAuthOnly); for use from other translation units. */
+        cpr::Response servalHttpGetAuthOnly(const std::string& url);
+
         /** Trim response body for logs (control chars -> space, cap length). */
         static std::string trimHttpBodyForLog(const std::string& body, size_t maxLen = 512);
         void logHttpFailure(const char* context, const char* method, const std::string& endpoint, long status,

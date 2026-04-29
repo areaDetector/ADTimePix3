@@ -96,6 +96,10 @@ bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
 }
 }  // namespace
 
+cpr::Response ADTimePix::servalHttpGetAuthOnly(const std::string& url) {
+    return servalGetAuthOnly(url);
+}
+
 // NetworkClient class implementation
 NetworkClient::NetworkClient() : socket_fd_(-1), connected_(false) {}
 
@@ -1877,6 +1881,10 @@ asynStatus ADTimePix::uploadDACS(){
     dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(filePath) + std::string(fileName);
 
     cpr::Response r = servalGetAuthOnly(dacs_file);
+    if (r.status_code != 200) {
+        logHttpFailure("uploadDACS GET /config/load dacs", "GET", dacs_file, (long)r.status_code, r.text);
+        status = asynError;
+    }
 
     printf("\nuploadDACS: http_code = %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 

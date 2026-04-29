@@ -27,6 +27,7 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * Added shared CPR request helpers in **`ADTimePix.cpp`** and migrated high-duplication GET/PUT call sites (connection checks, config paths, start/stop measurement flows) to reduce repeated auth/header/timeout boilerplate.
   * Default **5 second** timeouts on key status reads (`/dashboard`, `/detector`, `/detector/health`, `/measurement/config`, PixelConfig GETs, etc.).
   * **`trimHttpBodyForLog`**, **`logHttpFailure`**, and **`logHttpWarning`** on **`ADTimePix`** (after `driverName`): HTTP error lines include **method**, **URL**, **status**, and a **truncated/sanitized** response snippet (avoid giant HTML dumps in the IOC log).
+  * **BPC / DACS upload alignment** (**`uploadBPC()`**, **`uploadDACS()`**, GET SERVAL **`/config/load`**): Use the same auth-only CPR path as the rest of the driver (**`servalHttpGetAuthOnly`** wraps internal **`servalGetAuthOnly`** so **`mask_io.cpp`** stays consistent with **`ADTimePix.cpp`**). On HTTP status other than **200**, each call **`logHttpFailure`** and returns **`asynError`** (previously these uploads often returned **`asynSuccess`** even when SERVAL reported an error). **`HttpCode`** / **`WriteFileMessage`** (or equivalent PVs) still reflect SERVAL response; check them when uploads fail.
 * **Build validation**:
   * Full repository build (`make -j`) completes successfully after upgrade.
 
