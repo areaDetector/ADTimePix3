@@ -816,7 +816,8 @@ class ADTimePix : public ADDriver{
 
         bool acquiring=false;
 
-        epicsThreadId callbackThreadId;
+        /** Set in acquireStart(); must be NULL otherwise (destructor / shutdown join guard). */
+        epicsThreadId callbackThreadId = nullptr;
         
         // TCP streaming for PrvImg channel
         std::unique_ptr<NetworkClient> prvImgNetworkClient_;
@@ -824,7 +825,7 @@ class ADTimePix : public ADDriver{
         int prvImgPort_;
         bool prvImgConnected_;
         bool prvImgRunning_;
-        epicsThreadId prvImgWorkerThreadId_;
+        epicsThreadId prvImgWorkerThreadId_ = nullptr;
         epicsMutexId prvImgMutex_;
         std::vector<char> prvImgLineBuffer_;
         size_t prvImgTotalRead_;
@@ -845,7 +846,7 @@ class ADTimePix : public ADDriver{
         int imgPort_;
         bool imgConnected_;
         bool imgRunning_;
-        epicsThreadId imgWorkerThreadId_;
+        epicsThreadId imgWorkerThreadId_ = nullptr;
         epicsMutexId imgMutex_;
         std::vector<char> imgLineBuffer_;
         size_t imgTotalRead_;
@@ -891,7 +892,7 @@ class ADTimePix : public ADDriver{
         int prvHstPort_;
         bool prvHstConnected_;
         bool prvHstRunning_;
-        epicsThreadId prvHstWorkerThreadId_;
+        epicsThreadId prvHstWorkerThreadId_ = nullptr;
         epicsMutexId prvHstMutex_;
         std::vector<char> prvHstLineBuffer_;
         size_t prvHstTotalRead_;
@@ -936,7 +937,7 @@ class ADTimePix : public ADDriver{
         std::vector<epicsFloat64> prvHstTimeMsBuffer_;    // For histogram time axis (milliseconds)
 
         // Connection poll (CONNECT/DISCONNECT)
-        epicsThreadId connectionPollThreadId_;
+        epicsThreadId connectionPollThreadId_ = nullptr;
         epicsEventId connectionPollEvent_;
         double connectionPollPeriodSec_;
         int connectionPollEnable_;
