@@ -331,7 +331,7 @@ OPI Screens:
 
 External Libraries:
 
--   CPR (v1.9.1): HTTP client library
+-   CPR (v1.14.2): HTTP client library
 -   nlohmann/json (v3.11.2): JSON parsing
 -   GraphicsMagick: Image processing
 -   ADCore (R3-11+): areaDetector core
