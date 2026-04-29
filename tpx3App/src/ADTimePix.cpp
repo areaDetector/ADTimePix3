@@ -46,6 +46,33 @@ using json = nlohmann::json;
 
 namespace {
 constexpr size_t kPixelConfigBytes = 65536;
+const cpr::Authentication kServalAuth{"user", "pass", cpr::AuthMode::BASIC};
+const cpr::Parameters kServalParams{{"anon", "true"}, {"key", "value"}};
+const cpr::Header kJsonHeader{{"Content-Type", "application/json"}};
+
+cpr::Response servalGet(const std::string& url) {
+    return cpr::Get(cpr::Url{url}, kServalAuth, kServalParams);
+}
+
+cpr::Response servalGet(const std::string& url, int timeout_ms) {
+    return cpr::Get(cpr::Url{url}, kServalAuth, kServalParams, cpr::Timeout{timeout_ms});
+}
+
+cpr::Response servalGetAuthOnly(const std::string& url) {
+    return cpr::Get(cpr::Url{url}, kServalAuth);
+}
+
+cpr::Response servalGetJson(const std::string& url, int timeout_ms) {
+    return cpr::Get(cpr::Url{url}, kJsonHeader, cpr::Timeout{timeout_ms});
+}
+
+cpr::Response servalPutJson(const std::string& url, const std::string& body) {
+    return cpr::Put(cpr::Url{url}, cpr::Body{body}, kJsonHeader);
+}
+
+cpr::Response servalPutJson(const std::string& url, const std::string& body, int timeout_ms) {
+    return cpr::Put(cpr::Url{url}, cpr::Body{body}, kJsonHeader, cpr::Timeout{timeout_ms});
+}
 
 bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
     static const char kChars[] =
@@ -68,6 +95,10 @@ bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
     return true;
 }
 }  // namespace
+
+cpr::Response ADTimePix::servalHttpGetAuthOnly(const std::string& url) {
+    return servalGetAuthOnly(url);
+}
 
 // NetworkClient class implementation
 NetworkClient::NetworkClient() : socket_fd_(-1), connected_(false) {}
@@ -236,6 +267,38 @@ bool NetworkClient::receive_exact(char* buffer, size_t size) {
 
 
 const char* driverName = "ADTimePix";
+
+std::string ADTimePix::trimHttpBodyForLog(const std::string& body, size_t maxLen) {
+    std::string out;
+    const size_t n = std::min(body.size(), maxLen);
+    out.reserve(n + 4);
+    for (size_t i = 0; i < n; ++i) {
+        unsigned char c = static_cast<unsigned char>(body[i]);
+        if (c < 32 || c == 127)
+            out += ' ';
+        else
+            out += static_cast<char>(c);
+    }
+    if (body.size() > maxLen) out += "...";
+    return out;
+}
+
+void ADTimePix::logHttpFailure(const char* context, const char* method, const std::string& endpoint, long status,
+                               const std::string& body) {
+    ERR_ARGS("%s: %s %s HTTP %ld: %s", context ? context : "HTTP", method ? method : "?", endpoint.c_str(), status,
+             trimHttpBodyForLog(body).c_str());
+}
+
+void ADTimePix::logHttpFailure(const std::string& context, const char* method, const std::string& endpoint,
+                               long status, const std::string& body) {
+    logHttpFailure(context.c_str(), method, endpoint, status, body);
+}
+
+void ADTimePix::logHttpWarning(const char* context, const char* method, const std::string& endpoint, long status,
+                               const std::string& body) {
+    WARN_ARGS("%s: %s %s HTTP %ld: %s", context ? context : "HTTP", method ? method : "?", endpoint.c_str(), status,
+              trimHttpBodyForLog(body).c_str());
+}
 
 // Add any driver constants here
 
@@ -579,9 +642,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
     // Implement connecting to the camera here: check welcome URL
     // Usually the vendor provides examples of how to do this with the library/SDK
     // Use GET request and compare if URI status response code is 200.
-    cpr::Response r = cpr::Get(cpr::Url{this->serverURL},
-                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(this->serverURL);
     // printf("Status code: %li\n", r.status_code);
     // printf("Header:\n");
     // for (const pair<string, string>& kv : r.header) {
@@ -601,15 +662,13 @@ asynStatus ADTimePix::initialServerCheckConnection(){
 
         dashboard = this->serverURL + std::string("/dashboard");
         printf("ServerURL/dashboard =%s\n", dashboard.c_str());
-        r = cpr::Get(cpr::Url{dashboard},
-                                   cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                                   cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+        r = servalGet(dashboard);
 
         printf("Status code: %li\n", r.status_code);
         printf("Text:\n %s\n", r.text.c_str());
 
         if (r.status_code != 200) {
-            ERR_ARGS("Dashboard GET failed HTTP %ld", (long)r.status_code);
+            logHttpFailure("initialServerCheckConnection Dashboard", "GET", dashboard, (long)r.status_code, r.text);
             setIntegerParam(ADTimePixDetConnected, 0);
             connected = false;
         } else {
@@ -672,9 +731,7 @@ asynStatus ADTimePix::checkConnection(){
     bool detOk = false;
 
     std::string dashboard = this->serverURL + std::string("/dashboard");
-    cpr::Response r = cpr::Get(cpr::Url{dashboard},
-                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(dashboard, 5000);
     setIntegerParam(ADTimePixHttpCode, r.status_code);
 
     if (r.status_code == 200) {
@@ -770,9 +827,7 @@ asynStatus ADTimePix::getDashboard(){
 
     dashboard = this->serverURL + std::string("/dashboard");
     // printf("ServerURL/dashboard=%s\n", dashboard.c_str());
-    cpr::Response r = cpr::Get(cpr::Url{dashboard},
-                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(dashboard, 5000);
 
     if(r.status_code == 200) {
         setIntegerParam(ADTimePixServalConnected, 1);  // SERVAL reachable (dashboard responded)
@@ -826,12 +881,10 @@ asynStatus ADTimePix::getHealth(){
 
     health = this->serverURL + std::string("/detector/health");
     // printf("Health, %s\n", health.c_str());
-    cpr::Response r = cpr::Get(cpr::Url{health},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(health, 5000);
 
     if (r.status_code != 200) {
-        ERR_ARGS("Health GET failed HTTP %ld", (long)r.status_code);
+        logHttpFailure("getHealth", "GET", health, (long)r.status_code, r.text);
         return asynError;
     }
     json health_j;
@@ -936,8 +989,7 @@ asynStatus ADTimePix::rotateLayout(){
 
 //    printf("Layout,layout_url=%s\n", layout_url.c_str());
 
-    cpr::Response r = cpr::Get(cpr::Url{layout_url},
-                       cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    cpr::Response r = servalGetAuthOnly(layout_url);
 
 //    json layout_j = json::parse(r.text.c_str());
 //    printf("layout=%s\n",layout_j.dump(3,' ', true).c_str());
@@ -949,7 +1001,7 @@ asynStatus ADTimePix::rotateLayout(){
 //    );
 
     if (r.status_code != 200) {
-        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        logHttpFailure("rotateLayout", "GET", layout_url, (long)r.status_code, r.text);
         status = asynError;
     }
 
@@ -973,14 +1025,11 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     asynStatus status = asynSuccess;
 
     std::string dac_url = this->serverURL + std::string("/detector/chips/") + std::to_string(chip) + std::string("/dacs/");
-    cpr::Response r = cpr::Get(cpr::Url{dac_url},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    cpr::Response r = servalGet(dac_url);
 
     if (r.status_code != 200) {
-        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
-        ERR_ARGS("writeDac GET chip %d dacs failed HTTP %ld (body is not JSON)", chip,
-                 (long)r.status_code);
+        logHttpFailure(std::string("writeDac GET chip ") + std::to_string(chip), "GET", dac_url,
+                       (long)r.status_code, r.text);
         return asynError;
     }
 
@@ -995,14 +1044,10 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     // printf("dacs=%s\n",dacsRead_j.dump(3,' ', true).c_str());
     std::string json_data = dacsRead_j.dump(3,' ', true).c_str();
 
-    r = cpr::Put(
-        cpr::Url{dac_url},
-        cpr::Body{json_data},
-        cpr::Header{{"Content-Type", "application/json"}}
-    );
+    r = servalPutJson(dac_url, json_data);
 
     if (r.status_code != 200) {
-        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        logHttpFailure("writeDac PUT", "PUT", dac_url, (long)r.status_code, r.text);
         status = asynError;
     }
 
@@ -1287,9 +1332,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     for (int chip = 0; chip < nChips; chip++) {
         char statusMsg[256];
         std::string url = serverURL + "/detector/chips/" + std::to_string(chip) + "/PixelConfig";
-        cpr::Response r =
-            cpr::Get(cpr::Url{url}, cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                     cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+        cpr::Response r = servalGet(url, 5000);
 
         if (r.status_code != 200) {
             epicsSnprintf(statusMsg, sizeof(statusMsg), "HTTP %ld", (long)r.status_code);
@@ -1443,9 +1486,7 @@ asynStatus ADTimePix::getDetector(){
     getStringParam(ADSDKVersion, API_Ver);
 
     detector = this->serverURL + std::string("/detector");
-    cpr::Response r = cpr::Get(cpr::Url{detector},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    cpr::Response r = servalGet(detector, 5000);
 
     if (r.status_code != 200) {
         setIntegerParam(ADTimePixDetConnected,0);
@@ -1714,9 +1755,7 @@ asynStatus ADTimePix::getServer(){
     */
 
     server = this->serverURL + std::string("/server/destination");
-    cpr::Response r = cpr::Get(cpr::Url{server},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    cpr::Response r = servalGet(server, 5000);
 
     if (r.status_code != 200) {
     //    printf("Text server: %s\n", r.text.c_str());
@@ -1841,8 +1880,11 @@ asynStatus ADTimePix::uploadDACS(){
     getStringParam(ADTimePixDACSFileName, fileName);
     dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(filePath) + std::string(fileName);
 
-    cpr::Response r = cpr::Get(cpr::Url{dacs_file},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    cpr::Response r = servalGetAuthOnly(dacs_file);
+    if (r.status_code != 200) {
+        logHttpFailure("uploadDACS GET /config/load dacs", "GET", dacs_file, (long)r.status_code, r.text);
+        status = asynError;
+    }
 
     printf("\nuploadDACS: http_code = %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 
@@ -2299,20 +2341,16 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
     printf("server=%s\n", config.dump(3, ' ', true).c_str());
     
     // Send HTTP request with timeout
-    cpr::Response r = cpr::Put(cpr::Url{server},
-                               cpr::Body{config.dump().c_str()},
-                               cpr::Header{{"Content-Type", "application/json"}},
-                               cpr::Timeout{10000}); // 10 second timeout
+    cpr::Response r = servalPutJson(server, config.dump(), 10000); // 10 second timeout
     
     setIntegerParam(ADTimePixHttpCode, r.status_code);
     setStringParam(ADTimePixWriteMsg, r.text.c_str());
     
     if (r.status_code != 200) {
-        ERR_ARGS("HTTP request failed with status code: %li, response: %s", 
-                 r.status_code, r.text.c_str());
+        logHttpFailure("sendConfiguration PUT /server/destination", "PUT", server, (long)r.status_code, r.text);
         return asynError;
     }
-    
+
     return asynSuccess;
 }
 
@@ -2323,11 +2361,10 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
  */
 asynStatus ADTimePix::getMeasurementConfig() {
     std::string url = this->serverURL + std::string("/measurement/config");
-    cpr::Response r = cpr::Get(cpr::Url{url},
-                               cpr::Header{{"Content-Type", "application/json"}},
-                               cpr::Timeout{5000});
+    cpr::Response r = servalGetJson(url, 5000);
     if (r.status_code != 200) {
-        LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported)", url.c_str(), r.status_code);
+        LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported): %s", url.c_str(), r.status_code,
+                 trimHttpBodyForLog(r.text).c_str());
         return asynError;
     }
     try {
@@ -2378,9 +2415,7 @@ asynStatus ADTimePix::getMeasurementConfig() {
  */
 asynStatus ADTimePix::sendMeasurementConfig() {
     std::string url_get = this->serverURL + std::string("/measurement/config");
-    cpr::Response r = cpr::Get(cpr::Url{url_get},
-                               cpr::Header{{"Content-Type", "application/json"}},
-                               cpr::Timeout{5000});
+    cpr::Response r = servalGetJson(url_get, 5000);
     json config_j;
     if (r.status_code == 200) {
         try {
@@ -2421,14 +2456,12 @@ asynStatus ADTimePix::sendMeasurementConfig() {
     config_j["TimeOfFlight"]["Min"] = dVal;
     getDoubleParam(ADTimePixTofMax, &dVal);
     config_j["TimeOfFlight"]["Max"] = dVal;
-    cpr::Response put_r = cpr::Put(cpr::Url{url_get},
-                                   cpr::Body{config_j.dump().c_str()},
-                                   cpr::Header{{"Content-Type", "application/json"}},
-                                   cpr::Timeout{10000});
+    cpr::Response put_r = servalPutJson(url_get, config_j.dump(), 10000);
     setIntegerParam(ADTimePixHttpCode, put_r.status_code);
     setStringParam(ADTimePixWriteMsg, put_r.text.c_str());
     if (put_r.status_code != 200) {
-        ERR_ARGS("PUT %s failed: %li, %s", url_get.c_str(), put_r.status_code, put_r.text.c_str());
+        logHttpFailure("sendMeasurementConfig PUT /measurement/config", "PUT", url_get, (long)put_r.status_code,
+                       put_r.text);
         return asynError;
     }
     return asynSuccess;
@@ -2557,8 +2590,7 @@ asynStatus ADTimePix::initCamera(){
     dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.dacs");
 
     printf("\n\ninitCamera0: http_code = \n");
-    cpr::Response r = cpr::Get(cpr::Url{bpc_file},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    cpr::Response r = servalGetAuthOnly(bpc_file);
     printf("\n\ninitCamera1: http_code = %li\n", r.status_code);
     printf("Status code bpc_file: %li\n", r.status_code);
     printf("Text bpc_file: %s\n", r.text.c_str());
@@ -2566,8 +2598,7 @@ asynStatus ADTimePix::initCamera(){
     setStringParam(ADTimePixWriteMsg, r.text.c_str());
     
 
-    r = cpr::Get(cpr::Url{dacs_file},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    r = servalGetAuthOnly(dacs_file);
     printf("\n\ninitCamera2: http_code = %li\n", r.status_code);
     printf("Status code dacs_file: %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 
@@ -2575,9 +2606,7 @@ asynStatus ADTimePix::initCamera(){
     setStringParam(ADTimePixWriteMsg, r.text.c_str());   
 
     // Detector configuration file 
-    r = cpr::Get(cpr::Url{config},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    r = servalGet(config);
     printf("\n\ninitCamera3: http_code = %li\n", r.status_code);
     json config_j = json::parse(r.text.c_str());
     config_j["BiasVoltage"] = 103;
@@ -2586,9 +2615,7 @@ asynStatus ADTimePix::initCamera(){
     //config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
     //printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
 
-    r = cpr::Put(cpr::Url{config},
-                           cpr::Body{config_j.dump().c_str()},                      
-                           cpr::Header{{"Content-Type", "application/json"}});
+    r = servalPutJson(config, config_j.dump());
     printf("\n\ninitCamera4: http_code = %li\n", r.status_code);
     printf("Status code: %li\n", r.status_code);
     printf("Text: %s\n", r.text.c_str());
@@ -2616,9 +2643,7 @@ asynStatus ADTimePix::initAcquisition(){
     double doubleNum, doubleTmp;
 
     det_config = this->serverURL + std::string("/detector/config");
-    cpr::Response r = cpr::Get(cpr::Url{det_config},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(det_config);
 
     if (r.status_code != 200) {
         setIntegerParam(ADTimePixDetConnected,0);
@@ -2735,9 +2760,7 @@ asynStatus ADTimePix::initAcquisition(){
         getIntegerParam(ADTimePixLogLevel, &intNum);
         config_j["LogLevel"] = intNum;
 
-        r = cpr::Put(cpr::Url{det_config},
-                    cpr::Body{config_j.dump().c_str()},
-                    cpr::Header{{"Content-Type", "application/json"}});
+        r = servalPutJson(det_config, config_j.dump());
 
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
     }
@@ -2810,9 +2833,7 @@ asynStatus ADTimePix::acquireStart(){
 
     // Check if measurement is already running and stop it first to free ports
     string measurementURL = this->serverURL + std::string("/measurement");
-    cpr::Response r = cpr::Get(cpr::Url{measurementURL},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(measurementURL);
     
     if (r.status_code == 200 && !r.text.empty()) {
         try {
@@ -2831,14 +2852,13 @@ asynStatus ADTimePix::acquireStart(){
                     if (status != "DA_IDLE" && status != "DA_STOPPED") {
                         LOG_ARGS("Measurement is running (status: %s), stopping it first", status.c_str());
                         string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
-                        cpr::Response stop_r = cpr::Get(cpr::Url{stopMeasurementURL},
-                                                   cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                                                   cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+                        cpr::Response stop_r = servalGet(stopMeasurementURL);
                         if (stop_r.status_code == 200) {
                             // Wait for Serval to release ports (minimum: 100ms)
                             epicsThreadSleep(0.1);  // 100ms - allows port release
                         } else {
-                            WARN_ARGS("Failed to stop existing measurement (status: %ld), continuing anyway", stop_r.status_code);
+                            logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
+                                           (long)stop_r.status_code, stop_r.text);
                         }
                     }
                 } else {
@@ -2859,12 +2879,10 @@ asynStatus ADTimePix::acquireStart(){
     }
 
     string startMeasurementURL = this->serverURL + std::string("/measurement/start");
-    r = cpr::Get(cpr::Url{startMeasurementURL},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    r = servalGet(startMeasurementURL);
 
     if (r.status_code != 200){
-        ERR_ARGS("Failed to start measurement! Status code: %ld", r.status_code);
+        logHttpFailure("acquireStart GET /measurement/start", "GET", startMeasurementURL, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Failed to start acquisition");
         // Ensure any partially started worker thread is stopped
         epicsMutexLock(prvImgMutex_);
@@ -3155,9 +3173,13 @@ void ADTimePix::timePixCallback(){
 
     string measurement = this->serverURL + std::string("/measurement");   
     cpr::Url url = cpr::Url{measurement};
-    cpr::Session session;       //  Stateful piece of the library is needed for while loop. This avoids open connections otherwise generated in while loop below.
+    // One Session for the whole callback: the inner "wait for new frame" loop issues many GETs
+    // to the same /measurement URL. Reusing session.Get() avoids per-request cpr::Get(...) churn
+    // (fresh CurlHolder each time) and reduces TCP connection/socket churn under tight polling.
+    cpr::Session session;
     session.SetOption(url);
-    cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};   // Reserve space for at least 1 million characters
+    // Pre-size response buffer so repeated large JSON bodies do not reallocate every poll.
+    cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};
     session.SetOption(reserveSize);
     //session.SetReserveSize(reserveSize);
     cpr::Authentication authentication = cpr::Authentication("user", "pass", cpr::AuthMode::BASIC);
@@ -3168,8 +3190,7 @@ void ADTimePix::timePixCallback(){
 
     json measurement_j = json::object();
     if (r.status_code != 200) {
-        ERR_ARGS("timePixCallback: GET /measurement failed HTTP %ld (SERVAL/detector unavailable?)",
-                 (long)r.status_code);
+        logHttpFailure("timePixCallback GET /measurement", "GET", measurement, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Measurement HTTP error; acquisition stopped");
         setIntegerParam(ADStatus, ADStatusIdle);
         this->acquiring = false;
@@ -3240,10 +3261,11 @@ void ADTimePix::timePixCallback(){
 
         // Wait for new frame
         while(frameCounter == new_frame_num){
-            r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplication" of sessions
+            r = session.Get();  // same Session as initial GET; see setup above
 
             if (r.status_code != 200) {
-                WARN_ARGS("timePixCallback: poll /measurement HTTP %ld", (long)r.status_code);
+                logHttpWarning("timePixCallback poll GET /measurement", "GET", measurement, (long)r.status_code,
+                               r.text);
                 break;
             }
             try {
@@ -3375,17 +3397,15 @@ asynStatus ADTimePix::acquireStop(){
     // This MUST happen before we signal worker threads to exit, otherwise
     // worker threads will close the socket while Serval is still trying to write
     string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
-    cpr::Response r = cpr::Get(cpr::Url{stopMeasurementURL},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(stopMeasurementURL);
 
     if (r.status_code != 200){
-        ERR("Failed to stop measurement!");
+        logHttpFailure("acquireStop GET /measurement/stop", "GET", stopMeasurementURL, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Failed to stop acquisition");
         setIntegerParam(ADStatus, ADStatusError);
         return asynError;
     }
-    
+
     // Wait for Serval to process the stop command and stop its TcpSender threads
     // Serval needs time to:
     // 1. Process the stop command
@@ -3497,12 +3517,11 @@ asynStatus ADTimePix::acquireStop(){
 
     // Update end measurement values
     string measurementURL = this->serverURL + std::string("/measurement");
-    r = cpr::Get(cpr::Url{measurementURL},
-            cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-            cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    r = servalGet(measurementURL);
 
     if (r.status_code != 200){
-        ERR("Failed to stop measurement!");
+        logHttpFailure("acquireStop GET /measurement (post-stop)", "GET", measurementURL, (long)r.status_code,
+                       r.text);
         return asynError;
     }
 

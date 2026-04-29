@@ -2,29 +2,23 @@
 #define CPR_AUTH_H
 
 #include <string>
+#include <string_view>
 
-#include <utility>
+#include "cpr/util.h"
 
 namespace cpr {
 
-enum class AuthMode { BASIC, DIGEST, NTLM };
+enum class AuthMode { BASIC, DIGEST, NTLM, NEGOTIATE, ANY, ANYSAFE };
 
 class Authentication {
   public:
-    Authentication(const std::string& username, const std::string& password, const AuthMode& auth_mode) : auth_string_{username + ":" + password}, auth_mode_{auth_mode} {}
-    Authentication(std::string&& username, std::string&& password, const AuthMode&& auth_mode) : auth_string_{std::move(username) + ":" + std::move(password)}, auth_mode_{std::move(auth_mode)} {}
-    Authentication(const Authentication& other) = default;
-    Authentication(Authentication&& old) noexcept = default;
-    ~Authentication() noexcept;
-
-    Authentication& operator=(Authentication&& old) noexcept = default;
-    Authentication& operator=(const Authentication& other) = default;
+    Authentication(std::string_view username, std::string_view password, AuthMode auth_mode);
 
     const char* GetAuthString() const noexcept;
     AuthMode GetAuthMode() const noexcept;
 
   private:
-    std::string auth_string_;
+    util::SecureString auth_string_;
     AuthMode auth_mode_;
 };
 

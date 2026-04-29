@@ -1,5 +1,8 @@
 # Pull Request #3 Summary: Embedded Library Integration
 
+> Historical note: This summary describes PR #3 state in 2025 (CPR 1.9.1 embed).
+> Current branch has upgraded bundled CPR to 1.14.2 (C++17 baseline); see `RELEASE.md` R1-6-3.
+
 **Repository**: [areaDetector/ADTimePix3](https://github.com/areaDetector/ADTimePix3)  
 **Pull Request**: [#3](https://github.com/areaDetector/ADTimePix3/pull/3)  
 **Date**: 2025  

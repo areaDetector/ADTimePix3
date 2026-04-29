@@ -1,6 +1,9 @@
 # cpr on older OS 
 The Curl for humans (cpr) library requires newer cmake and compiler. These steps are to help with compilation process. The steps are general for other older operating system, but developed for specifically RHEL7.9.
 
+> Note: This document is historical and describes earlier CPR migration experiments (1.9.x -> 1.12.x) on older systems.
+> Current ADTimePix3 embeds CPR 1.14.2 with C++17; see `README.md` and `RELEASE.md` (R1-6-3).
+
 ## Dependencies
 * cmake version > 3.15
 * gcc >= 7.1 is needed for cpr

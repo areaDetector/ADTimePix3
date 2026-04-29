@@ -1,6 +1,12 @@
 #include "cpr/interceptor.h"
-
-#include <exception>
+#include "cpr/callback.h"
+#include "cpr/multiperform.h"
+#include "cpr/response.h"
+#include "cpr/session.h"
+#include <cstddef>
+#include <iosfwd>
+#include <stdexcept>
+#include <vector>
 
 namespace cpr {
 
@@ -25,7 +31,7 @@ Response Interceptor::proceed(Session& session, ProceedHttpMethod httpMethod) {
         case ProceedHttpMethod::PUT_REQUEST:
             return session.Put();
         default:
-            throw std::invalid_argument{"Can't procceed the session with the provided http method!"};
+            throw std::invalid_argument{"Can't proceed the session with the provided http method!"};
     }
 }
 
@@ -43,4 +49,11 @@ Response Interceptor::proceed(Session& session, ProceedHttpMethod httpMethod, co
     throw std::invalid_argument{"WriteCallback argument is only valid for ProceedHttpMethod::DOWNLOAD_CALLBACK!"};
 }
 
+std::vector<Response> InterceptorMulti::proceed(MultiPerform& multi) {
+    return multi.proceed();
+}
+
+void InterceptorMulti::PrepareDownloadSession(MultiPerform& multi, size_t sessions_index, const WriteCallback& write) {
+    multi.PrepareDownloadSessions(sessions_index, write);
+}
 } // namespace cpr

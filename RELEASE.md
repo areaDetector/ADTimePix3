@@ -17,7 +17,19 @@ R1-6-3 (TBD, 2026)
 
 Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
-* **Embedded libcpr (CPR)**: upgrade **`tpx3Support/cpr`** from the bundled **1.9.1**-era sources toward a current **[libcpr/cpr](https://github.com/libcpr/cpr)** release (e.g. **1.14.x**). Upstream CPR **≥ 1.10** requires **C++17** for the IOC and support libs; plan compiler baseline and **`Makefile`**/`INC`/`LIB_SRCS` refresh before tagging.
+* **Embedded libcpr (CPR) upgrade to 1.14.2**:
+  * Synced vendored CPR sources from upstream **`libcpr/cpr`** release **1.14.2** into **`tpx3Support/cpr`** (headers under `cpr/`, implementation `.cpp` files in parent directory).
+  * Updated **`tpx3Support/Makefile`** header/source lists to the 1.14.2 file set (includes new units such as `connection_pool`, `curlmultiholder`, `multiperform`, `sse`; removes obsolete `bearer.cpp`).
+  * Added vendored **`tpx3Support/cpr/cpr/cprver.h`** for non-CMake EPICS builds (CPR 1.14.2 still includes `cpr/cprver.h` from `cpr.h`; upstream typically generates it via CMake).
+* **Compiler baseline change for CPR >= 1.10**:
+  * Switched driver/support builds to **C++17** in **`tpx3Support/Makefile`** and **`tpx3App/src/Makefile`** (`USR_CPPFLAGS += -std=c++17`).
+* **Driver HTTP call cleanup after CPR upgrade**:
+  * Added shared CPR request helpers in **`ADTimePix.cpp`** and migrated high-duplication GET/PUT call sites (connection checks, config paths, start/stop measurement flows) to reduce repeated auth/header/timeout boilerplate.
+  * Default **5 second** timeouts on key status reads (`/dashboard`, `/detector`, `/detector/health`, `/measurement/config`, PixelConfig GETs, etc.).
+  * **`trimHttpBodyForLog`**, **`logHttpFailure`**, and **`logHttpWarning`** on **`ADTimePix`** (after `driverName`): HTTP error lines include **method**, **URL**, **status**, and a **truncated/sanitized** response snippet (avoid giant HTML dumps in the IOC log).
+  * **BPC / DACS upload alignment** (**`uploadBPC()`**, **`uploadDACS()`**, GET SERVAL **`/config/load`**): Use the same auth-only CPR path as the rest of the driver (**`servalHttpGetAuthOnly`** wraps internal **`servalGetAuthOnly`** so **`mask_io.cpp`** stays consistent with **`ADTimePix.cpp`**). On HTTP status other than **200**, each call **`logHttpFailure`** and returns **`asynError`** (previously these uploads often returned **`asynSuccess`** even when SERVAL reported an error). **`HttpCode`** / **`WriteFileMessage`** (or equivalent PVs) still reflect SERVAL response; check them when uploads fail.
+* **Build validation**:
+  * Full repository build (`make -j`) completes successfully after upgrade.
 
 
 R1-6-2 (April 29, 2026)

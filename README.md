@@ -12,7 +12,8 @@ Additional information:
 Notes:
 ------
 
-* Depends on the [CPR](https://github.com/libcpr/cpr) version 1.9.1 (bundled under `tpx3Support`; **R1-6-3** may bump this — see **RELEASE.md**).
+* Depends on the [CPR](https://github.com/libcpr/cpr) version **1.14.2** (bundled under `tpx3Support`).
+* Build baseline for bundled CPR is **C++17** (`-std=c++17` in `tpx3Support` and `tpx3App/src` Makefiles).
 * Depends on the [json](https://github.com/nlohmann/json) version v3.11.2.
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
 * **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
@@ -330,7 +331,7 @@ OPI Screens:
 
 External Libraries:
 
--   CPR (v1.9.1): HTTP client library
+-   CPR (v1.14.2): HTTP client library
 -   nlohmann/json (v3.11.2): JSON parsing
 -   GraphicsMagick: Image processing
 -   ADCore (R3-11+): areaDetector core

@@ -1,30 +1,45 @@
 #include "cpr/util.h"
-
+#include "cpr/callback.h"
+#include "cpr/cookies.h"
+#include "cpr/cprtypes.h"
+#include "cpr/curlholder.h"
+#include "cpr/secure_string.h"
+#include "cpr/sse.h"
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <chrono>
 #include <cstdint>
+#include <ctime>
+#include <curl/curl.h>
 #include <fstream>
-#include <iomanip>
 #include <ios>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #if defined(_Win32)
 #include <Windows.h>
 #else
+#ifdef __clang__
+#pragma clang diagnostic push
+#if __has_warning("-Wreserved-macro-identifier") // Not all versions of clang support this flag like the one used on Ubuntu 18.04
+#pragma clang diagnostic ignored "-Wreserved-macro-identifier"
+#endif
+#pragma clang diagnostic ignored "-Wunused-macros"
+#endif
 // https://en.cppreference.com/w/c/string/byte/memset
 // NOLINTNEXTLINE(bugprone-reserved-identifier, cert-dcl37-c, cert-dcl51-cpp, cppcoreguidelines-macro-usage)
 #define __STDC_WANT_LIB_EXT1__ 1
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 #include <cstring>
 #endif
 
-namespace cpr {
-namespace util {
+namespace cpr::util {
 
-enum class CurlHTTPCookieField : size_t {
+enum class CurlHTTPCookieField : uint8_t {
     Domain = 0,
     IncludeSubdomains,
     Path,
@@ -42,7 +57,7 @@ Cookies parseCookies(curl_slist* raw_cookies) {
         while (tokens.size() < CURL_HTTP_COOKIE_SIZE) {
             tokens.emplace_back("");
         }
-        std::time_t expires = static_cast<time_t>(std::stoul(tokens.at(static_cast<size_t>(CurlHTTPCookieField::Expires))));
+        const std::time_t expires = sTimestampToT(tokens.at(static_cast<size_t>(CurlHTTPCookieField::Expires)));
         cookies.emplace_back(Cookie{
                 tokens.at(static_cast<size_t>(CurlHTTPCookieField::Name)),
                 tokens.at(static_cast<size_t>(CurlHTTPCookieField::Value)),
@@ -58,16 +73,9 @@ Cookies parseCookies(curl_slist* raw_cookies) {
 
 Header parseHeader(const std::string& headers, std::string* status_line, std::string* reason) {
     Header header;
-    std::vector<std::string> lines;
     std::istringstream stream(headers);
-    {
-        std::string line;
-        while (std::getline(stream, line, '\n')) {
-            lines.push_back(line);
-        }
-    }
-
-    for (std::string& line : lines) {
+    std::string line;
+    while (std::getline(stream, line, '\n')) {
         if (line.substr(0, 5) == "HTTP/") {
             // set the status_line if it was given
             if ((status_line != nullptr) || (reason != nullptr)) {
@@ -78,7 +86,7 @@ Header parseHeader(const std::string& headers, std::string* status_line, std::st
 
                 // set the reason if it was given
                 if (reason != nullptr) {
-                    size_t pos1 = line.find_first_of("\t ");
+                    const size_t pos1 = line.find_first_of("\t ");
                     size_t pos2 = std::string::npos;
                     if (pos1 != std::string::npos) {
                         pos2 = line.find_first_of("\t ", pos1 + 1);
@@ -92,8 +100,8 @@ Header parseHeader(const std::string& headers, std::string* status_line, std::st
             header.clear();
         }
 
-        if (line.length() > 0) {
-            size_t found = line.find(':');
+        if (!line.empty()) {
+            const size_t found = line.find(':');
             if (found != std::string::npos) {
                 std::string value = line.substr(found + 1);
                 value.erase(0, value.find_first_not_of("\t "));
@@ -128,9 +136,9 @@ size_t headerUserFunction(char* ptr, size_t size, size_t nmemb, const HeaderCall
     return (*header)({ptr, size}) ? size : 0;
 }
 
-size_t writeFunction(char* ptr, size_t size, size_t nmemb, std::string* data) {
+size_t writeFunction(char* ptr, size_t size, size_t nmemb, void* data) {
     size *= nmemb;
-    data->append(ptr, size);
+    static_cast<std::string*>(data)->append(ptr, size);
     return size;
 }
 
@@ -145,12 +153,9 @@ size_t writeUserFunction(char* ptr, size_t size, size_t nmemb, const WriteCallba
     return (*write)({ptr, size}) ? size : 0;
 }
 
-#if LIBCURL_VERSION_NUM < 0x072000
-int progressUserFunction(const ProgressCallback* progress, double dltotal, double dlnow, double ultotal, double ulnow) {
-#else
-int progressUserFunction(const ProgressCallback* progress, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
-#endif
-    return (*progress)(dltotal, dlnow, ultotal, ulnow) ? 0 : 1;
+size_t writeSSEFunction(char* ptr, size_t size, size_t nmemb, ServerSentEventCallback* sse) {
+    size *= nmemb;
+    return sse->handleData({ptr, size}) ? size : 0;
 }
 
 int debugUserFunction(CURL* /*handle*/, curl_infotype type, char* data, size_t size, const DebugCallback* debug) {
@@ -168,8 +173,8 @@ int debugUserFunction(CURL* /*handle*/, curl_infotype type, char* data, size_t s
  * std::string input = "Hello World!";
  * std::string result = holder.urlEncode(input);
  **/
-std::string urlEncode(const std::string& s) {
-    CurlHolder holder; // Create a temporary new holder for URL encoding
+util::SecureString urlEncode(std::string_view s) {
+    const CurlHolder holder; // Create a temporary new holder for URL encoding
     return holder.urlEncode(s);
 }
 
@@ -183,55 +188,34 @@ std::string urlEncode(const std::string& s) {
  * std::string input = "Hello%20World%21";
  * std::string result = holder.urlDecode(input);
  **/
-std::string urlDecode(const std::string& s) {
-    CurlHolder holder; // Create a temporary new holder for URL decoding
+util::SecureString urlDecode(std::string_view s) {
+    const CurlHolder holder; // Create a temporary new holder for URL decoding
     return holder.urlDecode(s);
 }
 
-#if defined(__STDC_LIB_EXT1__)
-void secureStringClear(std::string& s) {
-    if (s.empty()) {
-        return;
-    }
-    memset_s(&s.front(), s.length(), 0, s.length());
-    s.clear();
-}
-#elif defined(_WIN32)
-void secureStringClear(std::string& s) {
-    if (s.empty()) {
-        return;
-    }
-    SecureZeroMemory(&s.front(), s.length());
-    s.clear();
-}
-#else
-#if defined(__clang__)
-#pragma clang optimize off // clang
-#elif defined(__GNUC__) || defined(__MINGW32__) || defined(__MINGW32__) || defined(__MINGW64__)
-#pragma GCC push_options   // g++
-#pragma GCC optimize("O0") // g++
-#endif
-void secureStringClear(std::string& s) {
-    if (s.empty()) {
-        return;
-    }
-    // NOLINTNEXTLINE (readability-container-data-pointer)
-    char* ptr = &(s[0]);
-    memset(ptr, '\0', s.length());
-    s.clear();
-}
-#if defined(__clang__)
-#pragma clang optimize on // clang
-#elif defined(__GNUC__) || defined(__MINGW32__) || defined(__MINGW32__) || defined(__MINGW64__)
-#pragma GCC pop_options // g++
-#endif
-#endif
-
 bool isTrue(const std::string& s) {
-    std::string temp_string{s};
-    std::transform(temp_string.begin(), temp_string.end(), temp_string.begin(), [](unsigned char c) { return std::tolower(c); });
-    return temp_string == "true";
+    constexpr std::string_view tmp = "true";
+    auto [s_it, tmp_it] = std::mismatch(s.begin(), s.end(), tmp.begin(), tmp.end(), [](auto s_c, auto t_c) { return std::tolower(s_c) == t_c; });
+    return s_it == s.end() && tmp_it == tmp.end();
 }
 
-} // namespace util
-} // namespace cpr
+time_t sTimestampToT(const std::string& st) {
+    // NOLINTNEXTLINE(google-runtime-int)
+    if (std::is_same_v<time_t, unsigned long>) {
+        return static_cast<time_t>(std::stoul(st));
+    }
+    // NOLINTNEXTLINE(google-runtime-int)
+    if (std::is_same_v<time_t, unsigned long long>) {
+        return static_cast<time_t>(std::stoull(st));
+    }
+    if (std::is_same_v<time_t, int>) {
+        return static_cast<time_t>(std::stoi(st));
+    }
+    // NOLINTNEXTLINE(google-runtime-int)
+    if (std::is_same_v<time_t, long>) {
+        return static_cast<time_t>(std::stol(st));
+    }
+    return static_cast<time_t>(std::stoll(st));
+}
+
+} // namespace cpr::util

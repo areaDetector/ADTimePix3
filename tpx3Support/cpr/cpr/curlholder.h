@@ -2,12 +2,13 @@
 #define CPR_CURL_HOLDER_H
 
 #include <array>
-#include <mutex>
-#include <string>
-
 #include <curl/curl.h>
+#include <mutex>
+
+#include "cpr/secure_string.h"
 
 namespace cpr {
+
 struct CurlHolder {
   private:
     /**
@@ -27,26 +28,27 @@ struct CurlHolder {
   public:
     CURL* handle{nullptr};
     struct curl_slist* chunk{nullptr};
-    struct curl_httppost* formpost{nullptr};
+    struct curl_slist* resolveCurlList{nullptr};
+    curl_mime* multipart{nullptr};
     std::array<char, CURL_ERROR_SIZE> error{};
 
     CurlHolder();
-    CurlHolder(const CurlHolder& other) = default;
-    CurlHolder(CurlHolder&& old) noexcept = default;
+    CurlHolder(const CurlHolder& other) = delete;
+    CurlHolder(CurlHolder&& old) noexcept;
     ~CurlHolder();
 
-    CurlHolder& operator=(CurlHolder&& old) noexcept = default;
-    CurlHolder& operator=(const CurlHolder& other) = default;
+    CurlHolder& operator=(const CurlHolder& other) = delete;
+    CurlHolder& operator=(CurlHolder&& old) noexcept;
 
     /**
      * Uses curl_easy_escape(...) for escaping the given string.
      **/
-    std::string urlEncode(const std::string& s) const;
+    [[nodiscard]] util::SecureString urlEncode(std::string_view s) const;
 
     /**
      * Uses curl_easy_unescape(...) for unescaping the given string.
      **/
-    std::string urlDecode(const std::string& s) const;
+    [[nodiscard]] util::SecureString urlDecode(std::string_view s) const;
 };
 } // namespace cpr
 
