@@ -264,6 +264,38 @@ bool NetworkClient::receive_exact(char* buffer, size_t size) {
 
 const char* driverName = "ADTimePix";
 
+std::string ADTimePix::trimHttpBodyForLog(const std::string& body, size_t maxLen) {
+    std::string out;
+    const size_t n = std::min(body.size(), maxLen);
+    out.reserve(n + 4);
+    for (size_t i = 0; i < n; ++i) {
+        unsigned char c = static_cast<unsigned char>(body[i]);
+        if (c < 32 || c == 127)
+            out += ' ';
+        else
+            out += static_cast<char>(c);
+    }
+    if (body.size() > maxLen) out += "...";
+    return out;
+}
+
+void ADTimePix::logHttpFailure(const char* context, const char* method, const std::string& endpoint, long status,
+                               const std::string& body) {
+    ERR_ARGS("%s: %s %s HTTP %ld: %s", context ? context : "HTTP", method ? method : "?", endpoint.c_str(), status,
+             trimHttpBodyForLog(body).c_str());
+}
+
+void ADTimePix::logHttpFailure(const std::string& context, const char* method, const std::string& endpoint,
+                               long status, const std::string& body) {
+    logHttpFailure(context.c_str(), method, endpoint, status, body);
+}
+
+void ADTimePix::logHttpWarning(const char* context, const char* method, const std::string& endpoint, long status,
+                               const std::string& body) {
+    WARN_ARGS("%s: %s %s HTTP %ld: %s", context ? context : "HTTP", method ? method : "?", endpoint.c_str(), status,
+              trimHttpBodyForLog(body).c_str());
+}
+
 // Add any driver constants here
 
 
@@ -632,7 +664,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         printf("Text:\n %s\n", r.text.c_str());
 
         if (r.status_code != 200) {
-            ERR_ARGS("Dashboard GET failed HTTP %ld", (long)r.status_code);
+            logHttpFailure("initialServerCheckConnection Dashboard", "GET", dashboard, (long)r.status_code, r.text);
             setIntegerParam(ADTimePixDetConnected, 0);
             connected = false;
         } else {
@@ -848,7 +880,7 @@ asynStatus ADTimePix::getHealth(){
     cpr::Response r = servalGet(health, 5000);
 
     if (r.status_code != 200) {
-        ERR_ARGS("Health GET failed HTTP %ld", (long)r.status_code);
+        logHttpFailure("getHealth", "GET", health, (long)r.status_code, r.text);
         return asynError;
     }
     json health_j;
@@ -965,7 +997,7 @@ asynStatus ADTimePix::rotateLayout(){
 //    );
 
     if (r.status_code != 200) {
-        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        logHttpFailure("rotateLayout", "GET", layout_url, (long)r.status_code, r.text);
         status = asynError;
     }
 
@@ -992,9 +1024,8 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     cpr::Response r = servalGet(dac_url);
 
     if (r.status_code != 200) {
-        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
-        ERR_ARGS("writeDac GET chip %d dacs failed HTTP %ld (body is not JSON)", chip,
-                 (long)r.status_code);
+        logHttpFailure(std::string("writeDac GET chip ") + std::to_string(chip), "GET", dac_url,
+                       (long)r.status_code, r.text);
         return asynError;
     }
 
@@ -1012,7 +1043,7 @@ asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
     r = servalPutJson(dac_url, json_data);
 
     if (r.status_code != 200) {
-        std::cerr << "Request failed with status code: " << r.status_code << std::endl;
+        logHttpFailure("writeDac PUT", "PUT", dac_url, (long)r.status_code, r.text);
         status = asynError;
     }
 
@@ -2308,11 +2339,10 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
     setStringParam(ADTimePixWriteMsg, r.text.c_str());
     
     if (r.status_code != 200) {
-        ERR_ARGS("HTTP request failed with status code: %li, response: %s", 
-                 r.status_code, r.text.c_str());
+        logHttpFailure("sendConfiguration PUT /server/destination", "PUT", server, (long)r.status_code, r.text);
         return asynError;
     }
-    
+
     return asynSuccess;
 }
 
@@ -2325,7 +2355,8 @@ asynStatus ADTimePix::getMeasurementConfig() {
     std::string url = this->serverURL + std::string("/measurement/config");
     cpr::Response r = servalGetJson(url, 5000);
     if (r.status_code != 200) {
-        LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported)", url.c_str(), r.status_code);
+        LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported): %s", url.c_str(), r.status_code,
+                 trimHttpBodyForLog(r.text).c_str());
         return asynError;
     }
     try {
@@ -2421,7 +2452,8 @@ asynStatus ADTimePix::sendMeasurementConfig() {
     setIntegerParam(ADTimePixHttpCode, put_r.status_code);
     setStringParam(ADTimePixWriteMsg, put_r.text.c_str());
     if (put_r.status_code != 200) {
-        ERR_ARGS("PUT %s failed: %li, %s", url_get.c_str(), put_r.status_code, put_r.text.c_str());
+        logHttpFailure("sendMeasurementConfig PUT /measurement/config", "PUT", url_get, (long)put_r.status_code,
+                       put_r.text);
         return asynError;
     }
     return asynSuccess;
@@ -2817,7 +2849,8 @@ asynStatus ADTimePix::acquireStart(){
                             // Wait for Serval to release ports (minimum: 100ms)
                             epicsThreadSleep(0.1);  // 100ms - allows port release
                         } else {
-                            WARN_ARGS("Failed to stop existing measurement (status: %ld), continuing anyway", stop_r.status_code);
+                            logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
+                                           (long)stop_r.status_code, stop_r.text);
                         }
                     }
                 } else {
@@ -2841,7 +2874,7 @@ asynStatus ADTimePix::acquireStart(){
     r = servalGet(startMeasurementURL);
 
     if (r.status_code != 200){
-        ERR_ARGS("Failed to start measurement! Status code: %ld", r.status_code);
+        logHttpFailure("acquireStart GET /measurement/start", "GET", startMeasurementURL, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Failed to start acquisition");
         // Ensure any partially started worker thread is stopped
         epicsMutexLock(prvImgMutex_);
@@ -3145,8 +3178,7 @@ void ADTimePix::timePixCallback(){
 
     json measurement_j = json::object();
     if (r.status_code != 200) {
-        ERR_ARGS("timePixCallback: GET /measurement failed HTTP %ld (SERVAL/detector unavailable?)",
-                 (long)r.status_code);
+        logHttpFailure("timePixCallback GET /measurement", "GET", measurement, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Measurement HTTP error; acquisition stopped");
         setIntegerParam(ADStatus, ADStatusIdle);
         this->acquiring = false;
@@ -3220,7 +3252,8 @@ void ADTimePix::timePixCallback(){
             r = session.Get();      // use stateful read to avoid TIME_WAIT "multiplication" of sessions
 
             if (r.status_code != 200) {
-                WARN_ARGS("timePixCallback: poll /measurement HTTP %ld", (long)r.status_code);
+                logHttpWarning("timePixCallback poll GET /measurement", "GET", measurement, (long)r.status_code,
+                               r.text);
                 break;
             }
             try {
@@ -3355,12 +3388,12 @@ asynStatus ADTimePix::acquireStop(){
     cpr::Response r = servalGet(stopMeasurementURL);
 
     if (r.status_code != 200){
-        ERR("Failed to stop measurement!");
+        logHttpFailure("acquireStop GET /measurement/stop", "GET", stopMeasurementURL, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Failed to stop acquisition");
         setIntegerParam(ADStatus, ADStatusError);
         return asynError;
     }
-    
+
     // Wait for Serval to process the stop command and stop its TcpSender threads
     // Serval needs time to:
     // 1. Process the stop command
@@ -3475,7 +3508,8 @@ asynStatus ADTimePix::acquireStop(){
     r = servalGet(measurementURL);
 
     if (r.status_code != 200){
-        ERR("Failed to stop measurement!");
+        logHttpFailure("acquireStop GET /measurement (post-stop)", "GET", measurementURL, (long)r.status_code,
+                       r.text);
         return asynError;
     }
 

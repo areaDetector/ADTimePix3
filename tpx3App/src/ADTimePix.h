@@ -1044,7 +1044,16 @@ class ADTimePix : public ADDriver{
         asynStatus configurePreviewSettings(json& server_j);
         asynStatus configureHistogramChannel(json& server_j);
         asynStatus sendConfiguration(const json& config);
-        
+
+        /** Trim response body for logs (control chars -> space, cap length). */
+        static std::string trimHttpBodyForLog(const std::string& body, size_t maxLen = 512);
+        void logHttpFailure(const char* context, const char* method, const std::string& endpoint, long status,
+                            const std::string& body);
+        void logHttpFailure(const std::string& context, const char* method, const std::string& endpoint, long status,
+                            const std::string& body);
+        void logHttpWarning(const char* context, const char* method, const std::string& endpoint, long status,
+                            const std::string& body);
+
         int checkFile(std::string &fullFileName);
         asynStatus rowsCols(int *rows, int *cols, int *xChips, int *yChips, int *chipPelWidth);
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);

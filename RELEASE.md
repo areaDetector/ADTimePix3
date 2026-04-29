@@ -25,6 +25,8 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * Switched driver/support builds to **C++17** in **`tpx3Support/Makefile`** and **`tpx3App/src/Makefile`** (`USR_CPPFLAGS += -std=c++17`).
 * **Driver HTTP call cleanup after CPR upgrade**:
   * Added shared CPR request helpers in **`ADTimePix.cpp`** and migrated high-duplication GET/PUT call sites (connection checks, config paths, start/stop measurement flows) to reduce repeated auth/header/timeout boilerplate.
+  * Default **5 second** timeouts on key status reads (`/dashboard`, `/detector`, `/detector/health`, `/measurement/config`, PixelConfig GETs, etc.).
+  * **`trimHttpBodyForLog`**, **`logHttpFailure`**, and **`logHttpWarning`** on **`ADTimePix`** (after `driverName`): HTTP error lines include **method**, **URL**, **status**, and a **truncated/sanitized** response snippet (avoid giant HTML dumps in the IOC log).
 * **Build validation**:
   * Full repository build (`make -j`) completes successfully after upgrade.
 
