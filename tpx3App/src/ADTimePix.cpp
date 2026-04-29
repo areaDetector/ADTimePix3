@@ -54,6 +54,10 @@ cpr::Response servalGet(const std::string& url) {
     return cpr::Get(cpr::Url{url}, kServalAuth, kServalParams);
 }
 
+cpr::Response servalGet(const std::string& url, int timeout_ms) {
+    return cpr::Get(cpr::Url{url}, kServalAuth, kServalParams, cpr::Timeout{timeout_ms});
+}
+
 cpr::Response servalGetAuthOnly(const std::string& url) {
     return cpr::Get(cpr::Url{url}, kServalAuth);
 }
@@ -691,9 +695,7 @@ asynStatus ADTimePix::checkConnection(){
     bool detOk = false;
 
     std::string dashboard = this->serverURL + std::string("/dashboard");
-    cpr::Response r = cpr::Get(cpr::Url{dashboard},
-                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(dashboard, 5000);
     setIntegerParam(ADTimePixHttpCode, r.status_code);
 
     if (r.status_code == 200) {
@@ -789,9 +791,7 @@ asynStatus ADTimePix::getDashboard(){
 
     dashboard = this->serverURL + std::string("/dashboard");
     // printf("ServerURL/dashboard=%s\n", dashboard.c_str());
-    cpr::Response r = cpr::Get(cpr::Url{dashboard},
-                               cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                               cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(dashboard, 5000);
 
     if(r.status_code == 200) {
         setIntegerParam(ADTimePixServalConnected, 1);  // SERVAL reachable (dashboard responded)
@@ -845,9 +845,7 @@ asynStatus ADTimePix::getHealth(){
 
     health = this->serverURL + std::string("/detector/health");
     // printf("Health, %s\n", health.c_str());
-    cpr::Response r = cpr::Get(cpr::Url{health},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+    cpr::Response r = servalGet(health, 5000);
 
     if (r.status_code != 200) {
         ERR_ARGS("Health GET failed HTTP %ld", (long)r.status_code);
@@ -955,8 +953,7 @@ asynStatus ADTimePix::rotateLayout(){
 
 //    printf("Layout,layout_url=%s\n", layout_url.c_str());
 
-    cpr::Response r = cpr::Get(cpr::Url{layout_url},
-                       cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    cpr::Response r = servalGetAuthOnly(layout_url);
 
 //    json layout_j = json::parse(r.text.c_str());
 //    printf("layout=%s\n",layout_j.dump(3,' ', true).c_str());
@@ -1300,9 +1297,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     for (int chip = 0; chip < nChips; chip++) {
         char statusMsg[256];
         std::string url = serverURL + "/detector/chips/" + std::to_string(chip) + "/PixelConfig";
-        cpr::Response r =
-            cpr::Get(cpr::Url{url}, cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                     cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+        cpr::Response r = servalGet(url, 5000);
 
         if (r.status_code != 200) {
             epicsSnprintf(statusMsg, sizeof(statusMsg), "HTTP %ld", (long)r.status_code);
@@ -1456,9 +1451,7 @@ asynStatus ADTimePix::getDetector(){
     getStringParam(ADSDKVersion, API_Ver);
 
     detector = this->serverURL + std::string("/detector");
-    cpr::Response r = cpr::Get(cpr::Url{detector},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    cpr::Response r = servalGet(detector, 5000);
 
     if (r.status_code != 200) {
         setIntegerParam(ADTimePixDetConnected,0);
@@ -1727,9 +1720,7 @@ asynStatus ADTimePix::getServer(){
     */
 
     server = this->serverURL + std::string("/server/destination");
-    cpr::Response r = cpr::Get(cpr::Url{server},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});   
+    cpr::Response r = servalGet(server, 5000);
 
     if (r.status_code != 200) {
     //    printf("Text server: %s\n", r.text.c_str());
@@ -1854,8 +1845,7 @@ asynStatus ADTimePix::uploadDACS(){
     getStringParam(ADTimePixDACSFileName, fileName);
     dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(filePath) + std::string(fileName);
 
-    cpr::Response r = cpr::Get(cpr::Url{dacs_file},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+    cpr::Response r = servalGetAuthOnly(dacs_file);
 
     printf("\nuploadDACS: http_code = %li\n", r.status_code);
     printf("Text dacs_file: %s\n", r.text.c_str()); 
