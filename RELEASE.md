@@ -12,6 +12,14 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x; latest te
 Driver depends on Serval versions, at this time. Current releases support Serval 4.1.5-rc2, 4.1.x, and 3.0.0-3.3.2.
 
 
+R1-6-3 (TBD, 2026)
+--------
+
+Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+* **Embedded libcpr (CPR)**: upgrade **`tpx3Support/cpr`** from the bundled **1.9.1**-era sources toward a current **[libcpr/cpr](https://github.com/libcpr/cpr)** release (e.g. **1.14.x**). Upstream CPR **≥ 1.10** requires **C++17** for the IOC and support libs; plan compiler baseline and **`Makefile`**/`INC`/`LIB_SRCS` refresh before tagging.
+
+
 R1-6-2 (April 29, 2026)
 --------
 

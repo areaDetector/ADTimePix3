@@ -12,7 +12,7 @@ Additional information:
 Notes:
 ------
 
-* Depends on the [CPR](https://github.com/libcpr/cpr) verison 1.9.1.
+* Depends on the [CPR](https://github.com/libcpr/cpr) version 1.9.1 (bundled under `tpx3Support`; **R1-6-3** may bump this — see **RELEASE.md**).
 * Depends on the [json](https://github.com/nlohmann/json) version v3.11.2.
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
 * **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
@@ -28,7 +28,7 @@ Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers in `tpx3App/src/ADTimePix.cpp` 
 
 * **Shorter prefixes**: define **`ADTPX3_LOG_SHORT`** when building the driver library so prefixes use **`__func__` only** (see commented `USR_CPPFLAGS` line in `tpx3App/src/Makefile`).
 * **`WARN` visibility**: by default **`WARN` / `WARN_ARGS`** use **`ASYN_TRACE_WARNING`**. The port’s asyn **trace mask** must include the **warning** bit for those lines to appear. If your site only enables **ERROR**-level trace and you need the old behavior, build with **`ADTPX3_WARN_AS_ERROR`** so `WARN*` is emitted at **`ASYN_TRACE_ERROR`** (commented example in the same `Makefile`).
-* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-6-2**).
+* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-6-3** in development; **R1-6-2** tagged April 29, 2026).
 
 TCP Image Streaming
 --------------------

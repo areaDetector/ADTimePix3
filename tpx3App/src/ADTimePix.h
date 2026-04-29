@@ -5,7 +5,7 @@
  *
  * Author:  Kazimierz Gofron
  * Created: June, 2022
- * Last edited: July 20, 2025
+ * Last edited: April 29, 2026
  * Copyright (c) : Oak Ridge National Laboratory
  *
  */
@@ -17,7 +17,7 @@
 // version numbers
 #define ADTIMEPIX_VERSION      1
 #define ADTIMEPIX_REVISION     6
-#define ADTIMEPIX_MODIFICATION 2
+#define ADTIMEPIX_MODIFICATION 3
 
 
 #include "ADDriver.h"
