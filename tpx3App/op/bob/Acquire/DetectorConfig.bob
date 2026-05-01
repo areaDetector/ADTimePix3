@@ -1274,7 +1274,7 @@ $(pv_value)</tooltip>
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_16</name>
+    <name>Linking Container_Vth0</name>
     <macros>
       <Chip>CHIP0</Chip>
     </macros>
@@ -1308,7 +1308,7 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_1</name>
+    <name>Linking Container_Vth1</name>
     <macros>
       <Chip>CHIP1</Chip>
     </macros>
@@ -1325,13 +1325,13 @@ $(pv_value)</tooltip>
     <rules>
       <rule name="VisDACs8" prop_id="visible" out_exp="false">
         <exp bool_exp="pv0==65536">
-          <value>false</value>
+          <value>true</value>
         </exp>
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
         <exp bool_exp="pv0==524288">
-          <value>true</value>
+          <value>false</value>
         </exp>
         <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
       </rule>
@@ -1342,7 +1342,7 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_2</name>
+    <name>Linking Container_Vth2</name>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
@@ -1359,13 +1359,13 @@ $(pv_value)</tooltip>
     <rules>
       <rule name="VisDACs8" prop_id="visible" out_exp="false">
         <exp bool_exp="pv0==65536">
-          <value>false</value>
+          <value>true</value>
         </exp>
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
         <exp bool_exp="pv0==524288">
-          <value>true</value>
+          <value>false</value>
         </exp>
         <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
       </rule>
@@ -1376,7 +1376,7 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_3</name>
+    <name>Linking Container_Vth3</name>
     <macros>
       <Chip>CHIP3</Chip>
     </macros>
@@ -1393,13 +1393,13 @@ $(pv_value)</tooltip>
     <rules>
       <rule name="VisDACs8" prop_id="visible" out_exp="false">
         <exp bool_exp="pv0==65536">
-          <value>false</value>
+          <value>true</value>
         </exp>
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
         <exp bool_exp="pv0==524288">
-          <value>true</value>
+          <value>false</value>
         </exp>
         <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
       </rule>
