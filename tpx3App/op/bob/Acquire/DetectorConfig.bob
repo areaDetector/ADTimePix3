@@ -1325,13 +1325,13 @@ $(pv_value)</tooltip>
     <rules>
       <rule name="VisDACs8" prop_id="visible" out_exp="false">
         <exp bool_exp="pv0==65536">
-          <value>true</value>
+          <value>false</value>
         </exp>
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
         <exp bool_exp="pv0==524288">
-          <value>false</value>
+          <value>true</value>
         </exp>
         <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
       </rule>
@@ -1359,13 +1359,13 @@ $(pv_value)</tooltip>
     <rules>
       <rule name="VisDACs8" prop_id="visible" out_exp="false">
         <exp bool_exp="pv0==65536">
-          <value>true</value>
+          <value>false</value>
         </exp>
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
         <exp bool_exp="pv0==524288">
-          <value>false</value>
+          <value>true</value>
         </exp>
         <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
       </rule>
@@ -1393,13 +1393,13 @@ $(pv_value)</tooltip>
     <rules>
       <rule name="VisDACs8" prop_id="visible" out_exp="false">
         <exp bool_exp="pv0==65536">
-          <value>true</value>
+          <value>false</value>
         </exp>
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
         <exp bool_exp="pv0==524288">
-          <value>false</value>
+          <value>true</value>
         </exp>
         <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
       </rule>
