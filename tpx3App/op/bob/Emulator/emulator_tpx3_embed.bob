@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>emulator_tpx3_embed</name>
+  <macros>
+    <R>Emulator:</R>
+  </macros>
+  <width>1060</width>
+  <height>550</height>
+  <widget type="label" version="2.0.0">
+    <name>Tp3Banner</name>
+    <text>Timepix3 emulator (Tpx3Emulator.jar)</text>
+    <x>10</x>
+    <y>2</y>
+    <width>500</width>
+    <height>22</height>
+    <background_color>
+      <color red="240" green="248" blue="255">
+      </color>
+    </background_color>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>HitRateGroup</name>
+    <x>10</x>
+    <y>28</y>
+    <width>310</width>
+    <height>100</height>
+    <widget type="label" version="2.0.0">
+      <name>HitRateTitle</name>
+      <text>Hit Rate [Mhits/s/chip]</text>
+      <x>10</x>
+      <y>10</y>
+      <width>160</width>
+      <border_width>1</border_width>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>HitRateSpinner</name>
+      <pv_name>$(P)$(R)HIT_RATE</pv_name>
+      <x>20</x>
+      <y>35</y>
+      <width>80</width>
+      <maximum>1000.0</maximum>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>HitRateEnable</name>
+      <pv_name>$(P)$(R)HIT_RATE_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>180</x>
+      <width>80</width>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>TDCGroup</name>
+    <x>340</x>
+    <y>28</y>
+    <width>320</width>
+    <height>100</height>
+    <widget type="label" version="2.0.0">
+      <name>TDCTitle</name>
+      <text>TDC offset</text>
+      <x>10</x>
+      <y>10</y>
+      <border_width>1</border_width>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>TDCSpinner</name>
+      <pv_name>$(P)$(R)TDC</pv_name>
+      <x>20</x>
+      <y>35</y>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>TDCEnable</name>
+      <pv_name>$(P)$(R)TDC_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>140</x>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>ChipboardGroup</name>
+    <x>10</x>
+    <y>138</y>
+    <width>310</width>
+    <height>100</height>
+    <widget type="label" version="2.0.0">
+      <name>ChipboardTitle</name>
+      <text>Chipboard ID</text>
+      <x>10</x>
+      <y>10</y>
+      <border_width>1</border_width>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>ChipboardSpinner</name>
+      <pv_name>$(P)$(R)CHIPBOARD_ID</pv_name>
+      <x>20</x>
+      <y>35</y>
+      <width>140</width>
+      <maximum>9.9999999E7</maximum>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ChipboardEnable</name>
+      <pv_name>$(P)$(R)CHIPBOARD_ID_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>140</x>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>JvmChipMaskGroup</name>
+    <x>340</x>
+    <y>138</y>
+    <width>360</width>
+    <height>100</height>
+    <widget type="label" version="2.0.0">
+      <name>ChipMaskTitle</name>
+      <text>JVM chipMask (-DchipMask, TPX3)</text>
+      <x>10</x>
+      <y>10</y>
+      <border_width>1</border_width>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ChipMaskLabel</name>
+      <text>Value (1-15)</text>
+      <x>15</x>
+      <y>45</y>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>ChipMask</name>
+      <pv_name>$(P)$(R)CHIP_MASK</pv_name>
+      <x>120</x>
+      <y>40</y>
+      <width>80</width>
+      <minimum>1.0</minimum>
+      <maximum>15.0</maximum>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ChipMaskEnable</name>
+      <pv_name>$(P)$(R)CHIP_MASK_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>220</x>
+      <y>40</y>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>ReplayGroup</name>
+    <x>10</x>
+    <y>248</y>
+    <width>1050</width>
+    <height>300</height>
+    <widget type="label" version="2.0.0">
+      <name>ReplayBanner</name>
+      <text>Raw replay (.tpx3) — used only when EMULATOR_TYPE=0</text>
+      <x>10</x>
+      <y>8</y>
+      <width>520</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayFileLabel</name>
+      <text>Replay File (.tpx3, full path)</text>
+      <x>20</x>
+      <y>30</y>
+      <width>220</width>
+      <tooltip>Replay previously collected raw .tpx3 data</tooltip>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ReplayFileNameInput</name>
+      <pv_name>$(P)$(R)ReplayFileName</pv_name>
+      <x>180</x>
+      <y>30</y>
+      <width>700</width>
+      <format>6</format>
+    </widget>
+    <widget type="fileselector" version="2.0.0">
+      <name>ReplayFileSelector</name>
+      <pv_name>$(P)$(R)ReplayFileName</pv_name>
+      <x>880</x>
+      <y>25</y>
+      <height>30</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ReplayFileEnable</name>
+      <pv_name>$(P)$(R)REPLAY_FILE_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>925</x>
+      <y>25</y>
+      <width>90</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayFileRBVLabel</name>
+      <text>Replay File (Readback)</text>
+      <x>20</x>
+      <y>60</y>
+      <width>150</width>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ReplayFileRBV</name>
+      <pv_name>$(P)$(R)ReplayFile_RBV</pv_name>
+      <x>180</x>
+      <y>60</y>
+      <width>830</width>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayModeLabel</name>
+      <text>Replay Mode</text>
+      <x>20</x>
+      <y>90</y>
+      <width>150</width>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>ReplayMode</name>
+      <pv_name>$(P)$(R)REPLAY_MODE</pv_name>
+      <x>180</x>
+      <y>90</y>
+      <width>200</width>
+      <maximum>3.0</maximum>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayModeDesc</name>
+      <text>(0=Single, 1=Repeat N, 2=Forever, 3=File List)</text>
+      <x>390</x>
+      <y>90</y>
+      <width>350</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RepeatCountLabel</name>
+      <text>Repeat Count</text>
+      <x>20</x>
+      <y>120</y>
+      <width>150</width>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>RepeatCount</name>
+      <pv_name>$(P)$(R)REPEAT_COUNT</pv_name>
+      <x>180</x>
+      <y>120</y>
+      <width>200</width>
+      <minimum>1.0</minimum>
+      <maximum>1000.0</maximum>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayFileListLabel</name>
+      <text>Replay File List (comma-separated)</text>
+      <x>20</x>
+      <y>150</y>
+      <width>150</width>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ReplayFileList</name>
+      <pv_name>$(P)$(R)REPLAY_FILE_LIST</pv_name>
+      <x>180</x>
+      <y>150</y>
+      <width>830</width>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayCurrentFileLabel</name>
+      <text>Current File</text>
+      <x>20</x>
+      <y>180</y>
+      <width>150</width>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ReplayCurrentFile</name>
+      <pv_name>$(P)$(R)REPLAY_CURRENT_FILE</pv_name>
+      <x>180</x>
+      <y>180</y>
+      <width>830</width>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayIterationLabel</name>
+      <text>Iteration</text>
+      <x>20</x>
+      <y>210</y>
+      <width>150</width>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ReplayIteration</name>
+      <pv_name>$(P)$(R)REPLAY_ITERATION</pv_name>
+      <x>180</x>
+      <y>210</y>
+      <width>200</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayRemainingLabel</name>
+      <text>Remaining</text>
+      <x>400</x>
+      <y>210</y>
+      <width>150</width>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ReplayRemaining</name>
+      <pv_name>$(P)$(R)REPLAY_REMAINING</pv_name>
+      <x>560</x>
+      <y>210</y>
+      <width>200</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReplayStatusLabel</name>
+      <text>Replay Status</text>
+      <x>20</x>
+      <y>240</y>
+      <width>150</width>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ReplayStatusMsg</name>
+      <pv_name>$(P)$(R)REPLAY_STATUS_MSG</pv_name>
+      <x>180</x>
+      <y>240</y>
+      <width>830</width>
+      <format>6</format>
+    </widget>
+  </widget>
+</display>

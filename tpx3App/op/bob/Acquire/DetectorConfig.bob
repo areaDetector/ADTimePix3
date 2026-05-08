@@ -1726,7 +1726,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Emulator</description>
-        <file>../tpx3emulator.bob</file>
+        <file>../Emulator/emulator.bob</file>
         <target>tab</target>
       </action>
     </actions>

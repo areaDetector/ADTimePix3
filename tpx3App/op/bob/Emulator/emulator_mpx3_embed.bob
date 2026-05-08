@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>emulator_mpx3_embed</name>
+  <macros>
+    <R>Emulator:</R>
+  </macros>
+  <width>1060</width>
+  <height>200</height>
+  <widget type="group" version="3.0.0">
+    <name>MPX3Parameters</name>
+    <width>1060</width>
+    <height>190</height>
+    <widget type="label" version="2.0.0">
+      <name>MpxTitle</name>
+      <text>Medipix3 emulator (Mpx3Emulator.jar)</text>
+      <x>10</x>
+      <y>5</y>
+      <width>500</width>
+      <background_color>
+        <color red="240" green="248" blue="255">
+        </color>
+      </background_color>
+      <border_width>1</border_width>
+      <border_color>
+        <color red="0" green="128" blue="255">
+        </color>
+      </border_color>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>MegapixelEn</name>
+      <pv_name>$(P)$(R)MEGAPIXEL_ENABLE</pv_name>
+      <label>megapixel</label>
+      <x>20</x>
+      <y>40</y>
+      <width>120</width>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>CornerTextEn</name>
+      <pv_name>$(P)$(R)CORNER_TEXT_ENABLE</pv_name>
+      <label>cornerText</label>
+      <x>160</x>
+      <y>40</y>
+      <width>120</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>MpxMaskLbl</name>
+      <text>chipMask</text>
+      <x>310</x>
+      <y>45</y>
+      <width>60</width>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>MpxChipMaskSp</name>
+      <pv_name>$(P)$(R)MPX_CHIP_MASK</pv_name>
+      <x>380</x>
+      <y>45</y>
+      <maximum>15.0</maximum>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>MpxMaskEnable</name>
+      <pv_name>$(P)$(R)MPX_CHIP_MASK_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>485</x>
+      <y>40</y>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>LossLbl</name>
+      <text>loss</text>
+      <x>640</x>
+      <y>45</y>
+      <width>40</width>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>LossEn</name>
+      <pv_name>$(P)$(R)MPX_LOSS_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>785</x>
+      <y>40</y>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>FracLbl</name>
+      <text>frac</text>
+      <x>20</x>
+      <y>95</y>
+      <width>40</width>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>FracEn</name>
+      <pv_name>$(P)$(R)MPX_FRAC_ENABLE</pv_name>
+      <label>Enable</label>
+      <x>165</x>
+      <y>90</y>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Omr0Lbl</name>
+      <text>omr0</text>
+      <x>285</x>
+      <y>95</y>
+      <width>40</width>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>Omr0En</name>
+      <pv_name>$(P)$(R)MPX_OMR0_ENABLE</pv_name>
+      <label>En</label>
+      <x>435</x>
+      <y>90</y>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>Spinner</name>
+      <pv_name>$(P)$(R)MPX_OMR0</pv_name>
+      <x>330</x>
+      <y>95</y>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>Spinner_1</name>
+      <pv_name>$(P)$(R)MPX_FRAC</pv_name>
+      <x>60</x>
+      <y>95</y>
+    </widget>
+    <widget type="spinner" version="2.0.0">
+      <name>Spinner_2</name>
+      <pv_name>$(P)$(R)MPX_LOSS</pv_name>
+      <x>680</x>
+      <y>45</y>
+    </widget>
+  </widget>
+</display>
