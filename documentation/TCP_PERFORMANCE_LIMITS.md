@@ -10,8 +10,8 @@ For Time-of-Flight (ToF) applications requiring very fast frame rates, the **his
 
 ### Bandwidth Requirements
 
-For a 512×512 pixel image with 16-bit pixels (uint16):
-- **Image size per frame**: 512 × 512 × 2 bytes = **524,288 bytes** (~512 KB)
+For a 512x512 pixel image with 16-bit pixels (uint16):
+- **Image size per frame**: 512 x 512 x 2 bytes = **524,288 bytes** (~512 KB)
 - **JSON header overhead**: ~200-500 bytes per frame (jsonimage format)
 - **Total per frame**: ~525 KB
 
@@ -22,7 +22,7 @@ For a 512×512 pixel image with 16-bit pixels (uint16):
 | 1,000 FPS | 1.0 ms | ~500 MB/s | **Possible** (with optimization) |
 | 10,000 FPS | 0.1 ms | ~5 GB/s | **Difficult** (CPU/memory bound) |
 | 100,000 FPS | 0.01 ms | ~50 GB/s | **Very difficult** (requires zero-copy, optimized processing) |
-| 200,000 FPS | 0.005 ms (5 μs) | ~100 GB/s | **Extremely difficult** (approaches memory bandwidth limits) |
+| 200,000 FPS | 0.005 ms (5 us) | ~100 GB/s | **Extremely difficult** (approaches memory bandwidth limits) |
 
 ### Localhost (Loopback) vs Ethernet
 
@@ -31,12 +31,12 @@ For a 512×512 pixel image with 16-bit pixels (uint16):
 **Loopback Interface Characteristics:**
 - **Bandwidth**: Limited by CPU/memory bandwidth, not network hardware
 - **Typical throughput**: 10-50+ GB/s (depends on CPU architecture and memory speed)
-- **Latency**: Very low (~1-10 μs), no network stack overhead
+- **Latency**: Very low (~1-10 us), no network stack overhead
 - **No packet loss**: Reliable, no network congestion
 
 **Comparison:**
 
-| Interface | Bandwidth | Max FPS (512×512) | Limiting Factor |
+| Interface | Bandwidth | Max FPS (512x512) | Limiting Factor |
 |-----------|-----------|-------------------|-----------------|
 | **Localhost (loopback)** | 10-50+ GB/s | **20,000-100,000+ FPS** | CPU/memory bandwidth |
 | 1 GbE | ~100 MB/s | ~200 FPS | Network hardware |
@@ -50,20 +50,20 @@ For a 512×512 pixel image with 16-bit pixels (uint16):
 ### Current Implementation Overhead
 
 Each frame requires:
-1. **TCP socket read**: Blocking `recv()` call (~10-50 μs depending on data availability)
-2. **JSON parsing**: nlohmann/json parsing of header (~50-200 μs for ~500 byte JSON)
-3. **Binary data read**: Additional `receive_exact()` for pixel data (~100-500 μs for 512 KB)
-4. **Byte order conversion**: Network-to-host byte swapping for all pixels (~200-1000 μs for 512×512)
-5. **NDArray allocation**: EPICS NDArray pool allocation (~50-200 μs)
-6. **Memory copy**: Copying pixel data to NDArray (~100-500 μs)
-7. **EPICS callbacks**: `doCallbacksGenericPointer()` to plugins (~100-500 μs)
-8. **Parameter updates**: asyn parameter updates (~10-50 μs)
+1. **TCP socket read**: Blocking `recv()` call (~10-50 us depending on data availability)
+2. **JSON parsing**: nlohmann/json parsing of header (~50-200 us for ~500 byte JSON)
+3. **Binary data read**: Additional `receive_exact()` for pixel data (~100-500 us for 512 KB)
+4. **Byte order conversion**: Network-to-host byte swapping for all pixels (~200-1000 us for 512x512)
+5. **NDArray allocation**: EPICS NDArray pool allocation (~50-200 us)
+6. **Memory copy**: Copying pixel data to NDArray (~100-500 us)
+7. **EPICS callbacks**: `doCallbacksGenericPointer()` to plugins (~100-500 us)
+8. **Parameter updates**: asyn parameter updates (~10-50 us)
 
-**Total processing time per frame**: ~620-2,500 μs (0.62-2.5 ms)
+**Total processing time per frame**: ~620-2,500 us (0.62-2.5 ms)
 
 **Maximum sustainable rate**: ~400-1,600 FPS (with current implementation)
 
-**Note**: With localhost loopback, network latency is negligible (~1-10 μs), so the bottleneck is purely processing overhead, not network bandwidth.
+**Note**: With localhost loopback, network latency is negligible (~1-10 us), so the bottleneck is purely processing overhead, not network bandwidth.
 
 ### Bottlenecks
 
@@ -96,10 +96,10 @@ WARN: Image Pool is empty... Awaiting free images.
 
 **For ToF applications, use the histogram channel (`PrvHst`) instead of full 2D images:**
 
-- **Data size**: ~16,000 bins × 4 bytes (int32) = **64 KB per frame** (vs 512 KB for images)
+- **Data size**: ~16,000 bins x 4 bytes (int32) = **64 KB per frame** (vs 512 KB for images)
 - **No JSON parsing**: Binary jsonhisto format is more efficient
 - **No byte swapping**: Histogram data is already in correct format
-- **Lower overhead**: ~10-50 μs processing time per frame
+- **Lower overhead**: ~10-50 us processing time per frame
 - **Higher rate capability**: Can sustain **10,000-50,000 FPS** easily
 
 **Configuration:**
@@ -108,14 +108,14 @@ WARN: Image Pool is empty... Awaiting free images.
 caput TPX3-TEST:cam1:PrvHstFilePath "tcp://listen@localhost:8451"
 caput TPX3-TEST:cam1:PrvHstFileFmt 4  # jsonhisto format
 caput TPX3-TEST:cam1:PrvHstNumBins 16000
-caput TPX3-TEST:cam1:PrvHstBinWidth 0.000001  # 1 μs bins
+caput TPX3-TEST:cam1:PrvHstBinWidth 0.000001  # 1 us bins
 caput TPX3-TEST:cam1:WritePrvHst 1
 ```
 
 **Benefits:**
-- **100× smaller data size** (64 KB vs 512 KB per frame)
-- **10-100× faster processing** (no JSON parsing, no byte swapping)
-- **Suitable for 5 μs frame rates** (200,000 FPS) with proper network infrastructure
+- **100x smaller data size** (64 KB vs 512 KB per frame)
+- **10-100x faster processing** (no JSON parsing, no byte swapping)
+- **Suitable for 5 us frame rates** (200,000 FPS) with proper network infrastructure
 
 ### Option 2: Optimize Image Channel (If Full Images Required)
 
@@ -151,7 +151,7 @@ If you absolutely need full 2D images for ToF:
 ### Option 3: Hybrid Approach
 
 Use histogram channel for ToF timing, and image channel for slower visualization:
-- **Histogram**: High-rate ToF data (5 μs frames)
+- **Histogram**: High-rate ToF data (5 us frames)
 - **Image**: Lower-rate visualization (100-1000 FPS)
 
 ## Practical Limits
@@ -160,19 +160,19 @@ Use histogram channel for ToF timing, and image channel for slower visualization
 
 | Application | Frame Rate | Exposure | Method | Status |
 |-------------|------------|----------|--------|--------|
-| Preview/Monitoring | 1-60 FPS | 16-1000 ms | Image TCP | ✅ **Easy** |
-| Standard Acquisition | 10-100 FPS | 10-100 ms | Image TCP | ✅ **Easy** |
-| Fast Acquisition | 100-1000 FPS | 1-10 ms | Image TCP | ⚠️ **Possible** (with optimization) |
-| Very Fast Acquisition | 1,000-10,000 FPS | 0.1-1 ms | Image TCP (localhost) | ⚠️ **Difficult** (CPU-bound, requires optimization) |
-| ToF Applications | 10,000-200,000 FPS | 5-100 μs | **Histogram TCP** (localhost) | ✅ **Recommended** |
+| Preview/Monitoring | 1-60 FPS | 16-1000 ms | Image TCP | OK **Easy** |
+| Standard Acquisition | 10-100 FPS | 10-100 ms | Image TCP | OK **Easy** |
+| Fast Acquisition | 100-1000 FPS | 1-10 ms | Image TCP | WARNING **Possible** (with optimization) |
+| Very Fast Acquisition | 1,000-10,000 FPS | 0.1-1 ms | Image TCP (localhost) | WARNING **Difficult** (CPU-bound, requires optimization) |
+| ToF Applications | 10,000-200,000 FPS | 5-100 us | **Histogram TCP** (localhost) | OK **Recommended** |
 
 ## Conclusion
 
 **For 5 microsecond frame rates (200,000 FPS) in ToF applications:**
 
-1. ✅ **Use histogram channel (`PrvHst`)** - This is the correct approach for ToF
-2. ⚠️ **Full 2D image channel at 5 μs**: With localhost loopback, network bandwidth is not the limit, but **CPU processing overhead** makes this extremely difficult. Current implementation can handle ~400-1,600 FPS. With significant optimization (zero-copy, optimized parsing), higher rates may be possible but are not guaranteed.
-3. ⚠️ **If images are required**, maximum practical rate with current implementation is ~1,000-2,000 FPS. Higher rates require optimization of processing pipeline.
+1. OK **Use histogram channel (`PrvHst`)** - This is the correct approach for ToF
+2. WARNING **Full 2D image channel at 5 us**: With localhost loopback, network bandwidth is not the limit, but **CPU processing overhead** makes this extremely difficult. Current implementation can handle ~400-1,600 FPS. With significant optimization (zero-copy, optimized parsing), higher rates may be possible but are not guaranteed.
+3. WARNING **If images are required**, maximum practical rate with current implementation is ~1,000-2,000 FPS. Higher rates require optimization of processing pipeline.
 
 **Key Point**: Since you're using `localhost` (loopback interface), the bottleneck is **CPU processing time**, not network bandwidth. The loopback interface can handle 10-50+ GB/s, but processing each frame takes ~1-2 ms, limiting sustainable rate to ~500-1,000 FPS with current code.
 
