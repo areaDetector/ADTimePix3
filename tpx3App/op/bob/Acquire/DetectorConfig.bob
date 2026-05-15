@@ -1979,4 +1979,28 @@ $(pv_value)</tooltip>
       </color>
     </border_color>
   </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>Action Button_11</name>
+    <actions>
+      <action type="open_display">
+        <description>Event</description>
+        <file>../Events/tpx3RawStream.bob</file>
+        <macros>
+          <R>raw:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Raw</text>
+    <x>845</x>
+    <y>400</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>$(actions)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
 </display>
