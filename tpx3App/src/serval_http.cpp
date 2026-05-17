@@ -1226,17 +1226,17 @@ asynStatus ADTimePix::getServer(){
     std::string server;
 
     // Use the vendor library to collect information about the camera format here, and set the appropriate PVs
-    /*
+    /* Example Serval 4.x Destination JSON (file bases use file:/path — one slash after "file:", not file:///)
         {
           "Destination" : {
             "Raw" : [ {
-              "Base" : "file:///home/kgofron/Downloads",
+              "Base" : "file:/media/nvme/raw",
               "FilePattern" : "raw%Hms_",
               "SplitStrategy" : "SINGLE_FILE",
               "QueueSize" : 16384
             } ],
             "Image" : [ {
-              "Base" : "file:///home/kgofron/Downloads/TimePix/20220105-asi-server-236-tpx3/examples/tpx3/data",
+              "Base" : "file:/media/nvme/img",
               "FilePattern" : "f%Hms_",
               "Format" : "tiff",
               "Mode" : "tot",
@@ -2107,7 +2107,7 @@ asynStatus ADTimePix::initCamera(){
     config_j["BiasVoltage"] = 103;
     config_j["BiasEnabled"] = true;
 
-    //config_j["Destination"]["Raw"][0]["Base"] = "file:///home/kgofron/Downloads";
+    //config_j["Destination"]["Raw"][0]["Base"] = "file:/media/nvme/raw";
     //printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
 
     r = ADTimePix3ServalHttp::putJson(config, config_j.dump());
