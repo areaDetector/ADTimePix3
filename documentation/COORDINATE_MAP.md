@@ -95,7 +95,9 @@ Chip `c` is derived from `k` as above. Each orientation maps **intra-chip** `(lx
 
 ## Eight-chip mosaic (`numChips == 8`)
 
-**Implemented only for orientation UP (0).** Rectangular grid from `rowsCols()`:
+### Linear 2×4 grid — **implemented** (UP only)
+
+**Current driver behavior** (`mask_io.cpp`): assumes chip IDs are laid out in a simple raster over the mosaic tiles:
 
 ```text
 X_CHIP = chip % xChips
@@ -109,7 +111,85 @@ img_linear = i + (xChips * w) * j
 
 `pelIndex` uses the same mosaic with `k = chip * w*w + lx + (w - 1 - ly) * w`.
 
-Other orientations: not implemented (`WARN`, returns `-1`).
+With `xChips = 4`, `yChips = 2`, image tile `(0,0)` is **chip 0**, `(1,0)` is chip 1, … `(3,1)` is chip 7:
+
+```text
++---+---+---+---+
+| 0 | 1 | 2 | 3 |
++---+---+---+---+
+| 4 | 5 | 6 | 7 |
++---+---+---+---+
+```
+
+Other global orientations for 8-chip: not implemented (`WARN`, returns `-1`).
+
+### Full-rate SpIDR 2×4 — **planned** (not in `mask_io.cpp` yet)
+
+ASI **single-board** 8-chip SpidrTurbo (`chipboardId` prefix **`84`**) uses a **different** stitched mosaic than the linear grid above. It also differs from the older **“2 × quad”** eight-chip diagram (two 4-chip modules). Reference: TPX3 emulator IOC README, section *Full-rate SpIDR 2×4 layout* (on many sites: `iocs/emulator/docs/TPX3_EMULATOR_IOC_README.md` under the EPICS `iocs` tree, outside this module).
+
+**Physical mosaic** (chip ID in each tile; `xChip` left→right, `yChip` top→bottom in image coordinates):
+
+```text
+Top short edge wb: 2,1,6        Right column wb: 7
++---+---+---+---+
+| 2 | 1 | 6 | 7 |   yChip = 0
++---+---+---+---+
+| 3 | 0 | 4 | 5 |   yChip = 1   (wb on chip 5 short edge; chip 7 along right)
++---+---+---+---+
+Bottom short edge wb: 3,0,4
+```
+
+**Draft placement table** `chip_at[yChip][xChip]` (BPC / Serval chip index in that tile):
+
+| `yChip` \\ `xChip` | 0 | 1 | 2 | 3 |
+|--------------------|---|---|---|---|
+| 0 | 2 | 1 | 6 | 7 |
+| 1 | 3 | 0 | 4 | 5 |
+
+C layout (row-major by `yChip`, then `xChip`):
+
+```text
+chip_at[2][4] = { { 2, 1, 6, 7 },
+                  { 3, 0, 4, 5 } };
+```
+
+**Draft per-chip intra-tile rotation** (relative to single-chip UP); **unverified** — confirm on emulator/hardware, especially chips **5** and **7** (ASI: mounted 90° for EELS / high-rate workflows):
+
+| Chip | Draft rotation | Notes |
+|------|----------------|-------|
+| 0 | UP | |
+| 1 | UP | |
+| 2 | UP | |
+| 3 | UP | |
+| 4 | UP | |
+| 5 | ROT90 | ASI: 90° vs other chips |
+| 6 | UP | |
+| 7 | ROT90 | ASI: 90° vs other chips |
+
+Planned lookup (conceptual — not implemented):
+
+1. `chip` from BPC index: `chip = k / (w*w)` (unchanged).
+2. Find tile `(xChip, yChip)` where `chip_at[yChip][xChip] == chip`.
+3. Apply that chip’s rotation to map local `(lx, ly)` → offset within the `w×w` tile, then `i = xChip*w + …`, `j = yChip*w + …`.
+
+**Do not use** the linear 8-chip formulas on SpIDR 2×4 data until this layout is implemented; masks, `PixelConfigDiff`, and masked-pels JSON will be misaligned.
+
+**Inputs still needed before implementation** (fill golden vectors in `test/coordinate_map_vectors.json` → `planned_cases`):
+
+- Confirm `chip_at` matches Serval `Layout` / emulator image for `chipboardId=84…`.
+- Confirm ROT90 convention (clockwise vs counter-clockwise; which edge is “short edge wb”).
+- Several golden `(k ↔ i,j)` points per chip, especially corners of chips **5** and **7**.
+- Whether BPC file byte order remains chip `0…7` blocks in Serval chip-index order (expected yes).
+
+**Draft expectations** (w=4, UP intra-chip on tile only — **not validated**; for discussion):
+
+| Case | BPC `k` | Tile `(xChip,yChip)` | Draft `(i,j)` if UP on tile |
+|------|---------|----------------------|----------------------------|
+| Chip 0 origin | 0 | (1,1) | (4, 7) |
+| Chip 2 origin | 32 | (0,0) | (0, 3) |
+| Chip 7 origin | 112 | (3,0) | (12, 3) |
+
+Compare to **current** linear 8-chip driver: `k=0` → `(0,3)`, `k=112` → `(12,7)` (see existing `8chip_up_*` cases in JSON).
 
 ## Test vectors
 
@@ -126,6 +206,8 @@ python3 test/verify_coordinate_map.py
 ```
 
 The script reimplements the mapping rules above; it does **not** link the EPICS driver. When changing `mask_io.cpp`, update the JSON and script together.
+
+**SpIDR 2×4:** placeholder cases live under `planned_cases` in the same JSON file. They are **skipped** by `verify_coordinate_map.py` until `status` is removed and expectations are verified on emulator/hardware. When implementing SpIDR mapping, move cases into `cases`, extend the Python reference, then update `mask_io.cpp`.
 
 ## API summary (`ADTimePix` in `mask_io.cpp`)
 

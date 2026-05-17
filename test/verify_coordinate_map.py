@@ -280,7 +280,14 @@ def main() -> int:
             print(f"  - {e}", file=sys.stderr)
         return 1
 
-    print(f"OK: {len(data['cases'])} coordinate_map_vectors cases passed")
+    n_cases = len(data["cases"])
+    planned = data.get("planned_cases", [])
+    n_planned = len(planned)
+    print(f"OK: {n_cases} coordinate_map_vectors cases passed", end="")
+    if n_planned:
+        print(f"; {n_planned} planned case(s) skipped (SpIDR 2×4 — see COORDINATE_MAP.md)")
+    else:
+        print()
     return 0
 
 
