@@ -181,6 +181,10 @@ The histogram channel is specifically designed for high-rate ToF applications an
 ## References
 
 - Histogram channel documentation: See `PrvHstHistogram.bob` screen
-- TCP streaming implementation: `tpx3App/src/ADTimePix.cpp` (lines 3399-3740 for image, `histogram_io.cpp` for histogram)
-- Buffer sizes: `MAX_BUFFER_SIZE = 32768` bytes (JSON header buffer)
+- **TCP streaming implementation** (driver source layout after R1-6-3 refactor; see [README.md](../README.md) *Driver Analysis* and [RELEASE.md](../RELEASE.md) R1-6-3):
+  - **PrvImg / Img (jsonimage)**: `tpx3App/src/serval_stream.cpp` — worker threads (`prvImgWorkerThread`, `imgWorkerThread`), line parsing (`processPrvImgDataLine`, `processImgDataLine`), frame handling (`processImgFrame`, `processPrvImgDataLine`), connect/disconnect; uses `tpx3App/src/network_client.cpp` for socket I/O.
+  - **PrvHst (jsonhisto)**: `tpx3App/src/histogram_io.cpp` — `prvHstWorkerThread`, `processPrvHstDataLine`, `processPrvHstFrame`.
+  - **Acquisition lifecycle** (start/stop measurement, spawn/join TCP workers): `tpx3App/src/acquire.cpp` — `acquireStart`, `acquireStop`, `timePixCallback`.
+  - **Img accumulation buffers** (running sum, sum-of-N): `tpx3App/src/img_accumulation.cpp` (called from `serval_stream.cpp`).
+- Buffer sizes: `MAX_BUFFER_SIZE = 32768` bytes (JSON header line buffer; defined in `ADTimePix.h`)
 - NDArray pool: Configured in `ADTimePixConfig()` call

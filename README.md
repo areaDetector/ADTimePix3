@@ -25,7 +25,7 @@ Notes:
 Driver logging (asyn)
 ---------------------
 
-Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers in `tpx3App/src/ADTimePix.cpp` use **`ADTPX3_FUNC`** in the log prefix: on **GCC/Clang** it defaults to **`__PRETTY_FUNCTION__`** (signature-rich); on other compilers it uses **`__func__`**.
+Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers (**`ADTimePixLog.h`**, used across `tpx3App/src/*.cpp`) use **`ADTPX3_FUNC`** in the log prefix: on **GCC/Clang** it defaults to **`__PRETTY_FUNCTION__`** (signature-rich); on other compilers it uses **`__func__`**.
 
 * **Shorter prefixes**: define **`ADTPX3_LOG_SHORT`** when building the driver library so prefixes use **`__func__` only** (see commented `USR_CPPFLAGS` line in `tpx3App/src/Makefile`).
 * **`WARN` visibility**: by default **`WARN` / `WARN_ARGS`** use **`ASYN_TRACE_WARNING`**. The port’s asyn **trace mask** must include the **warning** bit for those lines to appear. If your site only enables **ERROR**-level trace and you need the old behavior, build with **`ADTPX3_WARN_AS_ERROR`** so `WARN*` is emitted at **`ASYN_TRACE_ERROR`** (commented example in the same `Makefile`).
@@ -212,6 +212,22 @@ The ADTimePix3 is an EPICS areaDetector driver for TimePix3 detectors from Advan
 -   Data Format: JSON using nlohmann/json library
 -   Preview Images: TCP streaming (jsonimage format) for real-time preview images
 -   Image Processing: TCP streaming replaces GraphicsMagick HTTP method (GraphicsMagick preserved in `preserve/graphicsmagick-preview` branch)
+
+**Source modules** (`tpx3App/src/`, library `libADTimePix`):
+
+| File | Responsibility |
+|------|----------------|
+| `ADTimePix.cpp` | Core driver: constructor, channel path checks, PV I/O, `report` |
+| `serval_http.cpp` | Serval REST (config, dashboard, DACs, init, connection poll) |
+| `serval_http.h` | Shared CPR helpers (`ADTimePix3ServalHttp::get` / `putJson`, etc.) |
+| `acquire.cpp` | `acquireStart` / `acquireStop` / `timePixCallback` |
+| `serval_stream.cpp` | PrvImg / Img TCP jsonimage streaming |
+| `network_client.cpp` | TCP client used by stream and histogram paths |
+| `histogram_io.cpp` | PrvHst TCP jsonhisto streaming and accumulation |
+| `mask_io.cpp` | BPC/mask files, upload, coordinate mapping |
+| `img_accumulation.cpp` | Img running-sum / sum-of-N buffers |
+
+See [RELEASE.md](RELEASE.md) (R1-6-3) for the refactor notes. BPC index ↔ image layout: [documentation/COORDINATE_MAP.md](documentation/COORDINATE_MAP.md).
 
 #### 2. Core Functionality
 

@@ -24,10 +24,17 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 * **Compiler baseline change for CPR >= 1.10**:
   * Switched driver/support builds to **C++17** in **`tpx3Support/Makefile`** and **`tpx3App/src/Makefile`** (`USR_CPPFLAGS += -std=c++17`).
 * **Driver HTTP call cleanup after CPR upgrade**:
-  * Added shared CPR request helpers in **`ADTimePix.cpp`** and migrated high-duplication GET/PUT call sites (connection checks, config paths, start/stop measurement flows) to reduce repeated auth/header/timeout boilerplate.
+  * Shared CPR request helpers in **`serval_http.h`** / namespace **`ADTimePix3ServalHttp`** (**`serval_http.cpp`**); high-duplication GET/PUT sites (connection checks, config paths, measurement start/stop in **`acquire.cpp`**) use them to reduce repeated auth/header/timeout boilerplate.
   * Default **5 second** timeouts on key status reads (`/dashboard`, `/detector`, `/detector/health`, `/measurement/config`, PixelConfig GETs, etc.).
-  * **`trimHttpBodyForLog`**, **`logHttpFailure`**, and **`logHttpWarning`** on **`ADTimePix`** (after `driverName`): HTTP error lines include **method**, **URL**, **status**, and a **truncated/sanitized** response snippet (avoid giant HTML dumps in the IOC log).
-  * **BPC / DACS upload alignment** (**`uploadBPC()`**, **`uploadDACS()`**, GET SERVAL **`/config/load`**): Use the same auth-only CPR path as the rest of the driver (**`servalHttpGetAuthOnly`** wraps internal **`servalGetAuthOnly`** so **`mask_io.cpp`** stays consistent with **`ADTimePix.cpp`**). On HTTP status other than **200**, each call **`logHttpFailure`** and returns **`asynError`** (previously these uploads often returned **`asynSuccess`** even when SERVAL reported an error). **`HttpCode`** / **`WriteFileMessage`** (or equivalent PVs) still reflect SERVAL response; check them when uploads fail.
+  * **`trimHttpBodyForLog`**, **`logHttpFailure`**, and **`logHttpWarning`** on **`ADTimePix`** (implemented in **`serval_http.cpp`**): HTTP error lines include **method**, **URL**, **status**, and a **truncated/sanitized** response snippet (avoid giant HTML dumps in the IOC log).
+  * **BPC / DACS upload alignment** (**`uploadBPC()`**, **`uploadDACS()`**, GET SERVAL **`/config/load`**): Use the same auth-only CPR path as the rest of the driver (**`servalHttpGetAuthOnly`** → **`ADTimePix3ServalHttp::getAuthOnly`** so **`mask_io.cpp`** stays consistent with **`serval_http.cpp`**). On HTTP status other than **200**, each call **`logHttpFailure`** and returns **`asynError`** (previously these uploads often returned **`asynSuccess`** even when SERVAL reported an error). **`HttpCode`** / **`WriteFileMessage`** (or equivalent PVs) still reflect SERVAL response; check them when uploads fail.
+* **Code organization (driver split, no functional or PV changes)**:
+  * **`serval_stream.cpp`** + **`network_client.cpp`** — PrvImg / Img TCP **jsonimage** streaming and image accumulation hooks.
+  * **`serval_http.cpp`** — Serval REST (dashboard, detector/server config, DACs, **`fileWriter`**, **`initCamera`** / **`initAcquisition`**, PixelConfig refresh, measurement config, connection poll).
+  * **`acquire.cpp`** — **`acquireStart`**, **`acquireStop`**, **`timePixCallback`** (measurement HTTP + worker-thread orchestration).
+  * **`histogram_io.cpp`** — PrvHst TCP **jsonhisto** streaming and histogram accumulation (unchanged responsibility).
+  * **`mask_io.cpp`** — BPC/mask paths, upload, **`pelIndex`** / **`bpc2ImgIndex`** (see **`documentation/COORDINATE_MAP.md`**).
+  * **`ADTimePix.cpp`** — core driver shell (~1.8k lines): constructor, path checks, PV I/O (**`writeInt32`** / **`writeOctet`**), **`report`**, PrvHst NDArray plugin push.
 * **Build validation**:
   * Full repository build (`make -j`) completes successfully after upgrade.
 * **BPC naming consistency**: Renamed **`bcp2ImgIndex`** to **`bpc2ImgIndex`** (BPC file index to image index). Masked-pels JSON export uses **`skipped_unmapped_bpc_index`** (was **`skipped_unmapped_bcp_index`**). Fixed stray **BCP** typos in path-check comments.
