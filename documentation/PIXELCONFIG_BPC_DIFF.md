@@ -40,6 +40,10 @@ The driver does **not** guess which side is “correct”; it reports **equality
 
 Each element is **`abs(byte_SERVAL − byte_BPC)`** for the same logical pel after mapping. Bit-level mask changes (e.g. bit 0) typically show as small integers (often **1**) where that byte differs.
 
+## ## Coordinate map
+
+See **[COORDINATE_MAP.md](COORDINATE_MAP.md)** for `pelIndex` vs `bpc2ImgIndex`, orientations, and golden test vectors (`test/coordinate_map_vectors.json`).
+
 ## Related PVs and UI
 
 - **`RefreshPixelConfig`**: `Dashboard.template`; forward-links to **`PixelConfigDiff.PROC`** so the waveform record processes after the driver updates the buffer.

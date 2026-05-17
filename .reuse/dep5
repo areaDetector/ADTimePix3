@@ -36,6 +36,11 @@ Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
+Files: test/coordinate_map_vectors.json test/verify_coordinate_map.py
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
 Files: README.md RELEASE.md
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory

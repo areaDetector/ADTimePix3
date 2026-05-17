@@ -30,7 +30,7 @@ Alternatively, maintain **two** files (e.g. `tpx3_mask_full.json` + `bad_pixel_p
 | **BPC / `Position`** | Linear byte index in the `.bpc` file, chip0 block then chip1, ...; within a chip, row-major with **x (column within tile) fast**, **y (row within tile) slow** -- as in `bpc_position_to_chip_local` in `check_bit.c`. |
 | **`chip`, `lx`, `ly`** | Chip id in file order; local pixel inside the `chip_pel_width x chip_pel_width` tile. |
 | **`i`, `j` (image)** | **Column, row** in the **global** assembled image, **top-left origin** -- same as printed by `check_bit` and documented as matching **`bpc2ImgIndex`** in `mask_io.cpp`. |
-| **Mask / PixelConfigDiff image PVs** | Row-major `j * cols + i` with mapping **`pelIndex(i, j)`** to file index -- this is the path used for mask *editing* and `PixelConfigDiff`, and is **not** always the inverse of `bpc2ImgIndex` for every orientation. See `documentation/PIXELCONFIG_BPC_DIFF.md` and `mask_io.cpp` comments. |
+| **Mask / PixelConfigDiff image PVs** | Row-major `j * cols + i` with mapping **`pelIndex(i, j)`** to file index -- this is the path used for mask *editing* and `PixelConfigDiff`, and is **not** always the inverse of `bpc2ImgIndex` for every orientation. See **[COORDINATE_MAP.md](COORDINATE_MAP.md)**, `documentation/PIXELCONFIG_BPC_DIFF.md`, and `mask_io.cpp` comments. |
 
 When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** with the **same** `(i, j)` as the dense image and `NDArray` dimensions (column `i`, row `j`).
 
