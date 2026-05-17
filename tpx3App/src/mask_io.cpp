@@ -1,3 +1,12 @@
+/*
+ * ADTimePix3 - BPC / mask I/O and chip-image coordinate mapping (mask_io)
+ *
+ * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+ * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <sys/stat.h>
 #include <algorithm>
 // Area Detector include

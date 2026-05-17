@@ -1,8 +1,13 @@
 Copyright and License Terms
 ---------------------------
 
-Copyright (c) 2024 Oak Ridge National laboratory
-Copyright (c) 2022 Brookhaven National Laboratory
+Copyright (c) 2022 Brookhaven Science Associates, as Operator of Brookhaven National Laboratory
+Copyright (c) 2022-2026 UT-Battelle, LLC, as Operator of Oak Ridge National Laboratory
+
+Development began at Brookhaven National Laboratory through late 2022; development
+continued at Oak Ridge National Laboratory from November 2022 onward. Per-file
+headers in tpx3App/src/ use both copyright notices for the ADTimePix3 driver as one
+work product (including modules added at ORNL that refactor or extend earlier code).
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

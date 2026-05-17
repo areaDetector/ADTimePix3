@@ -1,13 +1,15 @@
 /*
- * Header file for the ADTimePix3 EPICS driver
+ * ADTimePix3 - EPICS areaDetector driver for TimePix3 (Serval)
  *
- * This file contains the definitions of PV params, and the definition of the ADTimePix3 class and functions.
+ * PV parameter definitions and ADTimePix class declaration.
  *
- * Author:  Kazimierz Gofron
- * Created: June, 2022
- * Last edited: April 29, 2026
- * Copyright (c) : Oak Ridge National Laboratory
+ * Author: Kazimierz Gofron (BNL, 2022; ORNL, 2022-present)
+ * Created: June 2022 (Brookhaven National Laboratory)
  *
+ * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+ * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 // header guard

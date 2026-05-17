@@ -1,11 +1,13 @@
 /*
- * This is a driver for the TimePix3 pixel array detector 
- * 
- * Author: Kazimierz Gofron
- * Created On: June, 2022
- * Last Edited: July 20, 2025
- * Copyright (c): 2022 Brookhaven National Laboratory
- * Copyright (c): 2025 Oak Ridge National Laboratory
+ * ADTimePix3 - EPICS areaDetector driver for TimePix3 (Serval)
+ *
+ * Author: Kazimierz Gofron (BNL, 2022; ORNL, 2022-present)
+ * Created: June 2022 (Brookhaven National Laboratory)
+ *
+ * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+ * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 // Standard includes

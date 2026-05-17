@@ -1,3 +1,12 @@
+/*
+ * ADTimePix3 - asyn logging helpers
+ *
+ * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+ * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef ADTIMEPIX3_LOG_H
 #define ADTIMEPIX3_LOG_H
 

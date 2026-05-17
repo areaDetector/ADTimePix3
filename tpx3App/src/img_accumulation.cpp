@@ -1,3 +1,12 @@
+/*
+ * ADTimePix3 - Img channel accumulation (running sum, sum of last N frames)
+ *
+ * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+ * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "img_accumulation.h"
 #include <stdexcept>
 #include <algorithm>

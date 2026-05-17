@@ -1,3 +1,12 @@
+/*
+ * ADTimePix3 - PrvHst / ToF histogram TCP streaming and accumulation
+ *
+ * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+ * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "histogram_io.h"
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
