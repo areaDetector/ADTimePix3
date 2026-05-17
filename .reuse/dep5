@@ -51,7 +51,32 @@ Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
-Files: tpx3Support/*
+Files: tpx3Support/cpr/**
+Copyright: libcpr contributors
+License: MIT
+ Comment:
+  Bundled CPR 1.14.2 (tpx3Support/cpr/cpr/cprver.h). Upstream https://github.com/libcpr/cpr
+
+Files: tpx3Support/json/**
+Copyright: Niels Lohmann
+License: MIT
+ Comment:
+  Bundled nlohmann/json 3.11.2. Upstream https://github.com/nlohmann/json
+
+Files: tpx3Support/Makefile
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
+
+Files: tpx3Support/O.*/
+Copyright: NOASSERTION
+License: NONE
+ Comment:
+  EPICS build artifacts under tpx3Support; not part of a source distribution.
+
+Files: vendor/**
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+ Comment:
+  Example JSON and test fixtures shipped with the driver.

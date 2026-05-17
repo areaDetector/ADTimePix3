@@ -1,0 +1,75 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: ADTimePix3
+DocumentNamespace: https://github.com/areaDetector/ADTimePix3/spdx/ADTimePix3
+Creator: Person: Kazimierz Gofron
+Creator: Tool: manual-SBOM
+Created: 2026-05-16T00:00:00Z
+
+##### Package: ADTimePix3 driver (this repository)
+
+PackageName: ADTimePix3
+SPDXID: SPDXRef-Package-ADTimePix3
+PackageVersion: R1-6-3
+PackageDownloadLocation: https://www.osti.gov/doecode/biblio/176778
+FilesAnalyzed: false
+PackageLicenseConcluded: MIT
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright (c) 2022 Brookhaven Science Associates, as Operator of Brookhaven National Laboratory
+PackageCopyrightText: Copyright (c) 2022-2026 UT-Battelle, LLC, as Operator of Oak Ridge National Laboratory
+PackageComment: EPICS areaDetector driver for TimePix3 via ASI Serval. See LICENSE and .reuse/dep5.
+
+##### Package: bundled CPR (HTTP client)
+
+PackageName: cpr
+SPDXID: SPDXRef-Package-cpr
+PackageVersion: 1.14.2
+PackageDownloadLocation: https://github.com/libcpr/cpr
+FilesAnalyzed: false
+PackageLicenseConcluded: MIT
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright (c) libcpr contributors
+ExternalRef: PACKAGE-MANAGER purl pkg:github/libcpr/cpr@1.14.2
+PackageComment: Vendored under tpx3Support/cpr/
+
+##### Package: bundled nlohmann/json
+
+PackageName: nlohmann-json
+SPDXID: SPDXRef-Package-nlohmann-json
+PackageVersion: 3.11.2
+PackageDownloadLocation: https://github.com/nlohmann/json
+FilesAnalyzed: false
+PackageLicenseConcluded: MIT
+PackageLicenseDeclared: MIT
+PackageCopyrightText: Copyright (c) 2013-2022 Niels Lohmann
+ExternalRef: PACKAGE-MANAGER purl pkg:github/nlohmann/json@v3.11.2
+PackageComment: Vendored under tpx3Support/json/
+
+##### Package: EPICS areaDetector (build-time)
+
+PackageName: ADCore-ADSupport
+SPDXID: SPDXRef-Package-epics-ad
+PackageDownloadLocation: https://github.com/areaDetector/areaDetector
+FilesAnalyzed: false
+PackageLicenseConcluded: EPICS
+PackageLicenseDeclared: EPICS
+PackageComment: Build and link dependency only; not redistributed by this module.
+
+##### Package: ASI Serval (runtime, external)
+
+PackageName: serval
+SPDXID: SPDXRef-Package-serval
+PackageDownloadLocation: NOASSERTION
+FilesAnalyzed: false
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageComment: Proprietary Advanced Scientific Instruments server software. Required at runtime; not included in this repository.
+
+##### Relationships
+
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-Package-ADTimePix3
+Relationship: SPDXRef-Package-ADTimePix3 CONTAINS SPDXRef-Package-cpr
+Relationship: SPDXRef-Package-ADTimePix3 CONTAINS SPDXRef-Package-nlohmann-json
+Relationship: SPDXRef-Package-ADTimePix3 DEPENDS_ON SPDXRef-Package-epics-ad
+Relationship: SPDXRef-Package-ADTimePix3 DEPENDS_ON SPDXRef-Package-serval

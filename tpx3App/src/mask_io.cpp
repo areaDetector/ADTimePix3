@@ -545,7 +545,6 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
         if (detOrientation == 0) {  // UP detector orientation
             i = bpcIndex % chipPelWidth;
             j = chipPelWidth - 1 - bpcIndex / chipPelWidth;
-            printf("remainder=%d,quotient=%d,imgIndex=%d\n", i, j, imgIndex);
         } else if (detOrientation == 1) {  // RIGHT
             i = bpcIndex / chipPelWidth;
             j = bpcIndex % chipPelWidth;
@@ -568,7 +567,7 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
             i = bpcIndex / chipPelWidth;
             j = chipPelWidth - 1 - bpcIndex % chipPelWidth;
         } else {
-            printf("bpc2Img: One chip not met conditions\n");
+            WARN("bpc2ImgIndex: single-chip orientation not supported");
         }
         imgIndex = i + chipPelWidth*j;
     } else if (numChips == 4) {  // quad chip 2x2 TimePix3
@@ -586,10 +585,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = (bpcIndex - 3*chipPelCount) % chipPelWidth;
                 j = 2*chipPelWidth - 1 - (bpcIndex - 3*chipPelCount) / chipPelWidth;
             } else if (chip > 3) {
-                printf("UP index: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: UP layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("UP:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: UP unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 3) {  // LEFT detector orientation
             if (chip == 3) { // tile (1,1), chip 3
@@ -605,10 +604,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = (bpcIndex - 2*chipPelCount) / chipPelWidth;
                 j = chipPelWidth + (bpcIndex - 2*chipPelCount) % chipPelWidth;
             } else if (chip > 3) {
-                printf("LEFT: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: LEFT layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("LEFT:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: LEFT unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 1) {  // RIGHT detector orientation
             if (chip == 1) { // tile (1,1), chip 1
@@ -624,10 +623,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = (bpcIndex) / chipPelWidth;
                 j = chipPelWidth + (bpcIndex) % chipPelWidth;
             } else if (chip > 3) {
-                printf("RIGHT: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: RIGHT layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("RIGHT:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: RIGHT unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 2) {  // DOWN detector orientation
             if (chip == 2) { // tile (1,1), chip 2
@@ -643,10 +642,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = (bpcIndex - chipPelCount) % chipPelWidth;
                 j = 2*chipPelWidth - 1 - (bpcIndex - chipPelCount) / chipPelWidth;
             } else if (chip > 3) {
-                printf("DOWN: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: DOWN layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("DOWN:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: DOWN unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 4) {  // UP MIRRORED detector orientation
             if (chip == 3) { // tile (1,1), chip 3
@@ -662,10 +661,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = chipPelWidth - 1 - (bpcIndex) % chipPelWidth;
                 j = 2*chipPelWidth - 1 - (bpcIndex) / chipPelWidth;
             } else if (chip > 3) {
-                printf("UP MIRRORED: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: UP MIRRORED layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("UP MIRRORED:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: UP MIRRORED unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 5) {  // RIGHT MIRRORED detector orientation
             if (chip == 0) { // tile (1,1), chip 0
@@ -681,10 +680,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = (bpcIndex - chipPelCount) / chipPelWidth;
                 j = 2*chipPelWidth - 1 - (bpcIndex - chipPelCount) % chipPelWidth;
             } else if (chip > 3) {
-                printf("RIGHT MIRRORED: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: RIGHT MIRRORED layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("RIGHT MIRRORED:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: RIGHT MIRRORED unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 6) {  // DOWN MIRRORED detector orientation
             if (chip == 1) { // tile (1,1), chip 1
@@ -700,10 +699,10 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = chipPelWidth - 1 - (bpcIndex - 2*chipPelCount) % chipPelWidth;
                 j = 2*chipPelWidth - 1 - (bpcIndex - 2*chipPelCount) / chipPelWidth;
             } else if (chip > 3) {
-                printf("DOWN MIRRORED: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: DOWN MIRRORED layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("DOWN MIRRORED:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: DOWN MIRRORED unspecified chip tile i=%d j=%d", i, j);
             }
         } else if (detOrientation == 7) {  // LEFT MIRRORED detector orientation
             if (chip == 2) { // tile (1,1), chip 2
@@ -719,13 +718,13 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
                 i = (bpcIndex - 3*chipPelCount) / chipPelWidth;
                 j = 2*chipPelWidth - 1 - (bpcIndex - 3*chipPelCount) % chipPelWidth;
             } else if (chip > 3) {
-                printf("LEFT MIRRORED: detector larger than 2x2\n");
+                WARN("bpc2ImgIndex: LEFT MIRRORED layout chip index out of range for 2x2");
                 imgIndex = -1;
             } else {
-                printf("LEFT MIRRORED:Unspecified chip sizes\n,i=%d,j=%d\n", i, j);
+                WARN_ARGS("bpc2ImgIndex: LEFT MIRRORED unspecified chip tile i=%d j=%d", i, j);
             }
         } else {
-            printf("bpc2ImgIndex: Quad chip 2x2 not met mask conditions\n");
+            WARN("bpc2ImgIndex: quad 2x2 orientation not supported");
         }
         imgIndex = i + 2*chipPelWidth*j;
     } else if (numChips == 8) {
@@ -733,13 +732,13 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
          * intra-chip mapping matches single-chip UP (same convention as one tile of the 2×2 case).
          * Only DetectorOrientation UP (0); other orientations need per-layout tables like 2×2. */
         if (detOrientation != 0) {
-            printf("bpc2ImgIndex: 8-chip BPC mapping implemented only for DetectorOrientation UP (0)\n");
+            WARN("bpc2ImgIndex: 8-chip mapping only for DetectorOrientation UP (0)");
             return -1;
         }
         int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, w = 0;
         rowsCols(&ROWS, &COLS, &xChips, &yChips, &w);
         if (xChips * yChips != 8 || chipPelCount <= 0 || chip < 0 || chip > 7) {
-            printf("bpc2ImgIndex: 8-chip requires eight tiles (xChips*yChips==8) and chip index 0..7\n");
+            WARN("bpc2ImgIndex: 8-chip requires xChips*yChips==8 and chip index 0..7");
             return -1;
         }
         int local = bpcIndex - chip * chipPelCount;
@@ -751,7 +750,7 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
         j = Y_CHIP * w + (w - 1 - ly);
         imgIndex = i + (xChips * w) * j;
     } else {
-        printf("bpc2ImgIndex: chip count %d not supported for BPC<->image mapping\n", numChips);
+        WARN_ARGS("bpc2ImgIndex: chip count %d not supported (use 1, 4, or 8)", numChips);
         imgIndex = -1;
     }
 
@@ -791,7 +790,7 @@ int ADTimePix::pelIndex(int i, int j) {
         } else if (detOrientation == 7) {  // LEFT MIRRORED
             index = ((PelWidth - 1) - j) + i*PelWidth;
         } else {
-            printf("One chip not met conditions\n");
+            WARN("pelIndex: single-chip orientation not supported");
         }
 
     } else if (numChips == 4) {
@@ -809,10 +808,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
                 index = 3*PelWidth*PelWidth + i - (jj - (PelWidth - 1))*PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("UP index: detector larger than 2x2\n");
+                WARN("pelIndex: UP layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("UP:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: UP unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 3) {  // LEFT detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 3
@@ -824,10 +823,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 2
                 index = 2*PelWidth*PelWidth + jj + i * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("LEFT: detector larger than 2x2\n");
+                WARN("pelIndex: LEFT layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("LEFT:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: LEFT unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 1) {  // RIGHT detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 1
@@ -839,10 +838,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 0
                 index = jj +  i * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("RIGHT: detector larger than 2x2\n");
+                WARN("pelIndex: RIGHT layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("RIGHT:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: RIGHT unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 2) {  // DOWN detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 2
@@ -854,10 +853,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 1
                 index = PelWidth*PelWidth + i +  ((PelWidth - 1) - jj) * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("DOWN: detector larger than 2x2\n");
+                WARN("pelIndex: DOWN layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("DOWN:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: DOWN unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 4) {  // UP MIRRORED detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 3
@@ -869,10 +868,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 0
                 index = ((PelWidth - 1) - i) + ((PelWidth - 1) - jj) * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("UP MIRRORED: detector larger than 2x2\n");
+                WARN("pelIndex: UP MIRRORED layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("UP MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: UP MIRRORED unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 5) {  // RIGHT MIRRORED detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 0
@@ -884,10 +883,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 1
                 index = PelWidth*PelWidth + ((PelWidth - 1) - jj) + i * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("RIGHT MIRRORED: detector larger than 2x2\n");
+                WARN("pelIndex: RIGHT MIRRORED layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("RIGHT MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: RIGHT MIRRORED unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 6) {  // DOWN MIRRORED detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 1
@@ -899,10 +898,10 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 2
                 index = 2*PelWidth*PelWidth + ((PelWidth - 1) - i) + ((PelWidth - 1) - jj) * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("DOWN MIRRORED: detector larger than 2x2\n");
+                WARN("pelIndex: DOWN MIRRORED layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("DOWN MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: DOWN MIRRORED unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
         } else if (detOrientation == 7) {  // LEFT MIRRORED detector orientation
             if ((X_CHIP == 1) && (Y_CHIP == 1)) { // tile (1,1), chip 2
@@ -914,24 +913,24 @@ int ADTimePix::pelIndex(int i, int j) {
             } else if ((X_CHIP == 0) && (Y_CHIP == 1)) { // tile (0,1), chip 3
                 index = 3*PelWidth*PelWidth + ((PelWidth - 1) - jj) + i * PelWidth;
             } else if ((X_CHIP > 1) || (Y_CHIP > 1)) {
-                printf("LEFT MIRRORED: detector larger than 2x2\n");
+                WARN("pelIndex: LEFT MIRRORED layout chip index out of range for 2x2");
                 index = -1;
             } else {
-                printf("LEFT MIRRORED:Unspecified chip sizes\n,i=%d,j=%d,xChip=%d,yChip=%d\n", i, j, X_CHIP, Y_CHIP);
+                WARN_ARGS("pelIndex: LEFT MIRRORED unspecified tile i=%d j=%d xChip=%d yChip=%d", i, j, X_CHIP, Y_CHIP);
             }
 
         } else {
-            printf("Mask computations are for 2x2 detector only\n");
+            WARN("pelIndex: quad orientation not supported for this layout");
         }
     } else if (numChips == 8) {
         if (detOrientation != 0) {
-            printf("pelIndex: 8-chip BPC mapping implemented only for DetectorOrientation UP (0)\n");
+            WARN("pelIndex: 8-chip mapping only for DetectorOrientation UP (0)");
             index = -1;
         } else {
             int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, Pel = 0;
             rowsCols(&ROWS, &COLS, &xChips, &yChips, &Pel);
             if (xChips * yChips != 8 || Pel <= 0 || X_CHIP >= xChips || Y_CHIP >= yChips) {
-                printf("pelIndex: 8-chip geometry mismatch (expect xChips*yChips==8)\n");
+                WARN("pelIndex: 8-chip geometry mismatch (expect xChips*yChips==8)");
                 index = -1;
             } else {
                 int lx = i - X_CHIP * Pel;
@@ -941,7 +940,7 @@ int ADTimePix::pelIndex(int i, int j) {
             }
         }
     } else {
-        printf("Mask: chip count %d not supported (supported: 1, 4, 8).\n", numChips);
+        WARN_ARGS("pelIndex: chip count %d not supported (use 1, 4, or 8)", numChips);
     }
 
     return index;
