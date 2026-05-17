@@ -1062,7 +1062,7 @@ class ADTimePix : public ADDriver{
         asynStatus rowsCols(int *rows, int *cols, int *xChips, int *yChips, int *chipPelWidth);
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
         int pelIndex(int x, int y);
-        int bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
+        int bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
         /** Write <BPCFilePath><stem>_masked_pels.json from in-memory BPC (bit0 = masked). Called from refreshPixelConfig when BPC is loaded. */
         void exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSize);
 };

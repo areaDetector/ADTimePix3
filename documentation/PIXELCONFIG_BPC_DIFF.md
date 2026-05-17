@@ -34,7 +34,7 @@ The driver does **not** guess which side is “correct”; it reports **equality
 
 - **`BPC` PV** (`TPX3_BPC_PEL`): **Linear file order**—index `k` is byte `k` in the `.bpc` file.
 - **`PixelConfigDiff`**: **Image order** = **`j × cols + i`** (same row-major convention as **`maskCircle`** / mask write), sample **`(i, j)`** = **`abs(SERVAL[k] − BPC[k])`** where **`k = pelIndex(i, j)`**. That is the **same** mapping used when a mask is written into the `.bpc` file (`pelIndex` in `mask_io.cpp`). **`DetOrient` / `TPX3_DET_ORIENTATION`** is included in **`pelIndex`**, so rotated layouts match the mask editor.
-- **`MaskBPC` when read from disk** (“read from bpc” / **`MaskPel`**): fills **`value[j*COLS+i]`** from **`bufBPC[pelIndex(i, j)]`**, same as mask **write** and **`PixelConfigDiff`** (no **`bcp2ImgIndex`** on this path).
+- **`MaskBPC` when read from disk** (“read from bpc” / **`MaskPel`**): fills **`value[j*COLS+i]`** from **`bufBPC[pelIndex(i, j)]`**, same as mask **write** and **`PixelConfigDiff`** (no **`bpc2ImgIndex`** on this path).
 
 ## `PixelConfigDiff` values
 
@@ -47,4 +47,4 @@ Each element is **`abs(byte_SERVAL − byte_BPC)`** for the same logical pel aft
 
 ## Release history
 
-See **`RELEASE.md`**, section **R1-6-2**, for implementation details (asyn array type, callback length, `bcp2ImgIndex` chip-index fix, **`pelIndex`**-based **`PixelConfigDiff`**).
+See **`RELEASE.md`**, section **R1-6-2**, for implementation details (asyn array type, callback length, `bpc2ImgIndex` chip-index fix, **`pelIndex`**-based **`PixelConfigDiff`**).

@@ -11,7 +11,7 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
   - If multiple `Health` blocks: `VDD_RBV` / `AVDD_RBV` strings become a JSON array of per-board rail arrays (e.g. `[[r0,r1,r2],[r0,r1,r2]]`). Single-board keeps the previous flat array of three numbers.
   - **Boards:** `TPX3_BOARDS2_ID`, `TPX3_BOARDS2_IP`, `TPX3_BOARDS_CH5`…`CH8` from `Info.Boards[1]` when available (`CH5`…`CH8` are that board’s four chip JSON objects).
 - **Database:** `ADTimePix3.template` adds `BChBoard2Id_RBV`, `IpAddr2_RBV`, `Chip5_RBV`…`Chip8_RBV`.
-- **Mask / BPC indexing (`mask_io.cpp`):** For `numChips == 8` and **DetectorOrientation UP (0)** only, `pelIndex` and `bcp2ImgIndex` use a **rectangular mosaic**: BPC chip order `chip = Y_CHIP * xChips + X_CHIP` with `xChips` / `yChips` from `rowsCols()` (`RowLen` and chip count from Serval). Intra-chip pixel order matches **single-chip UP** (same convention as one quadrant of the existing 2×2 implementation).
+- **Mask / BPC indexing (`mask_io.cpp`):** For `numChips == 8` and **DetectorOrientation UP (0)** only, `pelIndex` and `bpc2ImgIndex` use a **rectangular mosaic**: BPC chip order `chip = Y_CHIP * xChips + X_CHIP` with `xChips` / `yChips` from `rowsCols()` (`RowLen` and chip count from Serval). Intra-chip pixel order matches **single-chip UP** (same convention as one quadrant of the existing 2×2 implementation).
 
 ## Mask BPC database (`MASK_BPC_NELEMENTS`)
 

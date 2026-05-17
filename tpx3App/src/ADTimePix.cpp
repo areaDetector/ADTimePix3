@@ -395,9 +395,9 @@ bool ADTimePix::checkPath(std::string &filePath)
 }
 
 
-/** Checks whether the directory specified BCP/DACS/Raw parameter exists.
+/** Checks whether the directory specified BPC/DACS/Raw parameter exists.
   *
-  * This is a convenience function that determines the directory specified BCP/DACS/Raw Path parameter exists.
+  * This is a convenience function that determines the directory specified BPC/DACS/Raw Path parameter exists.
   * It sets the value of xxxPathExists to 0 (does not exist) or 1 (exists).
   * It also adds a trailing '/' character to the path if one is not present.
   * Returns a error status if the directory does not exist.
@@ -1246,7 +1246,7 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
             ly = local / pelW;
         }
 
-        const int imgIdx = bcp2ImgIndex(pos, pelW);
+        const int imgIdx = bpc2ImgIndex(pos, pelW);
         if (imgIdx < 0 || cols <= 0) {
             skippedUnmapped++;
             continue;
@@ -1274,7 +1274,7 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
 
     root["counts"]["masked_pels"] = counter;
     if (skippedUnmapped > 0) {
-        root["counts"]["skipped_unmapped_bcp_index"] = skippedUnmapped;
+        root["counts"]["skipped_unmapped_bpc_index"] = skippedUnmapped;
     }
     root["masked_pels"] = mlist;
     root["Bad pixels"] = badpixels;
@@ -1320,7 +1320,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     getIntegerParam(ADTimePixNumberOfChips, &nChips);
     if (nChips < 1) nChips = 1;
 
-    /* Image layout must match mask save (pelIndex): bcp2ImgIndex() is not the inverse of pelIndex for all
+    /* Image layout must match mask save (pelIndex): bpc2ImgIndex() is not the inverse of pelIndex for all
      * quad orientations (e.g. LEFT), so PixelConfigDiff is filled by (i,j) -> file k = pelIndex(i,j). */
     int rowsLay = 0, colsLay = 0, xChipsLay = 0, yChipsLay = 0, pelWidth = 0;
     rowsCols(&rowsLay, &colsLay, &xChipsLay, &yChipsLay, &pelWidth);

@@ -112,14 +112,14 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         }
         else if (maskBPCfile_val == 1) {
             fullFileName = BPCFilePath + BPCFileName;
-        //    printf("The readInt32Array bcp file read, %ld\n", nElements);
+        //    printf("The readInt32Array bpc file read, %ld\n", nElements);
             pathExists = checkFile(fullFileName);
             if (pathExists == 2) {  // BPC file exists, read and process it
         //        printf("mask,BPC file Exists=%d\n",pathExists);
                 readBPCfile(&bufBPC, &bufBPCSize);
                 rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
                 if (bufBPCSize > 0) {
-                    /* Same image <-> file map as mask write / PixelConfigDiff: pelIndex(i,j), not bcp2ImgIndex. */
+                    /* Same image <-> file map as mask write / PixelConfigDiff: pelIndex(i,j), not bpc2ImgIndex. */
                     for (size_t v = 0; v < nElements; ++v) {
                         value[v] = 0;
                     }
@@ -167,7 +167,7 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         getStringParam(ADTimePixBPCFileName, BPCFileName);
         fullFileName = BPCFilePath + BPCFileName;
 
-    //    printf("calib,The readInt32Array bcp file read, %ld\n", nElements);
+    //    printf("calib,The readInt32Array bpc file read, %ld\n", nElements);
         pathExists = checkFile(fullFileName);
     //    printf("calibration, BPC file Exists=%d\n",pathExists);
         if (pathExists == 2) {  // BPC file exists, read and process it
@@ -368,7 +368,7 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
     getStringParam(ADTimePixBPCFileName, fileName);
     fullFileName = filePath + fileName;
 
-//    printf("ReadBCP: name=%s\n", fullFileName.c_str());
+//    printf("ReadBPC: name=%s\n", fullFileName.c_str());
 
     // Open the source file for reading
     sourceFile = fopen(fullFileName.c_str(), "rb");
@@ -516,8 +516,8 @@ asynStatus ADTimePix::findChip(int x, int y, int *xChip, int *yChip, int *width)
 * bpcIndex - index of pixel in bpc file
 * imgIndex - index of pixel in AD image
 */
-// int ADTimePix::bcp2ImgIndex(int *x, int *y, int bpcIndexIn, int chipPelWidthIn) {
-int ADTimePix::bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
+// int ADTimePix::bpc2ImgIndex(int *x, int *y, int bpcIndexIn, int chipPelWidthIn) {
+int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
     int i=0, j=0;
     int detOrientation=0, imgIndex=0, bpcIndex=0;
     int numChips=0, chip=0, chipPelCount=0, chipPelWidth=0;
@@ -724,13 +724,13 @@ int ADTimePix::bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
          * intra-chip mapping matches single-chip UP (same convention as one tile of the 2×2 case).
          * Only DetectorOrientation UP (0); other orientations need per-layout tables like 2×2. */
         if (detOrientation != 0) {
-            printf("bcp2ImgIndex: 8-chip BPC mapping implemented only for DetectorOrientation UP (0)\n");
+            printf("bpc2ImgIndex: 8-chip BPC mapping implemented only for DetectorOrientation UP (0)\n");
             return -1;
         }
         int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, w = 0;
         rowsCols(&ROWS, &COLS, &xChips, &yChips, &w);
         if (xChips * yChips != 8 || chipPelCount <= 0 || chip < 0 || chip > 7) {
-            printf("bcp2ImgIndex: 8-chip requires eight tiles (xChips*yChips==8) and chip index 0..7\n");
+            printf("bpc2ImgIndex: 8-chip requires eight tiles (xChips*yChips==8) and chip index 0..7\n");
             return -1;
         }
         int local = bpcIndex - chip * chipPelCount;
@@ -742,7 +742,7 @@ int ADTimePix::bcp2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
         j = Y_CHIP * w + (w - 1 - ly);
         imgIndex = i + (xChips * w) * j;
     } else {
-        printf("bcp2ImgIndex: chip count %d not supported for BPC↔image mapping\n", numChips);
+        printf("bpc2ImgIndex: chip count %d not supported for BPC<->image mapping\n", numChips);
         imgIndex = -1;
     }
 
