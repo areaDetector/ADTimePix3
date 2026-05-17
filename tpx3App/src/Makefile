@@ -29,6 +29,7 @@ LIB_SRCS += histogram_io.cpp
 LIB_SRCS += network_client.cpp
 LIB_SRCS += serval_stream.cpp
 LIB_SRCS += serval_http.cpp
+LIB_SRCS += acquire.cpp
 
 LIB_SYS_LIBS += cpr curl z
 
