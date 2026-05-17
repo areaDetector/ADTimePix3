@@ -400,7 +400,7 @@ bool ADTimePix::checkPath(std::string &filePath)
   * This is a convenience function that determines the directory specified BPC/DACS/Raw Path parameter exists.
   * It sets the value of xxxPathExists to 0 (does not exist) or 1 (exists).
   * It also adds a trailing '/' character to the path if one is not present.
-  * Returns a error status if the directory does not exist.
+  * Returns an error status if the directory does not exist.
   */
 /* checkBPCPath() implemented in mask_io.cpp with other BPC/mask path logic */
 

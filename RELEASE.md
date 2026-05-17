@@ -266,27 +266,26 @@ R0-8 (February 25, 2024)
 * Chip loop update starts at chip1, since chip0
 * Initial work on Chip orientation control in FPGA
 * Measurement status values updated for interrupted acquisition
-* Serval 3.3.0 both TDC update during image readout
-* Serval 3.3.0 uses two TDC with separate computations
+* **Serval 3.3.0 TDC:** Before 3.3.0, one JSON record covered both TDC1 and TDC2; from 3.3.0 onward SERVAL exposes **two separate JSON entries**, and the driver uses **separate PVs** (and separate rate computations) for each TDC during image readout
 * Updated BPC / DACS to have default shorter path
 * Chip Voltage threshold coarse/fine setting opi and control
   * Douglas Araujo from ESS PR
   * Refactor DACs code to use asyn multidevice mechanism, using different asyn address for the chips
   * Initialize GraphicsMagick on class constructor
   * Fix RawStream PV type
-* Destructor is now static const
+* Destructor changed from `const` to **`static const`** (code/API change)
 * TDC signals for one-chip TPX3 detector
 * Raw file streaming to tcp://connect@localhost:8085 enabled
 * ADCore commonPlugins.cmd settings
 * Preview image loop speed up
-* Preview[0] channel does not need to be enabled; however, prv images are not displayed
+* **Preview[0] optional:** The driver no longer crashes when Preview[0] is not enabled. SERVAL does not send preview images in this configuration, so the Phoebus preview display stays empty
 * Driver ensures that for Continuous mode ExposureTime (AcquireTime) propagates to TriggerPeriod (AcquirePeriod), must be equal to each other
 * Default reduce readout of preview images to not more than 1 per second
 * Remove diagnostic messages
 * Dashboard DiskSpace is empty until raw file writing enabled, and acquisition starts
 * Dashboard work updated
-* Startup update with description of channels
-* Allow streaming of raw .tpx3 events, saving of prv images not required, more consistent default channel setting.
+* Startup update documents which channels to configure in the IOC (raw, preview/image, etc.)
+* Allow streaming of raw `.tpx3` events; saving preview images to disk is not required; more consistent default channel settings
 
 R0-7 (June 26, 2023)
 --------

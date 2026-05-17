@@ -73,9 +73,9 @@ Each frame requires:
 4. **EPICS callbacks**: Plugin callbacks add latency and can block
 5. **Mutex contention**: Multiple mutex locks in processing path
 
-## Current Performance Issues (from your logs)
+## Current Performance Issues (from example logs)
 
-Your logs show:
+Example operator logs show:
 ```
 Trigger FPS: 1000.0, Exposure (ms): 1.0
 WARN: Attempted to overwrite frame that was not fully read out due to limited buffers
