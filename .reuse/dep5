@@ -11,6 +11,11 @@ Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
+Files: tpx3App/src/network_client.cpp tpx3App/src/serval_stream.cpp
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
 Files: tpx3App/Db/*.template
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory

@@ -40,6 +40,7 @@
 #include <deque>
 #include "img_accumulation.h"
 #include "histogram_io.h"
+#include "network_client.h"
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -359,71 +360,6 @@
 #define ADTimePixApplyConfigString            "TPX3_APPLY_CONFIG"      // (asynInt32,         w)      Write 1 to push current PV config to SERVAL (fileWriter + getServer)
 
 using json = nlohmann::json;
-
-// Forward declarations
-class NetworkClient;
-
-
-
-// ----------------------------------------
-// ADTimePix3 Data Structures
-//-----------------------------------------
-
-/**
- * @brief Network client for TCP socket communication
- */
-class NetworkClient {
-public:
-    NetworkClient();
-    ~NetworkClient();
-
-    // Disable copy
-    NetworkClient(const NetworkClient&) = delete;
-    NetworkClient& operator=(const NetworkClient&) = delete;
-
-    // Allow move
-    NetworkClient(NetworkClient&& other) noexcept;
-    NetworkClient& operator=(NetworkClient&& other) noexcept;
-
-    /**
-     * @brief Connect to server
-     * @param host Server hostname/IP
-     * @param port Server port
-     * @return true if successful, false otherwise
-     */
-    bool connect(const std::string& host, int port);
-
-    /**
-     * @brief Disconnect from server
-     */
-    void disconnect();
-
-    /**
-     * @brief Check if connected
-     * @return true if connected
-     */
-    bool is_connected() const { return connected_; }
-
-    /**
-     * @brief Receive data from socket
-     * @param buffer Buffer to store received data
-     * @param max_size Maximum size to receive
-     * @return Number of bytes received, -1 on error, 0 on connection closed
-     */
-    ssize_t receive(char* buffer, size_t max_size);
-
-    /**
-     * @brief Receive exact amount of data
-     * @param buffer Buffer to store received data
-     * @param size Exact size to receive
-     * @return true if successful, false otherwise
-     */
-    bool receive_exact(char* buffer, size_t size);
-
-private:
-    int socket_fd_;
-    bool connected_;
-};
 
 // Constants for TCP streaming
 constexpr size_t MAX_BUFFER_SIZE = 32768;

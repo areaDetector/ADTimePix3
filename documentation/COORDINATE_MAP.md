@@ -1,6 +1,6 @@
 # BPC file index and image coordinates (`mask_io.cpp`)
 
-This note defines how **Binary Pixel Configuration (BPC)** byte indices relate to **global image** coordinates `(i, j)` in the ADTimePix3 driver. Implementation: `tpx3App/src/mask_io.cpp` (`pelIndex`, `bpc2ImgIndex`, `findChip`, `rowsCols`).
+This note defines how **Binary Pixel Configuration (BPC)** byte indices relate to **global image** coordinates `(i, j)` in the ADTimePix3 driver. Implementation: `tpx3App/src/mask_io.cpp` (`pelIndex`, `bpc2ImgIndex`, `findChip`, `rowsCols`). PrvImg/Img TCP jsonimage streaming lives in `tpx3App/src/serval_stream.cpp` (`network_client.cpp`).
 
 Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON_AND_STREAMING.md](MASKED_PIXELS_JSON_AND_STREAMING.md), [8chip-migration.md](8chip-migration.md).
 

@@ -15,6 +15,7 @@ USR_CPPFLAGS += -std=c++17
 
 INC += ADTimePix.h
 INC += ADTimePixLog.h
+INC += network_client.h
 
 # GraphicsMagick removed - TCP streaming is used instead
 # GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
@@ -24,6 +25,8 @@ LIB_SRCS += ADTimePix.cpp
 LIB_SRCS += mask_io.cpp
 LIB_SRCS += img_accumulation.cpp
 LIB_SRCS += histogram_io.cpp
+LIB_SRCS += network_client.cpp
+LIB_SRCS += serval_stream.cpp
 
 LIB_SYS_LIBS += cpr curl z
 
