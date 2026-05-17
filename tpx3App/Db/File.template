@@ -1,6 +1,9 @@
 #=================================================================#
 # Template file: File.template
 # Database for BPC and Chip/DACS files, which configure pixels and chips.
+# Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+# Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+# SPDX-License-Identifier: MIT
 # Kazimierz Gofron
 # July 1, 2022
 #=================================================================#

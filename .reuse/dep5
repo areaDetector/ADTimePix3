@@ -1,0 +1,57 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Upstream-Name: ADTimePix3
+Source: https://www.osti.gov/doecode/biblio/176778
+
+Files: LICENSE
+License: MIT
+
+Files: tpx3App/src/*
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: tpx3App/Db/*.template
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: tpx3App/Db/ADTimePix_settings.req
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: tpx3App/op/**
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: iocs/**
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: documentation/**
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: README.md RELEASE.md
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: configure/*
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: Makefile
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: tpx3Support/*
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT

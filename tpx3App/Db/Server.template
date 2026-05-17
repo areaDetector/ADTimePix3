@@ -1,6 +1,9 @@
 #=================================================================#
 # Template file: Server.template
 # Serval File Writer modes, which configure which files are written to disk.
+# Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+# Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+# SPDX-License-Identifier: MIT
 # Author: K. Gofron
 # Date: 2022/7/26
 #=================================================================#
