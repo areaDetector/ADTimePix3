@@ -1,0 +1,211 @@
+{
+  "format_version": 1,
+  "description": "Golden coordinate-mapping cases for mask_io.cpp (pelIndex, bpc2ImgIndex). Use pel_width=4 for small integers; production detectors typically use w=256.",
+  "orientation_names": {
+    "0": "UP",
+    "1": "RIGHT",
+    "2": "DOWN",
+    "3": "LEFT",
+    "4": "UP_MIRRORED",
+    "5": "RIGHT_MIRRORED",
+    "6": "DOWN_MIRRORED",
+    "7": "LEFT_MIRRORED"
+  },
+  "cases": [
+    {
+      "name": "1chip_up_bpc_origin",
+      "num_chips": 1,
+      "pel_width": 4,
+      "x_chips": 1,
+      "orientation": 0,
+      "bpc_index": 0,
+      "expect_bpc2img": { "i": 0, "j": 3, "img_linear": 12 },
+      "expect_pel_index_at_ij": 0
+    },
+    {
+      "name": "1chip_up_bpc_last_in_chip",
+      "num_chips": 1,
+      "pel_width": 4,
+      "x_chips": 1,
+      "orientation": 0,
+      "bpc_index": 15,
+      "expect_bpc2img": { "i": 3, "j": 0, "img_linear": 3 },
+      "expect_pel_index_at_ij": 15
+    },
+    {
+      "name": "1chip_up_pelindex_roundtrip",
+      "num_chips": 1,
+      "pel_width": 4,
+      "x_chips": 1,
+      "orientation": 0,
+      "i": 2,
+      "j": 1,
+      "expect_pel_index": 10,
+      "expect_bpc_index_from_pel": 10
+    },
+    {
+      "name": "quad_up_bpc_chip0_origin",
+      "num_chips": 4,
+      "pel_width": 4,
+      "x_chips": 2,
+      "orientation": 0,
+      "bpc_index": 0,
+      "expect_bpc2img": { "i": 4, "j": 7, "img_linear": 60 },
+      "expect_pel_index_at_ij": 0,
+      "note": "bpc2ImgIndex and pelIndex agree at chip0 BPC origin for UP"
+    },
+    {
+      "name": "quad_up_bpc_chip1_origin",
+      "num_chips": 4,
+      "pel_width": 4,
+      "x_chips": 2,
+      "orientation": 0,
+      "bpc_index": 16,
+      "expect_bpc2img": { "i": 7, "j": 0, "img_linear": 7 },
+      "expect_pel_index_at_ij": 16
+    },
+    {
+      "name": "quad_left_bpc2img_chip0_origin",
+      "num_chips": 4,
+      "pel_width": 4,
+      "x_chips": 2,
+      "orientation": 3,
+      "bpc_index": 0,
+      "expect_bpc2img": { "i": 7, "j": 0, "img_linear": 7 },
+      "expect_pel_index_at_ij": 3,
+      "note": "pelIndex(7,0) != 0: bpc2ImgIndex and pelIndex are not inverses for LEFT"
+    },
+    {
+      "name": "quad_left_pelindex_chip3_corner",
+      "num_chips": 4,
+      "pel_width": 4,
+      "x_chips": 2,
+      "orientation": 3,
+      "i": 0,
+      "j": 0,
+      "expect_pel_index": 16,
+      "note": "LEFT quad: pelIndex(0,0) is chip1 tile (k=16); not the same (i,j) as bpc2ImgIndex(k=0)->(7,0)"
+    },
+    {
+      "name": "8chip_up_bpc_chip0_origin",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "orientation": 0,
+      "bpc_index": 0,
+      "expect_bpc2img": { "i": 0, "j": 3, "img_linear": 48 },
+      "expect_pel_index_at_ij": 0
+    },
+    {
+      "name": "8chip_up_bpc_chip7_origin",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "orientation": 0,
+      "bpc_index": 112,
+      "expect_bpc2img": { "i": 12, "j": 7, "img_linear": 124 },
+      "expect_pel_index_at_ij": 112
+    },
+    {
+      "name": "chip_from_bpc_index",
+      "num_chips": 4,
+      "pel_width": 256,
+      "x_chips": 2,
+      "orientation": 0,
+      "bpc_index": 65535,
+      "expect_chip": 0,
+      "expect_lx": 255,
+      "expect_ly": 255,
+      "note": "Last byte of chip0 must not map to chip1 (regression for (index+1)/count bug)"
+    },
+    {
+      "name": "chip_from_bpc_index_chip_boundary",
+      "num_chips": 4,
+      "pel_width": 256,
+      "x_chips": 2,
+      "orientation": 0,
+      "bpc_index": 65536,
+      "expect_chip": 1,
+      "expect_lx": 0,
+      "expect_ly": 0
+    }
+  ],
+  "planned_cases": [
+    {
+      "name": "spidr_2x4_chip0_origin",
+      "status": "planned",
+      "layout": "spidr_2x4",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "chip_at": [[2, 1, 6, 7], [3, 0, 4, 5]],
+      "chip_rotation": ["UP", "UP", "UP", "UP", "UP", "ROT90", "UP", "ROT90"],
+      "bpc_index": 0,
+      "chip_id": 0,
+      "tile": { "x_chip": 1, "y_chip": 1 },
+      "draft_expect_bpc2img": { "i": 4, "j": 7, "img_linear": 116 },
+      "draft_expect_pel_index_at_ij": 0,
+      "current_linear_8chip_bpc2img": { "i": 0, "j": 3, "img_linear": 48 },
+      "note": "TBD: verify on emulator (chipboardId 84…) and Serval Layout; ROT90 for chips 5,7"
+    },
+    {
+      "name": "spidr_2x4_chip2_origin",
+      "status": "planned",
+      "layout": "spidr_2x4",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "chip_at": [[2, 1, 6, 7], [3, 0, 4, 5]],
+      "bpc_index": 32,
+      "chip_id": 2,
+      "tile": { "x_chip": 0, "y_chip": 0 },
+      "draft_expect_bpc2img": { "i": 0, "j": 3, "img_linear": 48 },
+      "current_linear_8chip_bpc2img": { "i": 8, "j": 3, "img_linear": 56 },
+      "note": "TBD: fill expect_* after hardware check"
+    },
+    {
+      "name": "spidr_2x4_chip5_origin",
+      "status": "planned",
+      "layout": "spidr_2x4",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "chip_at": [[2, 1, 6, 7], [3, 0, 4, 5]],
+      "chip_rotation": ["UP", "UP", "UP", "UP", "UP", "ROT90", "UP", "ROT90"],
+      "bpc_index": 80,
+      "chip_id": 5,
+      "tile": { "x_chip": 3, "y_chip": 1 },
+      "draft_expect_bpc2img": null,
+      "draft_expect_pel_index_at_ij": null,
+      "note": "TBD: ROT90 intra-chip; corner (lx,ly)=(0,0) — measure on hardware"
+    },
+    {
+      "name": "spidr_2x4_chip7_origin",
+      "status": "planned",
+      "layout": "spidr_2x4",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "chip_at": [[2, 1, 6, 7], [3, 0, 4, 5]],
+      "bpc_index": 112,
+      "chip_id": 7,
+      "tile": { "x_chip": 3, "y_chip": 0 },
+      "draft_expect_bpc2img": { "i": 12, "j": 3, "img_linear": 60 },
+      "current_linear_8chip_bpc2img": { "i": 12, "j": 7, "img_linear": 124 },
+      "note": "TBD: ROT90 intra-chip for chip 7"
+    },
+    {
+      "name": "spidr_2x4_pelindex_roundtrip_chip0",
+      "status": "planned",
+      "layout": "spidr_2x4",
+      "num_chips": 8,
+      "pel_width": 4,
+      "x_chips": 4,
+      "i": 4,
+      "j": 7,
+      "expect_pel_index": 0,
+      "expect_bpc_index_from_pel": 0,
+      "note": "TBD: pelIndex round-trip at chip 0 tile; null until SpIDR mapping exists in driver"
+    }
+  ]
+}
