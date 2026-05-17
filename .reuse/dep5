@@ -1,9 +1,10 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-
 Upstream-Name: ADTimePix3
 Source: https://www.osti.gov/doecode/biblio/176778
 
 Files: LICENSE
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: tpx3App/src/*
@@ -11,17 +12,7 @@ Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
-Files: tpx3App/src/network_client.cpp tpx3App/src/serval_stream.cpp
-Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
-License: MIT
-
-Files: tpx3App/Db/*.template
-Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
-License: MIT
-
-Files: tpx3App/Db/ADTimePix_settings.req
+Files: tpx3App/Db/*
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
@@ -41,7 +32,12 @@ Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
-Files: test/coordinate_map_vectors.json test/verify_coordinate_map.py
+Files: docs/**
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: test/*
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
@@ -61,32 +57,35 @@ Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
+Files: tpx3App/Makefile
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
 Files: tpx3Support/cpr/**
 Copyright: libcpr contributors
 License: MIT
- Comment:
-  Bundled CPR 1.14.2 (tpx3Support/cpr/cpr/cprver.h). Upstream https://github.com/libcpr/cpr
 
 Files: tpx3Support/json/**
 Copyright: Niels Lohmann
 License: MIT
- Comment:
-  Bundled nlohmann/json 3.11.2. Upstream https://github.com/nlohmann/json
 
 Files: tpx3Support/Makefile
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
-Files: tpx3Support/O.*/
-Copyright: NOASSERTION
-License: NONE
- Comment:
-  EPICS build artifacts under tpx3Support; not part of a source distribution.
-
 Files: vendor/**
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
 Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
- Comment:
-  Example JSON and test fixtures shipped with the driver.
+
+Files: .gitignore
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: SPDX.spdx
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: CC0-1.0
