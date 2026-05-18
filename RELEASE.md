@@ -27,14 +27,14 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * Shared CPR request helpers in **`serval_http.h`** / namespace **`ADTimePix3ServalHttp`** (**`serval_http.cpp`**); high-duplication GET/PUT sites (connection checks, config paths, measurement start/stop in **`acquire.cpp`**) use them to reduce repeated auth/header/timeout boilerplate.
   * Default **5 second** timeouts on key status reads (`/dashboard`, `/detector`, `/detector/health`, `/measurement/config`, PixelConfig GETs, etc.).
   * **`trimHttpBodyForLog`**, **`logHttpFailure`**, and **`logHttpWarning`** on **`ADTimePix`** (implemented in **`serval_http.cpp`**): HTTP error lines include **method**, **URL**, **status**, and a **truncated/sanitized** response snippet (avoid giant HTML dumps in the IOC log).
-  * **BPC / DACS upload alignment** (**`uploadBPC()`**, **`uploadDACS()`**, GET SERVAL **`/config/load`**): Use the same auth-only CPR path as the rest of the driver (**`servalHttpGetAuthOnly`** → **`ADTimePix3ServalHttp::getAuthOnly`** so **`mask_io.cpp`** stays consistent with **`serval_http.cpp`**). On HTTP status other than **200**, each call **`logHttpFailure`** and returns **`asynError`** (previously these uploads often returned **`asynSuccess`** even when SERVAL reported an error). **`HttpCode`** / **`WriteFileMessage`** (or equivalent PVs) still reflect SERVAL response; check them when uploads fail.
+  * **BPC / DACS upload alignment** (**`uploadBPC()`**, **`uploadDACS()`**, GET SERVAL **`/config/load`**): Use the same auth-only CPR path as the rest of the driver (**`servalHttpGetAuthOnly`** -> **`ADTimePix3ServalHttp::getAuthOnly`** so **`mask_io.cpp`** stays consistent with **`serval_http.cpp`**). On HTTP status other than **200**, each call **`logHttpFailure`** and returns **`asynError`** (previously these uploads often returned **`asynSuccess`** even when SERVAL reported an error). **`HttpCode`** / **`WriteFileMessage`** (or equivalent PVs) still reflect SERVAL response; check them when uploads fail.
 * **Code organization (driver split, no functional or PV changes)**:
-  * **`serval_stream.cpp`** + **`network_client.cpp`** — PrvImg / Img TCP **jsonimage** streaming and image accumulation hooks.
-  * **`serval_http.cpp`** — Serval REST (dashboard, detector/server config, DACs, **`fileWriter`**, **`initCamera`** / **`initAcquisition`**, PixelConfig refresh, measurement config, connection poll).
-  * **`acquire.cpp`** — **`acquireStart`**, **`acquireStop`**, **`timePixCallback`** (measurement HTTP + worker-thread orchestration).
-  * **`histogram_io.cpp`** — PrvHst TCP **jsonhisto** streaming and histogram accumulation (unchanged responsibility).
-  * **`mask_io.cpp`** — BPC/mask paths, upload, **`pelIndex`** / **`bpc2ImgIndex`** (see **`documentation/COORDINATE_MAP.md`**).
-  * **`ADTimePix.cpp`** — core driver shell (~1.8k lines): constructor, path checks, PV I/O (**`writeInt32`** / **`writeOctet`**), **`report`**, PrvHst NDArray plugin push.
+  * **`serval_stream.cpp`** + **`network_client.cpp`** - PrvImg / Img TCP **jsonimage** streaming and image accumulation hooks.
+  * **`serval_http.cpp`** - Serval REST (dashboard, detector/server config, DACs, **`fileWriter`**, **`initCamera`** / **`initAcquisition`**, PixelConfig refresh, measurement config, connection poll).
+  * **`acquire.cpp`** - **`acquireStart`**, **`acquireStop`**, **`timePixCallback`** (measurement HTTP + worker-thread orchestration).
+  * **`histogram_io.cpp`** - PrvHst TCP **jsonhisto** streaming and histogram accumulation (unchanged responsibility).
+  * **`mask_io.cpp`** - BPC/mask paths, upload, **`pelIndex`** / **`bpc2ImgIndex`** (see **`documentation/COORDINATE_MAP.md`**).
+  * **`ADTimePix.cpp`** - core driver shell (~1.8k lines): constructor, path checks, PV I/O (**`writeInt32`** / **`writeOctet`**), **`report`**, PrvHst NDArray plugin push.
 * **Copyright, SPDX, and REUSE (license compliance)**:
   * **`LICENSE`**: Dual copyright (Brookhaven Science Associates / BNL, UT-Battelle / ORNL) with development-history note; MIT terms unchanged.
   * **`tpx3App/src/*.{cpp,h}`**: Matching file headers with **`SPDX-License-Identifier: MIT`**.
