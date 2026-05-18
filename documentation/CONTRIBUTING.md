@@ -6,7 +6,7 @@ Thank you for contributing to the EPICS areaDetector driver for TimePix3 (Serval
 
 - The project is released under the **MIT License**. The full text is in [`LICENSE`](../LICENSE) at the repository root.
 - Copyright is held by **Brookhaven Science Associates** (operator of Brookhaven National Laboratory) and **UT-Battelle, LLC** (operator of Oak Ridge National Laboratory). Development began at BNL through late 2022 and continued at ORNL from November 2022 onward.
-- New **driver source** files under `tpx3App/src/` should use the same dual-copyright header block and **`SPDX-License-Identifier: MIT`** as existing `.cpp` / `.h` files (see `ADTimePix.cpp` for the template).
+- New **driver source** files under `tpx3App/src/` should copy the copyright and SPDX header block from an existing file such as `ADTimePix.cpp` (dual BNL/ORNL notice, MIT license identifier).
 
 ## REUSE and SPDX
 
@@ -26,7 +26,7 @@ reuse lint
 
 The command should finish with **REUSE Specification 3.0** compliance. If you add files under new directories, extend `.reuse/dep5` (or add SPDX headers in source) so `reuse lint` stays green.
 
-**Database and OPI files:** `tpx3App/Db/*.template` use short `#` copyright and SPDX lines; Phoebus `.bob` / `.opi` files under `tpx3App/op/` rely on `.reuse/dep5` only—do not paste multi-line C-style headers into screens.
+**Database and OPI files:** `tpx3App/Db/*.template` use short `#` copyright and SPDX lines; Phoebus `.bob` / `.opi` files under `tpx3App/op/` rely on `.reuse/dep5` only - do not paste multi-line C-style headers into screens.
 
 ## Code changes
 
