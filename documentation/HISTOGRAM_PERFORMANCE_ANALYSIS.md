@@ -12,7 +12,7 @@ The ADTimePix3 histogram processing code can handle **very high hit rates** (320
 - **Minimum Bin Width**: **~260 picoseconds** (1 TDC clock tick) - suitable for pump-probe experiments
 - **Maximum Bin Count**: **1,000,000 bins** per histogram
 - **Processing Rate**: **10,000-50,000+ FPS** (frames per second) depending on bin size
-- **Frame Rate Limits**: Processing overhead is minimal (~10-50 μs per frame), allowing very high frame rates
+- **Frame Rate Limits**: Processing overhead is minimal (~10-50 us per frame), allowing very high frame rates
 - **Sliding Sum**: Supports sum of last N frames for improved signal-to-noise in phase transition studies
 
 ## TDC Clock Period and Bin Width Resolution
@@ -42,11 +42,11 @@ Time Width (nanoseconds) = binWidth * 0.26041666666666667
 
 | Bin Width (Time) | Bin Width (TDC Ticks) | Feasibility | Use Case |
 |------------------|----------------------|-------------|----------|
-| **260 ps** | 1 tick | ✅ **Native resolution** | Maximum time resolution |
-| **1 ns** | ~3.84 ticks (use 4) | ✅ **Excellent** | Pump-probe experiments |
-| **10 ns** | ~38.4 ticks (use 38-39) | ✅ **Excellent** | High-resolution ToF |
-| **100 ns** | ~384 ticks | ✅ **Excellent** | Standard ToF |
-| **1 μs** | ~3,840 ticks | ✅ **Standard** | Standard ToF |
+| **260 ps** | 1 tick | [OK] **Native resolution** | Maximum time resolution |
+| **1 ns** | ~3.84 ticks (use 4) | [OK] **Excellent** | Pump-probe experiments |
+| **10 ns** | ~38.4 ticks (use 38-39) | [OK] **Excellent** | High-resolution ToF |
+| **100 ns** | ~384 ticks | [OK] **Excellent** | Standard ToF |
+| **1 us** | ~3,840 ticks | [OK] **Standard** | Standard ToF |
 
 **Conclusion**: The code can process bin widths down to **1 TDC clock tick (260 picoseconds)**, which is the native resolution of the TimePix3 detector. This is **suitable for pump-probe experiments** requiring sub-nanosecond time resolution.
 
@@ -57,7 +57,7 @@ For common bin widths:
 - **1 ns bin**: `binWidth = ceil(1e-9 / 2.6041666666666667e-10) = 4` TDC ticks
 - **10 ns bin**: `binWidth = ceil(10e-9 / 2.6041666666666667e-10) = 39` TDC ticks  
 - **100 ns bin**: `binWidth = ceil(100e-9 / 2.6041666666666667e-10) = 384` TDC ticks
-- **1 μs bin**: `binWidth = ceil(1e-6 / 2.6041666666666667e-10) = 3,840` TDC ticks
+- **1 us bin**: `binWidth = ceil(1e-6 / 2.6041666666666667e-10) = 3,840` TDC ticks
 
 ## Hit Rate Processing Capabilities
 
@@ -70,14 +70,14 @@ For common bin widths:
 
 The histogram processing code has **significantly lower overhead** than full 2D image processing:
 
-1. **JSON parsing**: ~10-50 μs (smaller JSON header for histogram vs image)
-2. **Binary data read**: ~10-100 μs (depends on bin size: `bin_size * 4 bytes`)
-3. **Byte swapping**: ~10-200 μs (depends on bin size)
-4. **Memory operations**: ~5-20 μs (histogram accumulation)
-5. **EPICS callbacks**: ~10-50 μs (NDArray callbacks)
-6. **Parameter updates**: ~5-10 μs
+1. **JSON parsing**: ~10-50 us (smaller JSON header for histogram vs image)
+2. **Binary data read**: ~10-100 us (depends on bin size: `bin_size * 4 bytes`)
+3. **Byte swapping**: ~10-200 us (depends on bin size)
+4. **Memory operations**: ~5-20 us (histogram accumulation)
+5. **EPICS callbacks**: ~10-50 us (NDArray callbacks)
+6. **Parameter updates**: ~5-10 us
 
-**Total processing time per frame**: ~50-430 μs (depending on bin size)
+**Total processing time per frame**: ~50-430 us (depending on bin size)
 
 **Maximum sustainable frame rate**: 
 - **Small bins (1,000-10,000 bins)**: ~2,300-20,000 FPS
@@ -121,13 +121,13 @@ Minimum Bin Width (TDC ticks) = (Total Time Range / TPX3_TDC_CLOCK_PERIOD_SEC) /
 
 | Frame Rate | Frame Period | Max Time Range | Min Bin Width (ns) | Min Bin Width (TDC ticks) | Feasibility |
 |------------|--------------|----------------|-------------------|--------------------------|-------------|
-| **60 Hz** | 16.67 ms | 16.67 ms | **16.67 ns** | ~64 ticks | ✅ **Excellent** |
-| **30 Hz** | 33.33 ms | 33.33 ms | **33.33 ns** | ~128 ticks | ✅ **Excellent** |
-| **20 Hz** | 50.00 ms | 50.00 ms | **50.00 ns** | ~192 ticks | ✅ **Excellent** |
-| **10 Hz** | 100.00 ms | 100.00 ms | **100.00 ns** | ~384 ticks | ✅ **Excellent** |
-| **1 Hz** | 1.00 s | 1.00 s | **1.00 μs** | ~3,840 ticks | ✅ **Good** |
+| **60 Hz** | 16.67 ms | 16.67 ms | **16.67 ns** | ~64 ticks | [OK] **Excellent** |
+| **30 Hz** | 33.33 ms | 33.33 ms | **33.33 ns** | ~128 ticks | [OK] **Excellent** |
+| **20 Hz** | 50.00 ms | 50.00 ms | **50.00 ns** | ~192 ticks | [OK] **Excellent** |
+| **10 Hz** | 100.00 ms | 100.00 ms | **100.00 ns** | ~384 ticks | [OK] **Excellent** |
+| **1 Hz** | 1.00 s | 1.00 s | **1.00 us** | ~3,840 ticks | [OK] **Good** |
 
-**Note**: These calculations assume you want to cover the **entire frame period** with histogram bins. If you only need a **subset of the time range** (e.g., a 1 μs window within a 16.67 ms frame), you can achieve much finer bin widths.
+**Note**: These calculations assume you want to cover the **entire frame period** with histogram bins. If you only need a **subset of the time range** (e.g., a 1 us window within a 16.67 ms frame), you can achieve much finer bin widths.
 
 ### Practical Bin Size Examples
 
@@ -135,14 +135,14 @@ For **pump-probe experiments** requiring fine time resolution:
 
 | Time Window | Bin Count | Bin Width | Feasibility |
 |-------------|-----------|-----------|-------------|
-| **1 ns window** | 1,000 bins | **1 ps** | ❌ **Not possible** (below TDC resolution) |
-| **10 ns window** | 10,000 bins | **1 ps** | ❌ **Not possible** (below TDC resolution) |
-| **100 ns window** | 100,000 bins | **1 ps** | ❌ **Not possible** (below TDC resolution) |
-| **1 μs window** | 10,000 bins | **100 ps** | ❌ **Not possible** (below TDC resolution) |
-| **1 μs window** | 3,840 bins | **260 ps** | ✅ **Native resolution** (1 TDC tick) |
-| **10 μs window** | 38,400 bins | **260 ps** | ✅ **Native resolution** (1 TDC tick) |
-| **100 μs window** | 384,000 bins | **260 ps** | ✅ **Native resolution** (1 TDC tick) |
-| **1 ms window** | 1,000,000 bins | **1 ns** | ✅ **Excellent** (4 TDC ticks) |
+| **1 ns window** | 1,000 bins | **1 ps** | [NO] **Not possible** (below TDC resolution) |
+| **10 ns window** | 10,000 bins | **1 ps** | [NO] **Not possible** (below TDC resolution) |
+| **100 ns window** | 100,000 bins | **1 ps** | [NO] **Not possible** (below TDC resolution) |
+| **1 us window** | 10,000 bins | **100 ps** | [NO] **Not possible** (below TDC resolution) |
+| **1 us window** | 3,840 bins | **260 ps** | [OK] **Native resolution** (1 TDC tick) |
+| **10 us window** | 38,400 bins | **260 ps** | [OK] **Native resolution** (1 TDC tick) |
+| **100 us window** | 384,000 bins | **260 ps** | [OK] **Native resolution** (1 TDC tick) |
+| **1 ms window** | 1,000,000 bins | **1 ns** | [OK] **Excellent** (4 TDC ticks) |
 
 **Key Limitation**: The **minimum bin width is limited by the TDC clock period (260 ps)**, not by the processing code. You cannot achieve sub-picosecond resolution because the detector itself cannot resolve time intervals smaller than one TDC clock tick.
 
@@ -150,17 +150,17 @@ For **pump-probe experiments** requiring fine time resolution:
 
 **For pump-probe experiments** (see detailed section below):
 - Fine time resolution: 260 ps - 1 ns bins
-- Small time windows: 1-100 μs
+- Small time windows: 1-100 us
 - High frame rates: 10-60 Hz
 
 **For phase transition detection** (see detailed section below):
-- Moderate time resolution: 100 ns - 1 μs bins (sufficient for Bragg edge resolution)
+- Moderate time resolution: 100 ns - 1 us bins (sufficient for Bragg edge resolution)
 - Large time windows: Full frame period (16.67 ms - 1 s)
 - Moderate frame rates: 1-60 Hz (depending on transition time scale)
 - Uses sliding sum for signal-to-noise improvement
 
 **For high hit rate applications**:
-- Standard time resolution: 100 ns - 1 μs bins
+- Standard time resolution: 100 ns - 1 us bins
 - Full time window coverage
 - High frame rates: 10-60 Hz
 
@@ -198,23 +198,23 @@ For a histogram with `bin_size` bins:
 ### Current Implementation Bottlenecks
 
 1. **Byte Swapping**: Network-to-host byte order conversion for all bins
-   - **Impact**: ~10-200 μs depending on bin size
+   - **Impact**: ~10-200 us depending on bin size
    - **Optimization potential**: Use SIMD instructions or zero-copy if data is already in host byte order
 
 2. **JSON Parsing**: nlohmann/json parsing of header
-   - **Impact**: ~10-50 μs per frame
+   - **Impact**: ~10-50 us per frame
    - **Optimization potential**: Use faster JSON parser or binary protocol
 
 3. **Memory Copies**: Multiple memory copies during processing
-   - **Impact**: ~5-20 μs depending on bin size
+   - **Impact**: ~5-20 us depending on bin size
    - **Optimization potential**: Zero-copy techniques, memory pools
 
 4. **EPICS Callbacks**: NDArray callbacks to plugins
-   - **Impact**: ~10-50 μs per frame
+   - **Impact**: ~10-50 us per frame
    - **Optimization potential**: Batch callbacks, reduce callback frequency
 
 5. **Mutex Contention**: Multiple mutex locks in processing path
-   - **Impact**: ~1-5 μs per lock
+   - **Impact**: ~1-5 us per lock
    - **Optimization potential**: Lock-free data structures, reduce lock scope
 
 ### Optimization Opportunities
@@ -234,13 +234,13 @@ For **very high hit rates** (640+ MHits/s) or **very high frame rates** (50,000+
 
 **Recommended Configuration:**
 - **Bin Width**: 1-4 TDC ticks (260 ps - 1 ns)
-- **Time Window**: 1-100 μs (depending on experiment)
+- **Time Window**: 1-100 us (depending on experiment)
 - **Bin Count**: 3,840 - 384,000 bins (to achieve 260 ps resolution)
 - **Frame Rate**: 10-60 Hz (depending on experiment timing)
 
 **Example:**
 ```bash
-# 1 μs time window with 260 ps bins (native resolution)
+# 1 us time window with 260 ps bins (native resolution)
 caput TPX3-TEST:cam1:PrvHstNumBins 3840
 caput TPX3-TEST:cam1:PrvHstBinWidth 1  # 1 TDC tick = 260 ps
 caput TPX3-TEST:cam1:PrvHstOffset 0
@@ -249,7 +249,7 @@ caput TPX3-TEST:cam1:PrvHstOffset 0
 ### For High Hit Rate Applications (320-640 MHits/s)
 
 **Recommended Configuration:**
-- **Bin Width**: 100 ns - 1 μs (384 - 3,840 TDC ticks)
+- **Bin Width**: 100 ns - 1 us (384 - 3,840 TDC ticks)
 - **Time Window**: Full frame period (16.67 ms - 1 s)
 - **Bin Count**: 10,000 - 100,000 bins
 - **Frame Rate**: 10-60 Hz
@@ -268,14 +268,14 @@ caput TPX3-TEST:cam1:PrvHstOffset 0
 Phase transition detection involves monitoring changes in neutron time-of-flight spectra over time to identify structural phase changes in materials. **Bragg edges** are sharp features in ToF histograms that correspond to crystal lattice spacings (d-spacings) via the relationship:
 
 ```
-λ = 2d sin(θ)  (Bragg's law)
-ToF = L / v = L * m / h * λ  (neutron wavelength to ToF conversion)
+lambda = 2d sin(theta)  (Bragg's law)
+ToF = L / v = L * m / h * lambda  (neutron wavelength to ToF conversion)
 ```
 
 Where:
-- `λ` = neutron wavelength
+- `lambda` = neutron wavelength
 - `d` = crystal lattice spacing
-- `θ` = scattering angle
+- `theta` = scattering angle
 - `L` = flight path length
 - `v` = neutron velocity
 - `m` = neutron mass
@@ -284,13 +284,13 @@ Where:
 **Key Requirements:**
 1. **Signal-to-Noise Ratio**: Phase transitions cause subtle shifts in Bragg edge positions and intensities. High signal-to-noise is critical for detection.
 2. **Temporal Resolution**: Phase transitions can occur over seconds to minutes, requiring frame rates of 1-60 Hz.
-3. **Time-of-Flight Resolution**: Bragg edges require sufficient ToF resolution to resolve lattice spacing changes. Typical requirements: 100 ns - 1 μs bin widths.
+3. **Time-of-Flight Resolution**: Bragg edges require sufficient ToF resolution to resolve lattice spacing changes. Typical requirements: 100 ns - 1 us bin widths.
 4. **Sliding Sum**: The sum of last N frames (`PrvHstHistogramSumNFrames`) improves signal-to-noise by averaging multiple frames while maintaining temporal resolution.
 
 **Recommended Configuration:**
-- **Bin Width**: 100 ns - 1 μs (384 - 3,840 TDC ticks)
+- **Bin Width**: 100 ns - 1 us (384 - 3,840 TDC ticks)
   - **100 ns bins**: For high-resolution studies requiring precise Bragg edge position measurement
-  - **1 μs bins**: For standard phase transition detection with good signal-to-noise
+  - **1 us bins**: For standard phase transition detection with good signal-to-noise
 - **Time Window**: Full frame period (covers entire neutron pulse or ToF range)
 - **Bin Count**: 10,000 - 1,000,000 bins (depending on time window and bin width)
 - **Frame Rate**: 1-60 Hz (depending on transition time scale)
@@ -314,9 +314,9 @@ caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 5  # Update every 5 frames
 
 **Standard Phase Transition Detection:**
 ```bash
-# 100 ms time window (10 Hz) with 1 μs bins for good signal-to-noise
+# 100 ms time window (10 Hz) with 1 us bins for good signal-to-noise
 caput TPX3-TEST:cam1:PrvHstNumBins 100000
-caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 μs
+caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 us
 caput TPX3-TEST:cam1:PrvHstOffset 0
 caput TPX3-TEST:cam1:PrvHstFramesToSum 20  # Sum of last 20 frames
 caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 2  # Update every 2 frames
@@ -324,9 +324,9 @@ caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 2  # Update every 2 frames
 
 **Slow Phase Transition Monitoring:**
 ```bash
-# 1 s time window (1 Hz) with 1 μs bins for long-term monitoring
+# 1 s time window (1 Hz) with 1 us bins for long-term monitoring
 caput TPX3-TEST:cam1:PrvHstNumBins 1000000
-caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 μs
+caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 us
 caput TPX3-TEST:cam1:PrvHstOffset 0
 caput TPX3-TEST:cam1:PrvHstFramesToSum 10  # Sum of last 10 frames
 caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 1  # Update every frame
@@ -349,10 +349,10 @@ The `PrvHstHistogramSumNFrames` waveform provides a sliding sum of the last N fr
 
 | Parameter | Pump-Probe | Phase Transition Detection |
 |-----------|------------|---------------------------|
-| **Time Resolution** | Sub-nanosecond (260 ps - 1 ns) | Microsecond (100 ns - 1 μs) |
+| **Time Resolution** | Sub-nanosecond (260 ps - 1 ns) | Microsecond (100 ns - 1 us) |
 | **Frame Rate** | High (10-60 Hz) | Moderate (1-60 Hz) |
-| **Bin Width** | 1-4 TDC ticks (260 ps - 1 ns) | 384-3,840 TDC ticks (100 ns - 1 μs) |
-| **Time Window** | Small (1-100 μs) | Large (full frame period) |
+| **Bin Width** | 1-4 TDC ticks (260 ps - 1 ns) | 384-3,840 TDC ticks (100 ns - 1 us) |
+| **Time Window** | Small (1-100 us) | Large (full frame period) |
 | **Signal-to-Noise** | Less critical | Critical (uses sliding sum) |
 | **Temporal Scale** | Nanoseconds to microseconds | Seconds to minutes |
 | **Primary Feature** | Fast dynamics | Bragg edge position/intensity |
@@ -360,7 +360,7 @@ The `PrvHstHistogramSumNFrames` waveform provides a sliding sum of the last N fr
 ### For Standard ToF Applications
 
 **Recommended Configuration:**
-- **Bin Width**: 1-10 μs (3,840 - 38,400 TDC ticks)
+- **Bin Width**: 1-10 us (3,840 - 38,400 TDC ticks)
 - **Time Window**: Full frame period
 - **Bin Count**: 1,000 - 100,000 bins
 - **Frame Rate**: 1-60 Hz
@@ -375,48 +375,48 @@ The `PrvHstHistogramSumNFrames` waveform provides a sliding sum of the last N fr
 
 ### Soft Limits (Processing Overhead)
 
-1. **Frame Rate**: Limited by processing overhead (~50-430 μs per frame)
+1. **Frame Rate**: Limited by processing overhead (~50-430 us per frame)
 2. **Memory**: Large bin counts require significant memory (~30 MB for 1M bins)
 3. **CPU**: Byte swapping and accumulation are CPU-intensive for large bin counts
 
 ### Practical Limits
 
 For **pump-probe experiments**:
-- ✅ **1 ns bins**: Fully supported (4 TDC ticks)
-- ✅ **100 ps bins**: **Not possible** (below TDC resolution)
-- ✅ **260 ps bins**: **Native resolution** (1 TDC tick) - **Recommended minimum**
+- [OK] **1 ns bins**: Fully supported (4 TDC ticks)
+- [NO] **100 ps bins**: **Not possible** (below TDC resolution)
+- [OK] **260 ps bins**: **Native resolution** (1 TDC tick) - **Recommended minimum**
 
 For **high hit rate applications**:
-- ✅ **320 MHits/s (quad-chip)**: Fully supported
-- ✅ **640 MHits/s (8-chip)**: Fully supported
-- ⚠️ **Higher rates**: May require optimization for very high frame rates
+- [OK] **320 MHits/s (quad-chip)**: Fully supported
+- [OK] **640 MHits/s (8-chip)**: Fully supported
+- [WARN] **Higher rates**: May require optimization for very high frame rates
 
 ## Conclusion
 
 The ADTimePix3 histogram processing code is **highly capable** for a wide range of Time-of-Flight applications:
 
-1. ✅ **Hit Rate**: Can handle **320-640+ MHits/s** from Cheetah detectors
-2. ✅ **Time Resolution**: Can process down to **260 picoseconds** (1 TDC tick) - suitable for pump-probe experiments
-3. ✅ **Frame Rate**: Can sustain **10,000-50,000+ FPS** depending on bin size
-4. ✅ **Bin Size**: Supports up to **1,000,000 bins** per histogram
-5. ✅ **Sliding Sum**: Supports sum of last N frames for improved signal-to-noise in phase transition detection
-6. ⚠️ **Limitation**: Minimum bin width is **260 ps** (TDC clock period) - cannot achieve sub-picosecond resolution
+1. [OK] **Hit Rate**: Can handle **320-640+ MHits/s** from Cheetah detectors
+2. [OK] **Time Resolution**: Can process down to **260 picoseconds** (1 TDC tick) - suitable for pump-probe experiments
+3. [OK] **Frame Rate**: Can sustain **10,000-50,000+ FPS** depending on bin size
+4. [OK] **Bin Size**: Supports up to **1,000,000 bins** per histogram
+5. [OK] **Sliding Sum**: Supports sum of last N frames for improved signal-to-noise in phase transition detection
+6. [WARN] **Limitation**: Minimum bin width is **260 ps** (TDC clock period) - cannot achieve sub-picosecond resolution
 
 **For pump-probe experiments requiring sub-nanosecond resolution:**
-- ✅ **1 ns bins (4 TDC ticks)**: Fully supported
-- ✅ **260 ps bins (1 TDC tick)**: Native detector resolution - **Recommended**
-- ❌ **Sub-260 ps bins**: Not possible (hardware limitation)
+- [OK] **1 ns bins (4 TDC ticks)**: Fully supported
+- [OK] **260 ps bins (1 TDC tick)**: Native detector resolution - **Recommended**
+- [NO] **Sub-260 ps bins**: Not possible (hardware limitation)
 
 **For phase transition detection using neutron Bragg edges:**
-- ✅ **100 ns - 1 μs bins**: Fully supported for Bragg edge resolution
-- ✅ **Sliding sum feature**: Enables signal-to-noise improvement while maintaining temporal resolution
-- ✅ **Frame rates 1-60 Hz**: Suitable for monitoring transitions over seconds to minutes
-- ✅ **Large bin counts (up to 1M bins)**: Supports full ToF range coverage
+- [OK] **100 ns - 1 us bins**: Fully supported for Bragg edge resolution
+- [OK] **Sliding sum feature**: Enables signal-to-noise improvement while maintaining temporal resolution
+- [OK] **Frame rates 1-60 Hz**: Suitable for monitoring transitions over seconds to minutes
+- [OK] **Large bin counts (up to 1M bins)**: Supports full ToF range coverage
 
 **For high hit rate applications (320-640 MHits/s):**
-- ✅ **Processing overhead is minimal** (~50-430 μs per frame)
-- ✅ **Can sustain high frame rates** (10,000-50,000+ FPS for small bins)
-- ✅ **Memory usage is reasonable** (~30 MB for 1M bins)
+- [OK] **Processing overhead is minimal** (~50-430 us per frame)
+- [OK] **Can sustain high frame rates** (10,000-50,000+ FPS for small bins)
+- [OK] **Memory usage is reasonable** (~30 MB for 1M bins)
 
 The code is well-optimized for Time-of-Flight applications including pump-probe experiments, phase transition detection, and high hit rate applications. It can handle the full capabilities of Cheetah TimePix3 detectors.
 
