@@ -589,7 +589,146 @@ int chipTemperatureFromHealthV3(const json& detector, int chip) {
     return 0;
 }
 
+/** True when GET /detector returns Health as an array (Serval 4 / multi-board; also some 3.2+). */
+bool detectorHealthIsArray(const json& detector_j) {
+    return detector_j.contains("Health") && detector_j["Health"].is_array();
+}
+
+/** Serval 4.x GET /server/destination may wrap channels in a Destination object. */
+const json& destinationBody(const json& parsed) {
+    if (parsed.contains("Destination") && parsed["Destination"].is_object())
+        return parsed["Destination"];
+    return parsed;
+}
+
+size_t jsonArraySizeIfArray(const json& parent, const char* key) {
+    if (!parent.contains(key)) return 0;
+    const json& v = parent.at(key);
+    return v.is_array() ? v.size() : 0;
+}
+
+size_t previewImageChannelCount(const json& dest) {
+    if (!dest.contains("Preview") || !dest.at("Preview").is_object()) return 0;
+    const json& prev = dest.at("Preview");
+    if (!prev.contains("ImageChannels") || !prev.at("ImageChannels").is_array()) return 0;
+    return prev.at("ImageChannels").size();
+}
+
+size_t previewHistogramChannelCount(const json& dest) {
+    if (!dest.contains("Preview") || !dest.at("Preview").is_object()) return 0;
+    const json& prev = dest.at("Preview");
+    if (!prev.contains("HistogramChannels") || !prev.at("HistogramChannels").is_array()) return 0;
+    return prev.at("HistogramChannels").size();
+}
+
 } // namespace
+
+void ADTimePix::updateDetectorHealthFromJson(const json& detector_j) {
+    if (!detector_j.contains("Health")) return;
+
+    const json& healthRoot = detector_j["Health"];
+    auto jsonDbl = [](const json& j, double def) -> double {
+        return j.is_number() ? j.get<double>() : def;
+    };
+    auto jsonInt = [](const json& j, int def) -> int {
+        if (j.is_number_integer()) return j.get<int>();
+        if (j.is_number_unsigned()) return static_cast<int>(j.get<unsigned>());
+        return def;
+    };
+
+    if (healthRoot.is_array()) {
+        if (healthRoot.empty()) {
+            LOG("getDetector: Health array is empty");
+            return;
+        }
+        const json& H0 = healthRoot[0];
+        if (!H0.is_object()) {
+            LOG("getDetector: Health[0] is not an object");
+            return;
+        }
+        setDoubleParam(ADTimePixLocalTemp, jsonDbl(H0.contains("LocalTemperature") ? H0["LocalTemperature"] : json(), 0.0));
+        setDoubleParam(ADTimePixFPGATemp, jsonDbl(H0.contains("FPGATemperature") ? H0["FPGATemperature"] : json(), 0.0));
+        setDoubleParam(ADTimePixFan1Speed, jsonDbl(H0.contains("Fan1Speed") ? H0["Fan1Speed"] : json(), 0.0));
+        setDoubleParam(ADTimePixFan2Speed, jsonDbl(H0.contains("Fan2Speed") ? H0["Fan2Speed"] : json(), 0.0));
+        setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H0.contains("BiasVoltage") ? H0["BiasVoltage"] : json(), 0.0));
+        setIntegerParam(ADTimePixHumidity, jsonInt(H0.contains("Humidity") ? H0["Humidity"] : json(), 0));
+
+        json chipTempsMerged = json::array();
+        for (const auto& hb : healthRoot) {
+            if (hb.is_object() && hb.contains("ChipTemperatures") && hb["ChipTemperatures"].is_array()) {
+                for (const auto& te : hb["ChipTemperatures"]) chipTempsMerged.push_back(te);
+            }
+        }
+        if (!chipTempsMerged.empty())
+            setStringParam(ADTimePixChipTemperature, chipTempsMerged.dump().c_str());
+        else if (H0.contains("ChipTemperatures"))
+            setStringParam(ADTimePixChipTemperature, H0["ChipTemperatures"].dump().c_str());
+
+        if (healthRoot.size() > 1) {
+            json vddM = json::array();
+            json avddM = json::array();
+            for (const auto& hb : healthRoot) {
+                if (hb.is_object() && hb.contains("VDD") && hb["VDD"].is_array()) vddM.push_back(hb["VDD"]);
+                if (hb.is_object() && hb.contains("AVDD") && hb["AVDD"].is_array()) avddM.push_back(hb["AVDD"]);
+            }
+            setStringParam(ADTimePixVDD, vddM.dump().c_str());
+            setStringParam(ADTimePixAVDD, avddM.dump().c_str());
+        } else {
+            if (H0.contains("VDD")) setStringParam(ADTimePixVDD, H0["VDD"].dump().c_str());
+            if (H0.contains("AVDD")) setStringParam(ADTimePixAVDD, H0["AVDD"].dump().c_str());
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (H0.contains("VDD") && H0["VDD"].is_array() && (size_t)i < H0["VDD"].size() && H0["VDD"][(size_t)i].is_number())
+                setDoubleParam(i, ADTimePixChipN_VDD, H0["VDD"][(size_t)i].get<double>());
+            if (H0.contains("AVDD") && H0["AVDD"].is_array() && (size_t)i < H0["AVDD"].size() &&
+                H0["AVDD"][(size_t)i].is_number())
+                setDoubleParam(i, ADTimePixChipN_AVDD, H0["AVDD"][(size_t)i].get<double>());
+        }
+        if (healthRoot.size() > 1) {
+            const json& H1 = healthRoot[1];
+            if (H1.is_object()) {
+                for (int i = 0; i < 3; i++) {
+                    int addr = i + 3;
+                    if (H1.contains("VDD") && H1["VDD"].is_array() && (size_t)i < H1["VDD"].size() &&
+                        H1["VDD"][(size_t)i].is_number())
+                        setDoubleParam(addr, ADTimePixChipN_VDD, H1["VDD"][(size_t)i].get<double>());
+                    if (H1.contains("AVDD") && H1["AVDD"].is_array() && (size_t)i < H1["AVDD"].size() &&
+                        H1["AVDD"][(size_t)i].is_number())
+                        setDoubleParam(addr, ADTimePixChipN_AVDD, H1["AVDD"][(size_t)i].get<double>());
+                }
+            }
+        } else {
+            for (int i = 0; i < 3; i++) {
+                int addr = i + 3;
+                setDoubleParam(addr, ADTimePixChipN_VDD, 0.0);
+                setDoubleParam(addr, ADTimePixChipN_AVDD, 0.0);
+            }
+        }
+    } else if (healthRoot.is_object()) {
+        const json& H = healthRoot;
+        setDoubleParam(ADTimePixLocalTemp, jsonDbl(H.contains("LocalTemperature") ? H["LocalTemperature"] : json(), 0.0));
+        setDoubleParam(ADTimePixFPGATemp, jsonDbl(H.contains("FPGATemperature") ? H["FPGATemperature"] : json(), 0.0));
+        setDoubleParam(ADTimePixFan1Speed, jsonDbl(H.contains("Fan1Speed") ? H["Fan1Speed"] : json(), 0.0));
+        setDoubleParam(ADTimePixFan2Speed, jsonDbl(H.contains("Fan2Speed") ? H["Fan2Speed"] : json(), 0.0));
+        setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H.contains("BiasVoltage") ? H["BiasVoltage"] : json(), 0.0));
+        setIntegerParam(ADTimePixHumidity, jsonInt(H.contains("Humidity") ? H["Humidity"] : json(), 0));
+        if (H.contains("ChipTemperatures"))
+            setStringParam(ADTimePixChipTemperature, H["ChipTemperatures"].dump().c_str());
+        if (H.contains("VDD")) setStringParam(ADTimePixVDD, H["VDD"].dump().c_str());
+        if (H.contains("AVDD")) setStringParam(ADTimePixAVDD, H["AVDD"].dump().c_str());
+
+        for (int i = 0; i < 3; i++) {
+            if (H.contains("VDD") && H["VDD"].is_array() && (size_t)i < H["VDD"].size() && H["VDD"][(size_t)i].is_number())
+                setDoubleParam(i, ADTimePixChipN_VDD, H["VDD"][(size_t)i].get<double>());
+            if (H.contains("AVDD") && H["AVDD"].is_array() && (size_t)i < H["AVDD"].size() &&
+                H["AVDD"][(size_t)i].is_number())
+                setDoubleParam(i, ADTimePixChipN_AVDD, H["AVDD"][(size_t)i].get<double>());
+        }
+    } else {
+        ERR_ARGS("getDetector: Health has unexpected JSON type (%s)", healthRoot.type_name());
+    }
+}
 
 /**
  * Fetch DACs values and update PVs readback
@@ -601,10 +740,6 @@ int chipTemperatureFromHealthV3(const json& detector, int chip) {
 */
 
 asynStatus ADTimePix::fetchDacs(json& data, int chip) {
-    std::string API_Ver;
-
-    getStringParam(ADSDKVersion, API_Ver);
-
     setIntegerParam(chip, ADTimePixCP_PLL,             data["Chips"][chip]["DACs"]["Ibias_CP_PLL"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1OFF,          data["Chips"][chip]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1ON,           data["Chips"][chip]["DACs"]["Ibias_DiscS1_ON"].get<int>());
@@ -624,10 +759,12 @@ asynStatus ADTimePix::fetchDacs(json& data, int chip) {
     setIntegerParam(chip, ADTimePixVthresholdCoarse,   data["Chips"][chip]["DACs"]["Vthreshold_coarse"].get<int>());
     setIntegerParam(chip, ADTimePixVthresholdFine,     data["Chips"][chip]["DACs"]["Vthreshold_fine"].get<int>());
 
-    if (API_Ver[0] == '4') {    // Serval version 4, Health is an array (multi-board: temps per board)
+    if (detectorHealthIsArray(data)) {
         setIntegerParam(chip, ADTimePixChipNTemperature, chipTemperatureFromHealthV4(data, chip));
-    } else {  // Serval version 3 or 2, Health is a dictionary
+    } else if (data.contains("Health") && data["Health"].is_object()) {
         setIntegerParam(chip, ADTimePixChipNTemperature, chipTemperatureFromHealthV3(data, chip));
+    } else {
+        setIntegerParam(chip, ADTimePixChipNTemperature, 0);
     }
 
     if (data["Chips"][chip]["Adjust"].is_null()) {  // Serval version 3, Adjust is typically not present / null.
@@ -976,9 +1113,6 @@ asynStatus ADTimePix::getDetector(){
     asynStatus status = asynSuccess;
     FLOW("Reading Detector Health, info, config, layout, chips");
     std::string detector;
-    std::string API_Ver;
-
-    getStringParam(ADSDKVersion, API_Ver);
 
     detector = this->serverURL + std::string("/detector");
     cpr::Response r = ADTimePix3ServalHttp::get(detector, 5000);
@@ -990,102 +1124,11 @@ asynStatus ADTimePix::getDetector(){
     else {
         setIntegerParam(ADTimePixDetConnected,1);
 
+        try {
         json detector_j = json::parse(r.text.c_str());
 
-        // printf("Number of chips=%d\n", detector_j["Info"]["NumberOfChips"].get<int>());
-
-        auto jsonDbl = [](const json& j, double def) -> double {
-            return j.is_number() ? j.get<double>() : def;
-        };
-        auto jsonInt = [](const json& j, int def) -> int {
-            if (j.is_number_integer()) return j.get<int>();
-            if (j.is_number_unsigned()) return static_cast<int>(j.get<unsigned>());
-            return def;
-        };
-
-        // Detector health PVs — SERVAL may send null for unavailable sensors (e.g. BiasVoltage when BIAS ADC offline).
-        if (API_Ver[0] == '4') {    // Serval version 4
-//            printf("Serval version 4, %s,%s\n", API_Ver.c_str(), detector_j.dump(3,' ', true).c_str());
-            const json& H0 = detector_j["Health"][0];
-            setDoubleParam(ADTimePixLocalTemp, jsonDbl(H0["LocalTemperature"], 0.0));
-            setDoubleParam(ADTimePixFPGATemp, jsonDbl(H0["FPGATemperature"], 0.0));
-            setDoubleParam(ADTimePixFan1Speed, jsonDbl(H0["Fan1Speed"], 0.0));
-            setDoubleParam(ADTimePixFan2Speed, jsonDbl(H0["Fan2Speed"], 0.0));
-            setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H0["BiasVoltage"], 0.0));
-            setIntegerParam(ADTimePixHumidity, jsonInt(H0["Humidity"], 0));
-
-            json chipTempsMerged = json::array();
-            if (detector_j["Health"].is_array()) {
-                for (const auto& hb : detector_j["Health"]) {
-                    if (hb.is_object() && hb.contains("ChipTemperatures") && hb["ChipTemperatures"].is_array()) {
-                        for (const auto& te : hb["ChipTemperatures"]) chipTempsMerged.push_back(te);
-                    }
-                }
-            }
-            if (!chipTempsMerged.empty())
-                setStringParam(ADTimePixChipTemperature, chipTempsMerged.dump().c_str());
-            else
-                setStringParam(ADTimePixChipTemperature, H0["ChipTemperatures"].dump().c_str());
-
-            if (detector_j["Health"].is_array() && detector_j["Health"].size() > 1) {
-                json vddM = json::array();
-                json avddM = json::array();
-                for (const auto& hb : detector_j["Health"]) {
-                    if (hb.is_object() && hb.contains("VDD") && hb["VDD"].is_array()) vddM.push_back(hb["VDD"]);
-                    if (hb.is_object() && hb.contains("AVDD") && hb["AVDD"].is_array()) avddM.push_back(hb["AVDD"]);
-                }
-                setStringParam(ADTimePixVDD, vddM.dump().c_str());
-                setStringParam(ADTimePixAVDD, avddM.dump().c_str());
-            } else {
-                setStringParam(ADTimePixVDD, H0["VDD"].dump().c_str());
-                setStringParam(ADTimePixAVDD, H0["AVDD"].dump().c_str());
-            }
-
-            // VDD, AVDD per rail: asyn ADDR 0–2 board 0, ADDR 3–5 board 1 (second SPIDR)
-            for (int i = 0; i < 3; i++) {
-                if (H0["VDD"].is_array() && (size_t)i < H0["VDD"].size() && H0["VDD"][(size_t)i].is_number())
-                    setDoubleParam(i, ADTimePixChipN_VDD, H0["VDD"][(size_t)i].get<double>());
-                if (H0["AVDD"].is_array() && (size_t)i < H0["AVDD"].size() && H0["AVDD"][(size_t)i].is_number())
-                    setDoubleParam(i, ADTimePixChipN_AVDD, H0["AVDD"][(size_t)i].get<double>());
-            }
-            if (detector_j["Health"].is_array() && detector_j["Health"].size() > 1) {
-                const json& H1 = detector_j["Health"][1];
-                for (int i = 0; i < 3; i++) {
-                    int addr = i + 3;
-                    if (H1["VDD"].is_array() && (size_t)i < H1["VDD"].size() && H1["VDD"][(size_t)i].is_number())
-                        setDoubleParam(addr, ADTimePixChipN_VDD, H1["VDD"][(size_t)i].get<double>());
-                    if (H1["AVDD"].is_array() && (size_t)i < H1["AVDD"].size() && H1["AVDD"][(size_t)i].is_number())
-                        setDoubleParam(addr, ADTimePixChipN_AVDD, H1["AVDD"][(size_t)i].get<double>());
-                }
-            } else {
-                for (int i = 0; i < 3; i++) {
-                    int addr = i + 3;
-                    setDoubleParam(addr, ADTimePixChipN_VDD, 0.0);
-                    setDoubleParam(addr, ADTimePixChipN_AVDD, 0.0);
-                }
-            }
-
-        }
-        else {  // Serval version 3 or 2
-            const json& H = detector_j["Health"];
-            setDoubleParam(ADTimePixLocalTemp, jsonDbl(H["LocalTemperature"], 0.0));
-            setDoubleParam(ADTimePixFPGATemp, jsonDbl(H["FPGATemperature"], 0.0));
-            setDoubleParam(ADTimePixFan1Speed, jsonDbl(H["Fan1Speed"], 0.0));
-            setDoubleParam(ADTimePixFan2Speed, jsonDbl(H["Fan2Speed"], 0.0));
-            setDoubleParam(ADTimePixBiasVoltage, jsonDbl(H["BiasVoltage"], 0.0));
-            setIntegerParam(ADTimePixHumidity, jsonInt(H["Humidity"], 0));
-            setStringParam(ADTimePixChipTemperature, H["ChipTemperatures"].dump().c_str());
-            setStringParam(ADTimePixVDD, H["VDD"].dump().c_str());
-            setStringParam(ADTimePixAVDD, H["AVDD"].dump().c_str());
-
-            // VDD, AVDD voltages
-            for (int i = 0; i < 3; i++) {
-                if (H["VDD"].is_array() && (size_t)i < H["VDD"].size() && H["VDD"][(size_t)i].is_number())
-                    setDoubleParam(i, ADTimePixChipN_VDD, H["VDD"][(size_t)i].get<double>());
-                if (H["AVDD"].is_array() && (size_t)i < H["AVDD"].size() && H["AVDD"][(size_t)i].is_number())
-                    setDoubleParam(i, ADTimePixChipN_AVDD, H["AVDD"][(size_t)i].get<double>());
-            }
-        }
+        // Health: branch on JSON shape (array vs object), not Serval version string alone.
+        updateDetectorHealthFromJson(detector_j);
 
         // Detector Info
         setStringParam(ADTimePixIfaceName,   strip_quotes(detector_j["Info"]["IfaceName"].dump().c_str()));
@@ -1197,19 +1240,42 @@ asynStatus ADTimePix::getDetector(){
         fetchDacs(detector_j, 0);
 
         // Serval3 - Detector Chip Layout
-        setIntegerParam(ADTimePixDetectorOrientation, mDetOrientationMap[strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str())]);
-        setStringParam(0, ADTimePixLayout, detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
+        if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
+            detector_j["Layout"].contains("DetectorOrientation")) {
+            setIntegerParam(ADTimePixDetectorOrientation,
+                mDetOrientationMap[strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str())]);
+        }
+        if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
+            detector_j["Layout"].contains("Original") && detector_j["Layout"]["Original"].is_object() &&
+            detector_j["Layout"]["Original"].contains("Chips") &&
+            detector_j["Layout"]["Original"]["Chips"].is_array() &&
+            !detector_j["Layout"]["Original"]["Chips"].empty()) {
+            setStringParam(0, ADTimePixLayout, detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
+        }
         callParamCallbacks();
 
         int number_chips = detector_j["Info"]["NumberOfChips"].get<int>();
         for (int chip = 1; chip < number_chips; chip++) {
             fetchDacs(detector_j, chip);
-            setStringParam(
-                chip,
-                ADTimePixLayout,
-                detector_j["Layout"]["Original"]["Chips"][chip].dump().c_str()
-            );
+            if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
+                detector_j["Layout"].contains("Original") && detector_j["Layout"]["Original"].is_object() &&
+                detector_j["Layout"]["Original"].contains("Chips") &&
+                detector_j["Layout"]["Original"]["Chips"].is_array() &&
+                (size_t)chip < detector_j["Layout"]["Original"]["Chips"].size()) {
+                setStringParam(
+                    chip,
+                    ADTimePixLayout,
+                    detector_j["Layout"]["Original"]["Chips"][chip].dump().c_str()
+                );
+            }
             callParamCallbacks(chip);
+        }
+        } catch (const json::exception& e) {
+            ERR_ARGS("getDetector JSON error: %s", e.what());
+            status = asynError;
+        } catch (const std::exception& e) {
+            ERR_ARGS("getDetector error: %s", e.what());
+            status = asynError;
         }
     }
     return status;
@@ -1268,16 +1334,12 @@ asynStatus ADTimePix::getServer(){
         setIntegerParam(ADTimePixDetConnected,1);
     //    setStringParam(ADTimePixWriteMsg, r.text.c_str());
 
-        json server_j = json::parse(r.text.c_str());
-    //    printf("getDetector: Server Destination JSON,%s\n", server_j.dump(3,' ', true).c_str());
-    //    printf("Number of channels: %ld\n", server_j.size());
-    //    printf("Number of Raw channels: %ld\n", server_j["Raw"].size());
-    //    printf("Number of Image channels: %ld\n", server_j["Image"].size());
-    //    printf("Number of Preview channels: %ld\n", server_j["Preview"].size());
-    //    printf("Number of Preview Image channels: %ld\n", server_j["Preview"]["ImageChannels"].size());
-    //    printf("Number of Preview Histogram channels: %ld\n\n", server_j["Preview"]["HistogramChannels"].size());
+        try {
+        const json parsed = json::parse(r.text.c_str());
+        const json& server_j = destinationBody(parsed);
 
-        switch (server_j["Raw"].size()) {
+        const size_t rawN = jsonArraySizeIfArray(server_j, "Raw");
+        switch (rawN) {
             case 0:
                 setIntegerParam(ADTimePixWriteRawRead, 0);
                 setIntegerParam(ADTimePixWriteRaw1Read, 0);
@@ -1297,7 +1359,8 @@ asynStatus ADTimePix::getServer(){
                 break; // More than two Raw channels
         }
 
-        switch (server_j["Image"].size()) {
+        const size_t imgN = jsonArraySizeIfArray(server_j, "Image");
+        switch (imgN) {
             case 0:
                 setIntegerParam(ADTimePixWriteImgRead, 0);
                 setIntegerParam(ADTimePixWriteImg1Read, 0);
@@ -1317,7 +1380,8 @@ asynStatus ADTimePix::getServer(){
                 break; // More than two Image channels
         }
 
-        switch (server_j["Preview"]["ImageChannels"].size()) {
+        const size_t prvImgN = previewImageChannelCount(server_j);
+        switch (prvImgN) {
             case 0:
                 setIntegerParam(ADTimePixWritePrvImgRead, 0);
                 setIntegerParam(ADTimePixWritePrvImg1Read, 0);
@@ -1337,7 +1401,8 @@ asynStatus ADTimePix::getServer(){
                 break; // More than two Preview Image channels
         }
 
-        switch (server_j["Preview"]["HistogramChannels"].size()) {
+        const size_t prvHstN = previewHistogramChannelCount(server_j);
+        switch (prvHstN) {
             case 0:
                 setIntegerParam(ADTimePixWritePrvHstRead, 0);
                 break; // No Preview Histogram channels
@@ -1348,6 +1413,13 @@ asynStatus ADTimePix::getServer(){
                 printf("More than one Preview Histogram channels\n");
                 setIntegerParam(ADTimePixWritePrvHstRead, 1);
                 break; // More than one Preview Histogram channels
+        }
+        } catch (const json::exception& e) {
+            ERR_ARGS("getServer JSON error: %s", e.what());
+            status = asynError;
+        } catch (const std::exception& e) {
+            ERR_ARGS("getServer error: %s", e.what());
+            status = asynError;
         }
     }
     callParamCallbacks();

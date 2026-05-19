@@ -936,6 +936,8 @@ class ADTimePix : public ADDriver{
         asynStatus uploadDACS();
         asynStatus writeDac(int chip, const std::string &dac, int value);
         asynStatus fetchDacs(json &data, int chip);
+        /** Map GET /detector Health (object or array) to health PVs; no throw on shape mismatch. */
+        void updateDetectorHealthFromJson(const json& detector_j);
         /** GET /detector/chips/<i>/PixelConfig for each chip: JSON string -> base64 decode; compare slice to BPC file if available. */
         asynStatus refreshPixelConfigFromServal();
         asynStatus fileWriter();
