@@ -6,7 +6,7 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
 
 - **IOC:** `load_chips.cmd` loads `Chips.template` for `CHIP0`…`CHIP7` (asyn `ADDR` 0–7). Included from `st_base.cmd`.
 - **Rails:** `OperatingVoltage.template` instances `Pwr0`…`Pwr5` at asyn `ADDR` 0–5. `ADDR` 0–2 are the three `VDD`/`AVDD` readings from Serval `Health[0]`; `ADDR` 3–5 are from `Health[1]` when present (second SPIDR). When only one board exists, `Pwr3`–`Pwr5` read back zero.
-- **Driver (`getDetector`, Serval 4):**
+- **Driver (`updateDetectorHealthFromJson` / `getDetector`; `Health` JSON array vs object):**
   - Merges all `Health[].ChipTemperatures` into one JSON array for `ChipTemps_RBV` (flat list, e.g. eight entries for two boards).
   - If multiple `Health` blocks: `VDD_RBV` / `AVDD_RBV` strings become a JSON array of per-board rail arrays (e.g. `[[r0,r1,r2],[r0,r1,r2]]`). Single-board keeps the previous flat array of three numbers.
   - **Boards:** `TPX3_BOARDS2_ID`, `TPX3_BOARDS2_IP`, `TPX3_BOARDS_CH5`…`CH8` from `Info.Boards[1]` when available (`CH5`…`CH8` are that board’s four chip JSON objects).

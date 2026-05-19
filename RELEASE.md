@@ -45,6 +45,11 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 * **Build validation**:
   * Full repository build (`make -j`) completes successfully after upgrade.
 * **BPC naming consistency**: Renamed **`bcp2ImgIndex`** to **`bpc2ImgIndex`** (BPC file index to image index). Masked-pels JSON export uses **`skipped_unmapped_bpc_index`** (was **`skipped_unmapped_bcp_index`**). Fixed stray **BCP** typos in path-check comments.
+* **Serval JSON shape parsing (`getDetector`, `getServer`, `fetchDacs`)**:
+  * **`updateDetectorHealthFromJson()`** in **`serval_http.cpp`**: Maps GET **`/detector`** **`Health`** to temperature, humidity, and **`VDD`/`AVDD`** PVs by **JSON shape** (object for Serval 2/3, array for Serval 4 / multi-board), not by **`ADSDKVersion`** alone. Multi-board behavior matches R1-6-2 (merged **`ChipTemperatures`**, dual-board rail PVs at asyn **`ADDR` 3-5**). Logs and skips on unexpected **`Health`** types instead of throwing.
+  * **`fetchDacs()`**: Per-chip **`ChipNTemperature`** uses **`chipTemperatureFromHealthV4`** / **`V3`** depending on whether **`Health`** is an array or object.
+  * **`getServer()`**: Unwraps Serval 4.x **`{"Destination": {...}}`** before counting **Raw** / **Image** / **Preview** channels; missing or non-array keys count as zero (no **`json::exception`** on partial responses).
+  * **`getDetector()`**: Guards optional **`Layout`** / **`Original`** / **`Chips`**; **`try`/`catch`** around JSON parse/update so malformed detector JSON logs **`getDetector JSON error`** and returns **`asynError`** instead of aborting the IOC (extends R1-6-2 HTTP/JSON robustness to the full detector refresh path).
 
 
 R1-6-2 (April 29, 2026)
