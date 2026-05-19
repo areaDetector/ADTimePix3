@@ -6,11 +6,11 @@
 #   - Wait until DetConnected_RBV=1, then: dbpf $(PREFIX)cam1:RefreshConnection 1
 #     and < init_detector_hw.cmd
 
-dbpf("$(PREFIX)cam1:RawFilePath","file:/media/nvme/raw")    # tcp://listen@localhost:8085 for stream
+dbpf("$(PREFIX)cam1:RawFilePath","tcp://listen@localhost:8085 ")    # tcp://listen@localhost:8085 for stream; file:/media/nvme/raw for file
 dbpf("$(PREFIX)cam1:RawFileTemplate","raw%MdHms_")
 dbpf("$(PREFIX)cam1:WriteRaw","0")   # Select raw disk write, or stream
 
-dbpf("$(PREFIX)cam1:Raw1FilePath","tcp://listen@localhost:8085")    # tcp://listen@localhost:8085 for stream
+dbpf("$(PREFIX)cam1:Raw1FilePath","file:/media/nvme/raw1")    # tcp://listen@localhost:8085 for stream
 dbpf("$(PREFIX)cam1:Raw1FileTemplate","raw%MdHms_")
 dbpf("$(PREFIX)cam1:WriteRaw1","0")   # Select raw disk write, or stream
 
