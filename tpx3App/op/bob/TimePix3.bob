@@ -128,12 +128,29 @@ $(pv_value)</tooltip>
     </border_color>
   </widget>
   <widget type="embedded" version="2.0.0">
-    <name>Linking Container_5</name>
-    <file>../../../../$(pathADCore)/ADCollect.opi</file>
+    <name>ConnectionStatusPanel</name>
+    <file>ConnectionStatus.bob</file>
     <x>360</x>
-    <y>205</y>
+    <y>200</y>
     <width>350</width>
-    <height>480</height>
+    <height>65</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <actions>
+    </actions>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Linking Container_5</name>
+    <file>Acquire/ADCollect.bob</file>
+    <x>360</x>
+    <y>270</y>
+    <width>350</width>
+    <height>415</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <actions>
