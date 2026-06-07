@@ -19,7 +19,7 @@
 // version numbers
 #define ADTIMEPIX_VERSION      1
 #define ADTIMEPIX_REVISION     6
-#define ADTIMEPIX_MODIFICATION 3
+#define ADTIMEPIX_MODIFICATION 4
 
 
 #include "ADDriver.h"

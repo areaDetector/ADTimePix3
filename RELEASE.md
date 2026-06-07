@@ -12,6 +12,12 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 
 Driver depends on Serval versions, at this time. Latest release is **R1-6-3** (driver **1.6.3**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
+R1-6-4 (TBD, 2026)
+--------
+
+Driver / user-visible version **1.6.4** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+
 R1-6-3 (June 7, 2026)
 --------
 
