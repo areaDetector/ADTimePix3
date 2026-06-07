@@ -30,14 +30,14 @@
     <text>SERVAL</text>
     <x>5</x>
     <y>22</y>
-    <width>55</width>
+    <width>60</width>
     <height>18</height>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="led" version="2.0.0">
     <name>ServalLED</name>
     <pv_name>$(P)$(R)ServalConnected_RBV</pv_name>
-    <x>65</x>
+    <x>70</x>
     <y>20</y>
     <width>22</width>
     <height>22</height>
@@ -49,12 +49,11 @@
       <color red="0" green="200" blue="0">
       </color>
     </on_color>
-    <show_boolean_label>false</show_boolean_label>
   </widget>
   <widget type="label" version="2.0.0">
     <name>DetLbl</name>
     <text>Detector</text>
-    <x>95</x>
+    <x>105</x>
     <y>22</y>
     <width>60</width>
     <height>18</height>
@@ -63,7 +62,7 @@
   <widget type="led" version="2.0.0">
     <name>DetLED</name>
     <pv_name>$(P)$(R)DetConnected_RBV</pv_name>
-    <x>160</x>
+    <x>170</x>
     <y>20</y>
     <width>22</width>
     <height>22</height>
@@ -75,15 +74,14 @@
       <color red="0" green="200" blue="0">
       </color>
     </on_color>
-    <show_boolean_label>false</show_boolean_label>
   </widget>
   <widget type="action_button" version="3.0.0">
     <name>RefreshBtn</name>
     <actions>
       <action type="write_pv">
+        <description>Refresh connection</description>
         <pv_name>$(P)$(R)RefreshConnection</pv_name>
         <value>1</value>
-        <description>Refresh connection</description>
       </action>
     </actions>
     <text>Refresh</text>
@@ -95,6 +93,7 @@
       <color red="115" green="223" blue="255">
       </color>
     </background_color>
+    <tooltip>$(actions)</tooltip>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>StatusMsg</name>
@@ -105,7 +104,7 @@
     <height>18</height>
     <format>6</format>
     <rules>
-      <rule name="warn_disconnected" prop_id="foreground_color">
+      <rule name="warn_disconnected" prop_id="foreground_color" out_exp="false">
         <exp bool_exp="pv0==9">
           <value>
             <color red="200" green="0" blue="0">
@@ -114,7 +113,7 @@
         </exp>
         <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
       </rule>
-      <rule name="warn_error" prop_id="foreground_color">
+      <rule name="warn_error" prop_id="foreground_color" out_exp="false">
         <exp bool_exp="pv0==6">
           <value>
             <color red="200" green="0" blue="0">

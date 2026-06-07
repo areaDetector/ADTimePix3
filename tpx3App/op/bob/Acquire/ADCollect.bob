@@ -3,9 +3,9 @@
 <display version="2.0.0">
   <name>ADCollect</name>
   <x>446</x>
-  <y>331</y>
+  <y>228</y>
   <width>350</width>
-  <height>480</height>
+  <height>330</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -15,7 +15,7 @@
   <widget type="rectangle" version="2.0.0">
     <name>rectangle #6</name>
     <width>350</width>
-    <height>480</height>
+    <height>330</height>
     <line_width>1</line_width>
     <line_color>
       <color red="0" green="0" blue="0">
@@ -31,10 +31,10 @@
     <name>text #9</name>
     <text>Exposure time</text>
     <x>45</x>
-    <y>30</y>
+    <y>21</y>
     <width>130</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -43,10 +43,10 @@
     <name>text entry #12</name>
     <pv_name>$(P)$(R)AcquireTime</pv_name>
     <x>180</x>
-    <y>30</y>
+    <y>21</y>
     <width>60</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <background_color>
@@ -61,11 +61,11 @@
     <name>text update #16</name>
     <pv_name>$(P)$(R)AcquireTime_RBV</pv_name>
     <x>245</x>
-    <y>31</y>
+    <y>21</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -84,10 +84,10 @@
     <name>text #20</name>
     <text>Acquire period</text>
     <x>35</x>
-    <y>55</y>
+    <y>38</y>
     <width>140</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -96,10 +96,10 @@
     <name>text entry #23</name>
     <pv_name>$(P)$(R)AcquirePeriod</pv_name>
     <x>180</x>
-    <y>55</y>
+    <y>38</y>
     <width>60</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <background_color>
@@ -114,11 +114,11 @@
     <name>text update #27</name>
     <pv_name>$(P)$(R)AcquirePeriod_RBV</pv_name>
     <x>245</x>
-    <y>56</y>
+    <y>38</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -137,10 +137,10 @@
     <name>text #31</name>
     <text># Images</text>
     <x>95</x>
-    <y>80</y>
+    <y>55</y>
     <width>80</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -149,10 +149,10 @@
     <name>text entry #34</name>
     <pv_name>$(P)$(R)NumImages</pv_name>
     <x>180</x>
-    <y>80</y>
+    <y>55</y>
     <width>60</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <background_color>
@@ -167,11 +167,11 @@
     <name>text update #38</name>
     <pv_name>$(P)$(R)NumImages_RBV</pv_name>
     <x>245</x>
-    <y>81</y>
+    <y>56</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -190,11 +190,11 @@
     <name>text update #42</name>
     <pv_name>$(P)$(R)NumImagesCounter_RBV</pv_name>
     <x>245</x>
-    <y>106</y>
+    <y>73</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -213,10 +213,10 @@
     <name>text #46</name>
     <text># Images complete</text>
     <x>5</x>
-    <y>105</y>
+    <y>72</y>
     <width>170</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -225,10 +225,10 @@
     <name>text #49</name>
     <text># Exp./image</text>
     <x>55</x>
-    <y>130</y>
+    <y>89</y>
     <width>120</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -237,10 +237,10 @@
     <name>text entry #52</name>
     <pv_name>$(P)$(R)NumExposures</pv_name>
     <x>180</x>
-    <y>130</y>
+    <y>89</y>
     <width>60</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <background_color>
@@ -255,11 +255,11 @@
     <name>text update #56</name>
     <pv_name>$(P)$(R)NumExposures_RBV</pv_name>
     <x>245</x>
-    <y>131</y>
+    <y>90</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -278,10 +278,10 @@
     <name>text #60</name>
     <text>Done</text>
     <x>223</x>
-    <y>210</y>
+    <y>144</y>
     <width>40</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -302,9 +302,9 @@
     <name>text #64</name>
     <text>Collecting</text>
     <x>194</x>
-    <y>210</y>
+    <y>144</y>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -333,9 +333,9 @@
     <pv_name>$(P)$(R)Acquire</pv_name>
     <text>Start</text>
     <x>180</x>
-    <y>230</y>
+    <y>158</y>
     <width>59</width>
-    <height>20</height>
+    <height>14</height>
     <background_color>
       <color red="115" green="223" blue="255">
       </color>
@@ -353,9 +353,9 @@
     <pv_name>$(P)$(R)Acquire</pv_name>
     <text>Stop</text>
     <x>247</x>
-    <y>230</y>
+    <y>158</y>
     <width>59</width>
-    <height>20</height>
+    <height>14</height>
     <background_color>
       <color red="115" green="223" blue="255">
       </color>
@@ -365,10 +365,10 @@
     <name>text #74</name>
     <text>Acquire</text>
     <x>105</x>
-    <y>230</y>
+    <y>158</y>
     <width>70</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -376,9 +376,9 @@
   <widget type="rectangle" version="2.0.0">
     <name>rectangle #77</name>
     <x>123</x>
-    <y>2</y>
+    <y>1</y>
     <width>105</width>
-    <height>21</height>
+    <height>14</height>
     <line_color>
       <color red="218" green="218" blue="218">
       </color>
@@ -392,10 +392,10 @@
     <name>text #80</name>
     <text>Collect</text>
     <x>140</x>
-    <y>3</y>
+    <y>2</y>
     <width>70</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -408,9 +408,9 @@
     <name>text #83</name>
     <text>Image mode</text>
     <x>25</x>
-    <y>155</y>
+    <y>107</y>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -419,9 +419,9 @@
     <name>menu #86</name>
     <pv_name>$(P)$(R)ImageMode</pv_name>
     <x>130</x>
-    <y>155</y>
+    <y>107</y>
     <width>120</width>
-    <height>20</height>
+    <height>14</height>
     <background_color>
       <color red="115" green="223" blue="255">
       </color>
@@ -432,11 +432,11 @@
     <name>text update #89</name>
     <pv_name>$(P)$(R)ImageMode_RBV</pv_name>
     <x>255</x>
-    <y>157</y>
+    <y>108</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -455,10 +455,10 @@
     <name>text #93</name>
     <text>Detector state</text>
     <x>35</x>
-    <y>330</y>
+    <y>227</y>
     <width>140</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -467,11 +467,11 @@
     <name>text update #96</name>
     <pv_name>$(P)$(R)DetectorState_RBV</pv_name>
     <x>180</x>
-    <y>330</y>
+    <y>227</y>
     <width>160</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -489,10 +489,10 @@
     <name>text #100</name>
     <text>Time remaining</text>
     <x>35</x>
-    <y>380</y>
+    <y>261</y>
     <width>140</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -501,11 +501,11 @@
     <name>text update #103</name>
     <pv_name>$(P)$(R)TimeRemaining_RBV</pv_name>
     <x>180</x>
-    <y>381</y>
+    <y>262</y>
     <width>67</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -524,10 +524,10 @@
     <name>text entry #107</name>
     <pv_name>$(P)$(R)ArrayCounter</pv_name>
     <x>180</x>
-    <y>405</y>
+    <y>278</y>
     <width>60</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <background_color>
@@ -542,10 +542,10 @@
     <name>text #111</name>
     <text>Image counter</text>
     <x>45</x>
-    <y>405</y>
+    <y>278</y>
     <width>130</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -554,11 +554,11 @@
     <name>text update #114</name>
     <pv_name>$(P)$(R)ArrayCounter_RBV</pv_name>
     <x>245</x>
-    <y>406</y>
+    <y>279</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -577,9 +577,9 @@
     <name>text #118</name>
     <text>Image rate</text>
     <x>75</x>
-    <y>430</y>
+    <y>296</y>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -588,10 +588,10 @@
     <name>text update #121</name>
     <pv_name>$(P)$(R)ArrayRate_RBV</pv_name>
     <x>180</x>
-    <y>431</y>
-    <height>18</height>
+    <y>296</y>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -610,10 +610,10 @@
     <name>text #125</name>
     <text>Array callbacks</text>
     <x>5</x>
-    <y>455</y>
+    <y>313</y>
     <width>150</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -622,9 +622,9 @@
     <name>menu #128</name>
     <pv_name>$(P)$(R)ArrayCallbacks</pv_name>
     <x>160</x>
-    <y>455</y>
+    <y>313</y>
     <width>90</width>
-    <height>20</height>
+    <height>14</height>
     <background_color>
       <color red="115" green="223" blue="255">
       </color>
@@ -635,11 +635,11 @@
     <name>text update #131</name>
     <pv_name>$(P)$(R)ArrayCallbacks_RBV</pv_name>
     <x>255</x>
-    <y>457</y>
+    <y>314</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -659,10 +659,10 @@
     <name>text #135</name>
     <text>Status</text>
     <x>5</x>
-    <y>355</y>
+    <y>244</y>
     <width>60</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -671,11 +671,11 @@
     <name>text update #138</name>
     <pv_name>$(P)$(R)StatusMessage_RBV</pv_name>
     <x>70</x>
-    <y>355</y>
+    <y>244</y>
     <width>275</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -694,10 +694,10 @@
     <name>text #142</name>
     <text># Queued arrays</text>
     <x>25</x>
-    <y>255</y>
+    <y>175</y>
     <width>150</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -706,11 +706,11 @@
     <name>text update #145</name>
     <pv_name>$(P)$(R)NumQueuedArrays</pv_name>
     <x>180</x>
-    <y>256</y>
+    <y>176</y>
     <width>60</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -730,10 +730,10 @@
     <name>text #149</name>
     <text>Trigger mode</text>
     <x>5</x>
-    <y>180</y>
+    <y>124</y>
     <width>120</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -742,9 +742,9 @@
     <name>menu #152</name>
     <pv_name>$(P)$(R)TriggerMode</pv_name>
     <x>130</x>
-    <y>180</y>
+    <y>124</y>
     <width>120</width>
-    <height>20</height>
+    <height>14</height>
     <background_color>
       <color red="115" green="223" blue="255">
       </color>
@@ -755,11 +755,11 @@
     <name>text update #155</name>
     <pv_name>$(P)$(R)TriggerMode_RBV</pv_name>
     <x>255</x>
-    <y>181</y>
+    <y>124</y>
     <width>80</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
@@ -778,10 +778,10 @@
     <name>text #159</name>
     <text>Wait for plugins</text>
     <x>15</x>
-    <y>280</y>
+    <y>192</y>
     <width>160</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -790,9 +790,9 @@
     <name>menu #162</name>
     <pv_name>$(P)$(R)WaitForPlugins</pv_name>
     <x>180</x>
-    <y>280</y>
+    <y>192</y>
     <width>80</width>
-    <height>20</height>
+    <height>14</height>
     <background_color>
       <color red="115" green="223" blue="255">
       </color>
@@ -803,10 +803,10 @@
     <name>text #165</name>
     <text>Acquire busy</text>
     <x>55</x>
-    <y>305</y>
+    <y>210</y>
     <width>120</width>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <horizontal_alignment>2</horizontal_alignment>
@@ -815,11 +815,11 @@
     <name>text update #168</name>
     <pv_name>$(P)$(R)AcquireBusy</pv_name>
     <x>180</x>
-    <y>306</y>
+    <y>210</y>
     <width>160</width>
-    <height>18</height>
+    <height>12</height>
     <font>
-      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      <font family="Sans" style="REGULAR" size="11.0">
       </font>
     </font>
     <foreground_color>
