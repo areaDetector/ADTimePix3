@@ -9,6 +9,7 @@ Additional information:
 * **Eight-chip / dual SPIDR** (IOC `load_chips.cmd`, `MASK_BPC_NELEMENTS`, health, mask indexing): [documentation/8chip-migration.md](documentation/8chip-migration.md)
 * **PixelConfig vs on-disk BPC** (SERVAL live config vs `.bpc` file, `PixelConfigDiff` / mask layout): [documentation/PIXELCONFIG_BPC_DIFF.md](documentation/PIXELCONFIG_BPC_DIFF.md)
 * **Readout stack diagram** (48→64→SERVAL; **ADTimePix3** is a SERVAL-only client; **LUNA** is an optional parallel ASI path not used by this driver): [PNG](documentation/TimePix3_pipeline_48_64_96_caption.png), [SVG source](documentation/TimePix3_pipeline_48_64_96.svg) (regenerate PNG with Inkscape from the SVG if you edit the figure).
+* **Medipix3 (development on `medipix3-integration`)**: unified driver with runtime `DetectorFamily` detection, capability PVs, and IOC profile `st_mpx3.cmd` — [documentation/medipix3-integration.md](documentation/medipix3-integration.md).
 
 Notes:
 ------

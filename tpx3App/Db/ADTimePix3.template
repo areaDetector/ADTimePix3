@@ -133,6 +133,48 @@ record(longin, "$(P)$(R)MpxType_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MPX_TYPE")
   field(SCAN, "I/O Intr")
 }
+record(stringin, "$(P)$(R)ChipType_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP_TYPE")
+  field(SCAN, "I/O Intr")
+  field(DESC, "ChipType (MPX3/TPX3)")
+}
+record(mbbi, "$(P)$(R)DetectorFamily_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DETECTOR_FAMILY")
+  field(ZRST, "Unknown")
+  field(ZRVL, "0")
+  field(ONST, "TPX3")
+  field(ONVL, "1")
+  field(TWST, "MPX3")
+  field(TWVL, "2")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Runtime detector family")
+}
+record(bi, "$(P)$(R)CapTdc_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_TDC")
+  field(SCAN, "I/O Intr")
+  field(DESC, "TDC hardware supported")
+}
+record(bi, "$(P)$(R)CapTofHist_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_TOF_HIST")
+  field(SCAN, "I/O Intr")
+  field(DESC, "ToF histogram stream supported")
+}
+record(bi, "$(P)$(R)CapDualPreview_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_DUAL_PREVIEW")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Two preview image layers")
+}
+record(bi, "$(P)$(R)CapImgThresholds_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_IMG_THRESHOLDS")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Image Thresholds[] in Serval config")
+}
 record(stringin, "$(P)$(R)BChBoardId_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_ID")

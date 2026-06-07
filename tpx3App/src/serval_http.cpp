@@ -94,6 +94,44 @@ static string strip_quotes(string str) {
     return str;
 }
 
+static string chipBoardEntryLabel(const json& chip) {
+    if (chip.is_string()) {
+        return strip_quotes(chip.dump());
+    }
+    if (chip.is_object()) {
+        if (chip.contains("Name") && chip["Name"].is_string()) {
+            return chip["Name"].get<string>();
+        }
+        if (chip.contains("Id")) {
+            if (chip["Id"].is_number_integer()) {
+                return std::to_string(chip["Id"].get<int>());
+            }
+            if (chip["Id"].is_string()) {
+                return chip["Id"].get<string>();
+            }
+        }
+    }
+    return strip_quotes(chip.dump());
+}
+
+static bool parseThresholdList(const string& text, json& out) {
+    out = json::array();
+    std::stringstream ss(text);
+    string item;
+    while (std::getline(ss, item, ',')) {
+        const auto start = item.find_first_not_of(" \t");
+        if (start == string::npos) continue;
+        const auto end = item.find_last_not_of(" \t");
+        item = item.substr(start, end - start + 1);
+        try {
+            out.push_back(std::stoi(item));
+        } catch (const std::exception&) {
+            return false;
+        }
+    }
+    return !out.empty();
+}
+
 cpr::Response ADTimePix::servalHttpGetAuthOnly(const std::string& url) {
     return ADTimePix3ServalHttp::getAuthOnly(url);
 }
@@ -1198,16 +1236,28 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADMaxSizeX,     detector_j["Info"]["PixCount"].get<int>() / detector_j["Info"]["NumberOfRows"].get<int>());  // Sensor Size X
         setIntegerParam(ADTimePixMpxType,       detector_j["Info"]["MpxType"].get<int>());
 
+        std::string chipType;
+        if (detector_j["Info"].contains("ChipType")) {
+            chipType = strip_quotes(detector_j["Info"]["ChipType"].dump());
+        }
+        std::string chipboardId;
+        if (detector_j["Info"].contains("Boards") && detector_j["Info"]["Boards"].is_array() &&
+            !detector_j["Info"]["Boards"].empty() &&
+            detector_j["Info"]["Boards"][0].contains("ChipboardId")) {
+            chipboardId = strip_quotes(detector_j["Info"]["Boards"][0]["ChipboardId"].dump());
+        }
+        updateDetectorFamily(detector_j["Info"]["MpxType"].get<int>(), chipType, chipboardId);
+
         if (detector_j["Info"].contains("Boards") && detector_j["Info"]["Boards"].is_array() &&
             !detector_j["Info"]["Boards"].empty()) {
             const json& B0 = detector_j["Info"]["Boards"][0];
             setStringParam(ADTimePixBoardsID, strip_quotes(B0["ChipboardId"].dump().c_str()));
             setStringParam(ADTimePixBoardsIP, strip_quotes(B0["IpAddress"].dump().c_str()));
             if (B0.contains("Chips") && B0["Chips"].is_array() && B0["Chips"].size() > 0) {
-                setStringParam(ADTimePixBoardsCh1, strip_quotes(B0["Chips"][0].dump().c_str()));
-                setStringParam(ADTimePixBoardsCh2, B0["Chips"].size() > 1 ? strip_quotes(B0["Chips"][1].dump().c_str()) : "");
-                setStringParam(ADTimePixBoardsCh3, B0["Chips"].size() > 2 ? strip_quotes(B0["Chips"][2].dump().c_str()) : "");
-                setStringParam(ADTimePixBoardsCh4, B0["Chips"].size() > 3 ? strip_quotes(B0["Chips"][3].dump().c_str()) : "");
+                setStringParam(ADTimePixBoardsCh1, chipBoardEntryLabel(B0["Chips"][0]).c_str());
+                setStringParam(ADTimePixBoardsCh2, B0["Chips"].size() > 1 ? chipBoardEntryLabel(B0["Chips"][1]).c_str() : "");
+                setStringParam(ADTimePixBoardsCh3, B0["Chips"].size() > 2 ? chipBoardEntryLabel(B0["Chips"][2]).c_str() : "");
+                setStringParam(ADTimePixBoardsCh4, B0["Chips"].size() > 3 ? chipBoardEntryLabel(B0["Chips"][3]).c_str() : "");
             } else {
                 setStringParam(ADTimePixBoardsCh1, "");
                 setStringParam(ADTimePixBoardsCh2, "");
@@ -1219,10 +1269,10 @@ asynStatus ADTimePix::getDetector(){
                 setStringParam(ADTimePixBoards2ID, strip_quotes(B1["ChipboardId"].dump().c_str()));
                 setStringParam(ADTimePixBoards2IP, strip_quotes(B1["IpAddress"].dump().c_str()));
                 if (B1.contains("Chips") && B1["Chips"].is_array() && B1["Chips"].size() >= 4) {
-                    setStringParam(ADTimePixBoardsCh5, strip_quotes(B1["Chips"][0].dump().c_str()));
-                    setStringParam(ADTimePixBoardsCh6, strip_quotes(B1["Chips"][1].dump().c_str()));
-                    setStringParam(ADTimePixBoardsCh7, strip_quotes(B1["Chips"][2].dump().c_str()));
-                    setStringParam(ADTimePixBoardsCh8, strip_quotes(B1["Chips"][3].dump().c_str()));
+                    setStringParam(ADTimePixBoardsCh5, chipBoardEntryLabel(B1["Chips"][0]).c_str());
+                    setStringParam(ADTimePixBoardsCh6, chipBoardEntryLabel(B1["Chips"][1]).c_str());
+                    setStringParam(ADTimePixBoardsCh7, chipBoardEntryLabel(B1["Chips"][2]).c_str());
+                    setStringParam(ADTimePixBoardsCh8, chipBoardEntryLabel(B1["Chips"][3]).c_str());
                 } else {
                     setStringParam(ADTimePixBoardsCh5, "");
                     setStringParam(ADTimePixBoardsCh6, "");
@@ -1834,6 +1884,30 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["QueueSize"] = intNum;
+    }
+
+    if (detectorCapabilities_.supportsImageThresholds) {
+        int thsParam;
+        if (!isPreview) {
+            thsParam = isChannel1 ? ADTimePixImg1Ths : ADTimePixImgThs;
+        } else {
+            thsParam = isChannel1 ? ADTimePixPrvImg1Ths : ADTimePixPrvImgThs;
+        }
+        std::string thsStr;
+        if (getParameterSafely(thsParam, thsStr) == asynSuccess) {
+            json thsArr;
+            if (parseThresholdList(thsStr, thsArr)) {
+                const int channelIndex = isChannel1 ? 1 : 0;
+                if (!isPreview) {
+                    server_j["Image"][channelIndex]["Thresholds"] = thsArr;
+                } else {
+                    server_j["Preview"]["ImageChannels"][channelIndex]["Thresholds"] = thsArr;
+                }
+            } else {
+                ERR_ARGS("Invalid threshold list for channel param %d: %s", thsParam, thsStr.c_str());
+                return asynError;
+            }
+        }
     }
 
     return asynSuccess;

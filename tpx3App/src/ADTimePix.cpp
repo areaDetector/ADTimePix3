@@ -1078,6 +1078,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         stackSize),
       pixelConfigDiffMutex_(NULL),
       asynFlags_(asynFlags),
+      detectorFamily_(DetectorFamily::Unknown),
+      detectorCapabilities_(),
+      detectorFamilyApplied_(false),
       imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
 
@@ -1135,6 +1138,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixNumberOfChipsString,   asynParamInt32, &ADTimePixNumberOfChips);
     createParam(ADTimePixNumberOfRowsString,    asynParamInt32, &ADTimePixNumberOfRows);
     createParam(ADTimePixMpxTypeString,         asynParamInt32, &ADTimePixMpxType);
+    createParam(ADTimePixChipTypeString,        asynParamOctet, &ADTimePixChipType);
+    createParam(ADTimePixDetectorFamilyString,  asynParamInt32, &ADTimePixDetectorFamily);
+    createParam(ADTimePixCapTdcString,          asynParamInt32, &ADTimePixCapTdc);
+    createParam(ADTimePixCapTofHistString,      asynParamInt32, &ADTimePixCapTofHist);
+    createParam(ADTimePixCapDualPreviewString,  asynParamInt32, &ADTimePixCapDualPreview);
+    createParam(ADTimePixCapImgThresholdsString, asynParamInt32, &ADTimePixCapImgThresholds);
 
     createParam(ADTimePixBoardsIDString,        asynParamOctet, &ADTimePixBoardsID);
     createParam(ADTimePixBoardsIPString,        asynParamOctet, &ADTimePixBoardsIP);
@@ -1552,6 +1561,13 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // This prevents INVALID status from very large default values
     setIntegerParam(ADNumImages, 0);
 
+    setIntegerParam(ADTimePixDetectorFamily, static_cast<int>(DetectorFamily::Unknown));
+    setStringParam(ADTimePixChipType, "");
+    setIntegerParam(ADTimePixCapTdc, 0);
+    setIntegerParam(ADTimePixCapTofHist, 0);
+    setIntegerParam(ADTimePixCapDualPreview, 0);
+    setIntegerParam(ADTimePixCapImgThresholds, 0);
+
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
     if(strlen(serverURL) <= 0){
@@ -1597,6 +1613,42 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     {
         epicsAtExit(exitCallbackC, this);
     }
+}
+
+
+void ADTimePix::updateDetectorFamily(int mpxType, const std::string& chipType,
+                                     const std::string& chipboardId) {
+    const DetectorFamily family = detectDetectorFamily(mpxType, chipType, chipboardId);
+    const bool familyChanged = (family != detectorFamily_);
+    detectorFamily_ = family;
+    detectorCapabilities_ = capabilitiesForFamily(family);
+
+    setStringParam(ADTimePixChipType, chipType.c_str());
+    setIntegerParam(ADTimePixDetectorFamily, static_cast<int>(family));
+    setIntegerParam(ADTimePixCapTdc, detectorCapabilities_.supportsTdc ? 1 : 0);
+    setIntegerParam(ADTimePixCapTofHist, detectorCapabilities_.supportsTofHistogram ? 1 : 0);
+    setIntegerParam(ADTimePixCapDualPreview, detectorCapabilities_.supportsDualPreview ? 1 : 0);
+    setIntegerParam(ADTimePixCapImgThresholds, detectorCapabilities_.supportsImageThresholds ? 1 : 0);
+
+    if (familyChanged || !detectorFamilyApplied_) {
+        applyFamilyDefaults(family);
+        detectorFamilyApplied_ = true;
+        FLOW_ARGS("Detector family %s (MpxType=%d ChipType=%s ChipboardId=%s)",
+                  detectorFamilyName(family), mpxType, chipType.c_str(), chipboardId.c_str());
+    }
+}
+
+void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
+    static const char* kDefaultThresholds = "0,1,2,3,4,5,6,7";
+
+    if (family != DetectorFamily::MPX3) {
+        return;
+    }
+
+    setStringParam(ADTimePixImgThs, kDefaultThresholds);
+    setStringParam(ADTimePixImg1Ths, kDefaultThresholds);
+    setStringParam(ADTimePixPrvImgThs, kDefaultThresholds);
+    setStringParam(ADTimePixPrvImg1Ths, kDefaultThresholds);
 }
 
 

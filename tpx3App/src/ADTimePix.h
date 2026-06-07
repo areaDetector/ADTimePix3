@@ -41,6 +41,7 @@
 #include "img_accumulation.h"
 #include "histogram_io.h"
 #include "network_client.h"
+#include "detector_family.h"
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -76,6 +77,12 @@
 #define ADTimePixNumberOfChipsString        "TPX3_NUM_CHIPS"        // (asynInt32,         r)      NumberOfChip
 #define ADTimePixNumberOfRowsString         "TPX3_NUM_ROWS"         // (asynInt32,         r)      NumberOfRows
 #define ADTimePixMpxTypeString              "TPX3_MPX_TYPE"         // (asynInt32,         r)      MpxType
+#define ADTimePixChipTypeString             "TPX3_CHIP_TYPE"        // (asynOctet,         r)      ChipType (MPX3, TPX3)
+#define ADTimePixDetectorFamilyString       "TPX3_DETECTOR_FAMILY"  // (asynInt32,         r)      0=Unknown, 1=TPX3, 2=MPX3
+#define ADTimePixCapTdcString               "TPX3_CAP_TDC"          // (asynInt32,         r)      TDC / ToF hardware supported
+#define ADTimePixCapTofHistString           "TPX3_CAP_TOF_HIST"     // (asynInt32,         r)      ToF histogram stream supported
+#define ADTimePixCapDualPreviewString       "TPX3_CAP_DUAL_PREVIEW" // (asynInt32,         r)      Two preview image layers
+#define ADTimePixCapImgThresholdsString     "TPX3_CAP_IMG_THRESHOLDS" // (asynInt32,       r)      Image Thresholds[] in Serval config
 
 #define ADTimePixBoardsIDString             "TPX3_BOARDS_ID"        // (asynOctet,         r)      Boards->ChipboardId
 #define ADTimePixBoardsIPString             "TPX3_BOARDS_IP"        // (asynOctet,         r)      Boards->IpAddress
@@ -445,7 +452,13 @@ class ADTimePix : public ADDriver{
         int ADTimePixNumberOfChips;        
         int ADTimePixNumberOfRows;         
         int ADTimePixMpxType;
-        
+        int ADTimePixChipType;
+        int ADTimePixDetectorFamily;
+        int ADTimePixCapTdc;
+        int ADTimePixCapTofHist;
+        int ADTimePixCapDualPreview;
+        int ADTimePixCapImgThresholds;
+
         int ADTimePixBoardsID;             
         int ADTimePixBoardsIP;
         int ADTimePixBoardsCh1;            
@@ -728,6 +741,8 @@ class ADTimePix : public ADDriver{
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
+        void updateDetectorFamily(int mpxType, const std::string& chipType, const std::string& chipboardId);
+        void applyFamilyDefaults(DetectorFamily family);
         /** Push processed Img (running sum and sum-of-N) as NDArrays to addresses 2 and 3 for file plugins. */
         void pushProcessedImgToPlugins();
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */
@@ -750,6 +765,9 @@ class ADTimePix : public ADDriver{
         std::string serverURL;
         /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). When set, asyn performs teardown on IOC exit. */
         int asynFlags_;
+        DetectorFamily detectorFamily_;
+        DetectorCapabilities detectorCapabilities_;
+        bool detectorFamilyApplied_;
         // GraphicsMagick Image member removed - TCP streaming used instead
 
         bool acquiring=false;
