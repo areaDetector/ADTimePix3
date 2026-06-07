@@ -52,8 +52,6 @@ dbpf("$(PREFIX)cam1:PrvSmplgMode","0")
 # ToF histogram preview is out of scope for Medipix3 v1
 dbpf("$(PREFIX)cam1:WritePrvHst","0")
 
-# Calibration paths — site-specific; point at Medipix3 files when available
-dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/")
-dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")
-dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/")
-dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")
+# BPC/DACS upload omitted for Medipix3 — TPX3 demo files are incompatible (pixel count,
+# DAC names). Set paths and dbpf WriteBPCFile/WriteDACSFile from iocsh when MPX3
+# calibration files are available on the SERVAL host.

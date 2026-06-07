@@ -38,6 +38,7 @@ Defaults:
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
 - two-layer preview on TCP ports 8088 (frame) and 8089 (running sum)
 - `count` image mode with Serval `Thresholds[]` when family is MPX3
+- BPC/DACS upload disabled in `init_detector_hw_mpx3.cmd` (TPX3 demo files are incompatible)
 
 ## Emulator workflow
 
