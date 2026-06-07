@@ -887,6 +887,8 @@ class ADTimePix : public ADDriver{
         void connectionPollThread();
         /** Set ADSDKVersion / FW timestamp from GET /dashboard JSON (startup and reconnect). */
         void updateServalVersionFromDashboard(const json& dashboard_j);
+        /** Map SERVAL/detector link to ADStatus (DetectorState) and ADStatusMessage. */
+        void updateStatusFromConnection(bool servalOk, bool detOk);
         /** On disconnect->connect: push PV config, refresh detector, optional BPC/DACS upload. */
         void refreshOnReconnect();
 

@@ -146,6 +146,24 @@ void ADTimePix::updateServalVersionFromDashboard(const json& dashboard_j) {
     }
 }
 
+void ADTimePix::updateStatusFromConnection(bool servalOk, bool detOk) {
+    if (servalOk && detOk) {
+        setStringParam(ADStatusMessage, "OK");
+        int acquiring = 0;
+        getIntegerParam(ADAcquire, &acquiring);
+        setIntegerParam(ADStatus, acquiring ? ADStatusAcquire : ADStatusIdle);
+    } else {
+        if (!servalOk && !detOk) {
+            setStringParam(ADStatusMessage, "SERVAL and detector disconnected");
+        } else if (!servalOk) {
+            setStringParam(ADStatusMessage, "SERVAL disconnected");
+        } else {
+            setStringParam(ADStatusMessage, "Detector disconnected");
+        }
+        setIntegerParam(ADStatus, ADStatusDisconnected);
+    }
+}
+
 void ADTimePix::refreshOnReconnect() {
     FLOW("SERVAL/detector reconnect: refreshing config, detector info, calibrations");
     (void)fileWriter();
@@ -160,6 +178,7 @@ void ADTimePix::refreshOnReconnect() {
     if (!bpcName.empty()) (void)uploadBPC();
     if (!dacsName.empty()) (void)uploadDACS();
 
+    updateStatusFromConnection(true, true);
     callParamCallbacks();
 }
 
@@ -232,6 +251,11 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         setIntegerParam(ADTimePixDetConnected,0);
     }
 
+    int servalConn = 0, detConn = 0;
+    getIntegerParam(ADTimePixServalConnected, &servalConn);
+    getIntegerParam(ADTimePixDetConnected, &detConn);
+    updateStatusFromConnection(servalConn != 0, detConn != 0);
+
     callParamCallbacks();
     if(connected) return asynSuccess;
     else{
@@ -282,11 +306,7 @@ asynStatus ADTimePix::checkConnection(){
         setStringParam(ADTimePixDetType, "null");
     }
 
-    if (servalOk && detOk) {
-        setStringParam(ADStatusMessage, "OK");
-    } else {
-        setStringParam(ADStatusMessage, "SERVAL or detector disconnected");
-    }
+    updateStatusFromConnection(servalOk, detOk);
     callParamCallbacks();
     return (servalOk && detOk) ? asynSuccess : asynError;
 }
@@ -392,6 +412,10 @@ asynStatus ADTimePix::getDashboard(){
         setIntegerParam(ADTimePixDetConnected, 0);
         setStringParam(ADTimePixDetType, "null");
     }
+    int servalConn = 0, detConn = 0;
+    getIntegerParam(ADTimePixServalConnected, &servalConn);
+    getIntegerParam(ADTimePixDetConnected, &detConn);
+    updateStatusFromConnection(servalConn != 0, detConn != 0);
     return status;
 }
 
