@@ -885,6 +885,10 @@ class ADTimePix : public ADDriver{
         int connectionPollSkipOnce_ = 0;
         static void connectionPollThreadC(void* pPvt);
         void connectionPollThread();
+        /** Set ADSDKVersion / FW timestamp from GET /dashboard JSON (startup and reconnect). */
+        void updateServalVersionFromDashboard(const json& dashboard_j);
+        /** On disconnect->connect: push PV config, refresh detector, optional BPC/DACS upload. */
+        void refreshOnReconnect();
 
         // ----------------------------------------
         // DRIVERNAMESTANDARD Global Variables
@@ -902,7 +906,7 @@ class ADTimePix : public ADDriver{
         //function used for connecting to a TimePix3 serval URL device
         // NOTE - THIS MAY ALSO NEED TO CHANGE IF SERIAL # NOT USED
         asynStatus initialServerCheckConnection();
-        /** Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, ADStatusMessage. Does not call getServer/getDashboard. */
+        /** Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, SDK version, ADStatusMessage. */
         asynStatus checkConnection();
 
         void printConnectedDeviceInfo();
@@ -938,6 +942,8 @@ class ADTimePix : public ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         /** Map GET /detector Health (object or array) to health PVs; no throw on shape mismatch. */
         void updateDetectorHealthFromJson(const json& detector_j);
+        /** Map Measurement.Info TDC rate fields by JSON keys (not SDK version string). */
+        void updateTdcRatesFromMeasurementInfo(const json& info);
         /** GET /detector/chips/<i>/PixelConfig for each chip: JSON string -> base64 decode; compare slice to BPC file if available. */
         asynStatus refreshPixelConfigFromServal();
         asynStatus fileWriter();

@@ -34,6 +34,20 @@ static void timePixCallbackC(void* pPvt) {
 // Acquisition Functions
 // -----------------------------------------------------------------------
 
+void ADTimePix::updateTdcRatesFromMeasurementInfo(const json& info) {
+    if (!info.is_object()) return;
+    if (info.contains("Tdc1EventRate") && info["Tdc1EventRate"].is_number()) {
+        setIntegerParam(ADTimePixTdc1Rate, info["Tdc1EventRate"].get<int>());
+    }
+    if (info.contains("Tdc2EventRate") && info["Tdc2EventRate"].is_number()) {
+        setIntegerParam(ADTimePixTdc2Rate, info["Tdc2EventRate"].get<int>());
+    }
+    // Serval 3.0 / 3.1: single TdcEventRate (when split fields are absent)
+    if (info.contains("TdcEventRate") && info["TdcEventRate"].is_number() && !info.contains("Tdc1EventRate")) {
+        setIntegerParam(ADTimePixTdc1Rate, info["TdcEventRate"].get<int>());
+    }
+}
+
 
 /*
  * Function that is used to initialize and connect to the device.
@@ -415,7 +429,6 @@ void ADTimePix::timePixCallback(){
     int arrayCallbacks;
     epicsTimeStamp startTime, endTime;
 //    double elapsedTime;
-    std::string API_Ver;
 
     getIntegerParam(ADImageMode, &mode);
     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
@@ -463,21 +476,7 @@ void ADTimePix::timePixCallback(){
             setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
         }
 
-    getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
-            if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
-                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
-            }
-            if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
-                setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
-            }
-    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
-            if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
-                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
-            }
-    } else {
-        printf ("Serval Version not compared, event rate not read\n");
-    }
+        updateTdcRatesFromMeasurementInfo(measurement_j["Info"]);
 
         if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
             setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
@@ -530,21 +529,8 @@ void ADTimePix::timePixCallback(){
                 if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
                     setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
                 }
-            
-            if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
-                    if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
-                        setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
-                    }
-                    if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
-                        setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
-                    }
-            } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
-                    if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
-                        setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
-                    }
-            } else {
-                printf ("Serval Version event rate not specified in while loop.\n");
-            }
+
+                updateTdcRatesFromMeasurementInfo(measurement_j["Info"]);
 
                 if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
                     setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
@@ -632,7 +618,6 @@ void ADTimePix::timePixCallback(){
  */ 
 asynStatus ADTimePix::acquireStop(){
     asynStatus status;
-    std::string API_Ver;
 
     this->acquiring=false;
     
@@ -782,21 +767,7 @@ asynStatus ADTimePix::acquireStop(){
             setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
         }
 
-    getStringParam(ADSDKVersion, API_Ver);
-    if ((API_Ver[0] == '4') || ((API_Ver[0] == '3') && ((API_Ver[2] - '0') >= 2))) {    // Serval 4.0.0 and later; Serval 3.2.0 and later
-            if (measurement_j["Info"].contains("Tdc1EventRate") && measurement_j["Info"]["Tdc1EventRate"].is_number()) {
-                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["Tdc1EventRate"].get<int>());
-            }
-            if (measurement_j["Info"].contains("Tdc2EventRate") && measurement_j["Info"]["Tdc2EventRate"].is_number()) {
-                setIntegerParam(ADTimePixTdc2Rate, measurement_j["Info"]["Tdc2EventRate"].get<int>());
-            }
-    } else if ((API_Ver[0] == '3') && ((API_Ver[2] - '0') <= 1)) {   // Serval 3.1.0 and 3.0.0
-            if (measurement_j["Info"].contains("TdcEventRate") && measurement_j["Info"]["TdcEventRate"].is_number()) {
-                setIntegerParam(ADTimePixTdc1Rate, measurement_j["Info"]["TdcEventRate"].get<int>());
-            }
-    } else {
-        printf ("Serval Version not compared, event rate not read in acquireStop\n");
-    }
+        updateTdcRatesFromMeasurementInfo(measurement_j["Info"]);
 
         if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
             setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());

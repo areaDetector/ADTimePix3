@@ -7,9 +7,9 @@
 #
 # Offline detector at boot: in st_base.cmd, use only:
 #     < init_detector_paths.cmd
-# When hardware is ready:
+# When hardware is ready (or after late connect; driver poll also runs refreshOnReconnect):
 #     dbpf $(PREFIX)cam1:RefreshConnection 1
-#     < init_detector_hw.cmd
+#     < init_detector_hw.cmd   # optional if BPC/DACS paths set — poll may upload on reconnect
 # Or merge both into one st_base.cmd line once the beamline always has a detector at IOC start.
 #
 # Site files (e.g. BL10): keep local path/calibration edits in a copy of init_detector_paths.cmd

@@ -130,6 +130,39 @@ void ADTimePix::logHttpWarning(const char* context, const char* method, const st
               trimHttpBodyForLog(body).c_str());
 }
 
+void ADTimePix::updateServalVersionFromDashboard(const json& dashboard_j) {
+    if (!dashboard_j.contains("Server") || !dashboard_j["Server"].is_object()) return;
+    const json& srv = dashboard_j["Server"];
+    if (srv.contains("SoftwareVersion")) {
+        std::string ver = strip_quotes(srv["SoftwareVersion"].dump());
+        if (!ver.empty()) {
+            setStringParam(ADSDKVersion, ver.c_str());
+            setStringParam(ADManufacturer, "ASI");
+        }
+    }
+    if (srv.contains("SoftwareTimestamp")) {
+        std::string ts = strip_quotes(srv["SoftwareTimestamp"].dump());
+        if (!ts.empty()) setStringParam(ADTimePixFWTimeStamp, ts.c_str());
+    }
+}
+
+void ADTimePix::refreshOnReconnect() {
+    FLOW("SERVAL/detector reconnect: refreshing config, detector info, calibrations");
+    (void)fileWriter();
+    (void)initAcquisition();
+    (void)getServer();
+    (void)getDetector();
+    (void)getMeasurementConfig();
+
+    std::string bpcName, dacsName;
+    getStringParam(ADTimePixBPCFileName, bpcName);
+    getStringParam(ADTimePixDACSFileName, dacsName);
+    if (!bpcName.empty()) (void)uploadBPC();
+    if (!dacsName.empty()) (void)uploadDACS();
+
+    callParamCallbacks();
+}
+
 asynStatus ADTimePix::initialServerCheckConnection(){
     bool connected = false;
 
@@ -170,14 +203,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
             try {
                 json dashboard_j = json::parse(r.text.c_str());
 
-                // strip double quote from beginning and end of string
-                std::string API_Ver, API_TS;
-                API_Ver = strip_quotes(dashboard_j["Server"]["SoftwareVersion"].dump()).c_str();
-                API_TS = strip_quotes(dashboard_j["Server"]["SoftwareTimestamp"].dump()).c_str();
-
-                setStringParam(ADSDKVersion, API_Ver.c_str());
-                setStringParam(ADManufacturer, "ASI");
-                setStringParam(ADTimePixFWTimeStamp, API_TS.c_str());
+                updateServalVersionFromDashboard(dashboard_j);
 
                 std::string Detector, DetType;
                 Detector = dashboard_j["Detector"].dump().c_str();
@@ -217,7 +243,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
 /**
  * Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, and ADStatusMessage.
  * Uses GET /dashboard as the single source of truth so ServalConnected means "SERVAL reachable"
- * even when the root URL returns 404/302. Does not call getServer() or full getDashboard().
+ * even when the root URL returns 404/302. Updates SDK version from dashboard; does not call getServer()/getDetector().
  * Used by connection poll and RefreshConnection PV.
  * @return asynSuccess if SERVAL and detector are connected, asynError otherwise
  */
@@ -234,6 +260,7 @@ asynStatus ADTimePix::checkConnection(){
         setIntegerParam(ADTimePixServalConnected, 1);
         try {
             json dashboard_j = json::parse(r.text.c_str());
+            updateServalVersionFromDashboard(dashboard_j);
             std::string Detector = dashboard_j["Detector"].dump();
             if (strcmp(Detector.c_str(), "null") != 0) {
                 detOk = true;
@@ -281,11 +308,9 @@ void ADTimePix::connectionPollThread() {
         int servalNow = 0, detNow = 0;
         getIntegerParam(ADTimePixServalConnected, &servalNow);
         getIntegerParam(ADTimePixDetConnected, &detNow);
-        // On reconnect: push current PV config to SERVAL (single source of truth), then refresh from SERVAL
+        // On reconnect: full late-init (config, detector, SDK version, calibrations) — see issue #14
         if (servalNow && detNow && (lastServalConnected_ == 0 || lastDetConnected_ == 0)) {
-            (void)fileWriter();       // Push channel config (Raw/Img/PrvImg/PrvHst) from PVs to SERVAL
-            (void)initAcquisition();  // Push detector config (TriggerMode, NumImages, etc.) from PVs to SERVAL
-            (void)getServer();        // Refresh channel state from SERVAL
+            refreshOnReconnect();
         }
         lastServalConnected_ = servalNow;
         lastDetConnected_ = detNow;
@@ -328,6 +353,7 @@ asynStatus ADTimePix::getDashboard(){
         setIntegerParam(ADTimePixServalConnected, 1);  // SERVAL reachable (dashboard responded)
         try {
             json dashboard_j = json::parse(r.text.c_str());
+            updateServalVersionFromDashboard(dashboard_j);
             // Detector status: consistent with checkConnection()
             std::string Detector = dashboard_j["Detector"].dump();
             if (strcmp(Detector.c_str(), "null") != 0) {
