@@ -95,7 +95,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>Linking Container_3</name>
-    <file>../../../../$(pathADCore)/ADSetup.opi</file>
+    <file>ADSetup.bob</file>
     <x>2</x>
     <y>35</y>
     <width>350</width>
