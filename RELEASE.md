@@ -7,9 +7,9 @@ The repository was transferred a while back to areaDetector organization.
 
 Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
-The master branch (under development) supports Serval 4.x.x and 3.x.x; latest tested is Serval 4.1.5-rc2 (requires TimePix3 Emulator 4.1.5-rc2). Serval 4.1.5 is recommended for 4.x (dual-image fix).
+The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for **4.1.x** (latest tested; includes dual-image and other Serval fixes).
 
-Driver depends on Serval versions, at this time. Current releases support Serval 4.1.5-rc2, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest release is **R1-6-3** (driver **1.6.3**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
 R1-6-3 (TBD, 2026)
@@ -51,6 +51,7 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * **`getServer()`**: Unwraps Serval 4.x **`{"Destination": {...}}`** before counting **Raw** / **Image** / **Preview** channels; missing or non-array keys count as zero (no **`json::exception`** on partial responses).
   * **`getDetector()`**: Guards optional **`Layout`** / **`Original`** / **`Chips`**; **`try`/`catch`** around JSON parse/update so malformed detector JSON logs **`getDetector JSON error`** and returns **`asynError`** instead of aborting the IOC (extends R1-6-2 HTTP/JSON robustness to the full detector refresh path).
 * **Connection status UX**: **`updateStatusFromConnection()`** sets **`DetectorState_RBV`** (**`ADStatus`**) to **Disconnected** when SERVAL or the detector is unreachable, with specific **`StatusMessage_RBV`** text; restores **Idle** / **Acquire** when linked. Phoebus: **`ConnectionStatus.bob`** (SERVAL/detector LEDs, status line, **Refresh**); **`Acquire/ADCollect.bob`** shows enum labels (**Idle**, **Disconnected**, **Error**, ...) not raw integers (replaces unused **`bob/Acquire/ADCollect.opi`**; **`TimePix3.bob`** embeds the **`.bob`**). **`ADSetup.bob`** (local fork): **Ready** / **Not ready** follow **`DetConnected_RBV`** (not **`AsynIO.CNCT`**); **Connect**/**Disconnect** buttons still control the asyn port only (**Asyn port** label). **`ADSetup.bob`** and **`Acquire/ADCollect.bob`** use **11 pt Sans** and tighter widget spacing (rescaled from ADCore autoconvert **16 pt Liberation Sans**) so they align with native TimePix3 OPI panels; **`TimePix3.bob`** embed heights and layout were adjusted accordingly.
+* **IOC boot raw channel defaults (`init_detector_paths.cmd`)**: **`RawFilePath`** default is **`tcp://listen@localhost:8085`** (TCP stream); **`Raw1FilePath`** default is **`file:/media/nvme/raw1`** (disk). The previous example IOC boot had these reversed (primary Raw to disk, Raw1 to TCP). Sites that write raw events to disk should set **`RawFilePath`** explicitly.
 * **Late SERVAL/detector connect (issue #14)**: When the IOC starts before SERVAL or the detector is available, connection poll **`refreshOnReconnect()`** now runs on disconnect-to-connect transition: updates **`SDKVersion_RBV`** / FW timestamp from **`/dashboard`** (**`updateServalVersionFromDashboard`** in **`checkConnection`**, **`getDashboard`**, and startup), **`getDetector()`**, **`getMeasurementConfig()`**, channel config (**`fileWriter`** / **`initAcquisition`** / **`getServer`**), and BPC/DACS upload when file names are configured. **`updateTdcRatesFromMeasurementInfo()`** in **`acquire.cpp`** reads **`Tdc1EventRate`** / **`Tdc2EventRate`** / legacy **`TdcEventRate`** from measurement JSON by field presence, not stale **`SDKVersion_RBV`** (fixes **`Tdc1EvtRate_RBV`** stuck at zero and log spam when version was **`unknown`** at IOC start).
 
 
