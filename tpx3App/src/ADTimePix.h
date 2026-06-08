@@ -933,6 +933,9 @@ class ADTimePix : public ADDriver{
 
         //function that starts image acquisition
         asynStatus acquireStart();
+        asynStatus ensurePreviewTcpPortsFree(bool forceRotate = false);
+        /** Re-parse PrvImg/Img TCP path PVs into host/port used by worker threads. */
+        void syncTcpStreamEndpoints();
 
         //function that stops image acquisition
         asynStatus acquireStop();
