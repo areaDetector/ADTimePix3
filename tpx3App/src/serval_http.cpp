@@ -138,6 +138,20 @@ static string jsonStringOr(const json& j, const string& def = "") {
     return strip_quotes(j.dump());
 }
 
+static void stripTpx3DetectorConfigFields(json& config_j) {
+    static const char* keys[] = {
+        "TriggerDelay",
+        "GlobalTimestampInterval",
+        "Tdc",
+        "ExternalReferenceClock",
+        "PeriphClk80",
+        nullptr,
+    };
+    for (const char** key = keys; *key != nullptr; ++key) {
+        config_j.erase(*key);
+    }
+}
+
 static bool parseThresholdList(const string& text, json& out) {
     out = json::array();
     std::stringstream ss(text);
@@ -1463,13 +1477,12 @@ asynStatus ADTimePix::getServer(){
     cpr::Response r = ADTimePix3ServalHttp::get(server, 5000);
 
     if (r.status_code != 200) {
-    //    printf("Text server: %s\n", r.text.c_str());
-    //    printf("Header server: %s\n", r.header["Content-Type"].c_str());
-    //    printf("Error server: %s\n", r.error.message.c_str());
-    //    printf("Status code server: %li\n", r.status_code);
-    //    printf("Elapsed server: %li\n", r.elapsed);
-    //    printf("Reason server: %s\n", r.reason.c_str());
-    //    printf("Url server: %s\n", r.url.c_str());
+        // Before the first WriteData push, Serval has no destination; IOC init dbpf on Write*
+        // channel PVs triggers getServer() and Serval logs this as a known warning.
+        if (r.text.find("Destination is not set") != std::string::npos) {
+            FLOW("Serval destination not configured yet (expected before WriteData)");
+            return asynSuccess;
+        }
 
         setIntegerParam(ADTimePixDetConnected,0);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
@@ -2388,6 +2401,10 @@ asynStatus ADTimePix::initAcquisition(){
         setIntegerParam(ADTimePixDetConnected,1);
     //    printf("initAcquisition: %s\n", r.text.c_str());
 
+        if (detectorFamily_ == DetectorFamily::Unknown) {
+            (void)getDetector();
+        }
+
         json config_j = json::parse(r.text.c_str());
         //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
@@ -2457,40 +2474,44 @@ asynStatus ADTimePix::initAcquisition(){
         getIntegerParam(ADTimePixTriggerOut, &intNum);
         config_j["TriggerOut"] = intNum;
 
-        getDoubleParam(ADTimePixTriggerDelay, &doubleNum);
-        config_j["TriggerDelay"] = doubleNum;
-        getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
-        config_j["GlobalTimestampInterval"] = doubleNum;
+        if (detectorFamily_ != DetectorFamily::MPX3) {
+            getDoubleParam(ADTimePixTriggerDelay, &doubleNum);
+            config_j["TriggerDelay"] = doubleNum;
+            getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
+            config_j["GlobalTimestampInterval"] = doubleNum;
 
-        getIntegerParam(ADTimePixTdc0, &intNum);
-        json tdc;
-        tdc[0] = "P0123";
-        tdc[1] = "N0123";
-        tdc[2] = "PN0123";
-        tdc[3] = "P0";
-        tdc[4] = "N0";
-        tdc[5] = "PN0";
-        config_j["Tdc"][0] = tdc[intNum];
-        getIntegerParam(ADTimePixTdc1, &intNum);
-        tdc[0] = "P0123";
-        tdc[1] = "N0123";
-        tdc[2] = "PN0123";
-        tdc[3] = "P0";
-        tdc[4] = "N0";
-        tdc[5] = "PN0";
-        config_j["Tdc"][1] = tdc[intNum];
+            getIntegerParam(ADTimePixTdc0, &intNum);
+            json tdc;
+            tdc[0] = "P0123";
+            tdc[1] = "N0123";
+            tdc[2] = "PN0123";
+            tdc[3] = "P0";
+            tdc[4] = "N0";
+            tdc[5] = "PN0";
+            config_j["Tdc"][0] = tdc[intNum];
+            getIntegerParam(ADTimePixTdc1, &intNum);
+            tdc[0] = "P0123";
+            tdc[1] = "N0123";
+            tdc[2] = "PN0123";
+            tdc[3] = "P0";
+            tdc[4] = "N0";
+            tdc[5] = "PN0";
+            config_j["Tdc"][1] = tdc[intNum];
 
-        getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
-        json externalClock;
-        externalClock[0] = "false";
-        externalClock[1] = "true";
-        config_j["ExternalReferenceClock"] = externalClock[intNum];
+            getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
+            json externalClock;
+            externalClock[0] = "false";
+            externalClock[1] = "true";
+            config_j["ExternalReferenceClock"] = externalClock[intNum];
 
-        getIntegerParam(ADTimePixPeriphClk80, &intNum);
-        json peripheralClock80;
-        peripheralClock80[0] = "false";
-        peripheralClock80[1] = "true";
-        config_j["PeriphClk80"] = peripheralClock80[intNum];
+            getIntegerParam(ADTimePixPeriphClk80, &intNum);
+            json peripheralClock80;
+            peripheralClock80[0] = "false";
+            peripheralClock80[1] = "true";
+            config_j["PeriphClk80"] = peripheralClock80[intNum];
+        } else {
+            stripTpx3DetectorConfigFields(config_j);
+        }
 
         getIntegerParam(ADTimePixLogLevel, &intNum);
         config_j["LogLevel"] = intNum;

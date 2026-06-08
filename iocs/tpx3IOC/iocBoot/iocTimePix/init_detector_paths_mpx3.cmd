@@ -1,4 +1,4 @@
-# Medipix3 channel/path defaults (frame + two-layer preview). Safe when detector is offline.
+# Medipix3 channel/path defaults (single preview TCP channel). Safe when detector is offline.
 # Reference: ADMediPix3 configs/serval/serval_mpx3.json
 
 dbpf("$(PREFIX)cam1:RawFilePath","file:/media/nvme/raw")
@@ -25,7 +25,7 @@ dbpf("$(PREFIX)cam1:Img1FileFmt","0")
 dbpf("$(PREFIX)cam1:Img1FileMode","0")
 dbpf("$(PREFIX)cam1:WriteImg1","0")
 
-# Two-layer preview: counter 0 (frame) and counter 1 (running sum)
+# Single-layer preview on TCP (frame channel). PrvImg1 disabled until driver has a worker.
 dbpf("$(PREFIX)cam1:PrvImgFilePath","tcp://listen@localhost:8088")
 dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImgFileFmt","3")
@@ -36,7 +36,8 @@ dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")
 dbpf("$(PREFIX)cam1:PrvImgQueueSize","16")
 dbpf("$(PREFIX)cam1:WritePrvImg","1")
 
-dbpf("$(PREFIX)cam1:PrvImg1FilePath","tcp://listen@localhost:8089")
+# Second preview layer (running sum) — disabled for v1: no IOC TCP consumer; Serval buffer fills on 8089
+dbpf("$(PREFIX)cam1:PrvImg1FilePath","file:/media/nvme/prv1")
 dbpf("$(PREFIX)cam1:PrvImg1FileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImg1FileFmt","3")
 dbpf("$(PREFIX)cam1:PrvImg1FileMode","0")
@@ -44,7 +45,7 @@ dbpf("$(PREFIX)cam1:PrvImg1IntgSize","-1")
 dbpf("$(PREFIX)cam1:PrvImg1IntgMode","0")
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")
 dbpf("$(PREFIX)cam1:PrvImg1QueueSize","16")
-dbpf("$(PREFIX)cam1:WritePrvImg1","1")
+dbpf("$(PREFIX)cam1:WritePrvImg1","0")
 
 dbpf("$(PREFIX)cam1:PrvPeriod","0.05")
 dbpf("$(PREFIX)cam1:PrvSmplgMode","0")
@@ -52,6 +53,9 @@ dbpf("$(PREFIX)cam1:PrvSmplgMode","0")
 # ToF histogram preview is out of scope for Medipix3 v1
 dbpf("$(PREFIX)cam1:WritePrvHst","0")
 
-# BPC/DACS upload omitted for Medipix3 — TPX3 demo files are incompatible (pixel count,
-# DAC names). Set paths and dbpf WriteBPCFile/WriteDACSFile from iocsh when MPX3
-# calibration files are available on the SERVAL host.
+# Medipix3 calibration (paths must end with / — driver concatenates path + filename).
+# Files must be readable on the SERVAL host at the resolved absolute path.
+dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/mpx3/")
+dbpf("$(PREFIX)cam1:BPCFileName","eq-01.bpc")
+dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/mpx3/")
+dbpf("$(PREFIX)cam1:DACSFileName","eq-01.dacs")
