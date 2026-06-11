@@ -34,6 +34,7 @@ dbpf("$(PREFIX)cam1:PrvImgIntgSize","1")
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","0")
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")
 dbpf("$(PREFIX)cam1:PrvImgQueueSize","16")
+dbpf("$(PREFIX)cam1:PrvImgThs","0,1,2,3,4,5,6,7")
 dbpf("$(PREFIX)cam1:WritePrvImg","1")
 
 # Second preview layer (running sum) — disabled for v1: no IOC TCP consumer; Serval buffer fills on 8089

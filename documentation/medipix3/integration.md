@@ -41,7 +41,7 @@ Defaults:
 - `count` image mode with Serval `Thresholds[]` when family is MPX3
 - BPC/DACS defaults: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
-**Phoebus:** open `tpx3App/op/bob/MediPix3/MediPix3.bob` with the same `P`/`R` macros (preview TCP config in `Acquire/Mpx3PreviewChannels.bob`, live images in `Acquire/Mpx3PrvImgMonitor.bob`).
+**Phoebus:** open `tpx3App/op/bob/MediPix3/MediPix3.bob` with the same `P`/`R` macros (preview TCP config in `Acquire/Mpx3PreviewChannels.bob`, live images in `Acquire/Mpx3PrvImgMonitor.bob`). For `PrvImgThs` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
 
 ## Emulator workflow
 
@@ -118,7 +118,7 @@ So the “two images” on **two TCP ports** are **current frame vs time-integra
 
 **EPICS v1:** one preview TCP consumer routes by **`thresholdID`**: address **0** (threshold 0) and **8** (threshold 1). Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start. `BothCounters_RBV` from detector config. A second preview TCP channel (`PrvImg1` / 8089) still needs a worker thread.
 
-Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver today reads only a subset and does not demux by `thresholdID` or route integrated preview from 8089.
+Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver parses header fields and demuxes by **`thresholdID`** to NDArray addresses 0 and 8; integrated preview from 8089 still requires a `PrvImg1` worker (Phase 2).
 
 ## Preview TCP ports and acquisition
 

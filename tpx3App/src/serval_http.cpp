@@ -170,6 +170,8 @@ static bool parseThresholdList(const string& text, json& out) {
     return !out.empty();
 }
 
+static const char kDefaultThresholdList[] = "0,1,2,3,4,5,6,7";
+
 cpr::Response ADTimePix::servalHttpGetAuthOnly(const std::string& url) {
     return ADTimePix3ServalHttp::getAuthOnly(url);
 }
@@ -1955,6 +1957,9 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
         }
         std::string thsStr;
         if (getParameterSafely(thsParam, thsStr) == asynSuccess) {
+            if (thsStr.empty()) {
+                thsStr = kDefaultThresholdList;
+            }
             json thsArr;
             if (parseThresholdList(thsStr, thsArr)) {
                 const int channelIndex = isChannel1 ? 1 : 0;

@@ -110,7 +110,7 @@ Code references: `processPrvImgDataLine()` / `processImgDataLine()` in `tpx3App/
 ### Phase 3 — Configuration alignment
 
 - [ ] Family defaults for `PrvImgThs` when `BothCounters=1` (per Erik).
-- [ ] Phoebus: dual image widgets or documented PVA addresses.
+- [x] Phoebus: dual image widgets (`Mpx3PrvImgMonitor.bob`, Pva1/Pva2).
 
 ---
 

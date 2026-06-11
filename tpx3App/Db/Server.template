@@ -1169,6 +1169,7 @@ record(waveform, "$(P)$(R)PrvImgThs")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMGTHS")
     field(FTVL, "CHAR")
     field(NELM, "256")
+    field(VAL, "0,1,2,3,4,5,6,7")
     info(autosaveFields, "VAL")
 }
 record(waveform, "$(P)$(R)PrvImgThs_RBV")

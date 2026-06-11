@@ -343,8 +343,24 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
     status = parseAsynUser(pasynUser, &function, &addr, &paramName);
     if (status != asynSuccess) return status;
 
+    const bool isThresholdList = (function == ADTimePixImgThs || function == ADTimePixImg1Ths ||
+                                  function == ADTimePixPrvImgThs || function == ADTimePixPrvImg1Ths);
+    std::string octetValue(value, nChars);
+    const auto nullPos = octetValue.find('\0');
+    if (nullPos != std::string::npos) {
+        octetValue.resize(nullPos);
+    }
+    if (isThresholdList) {
+        const auto first = octetValue.find_first_not_of(" \t");
+        if (first == std::string::npos) {
+            LOG_ARGS("Ignoring empty threshold list write for paramName=%s", paramName);
+            *nActual = nChars;
+            return asynSuccess;
+        }
+    }
+
     /* Set the parameter in the parameter library. */
-    status = (asynStatus)setStringParam(addr, function, (char *)value);
+    status = (asynStatus)setStringParam(addr, function, octetValue.c_str());
 
     if (function == ADTimePixBPCFilePath)  {
         status = this->checkBPCPath();        
