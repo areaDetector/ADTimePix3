@@ -41,6 +41,8 @@ Defaults:
 - `count` image mode with Serval `Thresholds[]` when family is MPX3
 - BPC/DACS defaults: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
+**Phoebus:** open `tpx3App/op/bob/MediPix3/MediPix3.bob` with the same `P`/`R` macros (preview TCP config in `Acquire/Mpx3PreviewChannels.bob`, live images in `Acquire/Mpx3PrvImgMonitor.bob`).
+
 ## Emulator workflow
 
 1. Start Serval with a Medipix3 emulator profile (see ADMediPix3 `configs/serval/`).

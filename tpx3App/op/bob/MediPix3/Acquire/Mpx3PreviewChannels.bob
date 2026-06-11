@@ -582,6 +582,36 @@
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
+      <name>PrvImgThsLbl</name>
+      <text>Thresholds</text>
+      <x>300</x>
+      <y>250</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PrvImgThs</name>
+      <pv_name>$(P)$(R)PrvImgThs</pv_name>
+      <x>390</x>
+      <y>248</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>Serval Preview.ImageChannels[0].Thresholds (comma-separated, e.g. 0,1,2,3,4,5,6,7)</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvImgThsRBV</name>
+      <pv_name>$(P)$(R)PrvImgThs_RBV</pv_name>
+      <x>390</x>
+      <y>228</y>
+      <width>140</width>
+      <height>18</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
       <name>HeaderMetaTitle</name>
       <text>jsonimage header (live)</text>
       <x>10</x>

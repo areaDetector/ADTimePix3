@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Mpx3PrvImgMonitor</name>
+  <width>1420</width>
+  <height>980</height>
+  <widget type="group" version="3.0.0">
+    <name>Mpx3_PrvImg_Monitor</name>
+    <width>1400</width>
+    <height>970</height>
+    <widget type="label" version="2.0.0">
+      <name>Title</name>
+      <text>Medipix3 Preview Image (PrvImg) — count mode, dual threshold</text>
+      <x>10</x>
+      <y>10</y>
+      <width>1380</width>
+      <height>40</height>
+      <font>
+        <font family="Liberation Sans" style="BOLD" size="22.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="255" green="255" blue="255">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="34" green="120" blue="70">
+        </color>
+      </background_color>
+      <transparent>false</transparent>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>ConnectionStatus</name>
+      <x>10</x>
+      <y>60</y>
+      <width>1380</width>
+      <height>95</height>
+      <widget type="label" version="2.0.0">
+        <name>ConnectionStatusLabel</name>
+        <text>TCP / detector status</text>
+        <x>10</x>
+        <y>8</y>
+        <width>180</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="led" version="2.0.0">
+        <name>WritePrvImgLED</name>
+        <pv_name>$(P)$(R)WritePrvImg_RBV</pv_name>
+        <x>20</x>
+        <y>38</y>
+        <width>24</width>
+        <height>24</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>WritePrvImgLabel</name>
+        <text>PrvImg</text>
+        <x>50</x>
+        <y>40</y>
+        <width>55</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>PrvImgFilePathDisplay</name>
+        <pv_name>$(P)$(R)PrvImgFilePath_RBV</pv_name>
+        <x>120</x>
+        <y>35</y>
+        <width>520</width>
+        <height>28</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>6</format>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>BothCntLbl</name>
+        <text>BothCounters</text>
+        <x>660</x>
+        <y>40</y>
+        <width>90</width>
+        <horizontal_alignment>2</horizontal_alignment>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>BothCntRBV</name>
+        <pv_name>$(P)$(R)BothCounters_RBV</pv_name>
+        <x>760</x>
+        <y>35</y>
+        <width>55</width>
+        <height>28</height>
+        <format>6</format>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ThIdLbl</name>
+        <text>thresholdID</text>
+        <x>830</x>
+        <y>40</y>
+        <width>90</width>
+        <horizontal_alignment>2</horizontal_alignment>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ThIdRBV</name>
+        <pv_name>$(P)$(R)PrvImgThresholdID_RBV</pv_name>
+        <x>930</x>
+        <y>35</y>
+        <width>45</width>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>IntgHdrLbl</name>
+        <text>integrationSize</text>
+        <x>990</x>
+        <y>40</y>
+        <width>100</width>
+        <horizontal_alignment>2</horizontal_alignment>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>IntgHdrRBV</name>
+        <pv_name>$(P)$(R)PrvImgIntegrationSize_RBV</pv_name>
+        <x>1100</x>
+        <y>35</y>
+        <width>45</width>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FamilyLbl</name>
+        <text>Family</text>
+        <x>1160</x>
+        <y>40</y>
+        <width>50</width>
+        <horizontal_alignment>2</horizontal_alignment>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FamilyRBV</name>
+        <pv_name>$(P)$(R)DetectorFamily_RBV</pv_name>
+        <x>1220</x>
+        <y>35</y>
+        <width>60</width>
+        <height>28</height>
+        <format>6</format>
+      </widget>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Image0Title</name>
+      <text>threshold 0 — PVA $(P)Pva1:Image (NDArray addr 0 / image1)</text>
+      <x>20</x>
+      <y>165</y>
+      <width>660</width>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Image1Title</name>
+      <text>threshold 1 — PVA $(P)Pva2:Image (NDArray addr 8 / imageTh1)</text>
+      <x>720</x>
+      <y>165</y>
+      <width>660</width>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="image" version="2.0.0">
+      <name>Image_Th0</name>
+      <pv_name>pva://$(P)Pva1:Image</pv_name>
+      <x>20</x>
+      <y>190</y>
+      <width>660</width>
+      <height>660</height>
+      <color_map>
+        <name>JET</name>
+      </color_map>
+      <x_axis>
+        <visible>true</visible>
+        <title>X</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y</title>
+        <minimum>512.0</minimum>
+        <maximum>0.0</maximum>
+      </y_axis>
+      <data_width>512</data_width>
+      <data_height>512</data_height>
+      <tooltip>Live preview when BothCounters=Yes or single threshold (ID 0)</tooltip>
+    </widget>
+    <widget type="image" version="2.0.0">
+      <name>Image_Th1</name>
+      <pv_name>pva://$(P)Pva2:Image</pv_name>
+      <x>720</x>
+      <y>190</y>
+      <width>660</width>
+      <height>660</height>
+      <color_map>
+        <name>JET</name>
+      </color_map>
+      <x_axis>
+        <visible>true</visible>
+        <title>X</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y</title>
+        <minimum>512.0</minimum>
+        <maximum>0.0</maximum>
+      </y_axis>
+      <data_width>512</data_width>
+      <data_height>512</data_height>
+      <tooltip>Second threshold stream when BothCounters=Yes (requires detector BothCounters config)</tooltip>
+    </widget>
+    <widget type="group" version="3.0.0">
+      <name>FrameMetadata</name>
+      <x>10</x>
+      <y>865</y>
+      <width>1380</width>
+      <height>95</height>
+      <widget type="label" version="2.0.0">
+        <name>FrameMetadataLabel</name>
+        <text>Frame metadata (jsonimage header)</text>
+        <x>10</x>
+        <y>5</y>
+        <width>240</width>
+        <background_color>
+          <color red="240" green="240" blue="240">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FrameNumberLabel</name>
+        <text>Frame #</text>
+        <x>20</x>
+        <y>40</y>
+        <width>60</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FrameNumberDisplay</name>
+        <pv_name>$(P)$(R)PrvImgFrameNumber_RBV</pv_name>
+        <x>85</x>
+        <y>35</y>
+        <width>100</width>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>AcqRateLabel</name>
+        <text>Rate (Hz)</text>
+        <x>210</x>
+        <y>40</y>
+        <width>70</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>AcqRateDisplay</name>
+        <pv_name>$(P)$(R)PrvImgAcqRate_RBV</pv_name>
+        <x>290</x>
+        <y>35</y>
+        <width>90</width>
+        <height>28</height>
+        <precision>3</precision>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>SizeXLbl</name>
+        <text>SizeX</text>
+        <x>400</x>
+        <y>40</y>
+        <width>50</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>SizeXDisplay</name>
+        <pv_name>$(P)$(R)SizeX_RBV</pv_name>
+        <x>460</x>
+        <y>35</y>
+        <width>70</width>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>SizeYLbl</name>
+        <text>SizeY</text>
+        <x>550</x>
+        <y>40</y>
+        <width>50</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>SizeYDisplay</name>
+        <pv_name>$(P)$(R)SizeY_RBV</pv_name>
+        <x>610</x>
+        <y>35</y>
+        <width>70</width>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>ArrayCounterLabel</name>
+        <text>ArrayCounter</text>
+        <x>700</x>
+        <y>40</y>
+        <width>90</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ArrayCounterDisplay</name>
+        <pv_name>$(P)$(R)ArrayCounter_RBV</pv_name>
+        <x>800</x>
+        <y>35</y>
+        <width>100</width>
+        <height>28</height>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>StatusLbl</name>
+        <text>ADStatus</text>
+        <x>920</x>
+        <y>40</y>
+        <width>70</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>StatusDisplay</name>
+        <pv_name>$(P)$(R)Status_RBV</pv_name>
+        <x>1000</x>
+        <y>35</y>
+        <width>360</width>
+        <height>28</height>
+        <format>6</format>
+      </widget>
+    </widget>
+  </widget>
+</display>

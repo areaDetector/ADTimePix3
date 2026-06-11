@@ -42,6 +42,10 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 NDStdArraysConfigure("ImageTh1", 3, 0, "$(PORT)", 8)
 dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageTh1:,PORT=ImageTh1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=20000000")
 
+# MPX3 dual threshold: PVA for NDArray addr 8 (imageTh1 / threshold 1)
+NDPvaConfigure("PVA2", $(QSIZE), 0, "$(PORT)", 8, "$(PREFIX)Pva2:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva2:, PORT=PVA2,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 
 set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")

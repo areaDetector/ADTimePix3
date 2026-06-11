@@ -132,7 +132,7 @@
     <actions>
       <action type="open_display">
         <description>Preview image monitor</description>
-        <file>../Acquire/PrvImgMonitor.bob</file>
+        <file>Acquire/Mpx3PrvImgMonitor.bob</file>
         <target>tab</target>
       </action>
     </actions>
