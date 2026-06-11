@@ -37,7 +37,7 @@ Defaults:
 - asyn port `MPX3`
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
 - single-layer preview on TCP port 8088 (frame channel; port rotates on repeat acquire)
-- `PrvImg1` (running sum) disabled until a driver TCP worker exists
+- `PrvImg1` (integrated preview on second TCP) disabled until a driver TCP worker exists
 - `count` image mode with Serval `Thresholds[]` when family is MPX3
 - BPC/DACS defaults: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
@@ -76,7 +76,9 @@ Serval `GET http://localhost:8081/` shows `Server.Destination`:
 | `Preview.ImageChannels[1]` (`PrvImg1`) | **No** — no worker thread yet | `WritePrvImg1=0` |
 | `Image[]` (main image channel) | Only if `WriteImg=1` and TCP + accumulation | `WriteImg=0` (file path unused) |
 
-The reference `serval_mpx3.json` configures **two preview layers** (frame + running sum). For EPICS v1, enable only the first preview TCP channel — matching what you validated in Phoebus FileWrite. A second preview TCP stream with no reader fills Serval’s queue (`Preview buffer full` on 8089) and breaks repeat acquire.
+The reference `serval_mpx3.json` and the **Serval manual** (destination example, §4 / pp. 18–19) configure **two preview TCP streams**: current frame and an image **integrated from the start of the measurement**. For EPICS v1, enable only the first preview TCP channel — matching what you validated in Phoebus FileWrite. A second preview TCP stream with no reader fills Serval’s queue (`Preview buffer full` on 8089) and breaks repeat acquire.
+
+**Serval manual** (`20251202_ASIServer_TPX3_manual_V4.1.3.pdf`, table 4.3, pp. 19–20): `IntegrationSize` **0 or 1** = no integration; **-1** = integrate all preview samples **from measurement start**; **2…32** = integrate over the last *n* images. `IntegrationMode` is **sum**, **average**, or **last** (ASI’s two-channel example uses **`last`** on 8089, not sum).
 
 After a clean IOC start, confirm Serval shows one preview channel:
 
@@ -98,7 +100,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 
 ## How Medipix3 preview images differ from Timepix3
 
-**Vendor notes (ASI):** Erik indicates that with **`BothCounters`** enabled, Serval sends **two separate jsonimage messages** (low/first threshold, then high/second); Accos uses the **threshold index in the image header**. That model may differ from the frame-vs-running-sum split in `serval_mpx3.json`. See **[preview-dual-threshold.md](preview-dual-threshold.md)** for correspondence, open questions, and the implementation plan. *v1 IOC uses single-channel preview only.*
+**Vendor notes (ASI):** Erik indicates that with **`BothCounters`** enabled, Serval sends **two separate jsonimage messages** (low/first threshold, then high/second); Accos uses the **threshold index in the image header** (manual names the field **`thresholdID`** — see below). That model is separate from the **frame vs integrated-preview** split on two TCP ports (8088 / 8089). See **[preview-dual-threshold.md](preview-dual-threshold.md)** for correspondence, open questions, and the implementation plan. *v1 IOC uses single-channel preview only.*
 
 Serval does **not** send “two threshold images” on one TCP socket **in the v1 EPICS profile** (one consumer, no header demux yet). Configuration controls what each **preview channel** produces:
 
@@ -106,15 +108,15 @@ Serval does **not** send “two threshold images” on one TCP socket **in the v
 |---------|-----------------|-----------------|
 | Counter / threshold indices | `Thresholds: [0..7]` — eight virtual counters | Often ToT/TDC modes; different `Mode` strings |
 | Preview `Mode` | `count` — pixel values are counter hits | Often `tot`, `count`, etc. |
-| Dual-layer preview (reference `serval_mpx3.json`) | **Two TCP channels**, not one stream with two images | Usually one preview TCP channel |
-| Channel 0 | `IntegrationSize: 1` — **current frame** count image | Frame preview |
-| Channel 1 | `IntegrationSize: -1`, `IntegrationMode: sum` — **running sum** | Optional second preview (TPX3 often uses disk for PrvImg1) |
+| Dual-layer preview (Serval manual §4, `serval_mpx3.json`) | **Two TCP channels** — frame vs integrated-from-measurement-start | Usually one preview TCP channel |
+| Channel 0 (e.g. 8088) | `IntegrationSize: 0` or `1` — **current frame** (no integration) | Frame preview |
+| Channel 1 (e.g. 8089) | `IntegrationSize: -1` — **integrated from measurement start**; ASI example uses `IntegrationMode: last` (non-zero overwrite). IOC default for disabled `PrvImg1` uses `IntgMode=sum` if enabled — choose mode to match intent | Optional second preview (`PrvImg1`) |
 
-So the “two images” in the MPX3 reference config are **frame vs running-sum**, both in `count` mode with the same `Thresholds` list. They are **not** automatically “low threshold vs high threshold” planes — those would be selected by which indices appear in `Thresholds` and how many preview channels you configure.
+So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not automatically “low threshold vs high threshold”. Dual-threshold images (if `BothCounters`) are a **header** concern (`thresholdID`) and may arrive as consecutive jsonimage messages on one socket.
 
 **EPICS v1:** one preview TCP consumer (`PrvImg` → NDArray address 0). You see one jsonimage stream (one frame type). A second channel needs `PrvImg1` worker support or an external TCP client.
 
-Each jsonimage line on the wire is: JSON header (`width`, `height`, `frameNumber`, …) + binary pixel array. The driver maps that to one NDArray; it does not demux multiple threshold planes from a single Serval channel.
+Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver today reads only a subset and does not demux by `thresholdID` or route integrated preview from 8089.
 
 ## Preview TCP ports and acquisition
 
