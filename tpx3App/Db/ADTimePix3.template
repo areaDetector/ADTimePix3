@@ -178,8 +178,10 @@ record(bi, "$(P)$(R)CapImgThresholds_RBV"){
 record(bi, "$(P)$(R)BothCounters_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOTH_COUNTERS")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
   field(SCAN, "I/O Intr")
-  field(DESC, "Detector Config BothCounters (MPX3 dual threshold)")
+  field(DESC, "MPX3 BothCounters from detector config")
 }
 record(stringin, "$(P)$(R)BChBoardId_RBV"){
   field(DTYP, "asynOctetRead")

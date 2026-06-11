@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Mpx3Status</name>
+  <width>350</width>
+  <height>150</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="rectangle" version="2.0.0">
+    <name>Border</name>
+    <width>350</width>
+    <height>150</height>
+    <line_width>1</line_width>
+    <transparent>true</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>Medipix3 Tools</text>
+    <x>95</x>
+    <y>3</y>
+    <width>160</width>
+    <font>
+      <font family="Sans" style="REGULAR" size="11.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DetStatusBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Detector status</description>
+        <file>../Detector/TimePixDetectorHealth.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Status</text>
+    <x>45</x>
+    <y>30</y>
+    <width>65</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>LoadBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Load BPC/DACS</description>
+        <file>../Setup/FileBPCdacs.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Load</text>
+    <x>45</x>
+    <y>55</y>
+    <width>65</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>DetConfigBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Detector config</description>
+        <file>../Acquire/DetectorConfig.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>DetConfig</text>
+    <x>205</x>
+    <y>30</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>PreviewWriterBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Medipix3 preview TCP channels</description>
+        <file>Acquire/Mpx3ServerFileWriter.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Preview</text>
+    <x>205</x>
+    <y>55</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>MaskBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Pixel mask</description>
+        <file>../Mask/Mask.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Mask</text>
+    <x>120</x>
+    <y>55</y>
+    <width>70</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>PrvImgBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Preview image monitor</description>
+        <file>../Acquire/PrvImgMonitor.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>PrvImg</text>
+    <x>45</x>
+    <y>85</y>
+    <width>65</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>EmulatorBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Medipix3 emulator</description>
+        <file>../Emulator/emulator.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Emulator</text>
+    <x>120</x>
+    <y>85</y>
+    <width>70</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>FamilyRBV</name>
+    <pv_name>$(P)$(R)DetectorFamily_RBV</pv_name>
+    <x>205</x>
+    <y>85</y>
+    <width>80</width>
+    <height>20</height>
+    <format>6</format>
+    <tooltip>Runtime detector family (expect MPX3)</tooltip>
+  </widget>
+</display>

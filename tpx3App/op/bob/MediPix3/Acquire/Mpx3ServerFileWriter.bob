@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Mpx3ServerFileWriter</name>
+  <width>1130</width>
+  <height>760</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="rectangle" version="2.0.0">
+    <name>TitleBar</name>
+    <y>5</y>
+    <width>1120</width>
+    <height>26</height>
+    <line_width>0</line_width>
+    <line_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </line_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>Medipix3 Serval Preview Writer — $(P)$(R)</text>
+    <y>6</y>
+    <width>1120</width>
+    <height>25</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>PreviewChannels</name>
+    <file>Mpx3PreviewChannels.bob</file>
+    <x>5</x>
+    <y>35</y>
+    <width>1120</width>
+    <height>720</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+</display>

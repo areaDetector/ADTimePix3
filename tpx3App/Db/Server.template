@@ -1205,9 +1205,9 @@ record(longin, "$(P)$(R)PrvImgIntegrationSize_RBV")
     field(SCAN, "I/O Intr")
 }
 
-record(longin, "$(P)$(R)PrvImgLogHeaders")
+record(longout, "$(P)$(R)PrvImgLogHeaders")
 {
-    field(DESC, "Log N jsonimage headers per acquire (0=off)")
+    field(DESC, "Jsonimage headers logged per acquire")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_LOG_HEADERS")
     field(PINI, "YES")
