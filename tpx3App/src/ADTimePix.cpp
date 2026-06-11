@@ -1066,10 +1066,10 @@ void ADTimePix::resetPrvHstAccumulation() {
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
-/* maxAddr=8: eight asyn addr lists, indices 0..7 — PrvImg=0, Img=1, Img sum=2, Img sumN=3,
- * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF bin centers (ms)=7 */
+/* maxAddr=9: asyn addr lists 0..8 — PrvImg thresh0=0, Img=1, Img sum=2, Img sumN=3,
+ * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF=7, PrvImg thresh1=8 */
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
-    : ADDriver(portName, 8, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+    : ADDriver(portName, 9, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK | asynFlags,
@@ -1144,6 +1144,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixCapTofHistString,      asynParamInt32, &ADTimePixCapTofHist);
     createParam(ADTimePixCapDualPreviewString,  asynParamInt32, &ADTimePixCapDualPreview);
     createParam(ADTimePixCapImgThresholdsString, asynParamInt32, &ADTimePixCapImgThresholds);
+    createParam(ADTimePixBothCountersString,     asynParamInt32, &ADTimePixBothCounters);
 
     createParam(ADTimePixBoardsIDString,        asynParamOctet, &ADTimePixBoardsID);
     createParam(ADTimePixBoardsIPString,        asynParamOctet, &ADTimePixBoardsIP);
@@ -1300,6 +1301,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgFrameNumberString,            asynParamInt32, &ADTimePixPrvImgFrameNumber);
     createParam(ADTimePixPrvImgTimeAtFrameString,            asynParamFloat64, &ADTimePixPrvImgTimeAtFrame);
     createParam(ADTimePixPrvImgAcqRateString,                asynParamFloat64, &ADTimePixPrvImgAcqRate);
+    createParam(ADTimePixPrvImgThresholdIDString,            asynParamInt32, &ADTimePixPrvImgThresholdID);
+    createParam(ADTimePixPrvImgIntegrationSizeString,        asynParamInt32, &ADTimePixPrvImgIntegrationSize);
+    createParam(ADTimePixPrvImgLogHeadersString,             asynParamInt32, &ADTimePixPrvImgLogHeaders);
     // Img TCP streaming metadata
     createParam(ADTimePixImgFrameNumberString,               asynParamInt32, &ADTimePixImgFrameNumber);
     createParam(ADTimePixImgTimeAtFrameString,               asynParamFloat64, &ADTimePixImgTimeAtFrame);
@@ -1446,6 +1450,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImgAcquisitionRate_ = 0.0;
     prvImgLastRateUpdateTime_ = 0.0;
     prvImgFirstFrameReceived_ = false;
+    prvImgJsonHeadersRemaining_ = 0;
     
     // Initialize TCP streaming for Img channel
     imgNetworkClient_.reset();
@@ -1567,6 +1572,10 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setIntegerParam(ADTimePixCapTofHist, 0);
     setIntegerParam(ADTimePixCapDualPreview, 0);
     setIntegerParam(ADTimePixCapImgThresholds, 0);
+    setIntegerParam(ADTimePixBothCounters, 0);
+    setIntegerParam(ADTimePixPrvImgThresholdID, 0);
+    setIntegerParam(ADTimePixPrvImgIntegrationSize, 0);
+    setIntegerParam(ADTimePixPrvImgLogHeaders, 3);
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 

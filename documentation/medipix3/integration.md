@@ -114,7 +114,7 @@ Serval does **not** send “two threshold images” on one TCP socket **in the v
 
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not automatically “low threshold vs high threshold”. Dual-threshold images (if `BothCounters`) are a **header** concern (`thresholdID`) and may arrive as consecutive jsonimage messages on one socket.
 
-**EPICS v1:** one preview TCP consumer (`PrvImg` → NDArray address 0). You see one jsonimage stream (one frame type). A second channel needs `PrvImg1` worker support or an external TCP client.
+**EPICS v1:** one preview TCP consumer routes by **`thresholdID`**: address **0** (threshold 0) and **8** (threshold 1). Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start. `BothCounters_RBV` from detector config. A second preview TCP channel (`PrvImg1` / 8089) still needs a worker thread.
 
 Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver today reads only a subset and does not demux by `thresholdID` or route integrated preview from 8089.
 

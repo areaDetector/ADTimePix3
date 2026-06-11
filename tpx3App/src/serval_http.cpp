@@ -1392,6 +1392,9 @@ asynStatus ADTimePix::getDetector(){
         setDoubleParam(ADTimePixGlobalTimestampInterval, jsonDoubleOr(cfg.value("GlobalTimestampInterval", json())));
         setIntegerParam(ADTimePixExternalReferenceClock, jsonBoolOr(cfg.value("ExternalReferenceClock", json())) ? 1 : 0);
         setIntegerParam(ADTimePixLogLevel,               jsonIntOr(cfg["LogLevel"]));
+        if (cfg.contains("BothCounters")) {
+            setIntegerParam(ADTimePixBothCounters, jsonBoolOr(cfg["BothCounters"]) ? 1 : 0);
+        }
 
 
         // Detector Chips: Chip0

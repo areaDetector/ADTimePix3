@@ -27,6 +27,28 @@ using json = nlohmann::json;
 
 extern const char* driverName;
 
+namespace {
+
+/** Serval jsonimage header: threshold index (manual field name thresholdID). */
+static int jsonImageThresholdId(const json& j) {
+    if (j.contains("thresholdID") && j["thresholdID"].is_number_integer()) {
+        return j["thresholdID"].get<int>();
+    }
+    if (j.contains("thresholdId") && j["thresholdId"].is_number_integer()) {
+        return j["thresholdId"].get<int>();
+    }
+    if (j.contains("thresholdIndex") && j["thresholdIndex"].is_number_integer()) {
+        return j["thresholdIndex"].get<int>();
+    }
+    return 0;
+}
+
+static int prvImgNdarrayAddressForThreshold(int thresholdId) {
+    return (thresholdId == 1) ? 8 : 0;
+}
+
+}  // namespace
+
 bool ADTimePix::parseTcpPath(const std::string& filePath, std::string& host, int& port) {
     // Parse tcp://listen@hostname:port or tcp://hostname:port
     // Examples: tcp://listen@localhost:8089, tcp://127.0.0.1:8089
@@ -1344,6 +1366,20 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         // Extract additional frame data
         int frame_number = j.value("frameNumber", 0);
         double time_at_frame = j.value("timeAtFrame", 0.0);
+        const int threshold_id = jsonImageThresholdId(j);
+        const int integration_size = j.value("integrationSize", 0);
+        const int ndArrayAddr = prvImgNdarrayAddressForThreshold(threshold_id);
+
+        if (prvImgJsonHeadersRemaining_ > 0) {
+            std::string headerLog = j.dump();
+            static constexpr size_t kMaxHeaderLog = 1024;
+            if (headerLog.size() > kMaxHeaderLog) {
+                headerLog.resize(kMaxHeaderLog);
+                headerLog += "...";
+            }
+            LOG_ARGS("PrvImg jsonimage header: %s", headerLog.c_str());
+            --prvImgJsonHeadersRemaining_;
+        }
         
         // Determine pixel format
         bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
@@ -1372,13 +1408,13 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         dims[2] = 0;
         
         NDArray *pImage = nullptr;
-        if (this->pArrays && this->pArrays[0]) {
-        pImage = this->pArrays[0];  
+        if (this->pArrays && ndArrayAddr >= 0 && ndArrayAddr < 9 && this->pArrays[ndArrayAddr]) {
+            pImage = this->pArrays[ndArrayAddr];
             pImage->release();
         }
         
-        this->pArrays[0] = this->pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
-        pImage = this->pArrays[0];
+        this->pArrays[ndArrayAddr] = this->pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
+        pImage = this->pArrays[ndArrayAddr];
         
         if (!pImage || !pImage->pData) {
             ERR("Failed to allocate NDArray or NDArray has no data pointer");
@@ -1473,6 +1509,8 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         // Set PrvImg metadata PVs
         setIntegerParam(ADTimePixPrvImgFrameNumber, frame_number);
         setDoubleParam(ADTimePixPrvImgTimeAtFrame, time_at_frame);
+        setIntegerParam(ADTimePixPrvImgThresholdID, threshold_id);
+        setIntegerParam(ADTimePixPrvImgIntegrationSize, integration_size);
         
         // Calculate acquisition rate
         epicsTimeStamp current_time;
@@ -1520,16 +1558,19 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         // Get attributes
         if (pImage->pAttributeList) {
             this->getAttributes(pImage->pAttributeList);
+            int thresholdIdAttr = threshold_id;
+            pImage->pAttributeList->add("ThresholdID", "Serval jsonimage thresholdID",
+                                        NDAttrInt32, &thresholdIdAttr);
         }
         
         // Call parameter callbacks to update EPICS PVs (thread-safe)
         callParamCallbacks();
         
-        // Trigger NDArray callbacks (thread-safe) - PrvImg channel uses address 0
+        // Trigger NDArray callbacks — addr 0 = threshold 0, addr 8 = threshold 1 (MPX3)
         int arrayCallbacks = 0;
         getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
         if (arrayCallbacks && pImage) {
-            doCallbacksGenericPointer(pImage, NDArrayData, 0);
+            doCallbacksGenericPointer(pImage, NDArrayData, ndArrayAddr);
         }
         
         LOG_ARGS("Processed PrvImg frame: width=%d, height=%d, format=%s, frame=%d", 

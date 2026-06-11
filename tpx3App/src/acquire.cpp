@@ -370,6 +370,13 @@ asynStatus ADTimePix::acquireStart(){
     this->callbackThreadId = epicsThreadCreateOpt("timePixCallback", timePixCallbackC, this, &opts);
     this->acquiring = true;
 
+    {
+        int logHeaders = 0;
+        getIntegerParam(ADTimePixPrvImgLogHeaders, &logHeaders);
+        prvImgJsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
+        prvImgFirstFrameReceived_ = false;
+    }
+
     // Path PV may have changed (port rotation or Phoebus WriteData); refresh before connect.
     syncTcpStreamEndpoints();
     

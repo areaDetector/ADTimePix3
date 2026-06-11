@@ -89,17 +89,17 @@ Code references: `processPrvImgDataLine()` / `processImgDataLine()` in `tpx3App/
 
 ### Phase 0 — Observe (low risk)
 
-- [ ] Log full jsonimage headers during acquire with dual-threshold emulator config.
-- [ ] Confirm field name, image order, and Preview vs Image behaviour.
-- [ ] Update this document and [integration.md](integration.md).
+- [x] Log full jsonimage headers during acquire (`PrvImgLogHeaders`, default 3 per acquire).
+- [x] Parse `thresholdID` and `integrationSize` from header; `PrvImgThresholdID_RBV`.
+- [x] Update this document and [integration.md](integration.md) (Serval manual alignment).
 
 ### Phase 1 — Header demux (dual threshold)
 
-- [ ] Parse **`thresholdID`** in `processPrvImgDataLine()` (and `processImgDataLine()` if applicable).
-- [ ] NDAttribute + RBV (`PrvImgThresholdID_RBV` or similar).
-- [ ] Route to NDArray addresses 0 and **8** (or agreed pair); document address map.
-- [ ] Read **`BothCounters`** in `getDetector()`; expose RBV.
-- [ ] MPX3 IOC: second `NDStdArrays`/PVA when `BothCounters_RBV=1`.
+- [x] Parse **`thresholdID`** in `processPrvImgDataLine()`.
+- [x] NDAttribute **`ThresholdID`** + RBV `PrvImgThresholdID_RBV`.
+- [x] Route to NDArray addresses **0** (threshold 0) and **8** (threshold 1); `maxAddr=9`.
+- [x] Read **`BothCounters`** in `getDetector()`; expose `BothCounters_RBV`.
+- [x] MPX3 IOC: second `NDStdArrays` (`imageTh1`) on address 8.
 
 ### Phase 2 — Optional second preview TCP (`PrvImg1`)
 

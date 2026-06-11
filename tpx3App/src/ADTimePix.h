@@ -83,6 +83,7 @@
 #define ADTimePixCapTofHistString           "TPX3_CAP_TOF_HIST"     // (asynInt32,         r)      ToF histogram stream supported
 #define ADTimePixCapDualPreviewString       "TPX3_CAP_DUAL_PREVIEW" // (asynInt32,         r)      Two preview image layers
 #define ADTimePixCapImgThresholdsString     "TPX3_CAP_IMG_THRESHOLDS" // (asynInt32,       r)      Image Thresholds[] in Serval config
+#define ADTimePixBothCountersString         "TPX3_BOTH_COUNTERS"      // (asynInt32,       r)      Detector Config BothCounters (MPX3 dual threshold)
 
 #define ADTimePixBoardsIDString             "TPX3_BOARDS_ID"        // (asynOctet,         r)      Boards->ChipboardId
 #define ADTimePixBoardsIPString             "TPX3_BOARDS_IP"        // (asynOctet,         r)      Boards->IpAddress
@@ -244,6 +245,9 @@
 #define ADTimePixPrvImgFrameNumberString        "TPX3_PRVIMG_FRAME_NUMBER"  // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixPrvImgTimeAtFrameString        "TPX3_PRVIMG_TIME_AT_FRAME" // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
 #define ADTimePixPrvImgAcqRateString            "TPX3_PRVIMG_ACQ_RATE"      // (asynFloat64,       r)      Calculated acquisition rate (fps)
+#define ADTimePixPrvImgThresholdIDString        "TPX3_PRVIMG_THRESHOLD_ID"  // (asynInt32,         r)      thresholdID from jsonimage header
+#define ADTimePixPrvImgIntegrationSizeString  "TPX3_PRVIMG_INTEGRATION_SIZE" // (asynInt32,      r)      integrationSize from jsonimage header
+#define ADTimePixPrvImgLogHeadersString         "TPX3_PRVIMG_LOG_HEADERS"   // (asynInt32,         r/w)    Log N jsonimage headers per acquire (0=off)
     // Img TCP streaming metadata (from jsonimage header)
 #define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixImgTimeAtFrameString           "TPX3_IMG_TIME_AT_FRAME"    // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
@@ -458,6 +462,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixCapTofHist;
         int ADTimePixCapDualPreview;
         int ADTimePixCapImgThresholds;
+        int ADTimePixBothCounters;
 
         int ADTimePixBoardsID;             
         int ADTimePixBoardsIP;
@@ -619,6 +624,9 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvImgFrameNumber;
         int ADTimePixPrvImgTimeAtFrame;
         int ADTimePixPrvImgAcqRate;
+        int ADTimePixPrvImgThresholdID;
+        int ADTimePixPrvImgIntegrationSize;
+        int ADTimePixPrvImgLogHeaders;
         // Img TCP streaming metadata
         int ADTimePixImgFrameNumber;
         int ADTimePixImgTimeAtFrame;
@@ -795,6 +803,12 @@ class ADTimePix : public ADDriver{
         double prvImgLastRateUpdateTime_;
         bool prvImgFirstFrameReceived_;
         static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
+        /** Remaining jsonimage headers to log this acquire (from TPX3_PRVIMG_LOG_HEADERS). */
+        int prvImgJsonHeadersRemaining_;
+        /** NDArray address for PrvImg threshold 0 preview (default stream). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD0 = 0;
+        /** NDArray address for PrvImg threshold 1 preview (MPX3 dual threshold). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD1 = 8;
         
         // TCP streaming for Img channel
         std::unique_ptr<NetworkClient> imgNetworkClient_;
