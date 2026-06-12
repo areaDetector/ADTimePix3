@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
   <width>470</width>
-  <height>960</height>
+  <height>1090</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -34,7 +34,7 @@
   <widget type="group" version="3.0.0">
     <name>PreviewGroup</name>
     <x>5</x>
-    <y>32</y>
+    <y>30</y>
     <width>460</width>
     <height>110</height>
     <widget type="label" version="2.0.0">
@@ -111,9 +111,9 @@
   <widget type="group" version="3.0.0">
     <name>DetectorConfigGroup</name>
     <x>5</x>
-    <y>148</y>
+    <y>145</y>
     <width>460</width>
-    <height>178</height>
+    <height>210</height>
     <widget type="label" version="2.0.0">
       <name>DetectorconfigTitle</name>
       <text>Detector config</text>
@@ -149,7 +149,7 @@
       <pv_name>$(P)$(R)BiasVolt_RBV</pv_name>
       <x>255</x>
       <y>28</y>
-      <width>210</width>
+      <width>170</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>BiasEnblLbl</name>
@@ -176,7 +176,7 @@
       <pv_name>$(P)$(R)BiasEnbl_RBV</pv_name>
       <x>255</x>
       <y>53</y>
-      <width>210</width>
+      <width>170</width>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
@@ -204,7 +204,7 @@
       <pv_name>$(P)$(R)ChainMode_RBV</pv_name>
       <x>255</x>
       <y>78</y>
-      <width>210</width>
+      <width>170</width>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
@@ -232,7 +232,7 @@
       <pv_name>$(P)$(R)Polarity_RBV</pv_name>
       <x>255</x>
       <y>101</y>
-      <width>210</width>
+      <width>170</width>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
@@ -260,7 +260,7 @@
       <pv_name>$(P)$(R)LogLevel_RBV</pv_name>
       <x>255</x>
       <y>128</y>
-      <width>210</width>
+      <width>170</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>Fan1Lbl</name>
@@ -298,9 +298,9 @@
   <widget type="group" version="3.0.0">
     <name>TriggerTimingGroup</name>
     <x>5</x>
-    <y>333</y>
+    <y>360</y>
     <width>460</width>
-    <height>155</height>
+    <height>210</height>
     <widget type="label" version="2.0.0">
       <name>TriggerandtimingTitle</name>
       <text>Trigger and timing</text>
@@ -337,7 +337,7 @@
       <pv_name>$(P)$(R)TriggerIn_RBV</pv_name>
       <x>255</x>
       <y>28</y>
-      <width>210</width>
+      <width>170</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>TriggerOutLbl</name>
@@ -364,7 +364,7 @@
       <pv_name>$(P)$(R)TriggerOut_RBV</pv_name>
       <x>255</x>
       <y>53</y>
-      <width>210</width>
+      <width>170</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>TriggerModeLbl</name>
@@ -391,7 +391,7 @@
       <pv_name>$(P)$(R)TriggerModeC_RBV</pv_name>
       <x>255</x>
       <y>78</y>
-      <width>210</width>
+      <width>170</width>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
@@ -418,7 +418,7 @@
       <pv_name>$(P)$(R)AcquireTime_RBV</pv_name>
       <x>255</x>
       <y>103</y>
-      <width>210</width>
+      <width>170</width>
       <foreground_color>
         <color red="10" green="0" blue="184">
         </color>
@@ -454,7 +454,7 @@
       <pv_name>$(P)$(R)AcquirePeriod_RBV</pv_name>
       <x>255</x>
       <y>128</y>
-      <width>210</width>
+      <width>170</width>
       <foreground_color>
         <color red="10" green="0" blue="184">
         </color>
@@ -490,7 +490,7 @@
       <pv_name>$(P)$(R)NumImages_RBV</pv_name>
       <x>255</x>
       <y>153</y>
-      <width>210</width>
+      <width>170</width>
       <foreground_color>
         <color red="10" green="0" blue="184">
         </color>
@@ -505,7 +505,7 @@
   <widget type="group" version="3.0.0">
     <name>Mpx3ChipGroup</name>
     <x>5</x>
-    <y>495</y>
+    <y>575</y>
     <width>460</width>
     <height>230</height>
     <widget type="label" version="2.0.0">
@@ -796,9 +796,9 @@
   <widget type="group" version="3.0.0">
     <name>DualThresholdGroup</name>
     <x>5</x>
-    <y>725</y>
+    <y>810</y>
     <width>460</width>
-    <height>118</height>
+    <height>115</height>
     <widget type="label" version="2.0.0">
       <name>DualThTitle</name>
       <text>Dual threshold</text>
@@ -852,9 +852,8 @@
       <text>Yes → Pva1/Pva2 (threshold 0/1). Not compatible with Continuous trigger — use AutoTrgSt_TmrSp (4). PrvImgThs→0,1 + WriteData; slow TriggerPeriod if UDP drops.</text>
       <x>5</x>
       <y>52</y>
-      <width>448</width>
+      <width>420</width>
       <height>38</height>
-      <wrap_words>true</wrap_words>
       <font>
         <font family="Sans" style="REGULAR" size="9.0">
         </font>
@@ -868,9 +867,9 @@
   <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>848</y>
+    <y>930</y>
     <width>460</width>
-    <height>110</height>
+    <height>150</height>
     <widget type="label" version="2.0.0">
       <name>StatusTitle</name>
       <text>Serval response</text>
@@ -944,9 +943,8 @@
       <text>Setpoints push to Serval on change (detector PUT or WriteData for preview period). Use Refresh after external edits.</text>
       <x>5</x>
       <y>88</y>
-      <width>448</width>
+      <width>420</width>
       <height>28</height>
-      <wrap_words>true</wrap_words>
       <font>
         <font family="Sans" style="REGULAR" size="9.0">
         </font>
