@@ -36,7 +36,7 @@
     <x>5</x>
     <y>32</y>
     <width>460</width>
-    <height>78</height>
+    <height>100</height>
     <widget type="label" version="2.0.0">
       <name>DualThTitle</name>
       <text>Dual threshold</text>
@@ -473,9 +473,9 @@
   <widget type="label" version="2.0.0">
     <name>BothCntHint</name>
     <text>Yes → threshold 0 on Pva1, threshold 1 on Pva2. Set PrvImgThs on preview writer.</text>
-    <x>20</x>
-    <y>114</y>
-    <width>420</width>
+    <x>40</x>
+    <y>105</y>
+    <width>400</width>
     <font>
       <font family="Sans" style="REGULAR" size="9.0">
       </font>
