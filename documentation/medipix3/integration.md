@@ -131,6 +131,16 @@ UDP `(2/4)` drops and a **horizontal split at y=256** in the image mean half the
 
 Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver parses header fields and demuxes by **`thresholdID`** to NDArray addresses 0 and 8; integrated preview from 8089 still requires a `PrvImg1` worker (Phase 2).
 
+### MPX3 detector fields not in Serval manual §4
+
+| Field | Role | Notes |
+|-------|------|-------|
+| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string (not preview-specific). Erik’s Accos example: **`HGM`**. Driver IOC default: **`SHGM`**. Typical ASI strings include **`LGM`**, **`HGM`**, **`SHGM`** — confirm allowed values with ASI or chip documentation; written via **`GainMode`** PV → `PUT /detector/config`. |
+| **`Preview period`** | Throttle live preview rate | Serval **`Preview.Period`** (seconds), separate from **`TriggerPeriod`**. Set via **`PrvPeriod`** PV; pushed on **`WriteData`**. Erik’s working UI used **0.5 s** preview period with **0.5 s** trigger period. **`PrvSmplgMode`**: `skipOnFrame` (0) or `skipOnPeriod` (1). |
+| **`BiasVoltage`** | Sensor bias | Erik: **100 V**. Low values (e.g. 12) can prevent useful counts on hardware/emulator. |
+| **`PixelDepth`** | Counter bit depth | Erik: **12**. Driver pushes integer to Serval; readback may show string `"12"`. |
+| **`IDelayConfig`** | Inter-chip delay tuning | Erik: `[15, 15, 15, 10]` — on **`Mpx3DetectorConfig.bob`**. |
+
 ### Erik’s validated dual-threshold recipe (Accos, 2026-06-12)
 
 Erik confirmed **4 triggers → 8 preview frames** on TCP **8088** (`thresholdID=1` then `0` per trigger, full 512×512). Matching EPICS settings:

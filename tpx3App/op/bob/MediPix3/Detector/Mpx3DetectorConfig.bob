@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
   <width>470</width>
-  <height>820</height>
+  <height>890</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -449,7 +449,7 @@
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Serval string e.g. SHGM</tooltip>
+      <tooltip>Medipix3 pre-amplifier gain (Serval Config). Erik Accos example: HGM. Common: LGM, HGM, SHGM — confirm with ASI / chip DAC docs.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>GainModeRBV</name>
@@ -735,9 +735,86 @@
     <tooltip>Read-only from Serval</tooltip>
   </widget>
   <widget type="group" version="3.0.0">
+    <name>PreviewGroup</name>
+    <x>5</x>
+    <y>675</y>
+    <width>460</width>
+    <height>62</height>
+    <widget type="label" version="2.0.0">
+      <name>PreviewTitle</name>
+      <text>Preview (Serval destination)</text>
+      <x>5</x>
+      <y>2</y>
+      <width>180</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvPeriodLbl</name>
+      <text>Preview period</text>
+      <x>5</x>
+      <y>28</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PrvPeriodSP</name>
+      <pv_name>$(P)$(R)PrvPeriod</pv_name>
+      <x>110</x>
+      <y>26</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <precision>6</precision>
+      <tooltip>Preview.Period (s). Pushed on WriteData. Erik example: 0.5 s with 0.5 s TriggerPeriod.</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvPeriodRBV</name>
+      <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
+      <x>255</x>
+      <y>26</y>
+      <width>70</width>
+      <precision>6</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvSmplLbl</name>
+      <text>Preview sampling</text>
+      <x>5</x>
+      <y>53</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>PrvSmplgModeSP</name>
+      <pv_name>$(P)$(R)PrvSmplgMode</pv_name>
+      <x>110</x>
+      <y>51</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>Preview.SamplingMode — skipOnFrame or skipOnPeriod. Pushed on WriteData.</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvSmplgModeRBV</name>
+      <pv_name>$(P)$(R)PrvSmplgMode_RBV</pv_name>
+      <x>255</x>
+      <y>51</y>
+      <width>175</width>
+      <format>6</format>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>670</y>
+    <y>745</y>
     <width>460</width>
     <height>140</height>
     <widget type="label" version="2.0.0">
@@ -810,7 +887,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>HintLbl</name>
-      <text>Setpoints push to Serval PUT /detector/config on change. Use Refresh after external edits.</text>
+      <text>Setpoints push to Serval on change (detector PUT or WriteData for preview period). Use Refresh after external edits.</text>
       <x>5</x>
       <y>88</y>
       <width>450</width>

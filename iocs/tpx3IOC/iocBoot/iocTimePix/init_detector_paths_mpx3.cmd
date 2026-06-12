@@ -49,7 +49,7 @@ dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")
 dbpf("$(PREFIX)cam1:PrvImg1QueueSize","16")
 dbpf("$(PREFIX)cam1:WritePrvImg1","0")
 
-dbpf("$(PREFIX)cam1:PrvPeriod","0.05")
+dbpf("$(PREFIX)cam1:PrvPeriod","0.5")
 dbpf("$(PREFIX)cam1:PrvSmplgMode","0")
 
 # ToF histogram preview is out of scope for Medipix3 v1
