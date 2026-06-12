@@ -1,111 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>Mpx3PreviewChannels</name>
-  <width>1120</width>
-  <height>720</height>
+  <width>1130</width>
+  <height>745</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
   </background_color>
   <grid_step_x>5</grid_step_x>
   <grid_step_y>5</grid_step_y>
-  <widget type="rectangle" version="2.0.0">
-    <name>TitleBar</name>
-    <width>1120</width>
-    <height>26</height>
-    <line_width>0</line_width>
-    <line_color>
-      <color red="0" green="128" blue="255">
-      </color>
-    </line_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Title</name>
-    <text>Medipix3 Preview TCP Channels — $(P)$(R)</text>
-    <y>3</y>
-    <width>1120</width>
-    <height>22</height>
-    <font>
-      <font family="Sans" style="REGULAR" size="14.0">
-      </font>
-    </font>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <horizontal_alignment>1</horizontal_alignment>
-    <vertical_alignment>1</vertical_alignment>
-  </widget>
   <widget type="group" version="3.0.0">
     <name>FamilyStatus</name>
-    <x>10</x>
-    <y>35</y>
-    <width>1100</width>
-    <height>55</height>
+    <x>5</x>
+    <y>5</y>
+    <width>1120</width>
+    <height>48</height>
+    <widget type="label" version="2.0.0">
+      <name>FamilyGroupLbl</name>
+      <text>Detector</text>
+      <x>8</x>
+      <y>2</y>
+      <width>60</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
     <widget type="label" version="2.0.0">
       <name>FamilyLbl</name>
-      <text>Detector family</text>
-      <x>10</x>
-      <y>15</y>
-      <width>110</width>
+      <text>Family</text>
+      <x>15</x>
+      <y>22</y>
+      <width>55</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>FamilyRBV</name>
       <pv_name>$(P)$(R)DetectorFamily_RBV</pv_name>
-      <x>130</x>
-      <y>12</y>
-      <width>80</width>
+      <x>75</x>
+      <y>18</y>
+      <width>55</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ChipLbl</name>
-      <text>Chip type</text>
-      <x>230</x>
-      <y>15</y>
-      <width>70</width>
+      <text>Chip</text>
+      <x>145</x>
+      <y>22</y>
+      <width>40</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>ChipRBV</name>
       <pv_name>$(P)$(R)ChipType_RBV</pv_name>
-      <x>310</x>
-      <y>12</y>
-      <width>100</width>
+      <x>190</x>
+      <y>18</y>
+      <width>55</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>BothCntLbl</name>
       <text>BothCounters</text>
-      <x>430</x>
-      <y>15</y>
-      <width>90</width>
+      <x>260</x>
+      <y>22</y>
+      <width>85</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>BothCntRBV</name>
       <pv_name>$(P)$(R)BothCounters_RBV</pv_name>
-      <x>530</x>
-      <y>12</y>
-      <width>60</width>
+      <x>350</x>
+      <y>18</y>
+      <width>45</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>CapThLbl</name>
-      <text>CapImgThresholds</text>
-      <x>610</x>
-      <y>15</y>
-      <width>120</width>
+      <text>ImgThs</text>
+      <x>420</x>
+      <y>22</y>
+      <width>50</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="led" version="2.0.0">
       <name>CapThLED</name>
       <pv_name>$(P)$(R)CapImgThresholds_RBV</pv_name>
-      <x>740</x>
-      <y>12</y>
+      <x>475</x>
+      <y>18</y>
       <width>22</width>
       <height>22</height>
       <off_color>
@@ -119,17 +103,17 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>CapDualLbl</name>
-      <text>CapDualPreview</text>
-      <x>780</x>
-      <y>15</y>
-      <width>100</width>
+      <text>DualPreview</text>
+      <x>510</x>
+      <y>22</y>
+      <width>75</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="led" version="2.0.0">
       <name>CapDualLED</name>
       <pv_name>$(P)$(R)CapDualPreview_RBV</pv_name>
-      <x>890</x>
-      <y>12</y>
+      <x>590</x>
+      <y>18</y>
       <width>22</width>
       <height>22</height>
       <off_color>
@@ -141,27 +125,21 @@
         </color>
       </on_color>
     </widget>
-  </widget>
-  <widget type="group" version="3.0.0">
-    <name>PreviewGlobal</name>
-    <x>10</x>
-    <y>95</y>
-    <width>1100</width>
-    <height>45</height>
     <widget type="label" version="2.0.0">
       <name>PrvPeriodLbl</name>
-      <text>Preview period</text>
-      <x>10</x>
-      <y>12</y>
-      <width>110</width>
+      <text>Period (s)</text>
+      <x>640</x>
+      <y>22</y>
+      <width>65</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textentry" version="3.0.0">
       <name>PrvPeriod</name>
       <pv_name>$(P)$(R)PrvPeriod</pv_name>
-      <x>130</x>
-      <y>10</y>
-      <width>100</width>
+      <x>710</x>
+      <y>18</y>
+      <width>70</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -172,26 +150,26 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvPeriodRBV</name>
       <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
-      <x>240</x>
-      <y>10</y>
-      <width>100</width>
+      <x>785</x>
+      <y>18</y>
+      <width>70</width>
       <height>22</height>
-      <precision>7</precision>
+      <precision>6</precision>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvSmplLbl</name>
-      <text>Sampling mode</text>
-      <x>360</x>
-      <y>12</y>
-      <width>110</width>
+      <text>Sample</text>
+      <x>870</x>
+      <y>22</y>
+      <width>50</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
       <name>PrvSmplgMode</name>
       <pv_name>$(P)$(R)PrvSmplgMode</pv_name>
-      <x>480</x>
-      <y>10</y>
-      <width>120</width>
+      <x>925</x>
+      <y>18</y>
+      <width>110</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
@@ -201,33 +179,44 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvSmplgModeRBV</name>
       <pv_name>$(P)$(R)PrvSmplgMode_RBV</pv_name>
-      <x>610</x>
-      <y>10</y>
-      <width>100</width>
+      <x>1040</x>
+      <y>18</y>
+      <width>70</width>
       <height>22</height>
       <format>6</format>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>WriteStatus</name>
-    <x>10</x>
-    <y>145</y>
-    <width>1100</width>
-    <height>90</height>
+    <x>5</x>
+    <y>58</y>
+    <width>1120</width>
+    <height>82</height>
+    <widget type="label" version="2.0.0">
+      <name>WriteGroupLbl</name>
+      <text>Push to Serval</text>
+      <x>8</x>
+      <y>2</y>
+      <width>90</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
     <widget type="label" version="2.0.0">
       <name>HttpLbl</name>
-      <text>HTTP code</text>
-      <x>10</x>
-      <y>10</y>
-      <width>90</width>
+      <text>HTTP</text>
+      <x>15</x>
+      <y>24</y>
+      <width>45</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HttpCode</name>
       <pv_name>$(P)$(R)HttpCode_RBV</pv_name>
-      <x>110</x>
-      <y>8</y>
-      <width>60</width>
+      <x>65</x>
+      <y>20</y>
+      <width>45</width>
       <height>22</height>
     </widget>
     <widget type="action_button" version="3.0.0">
@@ -240,110 +229,144 @@
         </action>
       </actions>
       <text>WriteData</text>
-      <x>190</x>
-      <y>8</y>
-      <width>90</width>
-      <height>24</height>
+      <x>125</x>
+      <y>18</y>
+      <width>85</width>
+      <height>26</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Push fileWriter + server preview config to Serval (same as WriteData=1)</tooltip>
+      <tooltip>Push fileWriter + server preview config to Serval</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImgEnLbl</name>
-      <text>PrvImg</text>
-      <x>300</x>
-      <y>12</y>
-      <width>50</width>
+      <text>PrvImg PV/SP</text>
+      <x>230</x>
+      <y>24</y>
+      <width>75</width>
     </widget>
     <widget type="led" version="2.0.0">
       <name>WritePrvImgLED</name>
       <pv_name>$(P)$(R)WritePrvImg</pv_name>
-      <x>355</x>
-      <y>8</y>
+      <x>310</x>
+      <y>20</y>
       <width>18</width>
       <height>18</height>
+      <tooltip>WritePrvImg (setpoint)</tooltip>
     </widget>
     <widget type="led" version="2.0.0">
       <name>WritePrvImgRBV</name>
       <pv_name>$(P)$(R)WritePrvImg_RBV</pv_name>
-      <x>355</x>
-      <y>28</y>
+      <x>332</x>
+      <y>20</y>
       <width>18</width>
       <height>18</height>
       <on_color>
         <color red="255" green="0" blue="0">
         </color>
       </on_color>
+      <tooltip>WritePrvImg_RBV (Serval)</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1EnLbl</name>
-      <text>PrvImg1</text>
-      <x>390</x>
-      <y>12</y>
-      <width>55</width>
+      <text>PrvImg1 PV/SP</text>
+      <x>370</x>
+      <y>24</y>
+      <width>85</width>
     </widget>
     <widget type="led" version="2.0.0">
       <name>WritePrvImg1LED</name>
       <pv_name>$(P)$(R)WritePrvImg1</pv_name>
-      <x>450</x>
-      <y>8</y>
+      <x>460</x>
+      <y>20</y>
       <width>18</width>
       <height>18</height>
+      <tooltip>WritePrvImg1 (setpoint)</tooltip>
     </widget>
     <widget type="led" version="2.0.0">
       <name>WritePrvImg1RBV</name>
       <pv_name>$(P)$(R)WritePrvImg1_RBV</pv_name>
-      <x>450</x>
-      <y>28</y>
+      <x>482</x>
+      <y>20</y>
       <width>18</width>
       <height>18</height>
       <on_color>
         <color red="255" green="0" blue="0">
         </color>
       </on_color>
+      <tooltip>WritePrvImg1_RBV (Serval)</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>WriteMsgLbl</name>
-      <text>Write message</text>
-      <x>490</x>
-      <y>12</y>
-      <width>90</width>
+      <text>Message</text>
+      <x>15</x>
+      <y>48</y>
+      <width>60</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>WriteFileMessage</name>
       <pv_name>$(P)$(R)WriteFileMessage</pv_name>
-      <x>10</x>
-      <y>38</y>
-      <width>1080</width>
-      <height>45</height>
+      <x>80</x>
+      <y>44</y>
+      <width>1030</width>
+      <height>30</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="10.0">
+        </font>
+      </font>
       <format>6</format>
       <vertical_alignment>1</vertical_alignment>
+      <wrap_words>true</wrap_words>
       <foreground_color>
-        <color red="200" green="0" blue="0">
+        <color red="40" green="40" blue="40">
         </color>
       </foreground_color>
       <background_color>
-        <color red="218" green="218" blue="218">
+        <color red="245" green="245" blue="245">
         </color>
       </background_color>
+      <border_width>1</border_width>
+      <border_color>
+        <color red="160" green="160" blue="160">
+        </color>
+      </border_color>
+      <rules>
+        <rule name="msg_ok" prop_id="foreground_color" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>
+              <color red="0" green="120" blue="0">
+              </color>
+            </value>
+          </exp>
+          <pv_name>$(P)$(R)HttpCode_RBV</pv_name>
+        </rule>
+        <rule name="msg_err" prop_id="foreground_color" out_exp="false">
+          <exp bool_exp="pv0&gt;0 &amp;&amp; pv0!=200">
+            <value>
+              <color red="200" green="0" blue="0">
+              </color>
+            </value>
+          </exp>
+          <pv_name>$(P)$(R)HttpCode_RBV</pv_name>
+        </rule>
+      </rules>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>PrvImg0</name>
-    <x>10</x>
-    <y>245</y>
-    <width>540</width>
-    <height>465</height>
+    <x>5</x>
+    <y>148</y>
+    <width>555</width>
+    <height>590</height>
     <widget type="label" version="2.0.0">
       <name>PrvImg0Title</name>
-      <text>PrvImg [0] — per-frame count preview (default tcp://listen@localhost:8088)</text>
-      <x>5</x>
-      <y>5</y>
-      <width>530</width>
-      <height>20</height>
+      <text>PrvImg [0]  frame / count  (tcp://listen@localhost:8088)</text>
+      <x>8</x>
+      <y>4</y>
+      <width>420</width>
+      <height>18</height>
       <font>
         <font family="Sans" style="BOLD" size="11.0">
         </font>
@@ -352,19 +375,15 @@
         <color red="10" green="0" blue="184">
         </color>
       </foreground_color>
-      <background_color>
-        <color red="240" green="248" blue="255">
-        </color>
-      </background_color>
     </widget>
     <widget type="bool_button" version="2.0.0">
       <name>WritePrvImgBtn</name>
       <pv_name>$(P)$(R)WritePrvImg</pv_name>
       <bit>-1</bit>
-      <x>460</x>
-      <y>30</y>
-      <width>70</width>
-      <height>26</height>
+      <x>470</x>
+      <y>2</y>
+      <width>75</width>
+      <height>24</height>
       <off_color>
         <color red="0" green="100" blue="0">
         </color>
@@ -375,39 +394,10 @@
       </on_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>PrvImgPathLbl</name>
-      <text>TCP path</text>
-      <x>10</x>
-      <y>35</y>
-      <width>90</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>PrvImgPathRBV</name>
-      <pv_name>$(P)$(R)PrvImgFilePath_RBV</pv_name>
-      <x>110</x>
-      <y>55</y>
-      <width>420</width>
-      <height>18</height>
-      <format>6</format>
-    </widget>
-    <widget type="textentry" version="3.0.0">
-      <name>PrvImgPath</name>
-      <pv_name>$(P)$(R)PrvImgFilePath</pv_name>
-      <x>110</x>
-      <y>75</y>
-      <width>420</width>
-      <background_color>
-        <color red="115" green="223" blue="255">
-        </color>
-      </background_color>
-      <format>6</format>
-    </widget>
-    <widget type="label" version="2.0.0">
       <name>PrvImgExistsLbl</name>
       <text>Exists</text>
       <x>10</x>
-      <y>55</y>
+      <y>32</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -415,16 +405,58 @@
       <name>PrvImgExists</name>
       <pv_name>$(P)$(R)PrvImgFilePathExists_RBV</pv_name>
       <x>110</x>
-      <y>35</y>
-      <width>40</width>
-      <height>18</height>
+      <y>28</y>
+      <width>50</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvImgPathLbl</name>
+      <text>TCP path (RBV)</text>
+      <x>10</x>
+      <y>58</y>
+      <width>90</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvImgPathRBV</name>
+      <pv_name>$(P)$(R)PrvImgFilePath_RBV</pv_name>
+      <x>110</x>
+      <y>54</y>
+      <width>435</width>
+      <height>22</height>
+      <format>6</format>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvImgPathSetLbl</name>
+      <text>TCP path (set)</text>
+      <x>10</x>
+      <y>84</y>
+      <width>90</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PrvImgPath</name>
+      <pv_name>$(P)$(R)PrvImgFilePath</pv_name>
+      <x>110</x>
+      <y>80</y>
+      <width>435</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImgTmplLbl</name>
       <text>File pattern</text>
       <x>10</x>
-      <y>100</y>
+      <y>110</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -432,8 +464,9 @@
       <name>PrvImgTmpl</name>
       <pv_name>$(P)$(R)PrvImgFileTemplate</pv_name>
       <x>110</x>
-      <y>100</y>
-      <width>420</width>
+      <y>106</y>
+      <width>435</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -444,7 +477,7 @@
       <name>PrvImgFmtLbl</name>
       <text>Format</text>
       <x>10</x>
-      <y>130</y>
+      <y>136</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -452,7 +485,7 @@
       <name>PrvImgFmt</name>
       <pv_name>$(P)$(R)PrvImgFileFmt</pv_name>
       <x>110</x>
-      <y>128</y>
+      <y>132</y>
       <width>120</width>
       <height>22</height>
       <background_color>
@@ -464,8 +497,8 @@
       <name>PrvImgFmtRBV</name>
       <pv_name>$(P)$(R)PrvImgFileFmt_RBV</pv_name>
       <x>240</x>
-      <y>128</y>
-      <width>80</width>
+      <y>132</y>
+      <width>90</width>
       <height>22</height>
       <format>6</format>
     </widget>
@@ -473,7 +506,7 @@
       <name>PrvImgModeLbl</name>
       <text>Mode</text>
       <x>10</x>
-      <y>160</y>
+      <y>162</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -494,15 +527,15 @@
       <pv_name>$(P)$(R)PrvImgFileMode_RBV</pv_name>
       <x>240</x>
       <y>158</y>
-      <width>80</width>
+      <width>90</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImgIntgSizeLbl</name>
-      <text>Integration size</text>
+      <text>Intg size</text>
       <x>10</x>
-      <y>190</y>
+      <y>188</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -510,8 +543,9 @@
       <name>PrvImgIntgSize</name>
       <pv_name>$(P)$(R)PrvImgIntgSize</pv_name>
       <x>110</x>
-      <y>188</y>
-      <width>80</width>
+      <y>184</y>
+      <width>70</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -520,25 +554,25 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvImgIntgSizeRBV</name>
       <pv_name>$(P)$(R)PrvImgIntgSize_RBV</pv_name>
-      <x>200</x>
-      <y>188</y>
-      <width>80</width>
+      <x>190</x>
+      <y>184</y>
+      <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImgIntgModeLbl</name>
-      <text>Integration mode</text>
-      <x>10</x>
-      <y>220</y>
-      <width>90</width>
+      <text>Intg mode</text>
+      <x>280</x>
+      <y>188</y>
+      <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
       <name>PrvImgIntgMode</name>
       <pv_name>$(P)$(R)PrvImgIntgMode</pv_name>
-      <x>110</x>
-      <y>218</y>
-      <width>120</width>
+      <x>355</x>
+      <y>184</y>
+      <width>110</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
@@ -548,17 +582,17 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvImgIntgModeRBV</name>
       <pv_name>$(P)$(R)PrvImgIntgMode_RBV</pv_name>
-      <x>240</x>
-      <y>218</y>
-      <width>80</width>
+      <x>470</x>
+      <y>184</y>
+      <width>75</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImgQueueLbl</name>
-      <text>Queue size</text>
+      <text>Queue</text>
       <x>10</x>
-      <y>250</y>
+      <y>214</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -566,8 +600,9 @@
       <name>PrvImgQueue</name>
       <pv_name>$(P)$(R)PrvImgQueueSize</pv_name>
       <x>110</x>
-      <y>248</y>
-      <width>80</width>
+      <y>210</y>
+      <width>70</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -576,57 +611,66 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvImgQueueRBV</name>
       <pv_name>$(P)$(R)PrvImgQueueSize_RBV</pv_name>
-      <x>200</x>
-      <y>248</y>
-      <width>80</width>
+      <x>190</x>
+      <y>210</y>
+      <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImgThsLbl</name>
       <text>Thresholds</text>
-      <x>300</x>
-      <y>250</y>
-      <width>80</width>
+      <x>10</x>
+      <y>240</y>
+      <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvImgThsRBV</name>
+      <pv_name>$(P)$(R)PrvImgThs_RBV</pv_name>
+      <x>110</x>
+      <y>236</y>
+      <width>435</width>
+      <height>22</height>
+      <format>6</format>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
     </widget>
     <widget type="textentry" version="3.0.0">
       <name>PrvImgThs</name>
       <pv_name>$(P)$(R)PrvImgThs</pv_name>
-      <x>390</x>
-      <y>248</y>
-      <width>140</width>
+      <x>110</x>
+      <y>262</y>
+      <width>435</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
       <format>6</format>
-      <tooltip>Serval Preview.ImageChannels[0].Thresholds (comma-separated, e.g. 0,1,2,3,4,5,6,7)</tooltip>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>PrvImgThsRBV</name>
-      <pv_name>$(P)$(R)PrvImgThs_RBV</pv_name>
-      <x>390</x>
-      <y>228</y>
-      <width>140</width>
-      <height>18</height>
-      <format>6</format>
+      <tooltip>Serval Preview.ImageChannels[0].Thresholds (comma-separated)</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HeaderMetaTitle</name>
       <text>jsonimage header (live)</text>
       <x>10</x>
-      <y>285</y>
+      <y>296</y>
       <width>200</width>
       <font>
         <font family="Sans" style="BOLD" size="10.0">
         </font>
       </font>
+      <background_color>
+        <color red="240" green="248" blue="255">
+        </color>
+      </background_color>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ThIdLbl</name>
       <text>thresholdID</text>
       <x>10</x>
-      <y>310</y>
+      <y>322</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -634,64 +678,64 @@
       <name>ThIdRBV</name>
       <pv_name>$(P)$(R)PrvImgThresholdID_RBV</pv_name>
       <x>110</x>
-      <y>308</y>
-      <width>60</width>
+      <y>318</y>
+      <width>50</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>IntgHdrLbl</name>
-      <text>integrationSize</text>
-      <x>190</x>
-      <y>310</y>
-      <width>100</width>
+      <text>intgSize</text>
+      <x>175</x>
+      <y>322</y>
+      <width>55</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>IntgHdrRBV</name>
       <pv_name>$(P)$(R)PrvImgIntegrationSize_RBV</pv_name>
-      <x>300</x>
-      <y>308</y>
-      <width>60</width>
+      <x>235</x>
+      <y>318</y>
+      <width>50</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>FrameLbl</name>
-      <text>frameNumber</text>
-      <x>10</x>
-      <y>340</y>
-      <width>90</width>
+      <text>frame#</text>
+      <x>300</x>
+      <y>322</y>
+      <width>50</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>FrameRBV</name>
       <pv_name>$(P)$(R)PrvImgFrameNumber_RBV</pv_name>
-      <x>110</x>
-      <y>338</y>
-      <width>80</width>
+      <x>355</x>
+      <y>318</y>
+      <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>AcqRateLbl</name>
-      <text>acq rate</text>
-      <x>210</x>
-      <y>340</y>
-      <width>70</width>
+      <text>Hz</text>
+      <x>435</x>
+      <y>322</y>
+      <width>30</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>AcqRateRBV</name>
       <pv_name>$(P)$(R)PrvImgAcqRate_RBV</pv_name>
-      <x>290</x>
-      <y>338</y>
-      <width>100</width>
+      <x>470</x>
+      <y>318</y>
+      <width>75</width>
       <height>22</height>
       <precision>3</precision>
     </widget>
     <widget type="label" version="2.0.0">
       <name>LogHdrLbl</name>
-      <text>Log headers (N)</text>
+      <text>Log hdrs</text>
       <x>10</x>
-      <y>370</y>
+      <y>348</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -699,8 +743,9 @@
       <name>LogHdrs</name>
       <pv_name>$(P)$(R)PrvImgLogHeaders</pv_name>
       <x>110</x>
-      <y>368</y>
+      <y>344</y>
       <width>60</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -709,48 +754,35 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>LogHdrNote</name>
-      <text>NDArray addr 0 (image1). Dual threshold 1 → addr 8 (imageTh1) when BothCounters=Yes.</text>
+      <text>NDArray addr 0 (Pva1). threshold 1 → addr 8 (Pva2) when BothCounters=Yes.</text>
       <x>10</x>
-      <y>400</y>
-      <width>520</width>
-      <height>30</height>
+      <y>372</y>
+      <width>530</width>
+      <height>22</height>
       <wrap_words>true</wrap_words>
+      <foreground_color>
+        <color red="80" green="80" blue="80">
+        </color>
+      </foreground_color>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>PrvImg1</name>
     <x>570</x>
-    <y>245</y>
-    <width>540</width>
-    <height>465</height>
+    <y>148</y>
+    <width>555</width>
+    <height>590</height>
     <widget type="label" version="2.0.0">
       <name>PrvImg1Title</name>
-      <text>PrvImg1 [1] — integrated preview (default tcp://listen@localhost:8089)</text>
-      <x>5</x>
-      <y>5</y>
-      <width>530</width>
-      <height>20</height>
+      <text>PrvImg1 [1]  integrated preview  (tcp://listen@localhost:8089)</text>
+      <x>8</x>
+      <y>4</y>
+      <width>420</width>
+      <height>18</height>
       <font>
         <font family="Sans" style="BOLD" size="11.0">
         </font>
       </font>
-      <foreground_color>
-        <color red="10" green="0" blue="184">
-        </color>
-      </foreground_color>
-      <background_color>
-        <color red="255" green="248" blue="240">
-        </color>
-      </background_color>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>PrvImg1Note</name>
-      <text>Phase 2: keep WritePrvImg1=0 until PrvImg1 TCP worker is enabled. Use IntegrationSize=-1 for measurement-integrated preview per Serval manual.</text>
-      <x>10</x>
-      <y>28</y>
-      <width>520</width>
-      <height>35</height>
-      <wrap_words>true</wrap_words>
       <foreground_color>
         <color red="120" green="60" blue="0">
         </color>
@@ -760,10 +792,10 @@
       <name>WritePrvImg1Btn</name>
       <pv_name>$(P)$(R)WritePrvImg1</pv_name>
       <bit>-1</bit>
-      <x>460</x>
-      <y>65</y>
-      <width>70</width>
-      <height>26</height>
+      <x>470</x>
+      <y>2</y>
+      <width>75</width>
+      <height>24</height>
       <off_color>
         <color red="0" green="100" blue="0">
         </color>
@@ -774,39 +806,27 @@
       </on_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>PrvImg1PathLbl</name>
-      <text>TCP path</text>
+      <name>PrvImg1Note</name>
+      <text>Phase 2: keep disabled until PrvImg1 TCP worker exists. IntgSize=-1 = integrated from measurement start.</text>
       <x>10</x>
-      <y>70</y>
-      <width>90</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>PrvImg1PathRBV</name>
-      <pv_name>$(P)$(R)PrvImg1FilePath_RBV</pv_name>
-      <x>110</x>
-      <y>90</y>
-      <width>420</width>
-      <height>18</height>
-      <format>6</format>
-    </widget>
-    <widget type="textentry" version="3.0.0">
-      <name>PrvImg1Path</name>
-      <pv_name>$(P)$(R)PrvImg1FilePath</pv_name>
-      <x>110</x>
-      <y>110</y>
-      <width>420</width>
+      <y>26</y>
+      <width>535</width>
+      <height>28</height>
+      <wrap_words>true</wrap_words>
+      <foreground_color>
+        <color red="120" green="60" blue="0">
+        </color>
+      </foreground_color>
       <background_color>
-        <color red="115" green="223" blue="255">
+        <color red="255" green="248" blue="240">
         </color>
       </background_color>
-      <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1ExistsLbl</name>
       <text>Exists</text>
       <x>10</x>
-      <y>90</y>
+      <y>62</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -814,16 +834,58 @@
       <name>PrvImg1Exists</name>
       <pv_name>$(P)$(R)PrvImg1FilePathExists_RBV</pv_name>
       <x>110</x>
-      <y>70</y>
-      <width>40</width>
-      <height>18</height>
+      <y>58</y>
+      <width>50</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvImg1PathLbl</name>
+      <text>Path (RBV)</text>
+      <x>10</x>
+      <y>88</y>
+      <width>90</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvImg1PathRBV</name>
+      <pv_name>$(P)$(R)PrvImg1FilePath_RBV</pv_name>
+      <x>110</x>
+      <y>84</y>
+      <width>435</width>
+      <height>22</height>
+      <format>6</format>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvImg1PathSetLbl</name>
+      <text>Path (set)</text>
+      <x>10</x>
+      <y>114</y>
+      <width>90</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PrvImg1Path</name>
+      <pv_name>$(P)$(R)PrvImg1FilePath</pv_name>
+      <x>110</x>
+      <y>110</y>
+      <width>435</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1TmplLbl</name>
       <text>File pattern</text>
       <x>10</x>
-      <y>135</y>
+      <y>140</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -831,8 +893,9 @@
       <name>PrvImg1Tmpl</name>
       <pv_name>$(P)$(R)PrvImg1FileTemplate</pv_name>
       <x>110</x>
-      <y>135</y>
-      <width>420</width>
+      <y>136</y>
+      <width>435</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -843,7 +906,7 @@
       <name>PrvImg1FmtLbl</name>
       <text>Format</text>
       <x>10</x>
-      <y>165</y>
+      <y>166</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -851,7 +914,7 @@
       <name>PrvImg1Fmt</name>
       <pv_name>$(P)$(R)PrvImg1FileFmt</pv_name>
       <x>110</x>
-      <y>163</y>
+      <y>162</y>
       <width>120</width>
       <height>22</height>
       <background_color>
@@ -863,8 +926,8 @@
       <name>PrvImg1FmtRBV</name>
       <pv_name>$(P)$(R)PrvImg1FileFmt_RBV</pv_name>
       <x>240</x>
-      <y>163</y>
-      <width>80</width>
+      <y>162</y>
+      <width>90</width>
       <height>22</height>
       <format>6</format>
     </widget>
@@ -872,7 +935,7 @@
       <name>PrvImg1ModeLbl</name>
       <text>Mode</text>
       <x>10</x>
-      <y>195</y>
+      <y>192</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -880,7 +943,7 @@
       <name>PrvImg1Mode</name>
       <pv_name>$(P)$(R)PrvImg1FileMode</pv_name>
       <x>110</x>
-      <y>193</y>
+      <y>188</y>
       <width>120</width>
       <height>22</height>
       <background_color>
@@ -892,16 +955,16 @@
       <name>PrvImg1ModeRBV</name>
       <pv_name>$(P)$(R)PrvImg1FileMode_RBV</pv_name>
       <x>240</x>
-      <y>193</y>
-      <width>80</width>
+      <y>188</y>
+      <width>90</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1IntgSizeLbl</name>
-      <text>Integration size</text>
+      <text>Intg size</text>
       <x>10</x>
-      <y>225</y>
+      <y>218</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -909,36 +972,37 @@
       <name>PrvImg1IntgSize</name>
       <pv_name>$(P)$(R)PrvImg1IntgSize</pv_name>
       <x>110</x>
-      <y>223</y>
-      <width>80</width>
+      <y>214</y>
+      <width>70</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>-1 = integrated from measurement start (Serval manual)</tooltip>
+      <tooltip>-1 = integrated from measurement start</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>PrvImg1IntgSizeRBV</name>
       <pv_name>$(P)$(R)PrvImg1IntgSize_RBV</pv_name>
-      <x>200</x>
-      <y>223</y>
-      <width>80</width>
+      <x>190</x>
+      <y>214</y>
+      <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1IntgModeLbl</name>
-      <text>Integration mode</text>
-      <x>10</x>
-      <y>255</y>
-      <width>90</width>
+      <text>Intg mode</text>
+      <x>280</x>
+      <y>218</y>
+      <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
       <name>PrvImg1IntgMode</name>
       <pv_name>$(P)$(R)PrvImg1IntgMode</pv_name>
-      <x>110</x>
-      <y>253</y>
-      <width>120</width>
+      <x>355</x>
+      <y>214</y>
+      <width>110</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
@@ -948,17 +1012,17 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvImg1IntgModeRBV</name>
       <pv_name>$(P)$(R)PrvImg1IntgMode_RBV</pv_name>
-      <x>240</x>
-      <y>253</y>
-      <width>80</width>
+      <x>470</x>
+      <y>214</y>
+      <width>75</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1QueueLbl</name>
-      <text>Queue size</text>
+      <text>Queue</text>
       <x>10</x>
-      <y>285</y>
+      <y>244</y>
       <width>90</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -966,8 +1030,9 @@
       <name>PrvImg1Queue</name>
       <pv_name>$(P)$(R)PrvImg1QueueSize</pv_name>
       <x>110</x>
-      <y>283</y>
-      <width>80</width>
+      <y>240</y>
+      <width>70</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
@@ -976,9 +1041,9 @@
     <widget type="textupdate" version="2.0.0">
       <name>PrvImg1QueueRBV</name>
       <pv_name>$(P)$(R)PrvImg1QueueSize_RBV</pv_name>
-      <x>200</x>
-      <y>283</y>
-      <width>80</width>
+      <x>190</x>
+      <y>240</y>
+      <width>70</width>
       <height>22</height>
     </widget>
   </widget>

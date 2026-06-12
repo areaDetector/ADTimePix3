@@ -60,7 +60,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>ADShutterPanel</name>
-    <file>../../../../$(pathADCore)/ADShutter.opi</file>
+    <file>../../../../../$(pathADCore)/ADShutter.opi</file>
     <x>360</x>
     <y>35</y>
     <width>350</width>
@@ -105,7 +105,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>ADPluginsPanel</name>
-    <file>../../ADCore/R3-11/ADPlugins.opi</file>
+    <file>../../../ADCore/R3-11/ADPlugins.opi</file>
     <x>2</x>
     <y>276</y>
     <width>350</width>
@@ -120,7 +120,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>ADReadoutPanel</name>
-    <file>../../../../$(pathADCore)/ADReadout.opi</file>
+    <file>../../../../../$(pathADCore)/ADReadout.opi</file>
     <x>2</x>
     <y>361</y>
     <width>350</width>
@@ -135,7 +135,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>ADBuffersPanel</name>
-    <file>../../../../$(pathADCore)/ADBuffers.opi</file>
+    <file>../../../../../$(pathADCore)/ADBuffers.opi</file>
     <x>360</x>
     <y>605</y>
     <width>350</width>
@@ -150,7 +150,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>ADAttrFilePanel</name>
-    <file>../../../../$(pathADCore)/ADAttrFile.opi</file>
+    <file>../../../../../$(pathADCore)/ADAttrFile.opi</file>
     <x>360</x>
     <y>770</y>
     <width>350</width>
