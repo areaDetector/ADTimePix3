@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
   <width>470</width>
-  <height>520</height>
+  <height>540</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -53,13 +53,12 @@
       <text>BothCounters</text>
       <x>5</x>
       <y>28</y>
-      <width>150</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
       <name>BothCountersSP</name>
       <pv_name>$(P)$(R)BothCounters</pv_name>
-      <x>160</x>
+      <x>110</x>
       <y>26</y>
       <width>140</width>
       <height>22</height>
@@ -72,11 +71,10 @@
     <widget type="textupdate" version="2.0.0">
       <name>BothCountersRBV</name>
       <pv_name>$(P)$(R)BothCounters_RBV</pv_name>
-      <x>310</x>
+      <x>255</x>
       <y>26</y>
       <width>140</width>
       <height>22</height>
-      <format>6</format>
       <foreground_color>
         <color red="10" green="0" blue="184">
         </color>
@@ -85,36 +83,21 @@
         <color red="187" green="187" blue="187">
         </color>
       </background_color>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>BothCntHint</name>
-      <text>Yes → threshold 0 on Pva1, threshold 1 on Pva2. Set PrvImgThs on preview writer.</text>
-      <x>5</x>
-      <y>52</y>
-      <width>450</width>
-      <font>
-        <font family="Sans" style="REGULAR" size="9.0">
-        </font>
-      </font>
-      <foreground_color>
-        <color red="64" green="64" blue="64">
-        </color>
-      </foreground_color>
+      <format>6</format>
     </widget>
   </widget>
   <widget type="label" version="2.0.0">
     <name>BiasVoltLbl</name>
     <text>BiasVoltage</text>
     <x>3</x>
-    <y>120</y>
-    <width>150</width>
+    <y>140</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="textentry" version="3.0.0">
     <name>BiasVoltSP</name>
     <pv_name>$(P)$(R)BiasVolt</pv_name>
-    <x>160</x>
-    <y>118</y>
+    <x>110</x>
+    <y>140</y>
     <width>140</width>
     <background_color>
       <color red="115" green="223" blue="255">
@@ -124,9 +107,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>BiasVoltRBV</name>
     <pv_name>$(P)$(R)BiasVolt_RBV</pv_name>
-    <x>310</x>
-    <y>118</y>
-    <width>150</width>
+    <x>255</x>
+    <y>140</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -140,15 +123,14 @@
     <name>BiasEnblLbl</name>
     <text>BiasEnabled</text>
     <x>3</x>
-    <y>145</y>
-    <width>150</width>
+    <y>165</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>BiasEnblSP</name>
     <pv_name>$(P)$(R)BiasEnbl</pv_name>
-    <x>160</x>
-    <y>143</y>
+    <x>110</x>
+    <y>165</y>
     <width>140</width>
     <height>22</height>
     <background_color>
@@ -159,10 +141,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>BiasEnblRBV</name>
     <pv_name>$(P)$(R)BiasEnbl_RBV</pv_name>
-    <x>310</x>
-    <y>143</y>
-    <width>150</width>
-    <format>6</format>
+    <x>255</x>
+    <y>165</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -171,20 +152,20 @@
       <color red="187" green="187" blue="187">
       </color>
     </background_color>
+    <format>6</format>
   </widget>
   <widget type="label" version="2.0.0">
     <name>ChainModeLbl</name>
     <text>ChainMode</text>
     <x>3</x>
-    <y>170</y>
-    <width>150</width>
+    <y>190</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>ChainModeSP</name>
     <pv_name>$(P)$(R)ChainMode</pv_name>
-    <x>160</x>
-    <y>168</y>
+    <x>110</x>
+    <y>190</y>
     <width>140</width>
     <height>22</height>
     <background_color>
@@ -195,10 +176,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>ChainModeRBV</name>
     <pv_name>$(P)$(R)ChainMode_RBV</pv_name>
-    <x>310</x>
-    <y>168</y>
-    <width>150</width>
-    <format>6</format>
+    <x>255</x>
+    <y>190</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -207,20 +187,20 @@
       <color red="187" green="187" blue="187">
       </color>
     </background_color>
+    <format>6</format>
   </widget>
   <widget type="label" version="2.0.0">
     <name>TriggerInLbl</name>
     <text>TriggerIn</text>
     <x>3</x>
-    <y>195</y>
-    <width>150</width>
+    <y>215</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>TriggerInSP</name>
     <pv_name>$(P)$(R)TriggerIn</pv_name>
-    <x>160</x>
-    <y>193</y>
+    <x>110</x>
+    <y>215</y>
     <width>140</width>
     <height>22</height>
     <background_color>
@@ -231,9 +211,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>TriggerInRBV</name>
     <pv_name>$(P)$(R)TriggerIn_RBV</pv_name>
-    <x>310</x>
-    <y>193</y>
-    <width>150</width>
+    <x>255</x>
+    <y>215</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -247,15 +227,14 @@
     <name>TriggerOutLbl</name>
     <text>TriggerOut</text>
     <x>3</x>
-    <y>220</y>
-    <width>150</width>
+    <y>240</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>TriggerOutSP</name>
     <pv_name>$(P)$(R)TriggerOut</pv_name>
-    <x>160</x>
-    <y>218</y>
+    <x>110</x>
+    <y>240</y>
     <width>140</width>
     <height>22</height>
     <background_color>
@@ -266,9 +245,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>TriggerOutRBV</name>
     <pv_name>$(P)$(R)TriggerOut_RBV</pv_name>
-    <x>310</x>
-    <y>218</y>
-    <width>150</width>
+    <x>255</x>
+    <y>240</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -282,15 +261,14 @@
     <name>TriggerModeLbl</name>
     <text>TriggerMode</text>
     <x>3</x>
-    <y>245</y>
-    <width>150</width>
+    <y>265</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>TriggerModeSP</name>
     <pv_name>$(P)$(R)TriggerMode</pv_name>
-    <x>160</x>
-    <y>243</y>
+    <x>110</x>
+    <y>265</y>
     <width>140</width>
     <height>22</height>
     <background_color>
@@ -301,10 +279,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>TriggerModeRBV</name>
     <pv_name>$(P)$(R)TriggerModeC_RBV</pv_name>
-    <x>310</x>
-    <y>243</y>
-    <width>150</width>
-    <format>6</format>
+    <x>255</x>
+    <y>265</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -313,20 +290,20 @@
       <color red="187" green="187" blue="187">
       </color>
     </background_color>
+    <format>6</format>
   </widget>
   <widget type="label" version="2.0.0">
     <name>ExposureLbl</name>
     <text>ExposureTime</text>
     <x>3</x>
-    <y>270</y>
-    <width>150</width>
+    <y>290</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="textentry" version="3.0.0">
     <name>AcquireTimeSP</name>
     <pv_name>$(P)$(R)AcquireTime</pv_name>
-    <x>160</x>
-    <y>268</y>
+    <x>110</x>
+    <y>290</y>
     <width>140</width>
     <background_color>
       <color red="115" green="223" blue="255">
@@ -337,15 +314,14 @@
     <name>TriggerPeriodLbl</name>
     <text>TriggerPeriod</text>
     <x>3</x>
-    <y>295</y>
-    <width>150</width>
+    <y>315</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="textentry" version="3.0.0">
     <name>AcquirePeriodSP</name>
     <pv_name>$(P)$(R)AcquirePeriod</pv_name>
-    <x>160</x>
-    <y>293</y>
+    <x>110</x>
+    <y>315</y>
     <width>140</width>
     <background_color>
       <color red="115" green="223" blue="255">
@@ -356,15 +332,14 @@
     <name>nTriggersLbl</name>
     <text>nTriggers</text>
     <x>3</x>
-    <y>320</y>
-    <width>150</width>
+    <y>340</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="textentry" version="3.0.0">
     <name>NumImagesSP</name>
     <pv_name>$(P)$(R)NumImages</pv_name>
-    <x>160</x>
-    <y>318</y>
+    <x>110</x>
+    <y>340</y>
     <width>140</width>
     <background_color>
       <color red="115" green="223" blue="255">
@@ -375,15 +350,14 @@
     <name>LogLevelLbl</name>
     <text>LogLevel</text>
     <x>3</x>
-    <y>345</y>
-    <width>150</width>
+    <y>365</y>
     <horizontal_alignment>2</horizontal_alignment>
   </widget>
   <widget type="combo" version="2.0.0">
     <name>LogLevelSP</name>
     <pv_name>$(P)$(R)LogLevel</pv_name>
-    <x>160</x>
-    <y>343</y>
+    <x>110</x>
+    <y>365</y>
     <width>140</width>
     <height>22</height>
     <background_color>
@@ -394,9 +368,9 @@
   <widget type="textupdate" version="2.0.0">
     <name>LogLevelRBV</name>
     <pv_name>$(P)$(R)LogLevel_RBV</pv_name>
-    <x>310</x>
-    <y>343</y>
-    <width>150</width>
+    <x>255</x>
+    <y>365</y>
+    <width>210</width>
     <foreground_color>
       <color red="10" green="0" blue="184">
       </color>
@@ -409,7 +383,7 @@
   <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>375</y>
+    <y>395</y>
     <width>460</width>
     <height>140</height>
     <widget type="label" version="2.0.0">
@@ -472,12 +446,13 @@
       <pv_name>$(P)$(R)WriteFileMessage</pv_name>
       <x>65</x>
       <y>56</y>
-      <width>385</width>
+      <width>360</width>
       <height>22</height>
       <font>
         <font family="Sans" style="REGULAR" size="9.0">
         </font>
       </font>
+      <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HintLbl</name>
@@ -494,5 +469,20 @@
         </color>
       </foreground_color>
     </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>BothCntHint</name>
+    <text>Yes → threshold 0 on Pva1, threshold 1 on Pva2. Set PrvImgThs on preview writer.</text>
+    <x>20</x>
+    <y>114</y>
+    <width>420</width>
+    <font>
+      <font family="Sans" style="REGULAR" size="9.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="64" green="64" blue="64">
+      </color>
+    </foreground_color>
   </widget>
 </display>
