@@ -2461,6 +2461,13 @@ asynStatus ADTimePix::initAcquisition(){
         //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
         getIntegerParam(ADTriggerMode, &intNum);
+        const int triggerModeIdx = intNum;
+        if (mpx3BothCountersTriggerConflict(triggerModeIdx)) {
+            ERR_ARGS("%s", kMpx3BothCountersTriggerMsg);
+            setStringParam(ADTimePixWriteMsg, kMpx3BothCountersTriggerMsg);
+            setIntegerParam(ADTimePixHttpCode, 400);
+            return asynError;
+        }
         json triggerMode;
         triggerMode[0] = "PEXSTART_NEXSTOP";
         triggerMode[1] = "NEXSTART_PEXSTOP";

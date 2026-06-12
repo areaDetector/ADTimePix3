@@ -771,6 +771,9 @@ class ADTimePix : public ADDriver{
         asynStatus sendMeasurementConfig();
         void updateDetectorFamily(int mpxType, const std::string& chipType, const std::string& chipboardId);
         void applyFamilyDefaults(DetectorFamily family);
+        /** MPX3: BothCounters=true is incompatible with TriggerMode index 5 (CONTINUOUS). */
+        bool mpx3BothCountersTriggerConflict(int triggerMode) const;
+        static const char kMpx3BothCountersTriggerMsg[];
         /** Push processed Img (running sum and sum-of-N) as NDArrays to addresses 2 and 3 for file plugins. */
         void pushProcessedImgToPlugins();
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */

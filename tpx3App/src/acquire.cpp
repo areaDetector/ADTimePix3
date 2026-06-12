@@ -209,6 +209,16 @@ asynStatus ADTimePix::acquireStart(){
     setIntegerParam(ADStatus, ADStatusAcquire);
     setStringParam(ADStatusMessage, "Starting acquisition...");
 
+    int triggerMode = 0;
+    getIntegerParam(ADTriggerMode, &triggerMode);
+    if (mpx3BothCountersTriggerConflict(triggerMode)) {
+        ERR_ARGS("%s", kMpx3BothCountersTriggerMsg);
+        setStringParam(ADStatusMessage, kMpx3BothCountersTriggerMsg);
+        setIntegerParam(ADStatus, ADStatusError);
+        callParamCallbacks();
+        return asynError;
+    }
+
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.joinable = 1;
 

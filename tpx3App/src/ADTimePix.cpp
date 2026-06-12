@@ -529,15 +529,36 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixBiasVolt || function == ADTimePixBiasEnable || function == ADTimePixTriggerIn || function == ADTimePixTriggerOut || function == ADTimePixLogLevel \
-                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode || function == ADTimePixBothCounters \
+                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode \
                 || function == ADTimePixPolarity || function == ADTimePixChargeSumming || function == ADTimePixColour \
                 || function == ADTimePixPixelDepth || function == ADTimePixCounterSelectIn || function == ADTimePixCounterSelectOut \
                 || function == ADTimePixIDelay0 || function == ADTimePixIDelay1 || function == ADTimePixIDelay2 || function == ADTimePixIDelay3) {
         status = initAcquisition();
-    }    
+    }
 
-    else if(function == ADNumImages || function == ADTriggerMode) { 
-        if(function == ADNumImages) {
+    else if(function == ADTimePixBothCounters) {
+        if (value != 0) {
+            int triggerMode = 0;
+            getIntegerParam(ADTriggerMode, &triggerMode);
+            if (mpx3BothCountersTriggerConflict(triggerMode)) {
+                LOG("MPX3 BothCounters: auto-switching TriggerMode 5 (CONTINUOUS) -> 4 (AUTOTRIGSTART_TIMERSTOP)");
+                setIntegerParam(ADTriggerMode, 4);
+                callParamCallbacks(ADTriggerMode);
+            }
+            setStringParam(ADTimePixPrvImgThs, "0,1");
+            callParamCallbacks(ADTimePixPrvImgThs);
+        }
+        status = initAcquisition();
+    }
+
+    else if(function == ADNumImages || function == ADTriggerMode) {
+        if(function == ADTriggerMode && mpx3BothCountersTriggerConflict(value)) {
+            LOG_ARGS("%s", kMpx3BothCountersTriggerMsg);
+            setIntegerParam(ADTriggerMode, 4);
+            setStringParam(ADStatusMessage, kMpx3BothCountersTriggerMsg);
+            callParamCallbacks(ADTriggerMode);
+        }
+        else if(function == ADNumImages) {
             int imageMode;
             getIntegerParam(ADImageMode,&imageMode);
             if (imageMode == 0 && value != 1) {
@@ -1686,6 +1707,19 @@ void ADTimePix::updateDetectorFamily(int mpxType, const std::string& chipType,
         FLOW_ARGS("Detector family %s (MpxType=%d ChipType=%s ChipboardId=%s)",
                   detectorFamilyName(family), mpxType, chipType.c_str(), chipboardId.c_str());
     }
+}
+
+const char ADTimePix::kMpx3BothCountersTriggerMsg[] =
+    "MPX3: BothCounters requires non-Continuous TriggerMode (use AutoTrgSt_TmrSp=4)";
+
+bool ADTimePix::mpx3BothCountersTriggerConflict(int triggerMode) const {
+    if (detectorFamily_ != DetectorFamily::MPX3) {
+        return false;
+    }
+    int bothCounters = 0;
+    ADTimePix* self = const_cast<ADTimePix*>(this);
+    self->getIntegerParam(ADTimePixBothCounters, &bothCounters);
+    return bothCounters != 0 && triggerMode == 5;
 }
 
 void ADTimePix::applyFamilyDefaults(DetectorFamily family) {

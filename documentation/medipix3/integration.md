@@ -118,6 +118,19 @@ So the “two images” on **two TCP ports** are **current frame vs time-integra
 
 **EPICS v1:** one preview TCP consumer routes by **`thresholdID`**: address **0** (threshold 0) and **8** (threshold 1). Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start. `BothCounters_RBV` from detector config. A second preview TCP channel (`PrvImg1` / 8089) still needs a worker thread.
 
+### BothCounters operational notes (2026-06)
+
+Serval **rejects** `BothCounters=true` with **`TriggerMode: CONTINUOUS`** (`TriggerMode` PV index **5**). The v1 MPX3 IOC startup sets Continuous by default (`init_detector_hw_mpx3.cmd`); for dual threshold use **`TriggerMode=4`** (`AUTOTRIGSTART_TIMERSTOP`) or **`6`** (`SOFTWARESTART_TIMERSTOP`). The driver auto-switches **5→4** when **`BothCounters=Yes`** is written and blocks acquire if both are still active.
+
+Recommended checklist when enabling dual threshold:
+
+1. **DetConfig:** `BothCounters=Yes` (driver sets `PrvImgThs` to `0,1` in the driver; run **WriteData** on the preview writer to push destination).
+2. **TriggerMode** not Continuous (4 or 6).
+3. **AcquirePeriod** ≥ ~0.15 s if Serval logs `Dropping frame … missing UDP packet(s) … (2/4)` — dual-counter readout needs more time per frame.
+4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`.
+
+UDP `(2/4)` drops and a **horizontal split at y=256** in the image mean half the chip UDP packets did not arrive before Serval assembled the frame — usually trigger rate or hardware/emulator limits, not EPICS preview TCP.
+
 Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver parses header fields and demuxes by **`thresholdID`** to NDArray addresses 0 and 8; integrated preview from 8089 still requires a `PrvImg1` worker (Phase 2).
 
 ## Preview TCP ports and acquisition
