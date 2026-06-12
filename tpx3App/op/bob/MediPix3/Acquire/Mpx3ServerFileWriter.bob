@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3ServerFileWriter</name>
   <width>1140</width>
-  <height>780</height>
+  <height>830</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -28,9 +28,9 @@
       <color red="220" green="235" blue="255">
       </color>
     </background_color>
+    <transparent>false</transparent>
     <horizontal_alignment>1</horizontal_alignment>
     <vertical_alignment>1</vertical_alignment>
-    <transparent>false</transparent>
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>PreviewChannels</name>
@@ -38,7 +38,7 @@
     <x>5</x>
     <y>32</y>
     <width>1130</width>
-    <height>745</height>
+    <height>790</height>
     <resize>4</resize>
     <transparent>true</transparent>
   </widget>
