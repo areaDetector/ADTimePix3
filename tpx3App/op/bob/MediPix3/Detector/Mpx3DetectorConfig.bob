@@ -536,6 +536,7 @@
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
+      <format>6</format>
       <tooltip>Medipix3 pre-amplifier gain (Serval Config). Erik Accos example: HGM. Common: LGM, HGM, SHGM — confirm with ASI / chip DAC docs.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
