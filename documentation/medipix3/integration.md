@@ -102,9 +102,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 
 ## How Medipix3 preview images differ from Timepix3
 
-**Vendor notes (ASI):** Erik indicates that with **`BothCounters`** enabled, Serval sends **two separate jsonimage messages** (low/first threshold, then high/second); Accos uses the **threshold index in the image header** (manual names the field **`thresholdID`** — see below). That model is separate from the **frame vs integrated-preview** split on two TCP ports (8088 / 8089). See **[preview-dual-threshold.md](preview-dual-threshold.md)** for correspondence, open questions, and the implementation plan. *v1 IOC uses single-channel preview only.*
-
-Serval does **not** send “two threshold images” on one TCP socket **in the v1 EPICS profile** (one consumer, no header demux yet). Configuration controls what each **preview channel** produces:
+**Vendor notes (ASI):** With **`BothCounters`** enabled, Serval sends **two consecutive jsonimage messages per trigger** on TCP **8088** (`thresholdID=1` then `0`); Accos and the EPICS driver demux by **`thresholdID`** in the header. That is separate from the **frame vs integrated-preview** split on two TCP ports (8088 / 8089). See **[preview-dual-threshold.md](preview-dual-threshold.md)** for Erik’s confirmed Accos behaviour and the implementation plan.
 
 | Concept | MPX3 (Medipix3) | TPX3 (Timepix3) |
 |---------|-----------------|-----------------|
@@ -114,9 +112,9 @@ Serval does **not** send “two threshold images” on one TCP socket **in the v
 | Channel 0 (e.g. 8088) | `IntegrationSize: 0` or `1` — **current frame** (no integration) | Frame preview |
 | Channel 1 (e.g. 8089) | `IntegrationSize: -1` — **integrated from measurement start**; ASI example uses `IntegrationMode: last` (non-zero overwrite). IOC default for disabled `PrvImg1` uses `IntgMode=sum` if enabled — choose mode to match intent | Optional second preview (`PrvImg1`) |
 
-So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not automatically “low threshold vs high threshold”. Dual-threshold images (if `BothCounters`) are a **header** concern (`thresholdID`) and may arrive as consecutive jsonimage messages on one socket.
+So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
-**EPICS v1:** one preview TCP consumer routes by **`thresholdID`**: address **0** (threshold 0) and **8** (threshold 1). Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start. `BothCounters_RBV` from detector config. A second preview TCP channel (`PrvImg1` / 8089) still needs a worker thread.
+**EPICS v1:** one preview TCP consumer on **8088** routes by **`thresholdID`**: NDArray address **0** / **Pva1** (threshold 0) and address **8** / **Pva2** (threshold 1). Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start. **`BothCounters_RBV`** from detector config. Integrated preview on **8089** still needs a **`PrvImg1` worker** (Phase 2).
 
 ### BothCounters operational notes (2026-06)
 
@@ -124,14 +122,34 @@ Serval **rejects** `BothCounters=true` with **`TriggerMode: CONTINUOUS`** (`Trig
 
 Recommended checklist when enabling dual threshold:
 
-1. **DetConfig:** `BothCounters=Yes` (driver sets `PrvImgThs` to `0,1` in the driver; run **WriteData** on the preview writer to push destination).
+1. **DetConfig:** `BothCounters=Yes` (driver sets `PrvImgThs` to `0,1`; run **WriteData** to push destination).
 2. **TriggerMode** not Continuous (4 or 6).
-3. **AcquirePeriod** ≥ ~0.15 s if Serval logs `Dropping frame … missing UDP packet(s) … (2/4)` — dual-counter readout needs more time per frame.
+3. **AcquirePeriod** long enough for dual-counter readout — Erik’s Accos reference uses **0.5 s**; shorter periods may log `Dropping frame … missing UDP packet(s) … (2/4)`.
 4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`.
 
 UDP `(2/4)` drops and a **horizontal split at y=256** in the image mean half the chip UDP packets did not arrive before Serval assembled the frame — usually trigger rate or hardware/emulator limits, not EPICS preview TCP.
 
 Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver parses header fields and demuxes by **`thresholdID`** to NDArray addresses 0 and 8; integrated preview from 8089 still requires a `PrvImg1` worker (Phase 2).
+
+### Erik’s validated dual-threshold recipe (Accos, 2026-06-12)
+
+Erik confirmed **4 triggers → 8 preview frames** on TCP **8088** (`thresholdID=1` then `0` per trigger, full 512×512). Matching EPICS settings:
+
+```bash
+caput MPX3-TEST:cam1:BothCounters 1
+caput MPX3-TEST:cam1:TriggerMode 4          # AutoTrgSt_TmrSp (AUTOTRIGSTART_TIMERSTOP)
+caput MPX3-TEST:cam1:ImageMode 1            # finite (Multiple)
+caput MPX3-TEST:cam1:NumImages 4
+caput MPX3-TEST:cam1:AcquirePeriod 0.5
+caput MPX3-TEST:cam1:AcquireTime 0.495
+caput MPX3-TEST:cam1:PrvImgThs "0,1"
+caput MPX3-TEST:cam1:WriteData 1
+caput MPX3-TEST:cam1:Acquire 1
+```
+
+During acquire, **`PrvImgThresholdID_RBV`** should alternate **1 → 0** as **`PrvImgFrameNumber_RBV`** steps 0…3. **`NumImagesCounter`** / Serval **`FrameCount`** count **triggers** (4), not jsonimage messages (8). Rebuild **`tpx3App`** after driver changes (`make -C iocs/tpx3IOC install`) and restart the IOC before testing.
+
+See **[preview-dual-threshold.md](preview-dual-threshold.md)** for Accos code reference and resolved open questions.
 
 ## Preview TCP ports and acquisition
 

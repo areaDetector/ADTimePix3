@@ -1,22 +1,27 @@
 # Medipix3 preview and dual-threshold delivery (vendor notes)
 
-**Status:** Open — awaiting ASI (Erik) answers to follow-up questions (2026-06-08).  
-**Related:** [integration.md](integration.md) (v1 IOC profile and validated single-channel preview).
+**Status:** Resolved — Erik confirmed Accos behaviour (2026-06-12). Phase 1 driver demux is implemented; Phase 2 (8089 integrated preview worker) remains open.  
+**Related:** [integration.md](integration.md) (v1 IOC profile, validated single-channel preview, and Erik’s dual-threshold test recipe).
 
-This note captures correspondence with ASI on how Serval delivers Medipix3 preview and threshold images, and the planned EPICS driver work. Update the **Open questions** and **Implementation plan** sections when Erik responds.
+This note captures correspondence with ASI on how Serval delivers Medipix3 preview and threshold images, and tracks EPICS driver work against the Accos reference client.
 
 ---
 
 ## Summary (Erik / Accos model)
 
-| Topic | Erik’s input (2026-06) |
-|-------|------------------------|
-| Dual threshold | With two thresholds active, Serval sends **two separate images** — **low/first threshold, then high/second**, in rapid succession (similar to X-Spectrum Lambda). |
-| Header metadata | **Accos reads `thresholdID` from the jsonimage header** (Serval manual p. 22) and routes display/save accordingly. |
-| Detector config | Behaviour is driven by **detector configuration**, not only by the destination endpoint. **`BothCounters`** is `true` when two threshold images are produced. |
+| Topic | Erik’s input |
+|-------|----------------|
+| Dual threshold | With **`BothCounters=true`**, Serval sends **two separate jsonimage messages per trigger** on preview TCP **8088** — **`thresholdID=1` first, then `thresholdID=0`**, same `frameNumber` (Accos, 2026-06-12). |
+| Frame count | **4 triggers → 8 preview frames** (two jsonimage messages per trigger). Serval **`nTriggers`** / EPICS **`NumImages`** count triggers, not jsonimage messages. |
+| Header metadata | Accos reads **`thresholdID`** from the jsonimage header (Serval manual p. 22) and stores `latestImage[thresholdID]`. EPICS driver routes the same way. |
+| Delivery path | **Same TCP socket** (8088) — consecutive `jsonimage` messages; **not** separate destination channels per threshold. |
+| `Thresholds` list | **`[0, 1]` on one preview channel** (`PrvImgThs` / destination `Thresholds`). |
+| Integrated preview | **8089** uses the **same threshold demux** when integration is enabled — Accos reads integrated socket in parallel and routes by `thresholdID`. Orthogonal to dual-threshold on 8088 (integration axis, not second threshold). |
+| Detector config | **`BothCounters=true`** in detector config enables dual-counter readout. **`TriggerMode`** must not be **`CONTINUOUS`** (Serval rejects the combination). |
+| Image size | Full **512×512** per message when readout completes; partial UDP loss shows as dropped frames or split images, not as half-height jsonimage headers. |
 | Emulator | Medipix3 emulator may show a **moving column of zero-count pixels** per image (useful when inspecting raw headers). |
 
-**Not yet confirmed by Erik:** same TCP socket vs separate channels for dual threshold; whether dual-threshold applies to `Preview`, `Image`, or both. **Serval manual (p. 22):** jsonimage header field is **`thresholdID`** (integer). Channel 8089 with `IntegrationSize: -1` is **integrated from measurement start** (manual p. 20), independent of dual threshold — ASI example uses `IntegrationMode: last`, not sum.
+**Serval manual (p. 22):** jsonimage header field is **`thresholdID`** (integer). Channel 8089 with `IntegrationSize: -1` is **integrated from measurement start** (manual p. 20), independent of dual threshold — ASI example uses `IntegrationMode: last`, not sum.
 
 ---
 
@@ -28,7 +33,7 @@ Serval configuration mixes two independent axes:
 
 - **Product:** two count images per logical update, distinguished by **`thresholdID`** in the jsonimage header (Serval manual p. 22; Accos/Erik).
 - **Driver implication:** demux on **one TCP stream** (parse header → route to two NDArray addresses or tag with NDAttribute).
-- **Config signal:** `BothCounters` in detector config (not yet read by ADTimePix3).
+- **Config signal:** `BothCounters` in detector config; driver exposes **`BothCounters_RBV`** and writes the PV on change.
 
 ### B. Dual preview channel (Serval manual §4, `serval_mpx3.json`)
 
@@ -60,32 +65,36 @@ Same **channel schema** and **`jsonimage` wire format**; **not equivalent** in S
 
 ---
 
-## Current driver gap (ADTimePix3)
+## Driver status (ADTimePix3)
 
-| Area | Today | Needed for dual threshold |
-|------|--------|---------------------------|
-| jsonimage parser | Reads `width`, `height`, `frameNumber`, `timeAtFrame`, `pixelFormat` only | Parse **`thresholdID`** from header (Serval manual p. 22) |
-| NDArray routing | All PrvImg frames → address **0** | Route by `thresholdID` (e.g. 0 → addr 0, 1 → new addr) |
-| NDAttributes | Standard AD attrs only | e.g. `ThresholdID` / `thresholdID` on each array |
-| Detector config | Family/threshold **lists** in destination JSON | Read **`BothCounters`** from `GET /detector` |
-| Second preview TCP | `PrvImg1` PVs exist; **no worker thread** | Optional: clone worker for integrated preview on 8089 |
-| IOC / PVA | One `NDStdArrays` on address 0 | Second PVA instance when dual threshold enabled |
+| Area | Status |
+|------|--------|
+| jsonimage parser | Parses **`thresholdID`**, `integrationSize`, `frameNumber`, dimensions, etc. |
+| NDArray routing | **`thresholdID=0` → addr 0** (Pva1); **`thresholdID=1` → addr 8** (Pva2) |
+| NDAttributes | **`ThresholdID`** on each array; **`PrvImgThresholdID_RBV`** |
+| Detector config | **`BothCounters`** read/write; trigger guardrails (no Continuous + BothCounters) |
+| Second preview TCP | **`PrvImg1` PVs exist; no worker thread** — Phase 2 (8089 integrated preview) |
+| IOC / PVA | **`NDStdArrays` + Pva2** on address 8 when dual threshold enabled |
 
-Code references: `processPrvImgDataLine()` / `processImgDataLine()` in `tpx3App/src/serval_stream.cpp`; destination push in `configureImageChannel()` in `tpx3App/src/serval_http.cpp`.
+Code references: `processPrvImgDataLine()` in `tpx3App/src/serval_stream.cpp`; destination push in `configureImageChannel()` in `tpx3App/src/serval_http.cpp`.
 
----
-
-## Open questions (sent to Erik, 2026-06-08)
-
-1. With **`BothCounters = true`**, are both threshold images on the **same TCP stream** (two consecutive `jsonimage` messages) or on **separate destination channels**?
-2. Confirm **`thresholdID`** behaviour and dual-threshold delivery path (manual documents the field; Erik pending on same-socket vs split channels).
-3. With **`BothCounters = true`**, should `Thresholds` be **`[0, 1]` on one channel** or split across channels/ports?
-4. Is **`Preview.ImageChannels[1]`** (8089, `IntegrationSize: -1`) independent of dual threshold? *(Manual: yes — integrated-from-start preview, not second threshold.)*
-5. Besides **`BothCounters`**, which other **detector-side fields** should clients read?
+Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview socket; `latestImage[getThresholdFromHeader(header)] = image`. EPICS `prvImgWorker` is equivalent.
 
 ---
 
-## Implementation plan (after Erik confirms)
+## Open questions — resolved (Erik, 2026-06-12)
+
+| # | Question (2026-06-08) | Answer |
+|---|------------------------|--------|
+| 1 | Same TCP stream vs separate channels for dual threshold? | **Same stream (8088)** — two consecutive jsonimage messages per trigger. |
+| 2 | **`thresholdID`** delivery path? | **Header field** on each message; Accos and ADTimePix3 demux by `thresholdID`. Order per trigger: **1 then 0**. |
+| 3 | **`Thresholds`** on one channel or split? | **`[0, 1]` on one preview channel** (`PrvImgThs` / destination JSON). |
+| 4 | Is 8089 independent of dual threshold? | **Yes** — 8089 is **integrated-from-start** preview; dual threshold still applies on 8089 when integration is enabled (same header demux). |
+| 5 | Other detector fields besides **`BothCounters`**? | Erik’s working example used standard config: **`TriggerMode`**, **`TriggerPeriod`**, **`ExposureTime`**, **`nTriggers`**, **`GainMode`**, **`PixelDepth`**, **`IDelayConfig`**, etc. No extra hidden flag beyond **`BothCounters`** for dual-threshold preview on 8088. |
+
+---
+
+## Implementation plan
 
 ### Phase 0 — Observe (low risk)
 
@@ -109,8 +118,30 @@ Code references: `processPrvImgDataLine()` / `processImgDataLine()` in `tpx3App/
 
 ### Phase 3 — Configuration alignment
 
-- [ ] Family defaults for `PrvImgThs` when `BothCounters=1` (per Erik).
+- [x] Driver sets **`PrvImgThs` to `0,1`** when **`BothCounters=Yes`** is written; user runs **WriteData** to push destination.
 - [x] Phoebus: dual image widgets (`Mpx3PrvImgMonitor.bob`, Pva1/Pva2).
+
+---
+
+## Erik’s validated Accos run (2026-06-12)
+
+Serval config pushed before acquire:
+
+```json
+{
+  "TriggerMode": "AUTOTRIGSTART_TIMERSTOP",
+  "nTriggers": 4,
+  "TriggerPeriod": 0.5,
+  "ExposureTime": 0.495,
+  "BothCounters": true,
+  "GainMode": "HGM",
+  "ChargeSumming": false,
+  "PixelDepth": "12",
+  "IDelayConfig": [15, 15, 15, 10]
+}
+```
+
+Result: **8 jsonimage frames** on TCP **8088** — for each `frameNumber` 0…3, **`thresholdID=1`** then **`thresholdID=0`**, each **512×512**. See [integration.md](integration.md) for the matching EPICS `caput` recipe.
 
 ---
 
@@ -119,10 +150,10 @@ Code references: `processPrvImgDataLine()` / `processImgDataLine()` in `tpx3App/
 | Date | From | Notes |
 |------|------|-------|
 | 2026-06 | Kaz → Erik | Asked how Serval sends low/high threshold images vs Lambda; referenced `serval_mpx3.json` two preview channels. |
-| 2026-06 | Erik | Two separate images (low then high); **`BothCounters`**; Accos uses **header threshold index**. |
-| 2026-06-08 | Kaz → Erik | Follow-up email: five questions (delivery path, header field, Thresholds list, 8089 meaning, detector fields). *Pending.* |
-
+| 2026-06 | Erik | Two separate images per trigger; **`BothCounters`**; Accos uses **header `thresholdID`**. |
+| 2026-06-08 | Kaz → Erik | Follow-up: five questions (delivery path, header field, Thresholds list, 8089 meaning, detector fields). |
 | 2026-06-10 | Manual review | **Serval V4.1.3 manual** §4: 8088 frame / 8089 `IntegrationSize:-1` integrated from measurement start; example `IntegrationMode: last`; jsonimage **`thresholdID`**. |
+| 2026-06-12 | Erik → Kaz | Accos code + log: **8088**, **`thresholdID` 1 then 0**, 4 triggers → 8 frames, integrated socket **8089** same demux; working **`TriggerPeriod=0.5`**, **`ExposureTime=0.495`**, **`AUTOTRIGSTART_TIMERSTOP`**. |
 
 ---
 
@@ -131,4 +162,4 @@ Code references: `processPrvImgDataLine()` / `processImgDataLine()` in `tpx3App/
 - **ASI Serval manual** `20251202_ASIServer_TPX3_manual_V4.1.3.pdf` (bundled with Serval 4.1.5) — destination example pp. 18–19; `IntegrationSize` / `IntegrationMode` table 4.3 pp. 19–20; jsonimage header p. 22 (`thresholdID`).
 - ADMediPix3 `configs/serval/serval_mpx3.json` — reference destination (frame + integrated preview).
 - [integration.md](integration.md) — validated v1 single-channel preview and troubleshooting.
-- [PROCESSED_IMAGE_FILE_SAVING.md](../PROCESSED_IMAGE_FILE_SAVING.md) — NDArray address map (0–7 in use; address 8+ TBD for second threshold preview).
+- [PROCESSED_IMAGE_FILE_SAVING.md](../PROCESSED_IMAGE_FILE_SAVING.md) — NDArray address map (address **8** = PrvImg threshold 1 / Pva2).
