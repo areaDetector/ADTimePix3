@@ -31,15 +31,15 @@ cd iocs/tpx3IOC/iocBoot/iocTimePix
 
 Or from iocsh: `st_mpx3.cmd` (includes `unique_mpx3.cmd` and `init_detector_mpx3.cmd`).
 
-Defaults:
+Defaults (from `init_detector_mpx3.cmd`):
 
 - PV prefix `MPX3-TEST:`
 - asyn port `MPX3`
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
-- single-layer preview on TCP port 8088 (frame channel; port rotates on repeat acquire)
-- `PrvImg1` (integrated preview on second TCP) disabled until a driver TCP worker exists
-- `count` image mode with Serval `Thresholds[]` when family is MPX3
-- BPC/DACS defaults: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
+- preview on TCP **8088** (`PrvImgThs` **0,1**, jsonimage format)
+- **`BothCounters=Yes`**, **`TriggerMode=AutoTrgSt_TmrSp` (4)**, **4 triggers**, **0.5 s** period (Erik Accos recipe)
+- `PrvImg1` (integrated preview on 8089) disabled until a driver TCP worker exists
+- BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
 **Phoebus:** open `tpx3App/op/bob/MediPix3/MediPix3.bob` with the same `P`/`R` macros (preview TCP config in `Acquire/Mpx3PreviewChannels.bob`, live images in `Acquire/Mpx3PrvImgMonitor.bob`). For `PrvImgThs` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
 
@@ -49,7 +49,7 @@ Defaults:
 2. Build this module: `make -j` from the module root.
 3. Start IOC with `st_mpx3.sh`.
 4. Confirm `MPX3-TEST:cam1:DetectorFamily_RBV` = `MPX3` after connect.
-5. Push channel config: `caput MPX3-TEST:cam1:WriteData 1`
+5. Confirm startup pushed config: `BothCounters_RBV`, `TriggerMode`, `WriteData` (or `dbpf` `WriteData=1` if Serval was late).
 6. Start acquisition: `caput MPX3-TEST:cam1:Acquire 1`
 
 ## Calibration files (`vendor/mpx3/`)
@@ -118,7 +118,7 @@ So the “two images” on **two TCP ports** are **current frame vs time-integra
 
 ### BothCounters operational notes (2026-06)
 
-Serval **rejects** `BothCounters=true` with **`TriggerMode: CONTINUOUS`** (`TriggerMode` PV index **5**). The v1 MPX3 IOC startup sets Continuous by default (`init_detector_hw_mpx3.cmd`); for dual threshold use **`TriggerMode=4`** (`AUTOTRIGSTART_TIMERSTOP`) or **`6`** (`SOFTWARESTART_TIMERSTOP`). The driver auto-switches **5→4** when **`BothCounters=Yes`** is written and blocks acquire if both are still active.
+Serval **rejects** `BothCounters=true` with **`TriggerMode: CONTINUOUS`** (`TriggerMode` PV index **5**). The MPX3 IOC startup profile uses **`TriggerMode=4`** (`AUTOTRIGSTART_TIMERSTOP`) with **`BothCounters=Yes`**. The driver auto-switches **5→4** when **`BothCounters=Yes`** is written later and blocks acquire if both are still active.
 
 Recommended checklist when enabling dual threshold:
 

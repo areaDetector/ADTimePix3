@@ -1,5 +1,5 @@
-# Medipix3 channel/path defaults (single preview TCP channel). Safe when detector is offline.
-# Reference: ADMediPix3 configs/serval/serval_mpx3.json
+# Medipix3 channel/path defaults (preview TCP 8088; dual-threshold PrvImgThs 0,1). Safe when detector is offline.
+# Reference: ADMediPix3 configs/serval/serval_mpx3.json; Erik Accos recipe — documentation/medipix3/integration.md
 
 dbpf("$(PREFIX)cam1:RawFilePath","file:/media/nvme/raw")
 dbpf("$(PREFIX)cam1:RawFileTemplate","raw%MdHms_")
@@ -34,7 +34,8 @@ dbpf("$(PREFIX)cam1:PrvImgIntgSize","1")
 dbpf("$(PREFIX)cam1:PrvImgIntgMode","0")
 dbpf("$(PREFIX)cam1:PrvStpOnDskLim","0")
 dbpf("$(PREFIX)cam1:PrvImgQueueSize","16")
-dbpf("$(PREFIX)cam1:PrvImgThs","0,1,2,3,4,5,6,7")
+# Dual threshold (BothCounters): thresholds 0 and 1 only on one preview channel
+dbpf("$(PREFIX)cam1:PrvImgThs","0,1")
 dbpf("$(PREFIX)cam1:WritePrvImg","1")
 
 # Second preview layer (running sum) — disabled for v1: no IOC TCP consumer; Serval buffer fills on 8089
