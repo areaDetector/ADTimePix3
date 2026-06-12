@@ -413,6 +413,23 @@
         </color>
       </background_color>
     </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>AcquireTimeRBV</name>
+      <pv_name>$(P)$(R)AcquireTime_RBV</pv_name>
+      <x>255</x>
+      <y>103</y>
+      <width>210</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <precision>3</precision>
+      <tooltip>ADCore readback (same as main screen); Serval ExposureTime after Health refresh</tooltip>
+    </widget>
     <widget type="label" version="2.0.0">
       <name>TriggerPeriodLbl</name>
       <text>TriggerPeriod</text>
@@ -432,6 +449,23 @@
         </color>
       </background_color>
     </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>AcquirePeriodRBV</name>
+      <pv_name>$(P)$(R)AcquirePeriod_RBV</pv_name>
+      <x>255</x>
+      <y>128</y>
+      <width>210</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <precision>3</precision>
+      <tooltip>ADCore readback (same as main screen); Serval TriggerPeriod after Health refresh</tooltip>
+    </widget>
     <widget type="label" version="2.0.0">
       <name>nTriggersLbl</name>
       <text>nTriggers</text>
@@ -450,6 +484,22 @@
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>NumImagesRBV</name>
+      <pv_name>$(P)$(R)NumImages_RBV</pv_name>
+      <x>255</x>
+      <y>153</y>
+      <width>210</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <tooltip>ADCore readback (same as main screen); pushed to Serval as nTriggers on WriteData</tooltip>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">

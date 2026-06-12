@@ -1398,6 +1398,7 @@ asynStatus ADTimePix::getDetector(){
         setDoubleParam(ADTimePixTriggerPeriod,           jsonDoubleOr(cfg["TriggerPeriod"]));
         setDoubleParam(ADAcquirePeriod,                  jsonDoubleOr(cfg["TriggerPeriod"]));
         setIntegerParam(ADTimePixnTriggers,              jsonIntOr(cfg["nTriggers"]));
+        setIntegerParam(ADNumImages,                     jsonIntOr(cfg["nTriggers"]));
         setIntegerParam(ADTimePixPeriphClk80,              jsonBoolOr(cfg.value("PeriphClk80", json())) ? 1 : 0);
         setDoubleParam(ADTimePixTriggerDelay,            jsonDoubleOr(cfg.value("TriggerDelay", json())));
         setStringParam(ADTimePixTdc,                     jsonStringOr(cfg.value("Tdc", json())).c_str());
