@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
   <width>470</width>
-  <height>540</height>
+  <height>820</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -380,10 +380,364 @@
       </color>
     </background_color>
   </widget>
+  <widget type="label" version="2.0.0">
+    <name>PolarityLbl</name>
+    <text>Polarity</text>
+    <x>3</x>
+    <y>390</y>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="combo" version="2.0.0">
+    <name>PolaritySP</name>
+    <pv_name>$(P)$(R)Polarity</pv_name>
+    <x>110</x>
+    <y>388</y>
+    <width>140</width>
+    <height>22</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>PolarityRBV</name>
+    <pv_name>$(P)$(R)Polarity_RBV</pv_name>
+    <x>255</x>
+    <y>388</y>
+    <width>210</width>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <format>6</format>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>Mpx3ChipGroup</name>
+    <x>5</x>
+    <y>440</y>
+    <width>460</width>
+    <height>230</height>
+    <widget type="label" version="2.0.0">
+      <name>Mpx3ChipTitle</name>
+      <text>MPX3 chip config</text>
+      <x>5</x>
+      <y>2</y>
+      <width>120</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>GainModeLbl</name>
+      <text>GainMode</text>
+      <y>28</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>GainModeSP</name>
+      <pv_name>$(P)$(R)GainMode</pv_name>
+      <x>110</x>
+      <y>26</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>Serval string e.g. SHGM</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>GainModeRBV</name>
+      <pv_name>$(P)$(R)GainMode_RBV</pv_name>
+      <x>255</x>
+      <y>26</y>
+      <width>175</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ChargeSumLbl</name>
+      <text>ChargeSumming</text>
+      <y>53</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>ChargeSummingSP</name>
+      <pv_name>$(P)$(R)ChargeSumming</pv_name>
+      <x>110</x>
+      <y>51</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ChargeSummingRBV</name>
+      <pv_name>$(P)$(R)ChargeSumming_RBV</pv_name>
+      <x>255</x>
+      <y>51</y>
+      <width>175</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ColourLbl</name>
+      <text>Colour</text>
+      <y>78</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>ColourSP</name>
+      <pv_name>$(P)$(R)Colour</pv_name>
+      <x>110</x>
+      <y>76</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ColourRBV</name>
+      <pv_name>$(P)$(R)Colour_RBV</pv_name>
+      <x>255</x>
+      <y>76</y>
+      <width>175</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PixelDepthLbl</name>
+      <text>PixelDepth</text>
+      <y>103</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PixelDepthSP</name>
+      <pv_name>$(P)$(R)PixelDepth</pv_name>
+      <x>110</x>
+      <y>101</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PixelDepthRBV</name>
+      <pv_name>$(P)$(R)PixelDepth_RBV</pv_name>
+      <x>255</x>
+      <y>101</y>
+      <width>175</width>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>CntSelInLbl</name>
+      <text>CounterSelectIn</text>
+      <y>128</y>
+      <width>140</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>CounterSelectInSP</name>
+      <pv_name>$(P)$(R)CounterSelectIn</pv_name>
+      <x>150</x>
+      <y>126</y>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>CounterSelectInRBV</name>
+      <pv_name>$(P)$(R)CounterSelectIn_RBV</pv_name>
+      <x>255</x>
+      <y>126</y>
+      <width>175</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>CntSelOutLbl</name>
+      <text>CounterSelectOut</text>
+      <y>153</y>
+      <width>140</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>CounterSelectOutSP</name>
+      <pv_name>$(P)$(R)CounterSelectOut</pv_name>
+      <x>150</x>
+      <y>151</y>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>CounterSelectOutRBV</name>
+      <pv_name>$(P)$(R)CounterSelectOut_RBV</pv_name>
+      <x>255</x>
+      <y>151</y>
+      <width>175</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>IDelayLbl</name>
+      <text>IDelayConfig</text>
+      <y>178</y>
+      <width>110</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>IDelay0SP</name>
+      <pv_name>$(P)$(R)IDelay0</pv_name>
+      <x>110</x>
+      <y>176</y>
+      <width>30</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>IDelayConfig[0]</tooltip>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>IDelay1SP</name>
+      <pv_name>$(P)$(R)IDelay1</pv_name>
+      <x>145</x>
+      <y>176</y>
+      <width>30</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>IDelayConfig[1]</tooltip>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>IDelay2SP</name>
+      <pv_name>$(P)$(R)IDelay2</pv_name>
+      <x>180</x>
+      <y>176</y>
+      <width>30</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>IDelayConfig[2]</tooltip>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>IDelay3SP</name>
+      <pv_name>$(P)$(R)IDelay3</pv_name>
+      <x>215</x>
+      <y>176</y>
+      <width>30</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>IDelayConfig[3]</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>IDelayRBV</name>
+      <pv_name>$(P)$(R)IDelay0_RBV</pv_name>
+      <x>255</x>
+      <y>176</y>
+      <width>40</width>
+      <tooltip>IDelay0 RBV (Refresh for full array)</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>IDelayRBV_1</name>
+      <pv_name>$(P)$(R)IDelay1_RBV</pv_name>
+      <x>300</x>
+      <y>176</y>
+      <width>40</width>
+      <tooltip>IDelay1 RBV (Refresh for full array)</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>IDelayRBV_2</name>
+      <pv_name>$(P)$(R)IDelay2_RBV</pv_name>
+      <x>345</x>
+      <y>176</y>
+      <width>40</width>
+      <tooltip>IDelay2 RBV (Refresh for full array)</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>IDelayRBV_3</name>
+      <pv_name>$(P)$(R)IDelay3_RBV</pv_name>
+      <x>390</x>
+      <y>176</y>
+      <width>40</width>
+      <tooltip>IDelay3 RBV (Refresh for full array)</tooltip>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Fan1Lbl</name>
+    <text>Fan1PWM</text>
+    <x>3</x>
+    <y>415</y>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Fan1RBV</name>
+    <pv_name>$(P)$(R)Fan1PWM_RBV</pv_name>
+    <x>110</x>
+    <y>415</y>
+    <tooltip>Read-only from Serval</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Fan2Lbl</name>
+    <text>Fan2PWM</text>
+    <x>220</x>
+    <y>415</y>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>Fan2RBV</name>
+    <pv_name>$(P)$(R)Fan2PWM_RBV</pv_name>
+    <x>330</x>
+    <y>415</y>
+    <tooltip>Read-only from Serval</tooltip>
+  </widget>
   <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>395</y>
+    <y>670</y>
     <width>460</width>
     <height>140</height>
     <widget type="label" version="2.0.0">

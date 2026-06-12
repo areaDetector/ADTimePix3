@@ -83,7 +83,17 @@
 #define ADTimePixCapTofHistString           "TPX3_CAP_TOF_HIST"     // (asynInt32,         r)      ToF histogram stream supported
 #define ADTimePixCapDualPreviewString       "TPX3_CAP_DUAL_PREVIEW" // (asynInt32,         r)      Two preview image layers
 #define ADTimePixCapImgThresholdsString     "TPX3_CAP_IMG_THRESHOLDS" // (asynInt32,       r)      Image Thresholds[] in Serval config
-#define ADTimePixBothCountersString         "TPX3_BOTH_COUNTERS"      // (asynInt32,       r)      Detector Config BothCounters (MPX3 dual threshold)
+#define ADTimePixBothCountersString         "TPX3_BOTH_COUNTERS"      // (asynInt32,       r/w)    Detector Config BothCounters (MPX3 dual threshold)
+#define ADTimePixGainModeString             "TPX3_GAIN_MODE"          // (asynOctet,       r/w)    MPX3 Config GainMode
+#define ADTimePixChargeSummingString        "TPX3_CHARGE_SUMMING"     // (asynInt32,       r/w)    MPX3 Config ChargeSumming
+#define ADTimePixColourString               "TPX3_COLOUR"             // (asynInt32,       r/w)    MPX3 Config Colour
+#define ADTimePixPixelDepthString           "TPX3_PIXEL_DEPTH"        // (asynInt32,       r/w)    MPX3 Config PixelDepth
+#define ADTimePixCounterSelectInString      "TPX3_COUNTER_SELECT_IN"  // (asynInt32,       r/w)    MPX3 Config CounterSelectIn
+#define ADTimePixCounterSelectOutString     "TPX3_COUNTER_SELECT_OUT" // (asynInt32,       r/w)    MPX3 Config CounterSelectOut
+#define ADTimePixIDelay0String              "TPX3_IDELAY0"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[0]
+#define ADTimePixIDelay1String              "TPX3_IDELAY1"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[1]
+#define ADTimePixIDelay2String              "TPX3_IDELAY2"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[2]
+#define ADTimePixIDelay3String              "TPX3_IDELAY3"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[3]
 
 #define ADTimePixBoardsIDString             "TPX3_BOARDS_ID"        // (asynOctet,         r)      Boards->ChipboardId
 #define ADTimePixBoardsIPString             "TPX3_BOARDS_IP"        // (asynOctet,         r)      Boards->IpAddress
@@ -463,6 +473,16 @@ class ADTimePix : public ADDriver{
         int ADTimePixCapDualPreview;
         int ADTimePixCapImgThresholds;
         int ADTimePixBothCounters;
+        int ADTimePixGainMode;
+        int ADTimePixChargeSumming;
+        int ADTimePixColour;
+        int ADTimePixPixelDepth;
+        int ADTimePixCounterSelectIn;
+        int ADTimePixCounterSelectOut;
+        int ADTimePixIDelay0;
+        int ADTimePixIDelay1;
+        int ADTimePixIDelay2;
+        int ADTimePixIDelay3;
 
         int ADTimePixBoardsID;             
         int ADTimePixBoardsIP;

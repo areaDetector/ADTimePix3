@@ -1381,7 +1381,17 @@ asynStatus ADTimePix::getDetector(){
     //    setStringParam(ADTimePixChainMode,               strip_quotes(cfg["ChainMode"].dump().c_str()));
         setIntegerParam(ADTimePixTriggerIn,              jsonIntOr(cfg["TriggerIn"]));
         setIntegerParam(ADTimePixTriggerOut,             jsonIntOr(cfg["TriggerOut"]));
-    //    setStringParam(ADTimePixPolarity,                strip_quotes(cfg["Polarity"].dump().c_str()));
+        if (cfg.contains("Polarity")) {
+            const std::string pol = jsonStringOr(cfg["Polarity"]);
+            setIntegerParam(ADTimePixPolarity, (pol == "Negative") ? 1 : 0);
+        }
+        if (cfg.contains("ChainMode")) {
+            const std::string chain = jsonStringOr(cfg["ChainMode"]);
+            int chainIdx = 0;
+            if (chain == "LEADER") chainIdx = 1;
+            else if (chain == "FOLLOWER") chainIdx = 2;
+            setIntegerParam(ADTimePixChainMode, chainIdx);
+        }
         setStringParam(ADTimePixTriggerMode,             jsonStringOr(cfg["TriggerMode"]).c_str());
         setDoubleParam(ADTimePixExposureTime,            jsonDoubleOr(cfg["ExposureTime"]));
         setDoubleParam(ADAcquireTime,                    jsonDoubleOr(cfg["ExposureTime"]));
@@ -1396,6 +1406,33 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADTimePixLogLevel,               jsonIntOr(cfg["LogLevel"]));
         if (cfg.contains("BothCounters")) {
             setIntegerParam(ADTimePixBothCounters, jsonBoolOr(cfg["BothCounters"]) ? 1 : 0);
+        }
+        if (cfg.contains("GainMode")) {
+            setStringParam(ADTimePixGainMode, jsonStringOr(cfg["GainMode"]).c_str());
+        }
+        if (cfg.contains("ChargeSumming")) {
+            setIntegerParam(ADTimePixChargeSumming, jsonBoolOr(cfg["ChargeSumming"]) ? 1 : 0);
+        }
+        if (cfg.contains("Colour")) {
+            setIntegerParam(ADTimePixColour, jsonBoolOr(cfg["Colour"]) ? 1 : 0);
+        }
+        if (cfg.contains("PixelDepth")) {
+            setIntegerParam(ADTimePixPixelDepth, jsonIntOr(cfg["PixelDepth"]));
+        }
+        if (cfg.contains("CounterSelectIn")) {
+            setIntegerParam(ADTimePixCounterSelectIn, jsonIntOr(cfg["CounterSelectIn"]));
+        }
+        if (cfg.contains("CounterSelectOut")) {
+            setIntegerParam(ADTimePixCounterSelectOut, jsonIntOr(cfg["CounterSelectOut"]));
+        }
+        if (cfg.contains("IDelayConfig") && cfg["IDelayConfig"].is_array()) {
+            const json& idelay = cfg["IDelayConfig"];
+            static const int idelayParams[] = {
+                ADTimePixIDelay0, ADTimePixIDelay1, ADTimePixIDelay2, ADTimePixIDelay3
+            };
+            for (size_t i = 0; i < 4 && i < idelay.size(); ++i) {
+                setIntegerParam(idelayParams[i], jsonIntOr(idelay[i]));
+            }
         }
 
 
@@ -2528,6 +2565,34 @@ asynStatus ADTimePix::initAcquisition(){
             stripTpx3DetectorConfigFields(config_j);
             getIntegerParam(ADTimePixBothCounters, &intNum);
             config_j["BothCounters"] = (intNum != 0);
+
+            getIntegerParam(ADTimePixChargeSumming, &intNum);
+            config_j["ChargeSumming"] = (intNum != 0);
+            getIntegerParam(ADTimePixColour, &intNum);
+            config_j["Colour"] = (intNum != 0);
+
+            std::string gainMode;
+            getStringParam(ADTimePixGainMode, gainMode);
+            if (!gainMode.empty()) {
+                config_j["GainMode"] = gainMode;
+            }
+
+            getIntegerParam(ADTimePixPixelDepth, &intNum);
+            config_j["PixelDepth"] = intNum;
+            getIntegerParam(ADTimePixCounterSelectIn, &intNum);
+            config_j["CounterSelectIn"] = intNum;
+            getIntegerParam(ADTimePixCounterSelectOut, &intNum);
+            config_j["CounterSelectOut"] = intNum;
+
+            json idelay = json::array();
+            static const int idelayParams[] = {
+                ADTimePixIDelay0, ADTimePixIDelay1, ADTimePixIDelay2, ADTimePixIDelay3
+            };
+            for (int i = 0; i < 4; ++i) {
+                getIntegerParam(idelayParams[i], &intNum);
+                idelay.push_back(intNum);
+            }
+            config_j["IDelayConfig"] = idelay;
         }
 
         getIntegerParam(ADTimePixLogLevel, &intNum);

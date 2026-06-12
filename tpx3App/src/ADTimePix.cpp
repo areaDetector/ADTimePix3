@@ -382,6 +382,8 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkPrvHstPath();
     } else if (function == ADTimePixTofTdcReference) {
         status = this->sendMeasurementConfig();
+    } else if (function == ADTimePixGainMode && detectorFamily_ == DetectorFamily::MPX3) {
+        status = initAcquisition();
     }
      /* Do callbacks so higher layers see any changes */
     status = (asynStatus)callParamCallbacks(addr, addr);
@@ -527,7 +529,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixBiasVolt || function == ADTimePixBiasEnable || function == ADTimePixTriggerIn || function == ADTimePixTriggerOut || function == ADTimePixLogLevel \
-                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode || function == ADTimePixBothCounters) {
+                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode || function == ADTimePixBothCounters \
+                || function == ADTimePixPolarity || function == ADTimePixChargeSumming || function == ADTimePixColour \
+                || function == ADTimePixPixelDepth || function == ADTimePixCounterSelectIn || function == ADTimePixCounterSelectOut \
+                || function == ADTimePixIDelay0 || function == ADTimePixIDelay1 || function == ADTimePixIDelay2 || function == ADTimePixIDelay3) {
         status = initAcquisition();
     }    
 
@@ -1161,6 +1166,16 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixCapDualPreviewString,  asynParamInt32, &ADTimePixCapDualPreview);
     createParam(ADTimePixCapImgThresholdsString, asynParamInt32, &ADTimePixCapImgThresholds);
     createParam(ADTimePixBothCountersString,     asynParamInt32, &ADTimePixBothCounters);
+    createParam(ADTimePixGainModeString,         asynParamOctet, &ADTimePixGainMode);
+    createParam(ADTimePixChargeSummingString,    asynParamInt32, &ADTimePixChargeSumming);
+    createParam(ADTimePixColourString,           asynParamInt32, &ADTimePixColour);
+    createParam(ADTimePixPixelDepthString,       asynParamInt32, &ADTimePixPixelDepth);
+    createParam(ADTimePixCounterSelectInString,  asynParamInt32, &ADTimePixCounterSelectIn);
+    createParam(ADTimePixCounterSelectOutString, asynParamInt32, &ADTimePixCounterSelectOut);
+    createParam(ADTimePixIDelay0String,          asynParamInt32, &ADTimePixIDelay0);
+    createParam(ADTimePixIDelay1String,          asynParamInt32, &ADTimePixIDelay1);
+    createParam(ADTimePixIDelay2String,          asynParamInt32, &ADTimePixIDelay2);
+    createParam(ADTimePixIDelay3String,          asynParamInt32, &ADTimePixIDelay3);
 
     createParam(ADTimePixBoardsIDString,        asynParamOctet, &ADTimePixBoardsID);
     createParam(ADTimePixBoardsIPString,        asynParamOctet, &ADTimePixBoardsIP);
@@ -1589,6 +1604,16 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setIntegerParam(ADTimePixCapDualPreview, 0);
     setIntegerParam(ADTimePixCapImgThresholds, 0);
     setIntegerParam(ADTimePixBothCounters, 0);
+    setStringParam(ADTimePixGainMode, "SHGM");
+    setIntegerParam(ADTimePixChargeSumming, 0);
+    setIntegerParam(ADTimePixColour, 0);
+    setIntegerParam(ADTimePixPixelDepth, 1);
+    setIntegerParam(ADTimePixCounterSelectIn, 0);
+    setIntegerParam(ADTimePixCounterSelectOut, 0);
+    setIntegerParam(ADTimePixIDelay0, 15);
+    setIntegerParam(ADTimePixIDelay1, 15);
+    setIntegerParam(ADTimePixIDelay2, 15);
+    setIntegerParam(ADTimePixIDelay3, 10);
     setIntegerParam(ADTimePixPrvImgThresholdID, 0);
     setIntegerParam(ADTimePixPrvImgIntegrationSize, 0);
     setIntegerParam(ADTimePixPrvImgLogHeaders, 3);
@@ -1676,6 +1701,12 @@ void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
     setStringParam(ADTimePixPrvImg1Ths, kDefaultThresholds);
     setIntegerParam(ADTimePixPrvImgFormat, 3);
     setIntegerParam(ADTimePixPrvImg1Format, 3);
+    setStringParam(ADTimePixGainMode, "SHGM");
+    setIntegerParam(ADTimePixPixelDepth, 1);
+    setIntegerParam(ADTimePixIDelay0, 15);
+    setIntegerParam(ADTimePixIDelay1, 15);
+    setIntegerParam(ADTimePixIDelay2, 15);
+    setIntegerParam(ADTimePixIDelay3, 10);
 }
 
 
