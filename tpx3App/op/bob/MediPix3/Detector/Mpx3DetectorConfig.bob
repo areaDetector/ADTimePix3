@@ -36,7 +36,7 @@
     <x>5</x>
     <y>690</y>
     <width>460</width>
-    <height>110</height>
+    <height>118</height>
     <widget type="label" version="2.0.0">
       <name>DualThTitle</name>
       <text>Dual threshold</text>
@@ -84,6 +84,23 @@
         </color>
       </background_color>
       <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BothCntHint</name>
+      <text>Yes → Pva1/Pva2 (threshold 0/1). Not compatible with Continuous trigger — use AutoTrgSt_TmrSp (4). PrvImgThs→0,1 + WriteData; slow TriggerPeriod if UDP drops.</text>
+      <x>5</x>
+      <y>52</y>
+      <width>448</width>
+      <height>38</height>
+      <wrap_words>true</wrap_words>
+      <font>
+        <font family="Sans" style="REGULAR" size="9.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="64" green="64" blue="64">
+        </color>
+      </foreground_color>
     </widget>
   </widget>
   <widget type="label" version="2.0.0">
@@ -814,9 +831,9 @@
   <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>800</y>
+    <y>812</y>
     <width>460</width>
-    <height>150</height>
+    <height>122</height>
     <widget type="label" version="2.0.0">
       <name>StatusTitle</name>
       <text>Serval response</text>
@@ -890,8 +907,9 @@
       <text>Setpoints push to Serval on change (detector PUT or WriteData for preview period). Use Refresh after external edits.</text>
       <x>5</x>
       <y>88</y>
-      <width>420</width>
-      <height>30</height>
+      <width>448</width>
+      <height>28</height>
+      <wrap_words>true</wrap_words>
       <font>
         <font family="Sans" style="REGULAR" size="9.0">
         </font>
@@ -901,21 +919,5 @@
         </color>
       </foreground_color>
     </widget>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>BothCntHint</name>
-    <text>Yes → Pva1/Pva2 (threshold 0/1). Not compatible with Continuous trigger — use AutoTrgSt_TmrSp (4). PrvImgThs→0,1 + WriteData; slow TriggerPeriod if UDP drops.</text>
-    <x>30</x>
-    <y>760</y>
-    <width>420</width>
-    <height>30</height>
-    <font>
-      <font family="Sans" style="REGULAR" size="9.0">
-      </font>
-    </font>
-    <foreground_color>
-      <color red="64" green="64" blue="64">
-      </color>
-    </foreground_color>
   </widget>
 </display>
