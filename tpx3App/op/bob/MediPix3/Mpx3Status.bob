@@ -75,7 +75,7 @@
     <actions>
       <action type="open_display">
         <description>Detector config</description>
-        <file>../Acquire/DetectorConfig.bob</file>
+        <file>Detector/Mpx3DetectorConfig.bob</file>
         <target>tab</target>
       </action>
     </actions>

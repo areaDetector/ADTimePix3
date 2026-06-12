@@ -1791,16 +1791,17 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
 
     if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
+    const std::string channelBase = fileStr;
 
     // Use correct JSON structure based on channel type
     if (!isPreview) {
         // Main image channel
         int channelIndex = isChannel1 ? 1 : 0;
-        server_j["Image"][channelIndex]["Base"] = fileStr;
+        server_j["Image"][channelIndex]["Base"] = channelBase;
     } else {
         // Preview image channels
         int channelIndex = isChannel1 ? 1 : 0;
-        server_j["Preview"]["ImageChannels"][channelIndex]["Base"] = fileStr;
+        server_j["Preview"]["ImageChannels"][channelIndex]["Base"] = channelBase;
     }
 
     if (getParameterSafely(filePatParam, fileStr) != asynSuccess) return asynError;
@@ -1832,6 +1833,12 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
 
     if (getParameterSafely(formatParam, intNum) != asynSuccess) return asynError;
+    if (channelBase.compare(0, 6, "tcp://") == 0 && (intNum == 0 || intNum == 2)) {
+        LOG_ARGS("TCP channel %s: format index %d invalid for tcp; using jsonimage (3)",
+                 jsonPath.c_str(), intNum);
+        intNum = 3;
+        setIntegerParam(formatParam, intNum);
+    }
     if (!validateArrayIndex(intNum, IMG_FORMATS.size())) {
         ERR_ARGS("Invalid format index: %d", intNum);
         return asynError;
@@ -2519,6 +2526,8 @@ asynStatus ADTimePix::initAcquisition(){
             config_j["PeriphClk80"] = peripheralClock80[intNum];
         } else {
             stripTpx3DetectorConfigFields(config_j);
+            getIntegerParam(ADTimePixBothCounters, &intNum);
+            config_j["BothCounters"] = (intNum != 0);
         }
 
         getIntegerParam(ADTimePixLogLevel, &intNum);
@@ -2526,7 +2535,11 @@ asynStatus ADTimePix::initAcquisition(){
 
         r = ADTimePix3ServalHttp::putJson(det_config, config_j.dump());
 
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
+        if (r.status_code == 200 && detectorFamily_ == DetectorFamily::MPX3) {
+            (void)getDetector();
+        }
     }
 
     callParamCallbacks();

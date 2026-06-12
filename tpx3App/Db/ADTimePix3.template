@@ -175,6 +175,13 @@ record(bi, "$(P)$(R)CapImgThresholds_RBV"){
   field(SCAN, "I/O Intr")
   field(DESC, "Image Thresholds[] in Serval config")
 }
+record(bo, "$(P)$(R)BothCounters"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOTH_COUNTERS")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(DESC, "MPX3 BothCounters in detector config")
+}
 record(bi, "$(P)$(R)BothCounters_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOTH_COUNTERS")

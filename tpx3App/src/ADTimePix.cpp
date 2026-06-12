@@ -527,7 +527,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixBiasVolt || function == ADTimePixBiasEnable || function == ADTimePixTriggerIn || function == ADTimePixTriggerOut || function == ADTimePixLogLevel \
-                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode) {  // set and enable bias, log level
+                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode || function == ADTimePixBothCounters) {
         status = initAcquisition();
     }    
 
@@ -1674,6 +1674,8 @@ void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
     setStringParam(ADTimePixImg1Ths, kDefaultThresholds);
     setStringParam(ADTimePixPrvImgThs, kDefaultThresholds);
     setStringParam(ADTimePixPrvImg1Ths, kDefaultThresholds);
+    setIntegerParam(ADTimePixPrvImgFormat, 3);
+    setIntegerParam(ADTimePixPrvImg1Format, 3);
 }
 
 
