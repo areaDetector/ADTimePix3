@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
   <width>470</width>
-  <height>940</height>
+  <height>960</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -32,410 +32,430 @@
     <vertical_alignment>1</vertical_alignment>
   </widget>
   <widget type="group" version="3.0.0">
-    <name>DualThresholdGroup</name>
+    <name>PreviewGroup</name>
     <x>5</x>
-    <y>690</y>
+    <y>32</y>
     <width>460</width>
-    <height>118</height>
+    <height>110</height>
     <widget type="label" version="2.0.0">
-      <name>DualThTitle</name>
-      <text>Dual threshold</text>
+      <name>PreviewTitle</name>
+      <text>Preview (Serval destination)</text>
       <x>5</x>
       <y>2</y>
-      <width>120</width>
+      <width>180</width>
       <background_color>
         <color red="240" green="240" blue="240">
         </color>
       </background_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>BothCntLbl</name>
-      <text>BothCounters</text>
+      <name>PrvPeriodLbl</name>
+      <text>Preview period</text>
       <x>5</x>
       <y>28</y>
+      <width>150</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PrvPeriodSP</name>
+      <pv_name>$(P)$(R)PrvPeriod</pv_name>
+      <x>160</x>
+      <y>26</y>
+      <width>120</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>1</format>
+      <precision>6</precision>
+      <tooltip>Preview.Period (s). Pushed on WriteData. Erik example: 0.5 s with 0.5 s TriggerPeriod.</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvPeriodRBV</name>
+      <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
+      <x>285</x>
+      <y>26</y>
+      <width>120</width>
+      <precision>6</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvSmplLbl</name>
+      <text>Preview sampling mode</text>
+      <x>5</x>
+      <y>53</y>
+      <width>150</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
-      <name>BothCountersSP</name>
-      <pv_name>$(P)$(R)BothCounters</pv_name>
+      <name>PrvSmplgModeSP</name>
+      <pv_name>$(P)$(R)PrvSmplgMode</pv_name>
+      <x>160</x>
+      <y>51</y>
+      <width>120</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>Preview.SamplingMode — skipOnFrame or skipOnPeriod. Pushed on WriteData.</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvSmplgModeRBV</name>
+      <pv_name>$(P)$(R)PrvSmplgMode_RBV</pv_name>
+      <x>285</x>
+      <y>51</y>
+      <width>120</width>
+      <format>6</format>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>DetectorConfigGroup</name>
+    <x>5</x>
+    <y>148</y>
+    <width>460</width>
+    <height>178</height>
+    <widget type="label" version="2.0.0">
+      <name>DetectorconfigTitle</name>
+      <text>Detector config</text>
+      <x>5</x>
+      <y>2</y>
+      <width>200</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BiasVoltLbl</name>
+      <text>BiasVoltage</text>
+      <x>5</x>
+      <y>28</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>BiasVoltSP</name>
+      <pv_name>$(P)$(R)BiasVolt</pv_name>
       <x>110</x>
-      <y>26</y>
+      <y>28</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>BiasVoltRBV</name>
+      <pv_name>$(P)$(R)BiasVolt_RBV</pv_name>
+      <x>255</x>
+      <y>28</y>
+      <width>210</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BiasEnblLbl</name>
+      <text>BiasEnabled</text>
+      <x>5</x>
+      <y>53</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>BiasEnblSP</name>
+      <pv_name>$(P)$(R)BiasEnbl</pv_name>
+      <x>110</x>
+      <y>53</y>
       <width>140</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Enable both counter thresholds on the detector (Serval Config.BothCounters). Pushes on change.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
-      <name>BothCountersRBV</name>
-      <pv_name>$(P)$(R)BothCounters_RBV</pv_name>
+      <name>BiasEnblRBV</name>
+      <pv_name>$(P)$(R)BiasEnbl_RBV</pv_name>
       <x>255</x>
-      <y>26</y>
-      <width>140</width>
-      <height>22</height>
-      <foreground_color>
-        <color red="10" green="0" blue="184">
-        </color>
-      </foreground_color>
-      <background_color>
-        <color red="187" green="187" blue="187">
-        </color>
-      </background_color>
+      <y>53</y>
+      <width>210</width>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>BothCntHint</name>
-      <text>Yes → Pva1/Pva2 (threshold 0/1). Not compatible with Continuous trigger — use AutoTrgSt_TmrSp (4). PrvImgThs→0,1 + WriteData; slow TriggerPeriod if UDP drops.</text>
+      <name>ChainModeLbl</name>
+      <text>ChainMode</text>
       <x>5</x>
-      <y>52</y>
-      <width>448</width>
-      <height>38</height>
-      <wrap_words>true</wrap_words>
-      <font>
-        <font family="Sans" style="REGULAR" size="9.0">
-        </font>
-      </font>
-      <foreground_color>
-        <color red="64" green="64" blue="64">
+      <y>78</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>ChainModeSP</name>
+      <pv_name>$(P)$(R)ChainMode</pv_name>
+      <x>110</x>
+      <y>78</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
         </color>
-      </foreground_color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ChainModeRBV</name>
+      <pv_name>$(P)$(R)ChainMode_RBV</pv_name>
+      <x>255</x>
+      <y>78</y>
+      <width>210</width>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PolarityLbl</name>
+      <text>Polarity</text>
+      <x>5</x>
+      <y>103</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>PolaritySP</name>
+      <pv_name>$(P)$(R)Polarity</pv_name>
+      <x>110</x>
+      <y>101</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PolarityRBV</name>
+      <pv_name>$(P)$(R)Polarity_RBV</pv_name>
+      <x>255</x>
+      <y>101</y>
+      <width>210</width>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>LogLevelLbl</name>
+      <text>LogLevel</text>
+      <x>5</x>
+      <y>128</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>LogLevelSP</name>
+      <pv_name>$(P)$(R)LogLevel</pv_name>
+      <x>110</x>
+      <y>128</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>LogLevelRBV</name>
+      <pv_name>$(P)$(R)LogLevel_RBV</pv_name>
+      <x>255</x>
+      <y>128</y>
+      <width>210</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Fan1Lbl</name>
+      <text>Fan1PWM</text>
+      <x>5</x>
+      <y>153</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Fan1RBV</name>
+      <pv_name>$(P)$(R)Fan1PWM_RBV</pv_name>
+      <x>110</x>
+      <y>153</y>
+      <width>80</width>
+      <tooltip>Read-only from Serval</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Fan2Lbl</name>
+      <text>Fan2PWM</text>
+      <x>220</x>
+      <y>153</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Fan2RBV</name>
+      <pv_name>$(P)$(R)Fan2PWM_RBV</pv_name>
+      <x>295</x>
+      <y>153</y>
+      <width>80</width>
+      <tooltip>Read-only from Serval</tooltip>
     </widget>
   </widget>
-  <widget type="label" version="2.0.0">
-    <name>BiasVoltLbl</name>
-    <text>BiasVoltage</text>
-    <x>3</x>
-    <y>160</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="textentry" version="3.0.0">
-    <name>BiasVoltSP</name>
-    <pv_name>$(P)$(R)BiasVolt</pv_name>
-    <x>110</x>
-    <y>160</y>
-    <width>140</width>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>BiasVoltRBV</name>
-    <pv_name>$(P)$(R)BiasVolt_RBV</pv_name>
-    <x>255</x>
-    <y>160</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>BiasEnblLbl</name>
-    <text>BiasEnabled</text>
-    <x>3</x>
-    <y>185</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>BiasEnblSP</name>
-    <pv_name>$(P)$(R)BiasEnbl</pv_name>
-    <x>110</x>
-    <y>185</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>BiasEnblRBV</name>
-    <pv_name>$(P)$(R)BiasEnbl_RBV</pv_name>
-    <x>255</x>
-    <y>185</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-    <format>6</format>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>ChainModeLbl</name>
-    <text>ChainMode</text>
-    <x>3</x>
-    <y>210</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>ChainModeSP</name>
-    <pv_name>$(P)$(R)ChainMode</pv_name>
-    <x>110</x>
-    <y>210</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>ChainModeRBV</name>
-    <pv_name>$(P)$(R)ChainMode_RBV</pv_name>
-    <x>255</x>
-    <y>210</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-    <format>6</format>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>TriggerInLbl</name>
-    <text>TriggerIn</text>
-    <x>3</x>
-    <y>235</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>TriggerInSP</name>
-    <pv_name>$(P)$(R)TriggerIn</pv_name>
-    <x>110</x>
-    <y>235</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>TriggerInRBV</name>
-    <pv_name>$(P)$(R)TriggerIn_RBV</pv_name>
-    <x>255</x>
-    <y>235</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>TriggerOutLbl</name>
-    <text>TriggerOut</text>
-    <x>3</x>
-    <y>260</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>TriggerOutSP</name>
-    <pv_name>$(P)$(R)TriggerOut</pv_name>
-    <x>110</x>
-    <y>260</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>TriggerOutRBV</name>
-    <pv_name>$(P)$(R)TriggerOut_RBV</pv_name>
-    <x>255</x>
-    <y>260</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>TriggerModeLbl</name>
-    <text>TriggerMode</text>
-    <x>3</x>
-    <y>285</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>TriggerModeSP</name>
-    <pv_name>$(P)$(R)TriggerMode</pv_name>
-    <x>110</x>
-    <y>285</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>TriggerModeRBV</name>
-    <pv_name>$(P)$(R)TriggerModeC_RBV</pv_name>
-    <x>255</x>
-    <y>285</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-    <format>6</format>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>ExposureLbl</name>
-    <text>ExposureTime</text>
-    <x>3</x>
-    <y>310</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="textentry" version="3.0.0">
-    <name>AcquireTimeSP</name>
-    <pv_name>$(P)$(R)AcquireTime</pv_name>
-    <x>110</x>
-    <y>310</y>
-    <width>140</width>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>TriggerPeriodLbl</name>
-    <text>TriggerPeriod</text>
-    <x>3</x>
-    <y>335</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="textentry" version="3.0.0">
-    <name>AcquirePeriodSP</name>
-    <pv_name>$(P)$(R)AcquirePeriod</pv_name>
-    <x>110</x>
-    <y>335</y>
-    <width>140</width>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>nTriggersLbl</name>
-    <text>nTriggers</text>
-    <x>3</x>
-    <y>360</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="textentry" version="3.0.0">
-    <name>NumImagesSP</name>
-    <pv_name>$(P)$(R)NumImages</pv_name>
-    <x>110</x>
-    <y>360</y>
-    <width>140</width>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>LogLevelLbl</name>
-    <text>LogLevel</text>
-    <x>3</x>
-    <y>385</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>LogLevelSP</name>
-    <pv_name>$(P)$(R)LogLevel</pv_name>
-    <x>110</x>
-    <y>385</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>LogLevelRBV</name>
-    <pv_name>$(P)$(R)LogLevel_RBV</pv_name>
-    <x>255</x>
-    <y>385</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>PolarityLbl</name>
-    <text>Polarity</text>
-    <x>3</x>
-    <y>410</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="combo" version="2.0.0">
-    <name>PolaritySP</name>
-    <pv_name>$(P)$(R)Polarity</pv_name>
-    <x>110</x>
-    <y>408</y>
-    <width>140</width>
-    <height>22</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>PolarityRBV</name>
-    <pv_name>$(P)$(R)Polarity_RBV</pv_name>
-    <x>255</x>
-    <y>408</y>
-    <width>210</width>
-    <foreground_color>
-      <color red="10" green="0" blue="184">
-      </color>
-    </foreground_color>
-    <background_color>
-      <color red="187" green="187" blue="187">
-      </color>
-    </background_color>
-    <format>6</format>
+  <widget type="group" version="3.0.0">
+    <name>TriggerTimingGroup</name>
+    <x>5</x>
+    <y>333</y>
+    <width>460</width>
+    <height>155</height>
+    <widget type="label" version="2.0.0">
+      <name>TriggerandtimingTitle</name>
+      <text>Trigger and timing</text>
+      <x>5</x>
+      <y>2</y>
+      <width>200</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TriggerInLbl</name>
+      <text>TriggerIn</text>
+      <x>5</x>
+      <y>28</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>TriggerInSP</name>
+      <pv_name>$(P)$(R)TriggerIn</pv_name>
+      <x>110</x>
+      <y>28</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>TriggerInRBV</name>
+      <pv_name>$(P)$(R)TriggerIn_RBV</pv_name>
+      <x>255</x>
+      <y>28</y>
+      <width>210</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TriggerOutLbl</name>
+      <text>TriggerOut</text>
+      <x>5</x>
+      <y>53</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>TriggerOutSP</name>
+      <pv_name>$(P)$(R)TriggerOut</pv_name>
+      <x>110</x>
+      <y>53</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>TriggerOutRBV</name>
+      <pv_name>$(P)$(R)TriggerOut_RBV</pv_name>
+      <x>255</x>
+      <y>53</y>
+      <width>210</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TriggerModeLbl</name>
+      <text>TriggerMode</text>
+      <x>5</x>
+      <y>78</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>TriggerModeSP</name>
+      <pv_name>$(P)$(R)TriggerMode</pv_name>
+      <x>110</x>
+      <y>78</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>TriggerModeRBV</name>
+      <pv_name>$(P)$(R)TriggerModeC_RBV</pv_name>
+      <x>255</x>
+      <y>78</y>
+      <width>210</width>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ExposureLbl</name>
+      <text>ExposureTime</text>
+      <x>5</x>
+      <y>103</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>AcquireTimeSP</name>
+      <pv_name>$(P)$(R)AcquireTime</pv_name>
+      <x>110</x>
+      <y>103</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TriggerPeriodLbl</name>
+      <text>TriggerPeriod</text>
+      <x>5</x>
+      <y>128</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>AcquirePeriodSP</name>
+      <pv_name>$(P)$(R)AcquirePeriod</pv_name>
+      <x>110</x>
+      <y>128</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>nTriggersLbl</name>
+      <text>nTriggers</text>
+      <x>5</x>
+      <y>153</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>NumImagesSP</name>
+      <pv_name>$(P)$(R)NumImages</pv_name>
+      <x>110</x>
+      <y>153</y>
+      <width>140</width>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>Mpx3ChipGroup</name>
     <x>5</x>
-    <y>460</y>
+    <y>495</y>
     <width>460</width>
     <height>230</height>
     <widget type="label" version="2.0.0">
@@ -723,117 +743,84 @@
       <tooltip>IDelay3 RBV (Refresh for full array)</tooltip>
     </widget>
   </widget>
-  <widget type="label" version="2.0.0">
-    <name>Fan1Lbl</name>
-    <text>Fan1PWM</text>
-    <x>3</x>
-    <y>435</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Fan1RBV</name>
-    <pv_name>$(P)$(R)Fan1PWM_RBV</pv_name>
-    <x>110</x>
-    <y>435</y>
-    <tooltip>Read-only from Serval</tooltip>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>Fan2Lbl</name>
-    <text>Fan2PWM</text>
-    <x>220</x>
-    <y>435</y>
-    <horizontal_alignment>2</horizontal_alignment>
-  </widget>
-  <widget type="textupdate" version="2.0.0">
-    <name>Fan2RBV</name>
-    <pv_name>$(P)$(R)Fan2PWM_RBV</pv_name>
-    <x>330</x>
-    <y>435</y>
-    <tooltip>Read-only from Serval</tooltip>
-  </widget>
   <widget type="group" version="3.0.0">
-    <name>PreviewGroup</name>
+    <name>DualThresholdGroup</name>
     <x>5</x>
-    <y>32</y>
+    <y>725</y>
     <width>460</width>
-    <height>110</height>
+    <height>118</height>
     <widget type="label" version="2.0.0">
-      <name>PreviewTitle</name>
-      <text>Preview (Serval destination)</text>
+      <name>DualThTitle</name>
+      <text>Dual threshold</text>
       <x>5</x>
       <y>2</y>
-      <width>180</width>
+      <width>120</width>
       <background_color>
         <color red="240" green="240" blue="240">
         </color>
       </background_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>PrvPeriodLbl</name>
-      <text>Preview period</text>
+      <name>BothCntLbl</name>
+      <text>BothCounters</text>
       <x>5</x>
       <y>28</y>
-      <width>150</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textentry" version="3.0.0">
-      <name>PrvPeriodSP</name>
-      <pv_name>$(P)$(R)PrvPeriod</pv_name>
-      <x>160</x>
-      <y>26</y>
-      <width>120</width>
-      <background_color>
-        <color red="115" green="223" blue="255">
-        </color>
-      </background_color>
-      <format>1</format>
-      <precision>6</precision>
-      <tooltip>Preview.Period (s). Pushed on WriteData. Erik example: 0.5 s with 0.5 s TriggerPeriod.</tooltip>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>PrvPeriodRBV</name>
-      <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
-      <x>285</x>
-      <y>26</y>
-      <width>120</width>
-      <precision>6</precision>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>PrvSmplLbl</name>
-      <text>Preview sampling mode</text>
-      <x>5</x>
-      <y>53</y>
-      <width>150</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
-      <name>PrvSmplgModeSP</name>
-      <pv_name>$(P)$(R)PrvSmplgMode</pv_name>
-      <x>160</x>
-      <y>51</y>
-      <width>120</width>
+      <name>BothCountersSP</name>
+      <pv_name>$(P)$(R)BothCounters</pv_name>
+      <x>110</x>
+      <y>26</y>
+      <width>140</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Preview.SamplingMode — skipOnFrame or skipOnPeriod. Pushed on WriteData.</tooltip>
+      <tooltip>Enable both counter thresholds on the detector (Serval Config.BothCounters). Pushes on change.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
-      <name>PrvSmplgModeRBV</name>
-      <pv_name>$(P)$(R)PrvSmplgMode_RBV</pv_name>
-      <x>285</x>
-      <y>51</y>
-      <width>120</width>
+      <name>BothCountersRBV</name>
+      <pv_name>$(P)$(R)BothCounters_RBV</pv_name>
+      <x>255</x>
+      <y>26</y>
+      <width>140</width>
+      <height>22</height>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
       <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BothCntHint</name>
+      <text>Yes → Pva1/Pva2 (threshold 0/1). Not compatible with Continuous trigger — use AutoTrgSt_TmrSp (4). PrvImgThs→0,1 + WriteData; slow TriggerPeriod if UDP drops.</text>
+      <x>5</x>
+      <y>52</y>
+      <width>448</width>
+      <height>38</height>
+      <wrap_words>true</wrap_words>
+      <font>
+        <font family="Sans" style="REGULAR" size="9.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="64" green="64" blue="64">
+        </color>
+      </foreground_color>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>812</y>
+    <y>848</y>
     <width>460</width>
-    <height>122</height>
+    <height>110</height>
     <widget type="label" version="2.0.0">
       <name>StatusTitle</name>
       <text>Serval response</text>
