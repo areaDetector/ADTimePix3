@@ -82,10 +82,10 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva6:, PORT=PVA6,ADD
 
 # Clipped band max(0,T0-T1): addr 13 (frame), 14 (integrated). Gated by cam1:PrvImgThreshDiffClip (default On).
 NDStdArraysConfigure("ImageDiffClip1", 3, 0, "$(PORT)", 13)
-dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageDiffClip1:,PORT=ImageDiffClip1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=UInt32,FTVL=ULONG,NELEMENTS=20000000")
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageDiffClip1:,PORT=ImageDiffClip1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
 
 NDStdArraysConfigure("ImageIntDiffClip1", 3, 0, "$(PORT)", 14)
-dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageIntDiffClip1:,PORT=ImageIntDiffClip1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=UInt32,FTVL=ULONG,NELEMENTS=20000000")
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageIntDiffClip1:,PORT=ImageIntDiffClip1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
 
 NDPvaConfigure("PVA7", $(QSIZE), 0, "$(PORT)", 13, "$(PREFIX)Pva7:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva7:, PORT=PVA7,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")

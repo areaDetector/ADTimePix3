@@ -374,18 +374,18 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff, i
     int32_t* pDiffData = reinterpret_cast<int32_t*>(pDiff->pData);
 
     NDArray* pClip = nullptr;
-    uint32_t* pClipData = nullptr;
+    int32_t* pClipData = nullptr;
     if (emitClip) {
         if (pArrays[addrDiffClip]) {
             pArrays[addrDiffClip]->release();
             pArrays[addrDiffClip] = nullptr;
         }
-        pClip = pNDArrayPool->alloc(2, dims, NDUInt32, 0, nullptr);
+        pClip = pNDArrayPool->alloc(2, dims, NDInt32, 0, nullptr);
         if (!pClip || !pClip->pData) {
             ERR_ARGS("%s failed to allocate clipped threshold-diff NDArray", logTag);
         } else {
             pArrays[addrDiffClip] = pClip;
-            pClipData = reinterpret_cast<uint32_t*>(pClip->pData);
+            pClipData = reinterpret_cast<int32_t*>(pClip->pData);
         }
     }
 
@@ -396,7 +396,7 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff, i
             const int32_t d = static_cast<int32_t>(t0[i]) - static_cast<int32_t>(t1[i]);
             pDiffData[i] = d;
             if (pClipData) {
-                pClipData[i] = (d > 0) ? static_cast<uint32_t>(d) : 0u;
+                pClipData[i] = (d > 0) ? d : 0;
             }
         }
     } else if (pT0->dataType == NDUInt16 && pT1->dataType == NDUInt16) {
@@ -406,7 +406,7 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff, i
             const int32_t d = static_cast<int32_t>(t0[i]) - static_cast<int32_t>(t1[i]);
             pDiffData[i] = d;
             if (pClipData) {
-                pClipData[i] = (d > 0) ? static_cast<uint32_t>(d) : 0u;
+                pClipData[i] = (d > 0) ? d : 0;
             }
         }
     } else {

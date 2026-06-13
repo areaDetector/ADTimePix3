@@ -447,14 +447,14 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>BandPassClipFrameTitle</name>
-      <text>clip frame — PVA $(P)Pva7:Image (addr 13, NDUInt32)</text>
+      <text>clip frame — PVA $(P)Pva7:Image (addr 13, max(0,T0−T1) Int32)</text>
       <x>20</x>
       <y>2365</y>
       <width>660</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>BandPassClipIntegTitle</name>
-      <text>clip integrated — PVA $(P)Pva8:Image (addr 14, NDUInt32)</text>
+      <text>clip integrated — PVA $(P)Pva8:Image (addr 14, max(0,T0−T1) Int32)</text>
       <x>720</x>
       <y>2365</y>
       <width>660</width>

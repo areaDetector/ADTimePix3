@@ -126,7 +126,7 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 ### Phase 4 — Driver threshold band-pass (IXS / ID10-style)
 
 - [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** difference **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
-- [x] When **`PrvImgThreshDiffClip=On`**, also emit **`NDUInt32`** **`max(0, T0−T1)`** on addr **13** / **14** (Pva7 / Pva8) for non-negative display.
+- [x] When **`PrvImgThreshDiffClip=On`**, also emit **`NDInt32`** **`max(0, T0−T1)`** (non-negative) on addr **13** / **14** (Pva7 / Pva8) for display.
 - [x] Gated on **`BothCounters=Yes`**; skips diff when `frameNumber` mismatch between T0 and T1 buffers.
 - [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6**; clip **`imageDiffClip1`** / **`imageIntDiffClip1`** + **Pva7** / **Pva8**.
 - [x] Phoebus band-pass rows on `Mpx3PrvImgMonitor.bob` (signed Pva5/Pva6, clipped Pva7/Pva8).
