@@ -1735,7 +1735,7 @@ void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
     setStringParam(ADTimePixPrvImg1Ths, kDefaultThresholds);
     setIntegerParam(ADTimePixPrvImgFormat, 3);
     setIntegerParam(ADTimePixPrvImg1Format, 3);
-    setStringParam(ADTimePixGainMode, "SHGM");
+    setStringParam(ADTimePixGainMode, "HGM");
     setIntegerParam(ADTimePixPixelDepth, 1);
     setIntegerParam(ADTimePixIDelay0, 15);
     setIntegerParam(ADTimePixIDelay1, 15);
