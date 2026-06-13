@@ -836,8 +836,12 @@ class ADTimePix : public ADDriver{
         static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD0 = 9;
         /** NDArray address for PrvImg1 integrated preview threshold 1. */
         static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD1 = 10;
+        /** NDArray address for PrvImg frame band-pass (threshold 0 minus threshold 1). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF = 11;
+        /** NDArray address for PrvImg1 integrated band-pass (T0 minus T1). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESH_DIFF = 12;
         /** Number of NDArray callback addresses (0..NDARRAY_MAX_ADDR-1). */
-        static constexpr int NDARRAY_MAX_ADDR = 11;
+        static constexpr int NDARRAY_MAX_ADDR = 13;
 
         // TCP streaming for PrvImg1 channel (integrated preview)
         std::unique_ptr<NetworkClient> prvImg1NetworkClient_;
@@ -1051,6 +1055,8 @@ class ADTimePix : public ADDriver{
         bool parseTcpPath(const std::string& filePath, std::string& host, int& port);
         bool processPreviewJsonimageLine(const PreviewJsonimageStream& stream,
                                          char* line_buffer, char* newline_pos, size_t total_read);
+        void emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
+                                      int frame_number, const char* logTag);
         void runPreviewTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
                                  std::string& host, int& port,
                                  std::unique_ptr<NetworkClient>& networkClient,

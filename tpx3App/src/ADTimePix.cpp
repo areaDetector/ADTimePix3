@@ -1131,9 +1131,10 @@ void ADTimePix::resetPrvHstAccumulation() {
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
-/* maxAddr=11: asyn addr lists 0..10 — PrvImg thresh0=0, Img=1, Img sum=2, Img sumN=3,
+/* maxAddr=13: asyn addr lists 0..12 — PrvImg thresh0=0, Img=1, Img sum=2, Img sumN=3,
  * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF=7, PrvImg thresh1=8,
- * PrvImg1 integrated thresh0=9, PrvImg1 integrated thresh1=10 */
+ * PrvImg1 integrated thresh0=9, PrvImg1 integrated thresh1=10,
+ * PrvImg T0-T1 band=11, PrvImg1 integrated T0-T1 band=12 */
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
     : ADDriver(portName, NDARRAY_MAX_ADDR, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,

@@ -55,6 +55,8 @@ struct ADTimePix::PreviewJsonimageStream {
     std::unique_ptr<NetworkClient>* networkClient;
     int ndAddrThreshold0;
     int ndAddrThreshold1;
+    /** NDArray address for T0-T1 band-pass (-1 = disabled). */
+    int ndAddrThreshDiff;
     int ndMaxAddr;
     int paramFrameNumber;
     int paramThresholdId;
@@ -291,6 +293,11 @@ bool ADTimePix::processPreviewJsonimageLine(
             doCallbacksGenericPointer(pImage, NDArrayData, ndArrayAddr);
         }
 
+        if (threshold_id == 0 && stream.ndAddrThreshDiff >= 0) {
+            emitPreviewThresholdDiff(stream.ndAddrThreshold0, stream.ndAddrThreshold1,
+                                     stream.ndAddrThreshDiff, frame_number, stream.logTag);
+        }
+
         LOG_ARGS("Processed %s frame: width=%d, height=%d, format=%s, frame=%d, thresholdID=%d",
                  stream.logTag, width, height, pixel_format_str.c_str(), frame_number, threshold_id);
 
@@ -300,6 +307,102 @@ bool ADTimePix::processPreviewJsonimageLine(
     }
 
     return true;
+}
+
+void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
+                                           int frame_number, const char* logTag)
+{
+    int bothCounters = 0;
+    getIntegerParam(ADTimePixBothCounters, &bothCounters);
+    if (!bothCounters || addrDiff < 0) {
+        return;
+    }
+
+    if (!pNDArrayPool || !pArrays ||
+        addrT0 < 0 || addrT1 < 0 || addrDiff < 0 ||
+        addrT0 >= NDARRAY_MAX_ADDR || addrT1 >= NDARRAY_MAX_ADDR ||
+        addrDiff >= NDARRAY_MAX_ADDR) {
+        return;
+    }
+
+    NDArray* pT0 = pArrays[addrT0];
+    NDArray* pT1 = pArrays[addrT1];
+    if (!pT0 || !pT1 || !pT0->pData || !pT1->pData) {
+        return;
+    }
+
+    if (static_cast<int>(pT0->uniqueId) != frame_number ||
+        static_cast<int>(pT1->uniqueId) != frame_number) {
+        LOG_ARGS("%s threshold diff skipped: frame mismatch T0=%d T1=%d (want %d)",
+                 logTag, static_cast<int>(pT0->uniqueId),
+                 static_cast<int>(pT1->uniqueId), frame_number);
+        return;
+    }
+
+    if (pT0->ndims != 2 || pT1->ndims != 2 ||
+        pT0->dims[0].size != pT1->dims[0].size ||
+        pT0->dims[1].size != pT1->dims[1].size) {
+        ERR_ARGS("%s threshold diff skipped: dimension mismatch", logTag);
+        return;
+    }
+
+    const size_t width = pT0->dims[0].size;
+    const size_t height = pT0->dims[1].size;
+    const size_t pixel_count = width * height;
+
+    if (pArrays[addrDiff]) {
+        pArrays[addrDiff]->release();
+        pArrays[addrDiff] = nullptr;
+    }
+
+    size_t dims[3] = {width, height, 0};
+    NDArray* pDiff = pNDArrayPool->alloc(2, dims, NDInt32, 0, nullptr);
+    if (!pDiff || !pDiff->pData) {
+        ERR_ARGS("%s failed to allocate threshold-diff NDArray", logTag);
+        return;
+    }
+    pArrays[addrDiff] = pDiff;
+
+    int32_t* pDiffData = reinterpret_cast<int32_t*>(pDiff->pData);
+    if (pT0->dataType == NDUInt32 && pT1->dataType == NDUInt32) {
+        const uint32_t* t0 = reinterpret_cast<const uint32_t*>(pT0->pData);
+        const uint32_t* t1 = reinterpret_cast<const uint32_t*>(pT1->pData);
+        for (size_t i = 0; i < pixel_count; ++i) {
+            pDiffData[i] = static_cast<int32_t>(t0[i]) - static_cast<int32_t>(t1[i]);
+        }
+    } else if (pT0->dataType == NDUInt16 && pT1->dataType == NDUInt16) {
+        const uint16_t* t0 = reinterpret_cast<const uint16_t*>(pT0->pData);
+        const uint16_t* t1 = reinterpret_cast<const uint16_t*>(pT1->pData);
+        for (size_t i = 0; i < pixel_count; ++i) {
+            pDiffData[i] = static_cast<int32_t>(t0[i]) - static_cast<int32_t>(t1[i]);
+        }
+    } else {
+        ERR_ARGS("%s threshold diff skipped: unsupported source types %d / %d",
+                 logTag, static_cast<int>(pT0->dataType), static_cast<int>(pT1->dataType));
+        pDiff->release();
+        pArrays[addrDiff] = nullptr;
+        return;
+    }
+
+    pDiff->uniqueId = pT0->uniqueId;
+    pDiff->timeStamp = pT0->timeStamp;
+    pDiff->epicsTS = pT0->epicsTS;
+
+    if (pDiff->pAttributeList && pT0->pAttributeList) {
+        pT0->pAttributeList->copy(pDiff->pAttributeList);
+        static const char kBandPassAttr[] = "T0-T1";
+        pDiff->pAttributeList->add("ThresholdBandPass", "Preview threshold band-pass",
+                                   NDAttrString, const_cast<char*>(kBandPassAttr));
+    }
+
+    int arrayCallbacks = 0;
+    getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+    if (arrayCallbacks) {
+        doCallbacksGenericPointer(pDiff, NDArrayData, addrDiff);
+    }
+
+    LOG_ARGS("Processed %s threshold diff: frame=%d, addr=%d (T0=%d - T1=%d)",
+             logTag, frame_number, addrDiff, addrT0, addrT1);
 }
 
 /** Shared TCP read loop for jsonimage preview streams (PrvImg / PrvImg1). */
@@ -1606,6 +1709,7 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         &prvImgNetworkClient_,
         NDARRAY_ADDR_PRVIMG_THRESHOLD0,
         NDARRAY_ADDR_PRVIMG_THRESHOLD1,
+        NDARRAY_ADDR_PRVIMG_THRESH_DIFF,
         NDARRAY_MAX_ADDR,
         ADTimePixPrvImgFrameNumber,
         ADTimePixPrvImgThresholdID,
@@ -1628,6 +1732,7 @@ bool ADTimePix::processPrvImg1DataLine(char* line_buffer, char* newline_pos, siz
         &prvImg1NetworkClient_,
         NDARRAY_ADDR_PRVIMG1_THRESHOLD0,
         NDARRAY_ADDR_PRVIMG1_THRESHOLD1,
+        NDARRAY_ADDR_PRVIMG1_THRESH_DIFF,
         NDARRAY_MAX_ADDR,
         -1,
         -1,
