@@ -66,6 +66,39 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva3:, PORT=PVA3,ADD
 NDPvaConfigure("PVA4", $(QSIZE), 0, "$(PORT)", 10, "$(PREFIX)Pva4:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva4:, PORT=PVA4,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
+# ---------------------------------------------------------------------------
+# IXS / dual-threshold band-pass (T0 - T1): uncomment for ID10-style between-threshold
+# images (weak IXS, cosmic handling in spectra — validated on Lambda / Tagma at BNL).
+# Requires NDPluginProcess (in commonPlugins). Pairing uses background subtract:
+#   frame:      image1 (T0) - imageTh1 (T1)  -> imageDiff1  / Pva5
+#   integrated: imageInt1 - imageIntTh1       -> imageIntDiff1 / Pva6
+# After iocInit, uncomment < init_ixs_thresh_diff.cmd in st_mpx3.cmd (or include from init_detector_mpx3.cmd).
+# Alternative with two live inputs: ADCompVision (NDCVConfigure) if ADCOMPVISION is in RELEASE.local.
+# Production pairing without scan latency: future driver NDArray addr 11/12 (see preview-dual-threshold.md).
+#
+# NDProcessConfigure("FRMDIFF", $(QSIZE), 0, "Image1", 0, 0, 0)
+# dbLoadRecords("$(ADCORE)/db/NDProcess.template", "P=$(PREFIX),R=procFrameDiff:,PORT=FRMDIFF,ADDR=0,TIMEOUT=1,NDARRAY_PORT=Image1")
+# dbLoadRecords("ixs_thresh_diff.template", "P=$(PREFIX)")
+#
+# NDProcessConfigure("INTDIFF", $(QSIZE), 0, "ImageInt1", 0, 0, 0)
+# dbLoadRecords("$(ADCORE)/db/NDProcess.template", "P=$(PREFIX),R=procIntDiff:,PORT=INTDIFF,ADDR=0,TIMEOUT=1,NDARRAY_PORT=ImageInt1")
+#
+# NDStdArraysConfigure("ImageDiff1", 3, 0, "FRMDIFF", 0)
+# dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageDiff1:,PORT=ImageDiff1,ADDR=0,NDARRAY_PORT=FRMDIFF,TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
+# NDStdArraysConfigure("ImageIntDiff1", 3, 0, "INTDIFF", 0)
+# dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageIntDiff1:,PORT=ImageIntDiff1,ADDR=0,NDARRAY_PORT=INTDIFF,TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
+#
+# NDPvaConfigure("PVA5", $(QSIZE), 0, "FRMDIFF", 0, "$(PREFIX)Pva5:Image", 0, 0, 0)
+# dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva5:, PORT=PVA5,ADDR=0,TIMEOUT=1,NDARRAY_PORT=FRMDIFF")
+# NDPvaConfigure("PVA6", $(QSIZE), 0, "INTDIFF", 0, "$(PREFIX)Pva6:Image", 0, 0, 0)
+# dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva6:, PORT=PVA6,ADDR=0,TIMEOUT=1,NDARRAY_PORT=INTDIFF")
+#
+# Optional ADCompVision (build ADCOMPVISION into support, set RELEASE.local):
+# NDCVConfigure("IXSCV1", $(QSIZE), 0, "$(PORT)", 0, 0, 0, 0, 0, $(MAX_THREADS=5))
+# dbLoadRecords("$(ADCOMPVISION)/db/NDCV.template", "P=$(PREFIX),R=ixsCv1:,PORT=IXSCV1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+# set_requestfile_path("$(ADCOMPVISION)/db")
+# ---------------------------------------------------------------------------
+
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 
 set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
@@ -75,3 +108,6 @@ iocInit()
 < init_detector_mpx3.cmd
 
 create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
+
+# IXS T0-T1 band-pass plugins (uncomment plugin block in st_mpx3.cmd first):
+# < init_ixs_thresh_diff.cmd
