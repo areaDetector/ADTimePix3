@@ -127,7 +127,7 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 - [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** difference **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
 - [x] Gated on **`BothCounters=Yes`**; skips diff when `frameNumber` mismatch between T0 and T1 buffers.
 - [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6** on driver addrs 11/12.
-- [ ] Phoebus band-pass row on `Mpx3PrvImgMonitor.bob` (Pva5/Pva6).
+- [x] Phoebus band-pass row on `Mpx3PrvImgMonitor.bob` (Pva5/Pva6).
 
 Legacy **`NDPluginProcess`** sketch (`ixs_thresh_diff.template`) remains as optional fallback; driver pairing has no scan latency.
 

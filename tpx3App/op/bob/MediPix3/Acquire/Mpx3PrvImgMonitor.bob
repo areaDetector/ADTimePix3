@@ -2,14 +2,14 @@
 <display version="2.0.0">
   <name>Mpx3PrvImgMonitor</name>
   <width>1420</width>
-  <height>1680</height>
+  <height>2450</height>
   <widget type="group" version="3.0.0">
     <name>Mpx3_PrvImg_Monitor</name>
     <width>1400</width>
-    <height>1670</height>
+    <height>2440</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
-      <text>Medipix3 Preview — PrvImg frame (8088) + PrvImg1 integrated (8089)</text>
+      <text>Medipix3 Preview — PrvImg (8088) + PrvImg1 integrated (8089) + T0−T1 band (addr 11/12)</text>
       <x>10</x>
       <y>10</y>
       <width>1380</width>
@@ -334,10 +334,91 @@
       <data_height>512</data_height>
       <tooltip>Integrated preview threshold 1 when BothCounters=Yes</tooltip>
     </widget>
+    <widget type="label" version="2.0.0">
+      <name>BandPassRowTitle</name>
+      <text>IXS band-pass — driver T0−T1 (BothCounters=Yes, paired per trigger)</text>
+      <x>20</x>
+      <y>1620</y>
+      <width>900</width>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="140" green="0" blue="0">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BandPassFrameTitle</name>
+      <text>frame band — PVA $(P)Pva5:Image (addr 11, NDInt32)</text>
+      <x>20</x>
+      <y>1645</y>
+      <width>660</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BandPassIntegTitle</name>
+      <text>integrated band — PVA $(P)Pva6:Image (addr 12, NDInt32)</text>
+      <x>720</x>
+      <y>1645</y>
+      <width>660</width>
+    </widget>
+    <widget type="image" version="2.0.0">
+      <name>Image_BandFrame</name>
+      <pv_name>pva://$(P)Pva5:Image</pv_name>
+      <x>20</x>
+      <y>1670</y>
+      <width>660</width>
+      <height>660</height>
+      <color_map>
+        <name>JET</name>
+      </color_map>
+      <x_axis>
+        <visible>true</visible>
+        <title>X</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y</title>
+        <minimum>512.0</minimum>
+        <maximum>0.0</maximum>
+      </y_axis>
+      <data_width>512</data_width>
+      <data_height>512</data_height>
+      <tooltip>Per-frame threshold 0 minus threshold 1 (between-threshold counts; ID10/Lambda-style IXS)</tooltip>
+    </widget>
+    <widget type="image" version="2.0.0">
+      <name>Image_BandInteg</name>
+      <pv_name>pva://$(P)Pva6:Image</pv_name>
+      <x>720</x>
+      <y>1670</y>
+      <width>660</width>
+      <height>660</height>
+      <color_map>
+        <name>JET</name>
+      </color_map>
+      <x_axis>
+        <visible>true</visible>
+        <title>X</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y</title>
+        <minimum>512.0</minimum>
+        <maximum>0.0</maximum>
+      </y_axis>
+      <data_width>512</data_width>
+      <data_height>512</data_height>
+      <tooltip>Integrated threshold 0 minus threshold 1 from measurement start</tooltip>
+    </widget>
     <widget type="group" version="3.0.0">
       <name>FrameMetadata</name>
       <x>10</x>
-      <y>1620</y>
+      <y>2340</y>
       <width>1380</width>
       <height>95</height>
       <widget type="label" version="2.0.0">
