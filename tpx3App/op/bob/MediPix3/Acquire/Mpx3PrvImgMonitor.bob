@@ -2,14 +2,14 @@
 <display version="2.0.0">
   <name>Mpx3PrvImgMonitor</name>
   <width>1420</width>
-  <height>3170</height>
+  <height>2450</height>
   <widget type="group" version="3.0.0">
     <name>Mpx3_PrvImg_Monitor</name>
     <width>1400</width>
-    <height>3160</height>
+    <height>2440</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
-      <text>Medipix3 Preview — thresholds + T0−T1 band (signed addr 11/12, clip addr 13/14)</text>
+      <text>Medipix3 Preview — thresholds + T0−T1 band (addr 11/12, PrvImgThreshDiffClip)</text>
       <x>10</x>
       <y>10</y>
       <width>1380</width>
@@ -183,7 +183,24 @@
         <text>ThreshDiffClip</text>
         <x>690</x>
         <y>70</y>
+        <width>95</width>
+      </widget>
+      <widget type="slide_button" version="2.0.0">
+        <name>ThreshDiffClipSP</name>
+        <pv_name>$(P)$(R)PrvImgThreshDiffClip</pv_name>
+        <x>790</x>
+        <y>65</y>
         <width>100</width>
+        <height>30</height>
+        <show_label>false</show_label>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>ThreshDiffClipRBV</name>
+        <pv_name>$(P)$(R)PrvImgThreshDiffClip_RBV</pv_name>
+        <x>900</x>
+        <y>68</y>
+        <width>55</width>
+        <height>24</height>
       </widget>
     </widget>
     <widget type="label" version="2.0.0">
@@ -351,10 +368,10 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>BandPassRowTitle</name>
-      <text>IXS band-pass — signed T0−T1 diagnostic (addr 11/12)</text>
+      <text>IXS band-pass T0−T1 — Pva5/Pva6 (addr 11/12); Clip=On → max(0,diff)</text>
       <x>20</x>
       <y>1620</y>
-      <width>900</width>
+      <width>950</width>
       <font>
         <font family="Sans" style="BOLD" size="12.0">
         </font>
@@ -366,14 +383,14 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>BandPassFrameTitle</name>
-      <text>signed frame — PVA $(P)Pva5:Image (addr 11, NDInt32)</text>
+      <text>frame band — PVA $(P)Pva5:Image (addr 11)</text>
       <x>20</x>
       <y>1645</y>
       <width>660</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>BandPassIntegTitle</name>
-      <text>signed integrated — PVA $(P)Pva6:Image (addr 12, NDInt32)</text>
+      <text>integrated band — PVA $(P)Pva6:Image (addr 12)</text>
       <x>720</x>
       <y>1645</y>
       <width>660</width>
@@ -402,7 +419,7 @@
       </y_axis>
       <data_width>512</data_width>
       <data_height>512</data_height>
-      <tooltip>Signed per-frame T0−T1 (negative values indicate pairing/threshold issues on emulator)</tooltip>
+      <tooltip>T0−T1 per frame; set PrvImgThreshDiffClip=Clip for non-negative IXS display</tooltip>
     </widget>
     <widget type="image" version="2.0.0">
       <name>Image_BandInteg</name>
@@ -428,93 +445,12 @@
       </y_axis>
       <data_width>512</data_width>
       <data_height>512</data_height>
-      <tooltip>Signed integrated T0−T1 from measurement start</tooltip>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>BandPassClipRowTitle</name>
-      <text>IXS band-pass — clipped max(0, T0−T1) for display (addr 13/14, PrvImgThreshDiffClip=On)</text>
-      <x>20</x>
-      <y>2340</y>
-      <width>1000</width>
-      <font>
-        <font family="Sans" style="BOLD" size="12.0">
-        </font>
-      </font>
-      <foreground_color>
-        <color red="140" green="0" blue="0">
-        </color>
-      </foreground_color>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>BandPassClipFrameTitle</name>
-      <text>clip frame — PVA $(P)Pva7:Image (addr 13, max(0,T0−T1) Int32)</text>
-      <x>20</x>
-      <y>2365</y>
-      <width>660</width>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>BandPassClipIntegTitle</name>
-      <text>clip integrated — PVA $(P)Pva8:Image (addr 14, max(0,T0−T1) Int32)</text>
-      <x>720</x>
-      <y>2365</y>
-      <width>660</width>
-    </widget>
-    <widget type="image" version="2.0.0">
-      <name>Image_BandClipFrame</name>
-      <pv_name>pva://$(P)Pva7:Image</pv_name>
-      <x>20</x>
-      <y>2390</y>
-      <width>660</width>
-      <height>660</height>
-      <color_map>
-        <name>JET</name>
-      </color_map>
-      <x_axis>
-        <visible>true</visible>
-        <title>X</title>
-        <minimum>0.0</minimum>
-        <maximum>512.0</maximum>
-      </x_axis>
-      <y_axis>
-        <visible>true</visible>
-        <title>Y</title>
-        <minimum>512.0</minimum>
-        <maximum>0.0</maximum>
-      </y_axis>
-      <data_width>512</data_width>
-      <data_height>512</data_height>
-      <tooltip>Non-negative between-threshold counts (max(0, T0−T1)) — use for IXS display</tooltip>
-    </widget>
-    <widget type="image" version="2.0.0">
-      <name>Image_BandClipInteg</name>
-      <pv_name>pva://$(P)Pva8:Image</pv_name>
-      <x>720</x>
-      <y>2390</y>
-      <width>660</width>
-      <height>660</height>
-      <color_map>
-        <name>JET</name>
-      </color_map>
-      <x_axis>
-        <visible>true</visible>
-        <title>X</title>
-        <minimum>0.0</minimum>
-        <maximum>512.0</maximum>
-      </x_axis>
-      <y_axis>
-        <visible>true</visible>
-        <title>Y</title>
-        <minimum>512.0</minimum>
-        <maximum>0.0</maximum>
-      </y_axis>
-      <data_width>512</data_width>
-      <data_height>512</data_height>
-      <tooltip>Non-negative integrated between-threshold counts</tooltip>
+      <tooltip>Integrated T0−T1; Clip=Signed shows pairing diagnostics on emulator</tooltip>
     </widget>
     <widget type="group" version="3.0.0">
       <name>FrameMetadata</name>
       <x>10</x>
-      <y>3060</y>
+      <y>2340</y>
       <width>1380</width>
       <height>95</height>
       <widget type="label" version="2.0.0">

@@ -71,8 +71,7 @@ Same **channel schema** and **`jsonimage` wire format**; **not equivalent** in S
 |------|--------|
 | jsonimage parser | Parses **`thresholdID`**, `integrationSize`, `frameNumber`, dimensions, etc. |
 | NDArray routing | **`thresholdID=0` → addr 0** (Pva1); **`thresholdID=1` → addr 8** (Pva2) |
-| IXS band-pass | **`T0−T1` per paired trigger → addr 11** (frame, Pva5); **integrated → addr 12** (Pva6) when **`BothCounters=Yes`** |
-| IXS clip band | **`max(0, T0−T1)` → addr 13** (Pva7); **integrated → addr 14** (Pva8) when **`PrvImgThreshDiffClip=On`** (default) |
+| IXS band-pass | **`T0−T1` or `max(0,T0−T1)` on addr 11/12** (Pva5/Pva6) when **`BothCounters=Yes`**; mode from **`PrvImgThreshDiffClip`** (default Clip) |
 | NDAttributes | **`ThresholdID`** on each array; **`PrvImgThresholdID_RBV`** |
 | Detector config | **`BothCounters`** read/write; trigger guardrails (no Continuous + BothCounters) |
 | Second preview TCP | **`prvImg1WorkerThread`** — NDArray addr **9** / **10**, PVA **Pva3** / **Pva4** |
@@ -125,11 +124,11 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 
 ### Phase 4 — Driver threshold band-pass (IXS / ID10-style)
 
-- [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** difference **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
-- [x] When **`PrvImgThreshDiffClip=On`**, also emit **`NDInt32`** **`max(0, T0−T1)`** (non-negative) on addr **13** / **14** (Pva7 / Pva8) for display.
+- [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
+- [x] **`PrvImgThreshDiffClip`**: **Clip** (default) → **`max(0, T0−T1)`** on addrs 11/12; **Signed** → raw signed diff for pairing diagnostics.
 - [x] Gated on **`BothCounters=Yes`**; skips diff when `frameNumber` mismatch between T0 and T1 buffers.
-- [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6**; clip **`imageDiffClip1`** / **`imageIntDiffClip1`** + **Pva7** / **Pva8**.
-- [x] Phoebus band-pass rows on `Mpx3PrvImgMonitor.bob` (signed Pva5/Pva6, clipped Pva7/Pva8).
+- [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6** only (no separate clip addrs).
+- [x] Phoebus band-pass row on `Mpx3PrvImgMonitor.bob` (Pva5/Pva6 + **PrvImgThreshDiffClip** control).
 
 Legacy **`NDPluginProcess`** sketch (`ixs_thresh_diff.template`) remains as optional fallback; driver pairing has no scan latency.
 

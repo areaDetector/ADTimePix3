@@ -1237,22 +1237,22 @@ record(longout, "$(P)$(R)PrvImgLogHeaders")
 
 record(bo, "$(P)$(R)PrvImgThreshDiffClip")
 {
-    field(DESC, "Emit max(0,T0-T1) on NDArray addrs 13/14")
+    field(DESC, "Clip T0-T1 band on addrs 11/12 to max(0,diff)")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESH_DIFF_CLIP")
-    field(ZNAM, "Off")
-    field(ONAM, "On")
+    field(ZNAM, "Signed")
+    field(ONAM, "Clip")
     field(PINI, "YES")
     field(VAL,  "1")
     info(autosaveFields, "VAL")
 }
 record(bi, "$(P)$(R)PrvImgThreshDiffClip_RBV")
 {
-    field(DESC, "Clipped threshold band-pass enabled")
+    field(DESC, "T0-T1 band clip mode (addrs 11/12)")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESH_DIFF_CLIP")
-    field(ZNAM, "Off")
-    field(ONAM, "On")
+    field(ZNAM, "Signed")
+    field(ONAM, "Clip")
     field(SCAN, "I/O Intr")
 }
 

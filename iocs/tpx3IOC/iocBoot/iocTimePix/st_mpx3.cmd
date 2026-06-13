@@ -67,7 +67,7 @@ NDPvaConfigure("PVA4", $(QSIZE), 0, "$(PORT)", 10, "$(PREFIX)Pva4:Image", 0, 0, 
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva4:, PORT=PVA4,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
 # IXS / dual-threshold band-pass (T0 - T1): driver NDArray addr 11 (frame), 12 (integrated).
-# Emitted when BothCounters=Yes after each paired T1→T0 jsonimage trigger (ID10/Lambda-style).
+# Clip to max(0,T0-T1) when cam1:PrvImgThreshDiffClip=On (default); signed T0-T1 when Off.
 NDStdArraysConfigure("ImageDiff1", 3, 0, "$(PORT)", 11)
 dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageDiff1:,PORT=ImageDiff1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
 
@@ -79,19 +79,6 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva5:, PORT=PVA5,ADD
 
 NDPvaConfigure("PVA6", $(QSIZE), 0, "$(PORT)", 12, "$(PREFIX)Pva6:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva6:, PORT=PVA6,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
-
-# Clipped band max(0,T0-T1): addr 13 (frame), 14 (integrated). Gated by cam1:PrvImgThreshDiffClip (default On).
-NDStdArraysConfigure("ImageDiffClip1", 3, 0, "$(PORT)", 13)
-dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageDiffClip1:,PORT=ImageDiffClip1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
-
-NDStdArraysConfigure("ImageIntDiffClip1", 3, 0, "$(PORT)", 14)
-dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageIntDiffClip1:,PORT=ImageIntDiffClip1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
-
-NDPvaConfigure("PVA7", $(QSIZE), 0, "$(PORT)", 13, "$(PREFIX)Pva7:Image", 0, 0, 0)
-dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva7:, PORT=PVA7,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
-
-NDPvaConfigure("PVA8", $(QSIZE), 0, "$(PORT)", 14, "$(PREFIX)Pva8:Image", 0, 0, 0)
-dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva8:, PORT=PVA8,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
 # ---------------------------------------------------------------------------
 # Legacy IXS band-pass via NDPluginProcess (optional; driver addr 11/12 preferred):
