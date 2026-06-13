@@ -128,7 +128,7 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 - [x] **`PrvImgThreshDiffClip`**: **Clip** (default) → **`max(0, T0−T1)`** on addrs 11/12; **Signed** → raw signed diff for pairing diagnostics.
 - [x] Gated on **`BothCounters=Yes`**; skips diff when `frameNumber` mismatch between T0 and T1 buffers.
 - [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6** only (no separate clip addrs).
-- [x] Phoebus band-pass row on `Mpx3PrvImgMonitor.bob` (Pva5/Pva6 + **PrvImgThreshDiffClip** control).
+- [x] Phoebus 2×3 layout on `Mpx3PrvImgMonitor.bob` (frame row + integrated row; band T0−T1 in col 3, Pva5/Pva6 + **PrvImgThreshDiffClip**).
 
 Legacy **`NDPluginProcess`** sketch (`ixs_thresh_diff.template`) remains as optional fallback; driver pairing has no scan latency.
 

@@ -2,11 +2,11 @@
 <display version="2.0.0">
   <name>Mpx3PrvImgMonitor</name>
   <width>1420</width>
-  <height>2450</height>
+  <height>1360</height>
   <widget type="group" version="3.0.0">
     <name>Mpx3_PrvImg_Monitor</name>
     <width>1400</width>
-    <height>2440</height>
+    <height>1350</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>Medipix3 Preview — thresholds + T0−T1 band (addr 11/12, PrvImgThreshDiffClip)</text>
@@ -205,10 +205,10 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>FrameRowTitle</name>
-      <text>PrvImg [0] — current frame (tcp 8088)</text>
+      <text>Current frame (tcp 8088) — PrvImg [0]</text>
       <x>20</x>
       <y>200</y>
-      <width>660</width>
+      <width>1340</width>
       <font>
         <font family="Sans" style="BOLD" size="12.0">
         </font>
@@ -219,17 +219,27 @@
       </foreground_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>Image1Title</name>
-      <text>threshold 1 — PVA $(P)Pva2:Image (NDArray addr 8 / imageTh1)</text>
-      <x>720</x>
-      <y>200</y>
-      <width>660</width>
-      <font>
-        <font family="Sans" style="BOLD" size="12.0">
-        </font>
-      </font>
+      <name>FrameTh0Title</name>
+      <text>T0 — PVA $(P)Pva1:Image (addr 0)</text>
+      <x>20</x>
+      <y>225</y>
+      <width>440</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>FrameTh1Title</name>
+      <text>T1 — PVA $(P)Pva2:Image (addr 8)</text>
+      <x>470</x>
+      <y>225</y>
+      <width>440</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>FrameBandTitle</name>
+      <text>T0−T1 band — PVA $(P)Pva5:Image (addr 11)</text>
+      <x>920</x>
+      <y>225</y>
+      <width>440</width>
       <foreground_color>
-        <color red="10" green="0" blue="184">
+        <color red="140" green="0" blue="0">
         </color>
       </foreground_color>
     </widget>
@@ -237,9 +247,9 @@
       <name>Image_Th0</name>
       <pv_name>pva://$(P)Pva1:Image</pv_name>
       <x>20</x>
-      <y>225</y>
-      <width>660</width>
-      <height>660</height>
+      <y>250</y>
+      <width>440</width>
+      <height>440</height>
       <color_map>
         <name>JET</name>
       </color_map>
@@ -262,10 +272,10 @@
     <widget type="image" version="2.0.0">
       <name>Image_Th1</name>
       <pv_name>pva://$(P)Pva2:Image</pv_name>
-      <x>720</x>
-      <y>225</y>
-      <width>660</width>
-      <height>660</height>
+      <x>470</x>
+      <y>250</y>
+      <width>440</width>
+      <height>440</height>
       <color_map>
         <name>JET</name>
       </color_map>
@@ -285,12 +295,38 @@
       <data_height>512</data_height>
       <tooltip>Second threshold stream when BothCounters=Yes (requires detector BothCounters config)</tooltip>
     </widget>
+    <widget type="image" version="2.0.0">
+      <name>Image_BandFrame</name>
+      <pv_name>pva://$(P)Pva5:Image</pv_name>
+      <x>920</x>
+      <y>250</y>
+      <width>440</width>
+      <height>440</height>
+      <color_map>
+        <name>JET</name>
+      </color_map>
+      <x_axis>
+        <visible>true</visible>
+        <title>X</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y</title>
+        <minimum>512.0</minimum>
+        <maximum>0.0</maximum>
+      </y_axis>
+      <data_width>512</data_width>
+      <data_height>512</data_height>
+      <tooltip>T0−T1 per frame; set PrvImgThreshDiffClip=Clip for non-negative IXS display</tooltip>
+    </widget>
     <widget type="label" version="2.0.0">
       <name>IntegRowTitle</name>
-      <text>PrvImg1 [1] — integrated from measurement start (tcp 8089, IntgSize=-1)</text>
+      <text>Integrated from measurement start (tcp 8089, IntgSize=-1) — PrvImg1 [1]</text>
       <x>20</x>
-      <y>900</y>
-      <width>700</width>
+      <y>705</y>
+      <width>1340</width>
       <font>
         <font family="Sans" style="BOLD" size="12.0">
         </font>
@@ -302,25 +338,36 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>IntegTh0Title</name>
-      <text>integrated threshold 0 — PVA $(P)Pva3:Image (addr 9)</text>
+      <text>T0 — PVA $(P)Pva3:Image (addr 9)</text>
       <x>20</x>
-      <y>925</y>
-      <width>660</width>
+      <y>730</y>
+      <width>440</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>IntegTh1Title</name>
-      <text>integrated threshold 1 — PVA $(P)Pva4:Image (addr 10)</text>
-      <x>720</x>
-      <y>925</y>
-      <width>660</width>
+      <text>T1 — PVA $(P)Pva4:Image (addr 10)</text>
+      <x>470</x>
+      <y>730</y>
+      <width>440</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>IntegBandTitle</name>
+      <text>T0−T1 band — PVA $(P)Pva6:Image (addr 12)</text>
+      <x>920</x>
+      <y>730</y>
+      <width>440</width>
+      <foreground_color>
+        <color red="140" green="0" blue="0">
+        </color>
+      </foreground_color>
     </widget>
     <widget type="image" version="2.0.0">
       <name>Image_IntTh0</name>
       <pv_name>pva://$(P)Pva3:Image</pv_name>
       <x>20</x>
-      <y>950</y>
-      <width>660</width>
-      <height>660</height>
+      <y>755</y>
+      <width>440</width>
+      <height>440</height>
       <color_map>
         <name>JET</name>
       </color_map>
@@ -343,10 +390,10 @@
     <widget type="image" version="2.0.0">
       <name>Image_IntTh1</name>
       <pv_name>pva://$(P)Pva4:Image</pv_name>
-      <x>720</x>
-      <y>950</y>
-      <width>660</width>
-      <height>660</height>
+      <x>470</x>
+      <y>755</y>
+      <width>440</width>
+      <height>440</height>
       <color_map>
         <name>JET</name>
       </color_map>
@@ -366,68 +413,13 @@
       <data_height>512</data_height>
       <tooltip>Integrated preview threshold 1 when BothCounters=Yes</tooltip>
     </widget>
-    <widget type="label" version="2.0.0">
-      <name>BandPassRowTitle</name>
-      <text>IXS band-pass T0−T1 — Pva5/Pva6 (addr 11/12); Clip=On → max(0,diff)</text>
-      <x>20</x>
-      <y>1620</y>
-      <width>950</width>
-      <font>
-        <font family="Sans" style="BOLD" size="12.0">
-        </font>
-      </font>
-      <foreground_color>
-        <color red="140" green="0" blue="0">
-        </color>
-      </foreground_color>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>BandPassFrameTitle</name>
-      <text>frame band — PVA $(P)Pva5:Image (addr 11)</text>
-      <x>20</x>
-      <y>1645</y>
-      <width>660</width>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>BandPassIntegTitle</name>
-      <text>integrated band — PVA $(P)Pva6:Image (addr 12)</text>
-      <x>720</x>
-      <y>1645</y>
-      <width>660</width>
-    </widget>
-    <widget type="image" version="2.0.0">
-      <name>Image_BandFrame</name>
-      <pv_name>pva://$(P)Pva5:Image</pv_name>
-      <x>20</x>
-      <y>1670</y>
-      <width>660</width>
-      <height>660</height>
-      <color_map>
-        <name>JET</name>
-      </color_map>
-      <x_axis>
-        <visible>true</visible>
-        <title>X</title>
-        <minimum>0.0</minimum>
-        <maximum>512.0</maximum>
-      </x_axis>
-      <y_axis>
-        <visible>true</visible>
-        <title>Y</title>
-        <minimum>512.0</minimum>
-        <maximum>0.0</maximum>
-      </y_axis>
-      <data_width>512</data_width>
-      <data_height>512</data_height>
-      <tooltip>T0−T1 per frame; set PrvImgThreshDiffClip=Clip for non-negative IXS display</tooltip>
-    </widget>
     <widget type="image" version="2.0.0">
       <name>Image_BandInteg</name>
       <pv_name>pva://$(P)Pva6:Image</pv_name>
-      <x>720</x>
-      <y>1670</y>
-      <width>660</width>
-      <height>660</height>
+      <x>920</x>
+      <y>755</y>
+      <width>440</width>
+      <height>440</height>
       <color_map>
         <name>JET</name>
       </color_map>
@@ -450,7 +442,7 @@
     <widget type="group" version="3.0.0">
       <name>FrameMetadata</name>
       <x>10</x>
-      <y>2340</y>
+      <y>1210</y>
       <width>1380</width>
       <height>95</height>
       <widget type="label" version="2.0.0">
