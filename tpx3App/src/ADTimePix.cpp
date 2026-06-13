@@ -306,8 +306,31 @@ asynStatus ADTimePix::checkPrvImgPath()
 
 asynStatus ADTimePix::checkPrvImg1Path()
 {
-    return checkChannelPath(ADTimePixPrvImg1Base, -1, ADTimePixPrvImg1FilePathExists,
-                          "PrvImg1", "PrvImg1 file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
+    asynStatus status = checkChannelPath(ADTimePixPrvImg1Base, -1, ADTimePixPrvImg1FilePathExists,
+                          "PrvImg1", "PrvImg1 file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://listen@hostname:port");
+
+    if (status == asynSuccess) {
+        std::string filePath;
+        getStringParam(ADTimePixPrvImg1Base, filePath);
+        if (filePath.find("tcp://") == 0) {
+            std::string host;
+            int port;
+            if (parseTcpPath(filePath, host, port)) {
+                epicsMutexLock(prvImg1Mutex_);
+                prvImg1Host_ = host;
+                prvImg1Port_ = port;
+                getIntegerParam(ADTimePixPrvImg1Format, &prvImg1Format_);
+                epicsMutexUnlock(prvImg1Mutex_);
+                LOG_ARGS("Parsed PrvImg1 TCP path: host=%s, port=%d", host.c_str(), port);
+            } else {
+                ERR_ARGS("Failed to parse PrvImg1 TCP path: %s", filePath.c_str());
+                setIntegerParam(ADTimePixPrvImg1FilePathExists, 0);
+                return asynError;
+            }
+        }
+    }
+
+    return status;
 }
 
 asynStatus ADTimePix::checkPrvHstPath() // file:/, http://, tcp:// format
@@ -1108,10 +1131,11 @@ void ADTimePix::resetPrvHstAccumulation() {
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
-/* maxAddr=9: asyn addr lists 0..8 — PrvImg thresh0=0, Img=1, Img sum=2, Img sumN=3,
- * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF=7, PrvImg thresh1=8 */
+/* maxAddr=11: asyn addr lists 0..10 — PrvImg thresh0=0, Img=1, Img sum=2, Img sumN=3,
+ * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF=7, PrvImg thresh1=8,
+ * PrvImg1 integrated thresh0=9, PrvImg1 integrated thresh1=10 */
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
-    : ADDriver(portName, 9, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+    : ADDriver(portName, NDARRAY_MAX_ADDR, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK | asynFlags,
@@ -1503,6 +1527,27 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImgLastRateUpdateTime_ = 0.0;
     prvImgFirstFrameReceived_ = false;
     prvImgJsonHeadersRemaining_ = 0;
+
+    // Initialize TCP streaming for PrvImg1 channel (integrated preview)
+    prvImg1NetworkClient_.reset();
+    prvImg1Host_ = "";
+    prvImg1Port_ = 0;
+    prvImg1Connected_ = false;
+    prvImg1Running_ = false;
+    prvImg1WorkerThreadId_ = nullptr;
+    prvImg1Mutex_ = epicsMutexMustCreate();
+    if (!prvImg1Mutex_) {
+        ERR("Failed to create PrvImg1 mutex");
+    }
+    prvImg1LineBuffer_.resize(MAX_BUFFER_SIZE);
+    prvImg1TotalRead_ = 0;
+    prvImg1Format_ = 0;
+    prvImg1PreviousFrameNumber_ = 0;
+    prvImg1PreviousTimeAtFrame_ = 0.0;
+    prvImg1AcquisitionRate_ = 0.0;
+    prvImg1LastRateUpdateTime_ = 0.0;
+    prvImg1FirstFrameReceived_ = false;
+    prvImg1JsonHeadersRemaining_ = 0;
     
     // Initialize TCP streaming for Img channel
     imgNetworkClient_.reset();
@@ -1776,6 +1821,18 @@ void ADTimePix::shutdownPortDriver() {
     }
     prvImgDisconnect();
 
+    // Stop PrvImg1 TCP streaming
+    if (prvImg1Mutex_) {
+        epicsMutexLock(prvImg1Mutex_);
+        prvImg1Running_ = false;
+        epicsMutexUnlock(prvImg1Mutex_);
+    }
+    if (prvImg1WorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+    prvImg1Disconnect();
+
     // Stop Img TCP streaming
     if (imgMutex_) {
         epicsMutexLock(imgMutex_);
@@ -1843,6 +1900,22 @@ ADTimePix::~ADTimePix(){
     if (prvImgMutex_) {
         epicsMutexDestroy(prvImgMutex_);
         prvImgMutex_ = NULL;
+    }
+
+    // Stop PrvImg1 TCP streaming
+    epicsMutexLock(prvImg1Mutex_);
+    prvImg1Running_ = false;
+    epicsMutexUnlock(prvImg1Mutex_);
+
+    if (prvImg1WorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+    prvImg1Disconnect();
+
+    if (prvImg1Mutex_) {
+        epicsMutexDestroy(prvImg1Mutex_);
+        prvImg1Mutex_ = NULL;
     }
     
     // Stop Img TCP streaming

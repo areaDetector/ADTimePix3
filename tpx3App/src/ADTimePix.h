@@ -832,7 +832,32 @@ class ADTimePix : public ADDriver{
         static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD0 = 0;
         /** NDArray address for PrvImg threshold 1 preview (MPX3 dual threshold). */
         static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD1 = 8;
-        
+        /** NDArray address for PrvImg1 integrated preview threshold 0 (TCP 8089). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD0 = 9;
+        /** NDArray address for PrvImg1 integrated preview threshold 1. */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD1 = 10;
+        /** Number of NDArray callback addresses (0..NDARRAY_MAX_ADDR-1). */
+        static constexpr int NDARRAY_MAX_ADDR = 11;
+
+        // TCP streaming for PrvImg1 channel (integrated preview)
+        std::unique_ptr<NetworkClient> prvImg1NetworkClient_;
+        std::string prvImg1Host_;
+        int prvImg1Port_;
+        bool prvImg1Connected_;
+        bool prvImg1Running_;
+        epicsThreadId prvImg1WorkerThreadId_ = nullptr;
+        epicsMutexId prvImg1Mutex_;
+        std::vector<char> prvImg1LineBuffer_;
+        size_t prvImg1TotalRead_;
+        int prvImg1Format_;
+        int prvImg1PreviousFrameNumber_;
+        double prvImg1PreviousTimeAtFrame_;
+        double prvImg1AcquisitionRate_;
+        std::deque<double> prvImg1RateSamples_;
+        double prvImg1LastRateUpdateTime_;
+        bool prvImg1FirstFrameReceived_;
+        int prvImg1JsonHeadersRemaining_;
+
         // TCP streaming for Img channel
         std::unique_ptr<NetworkClient> imgNetworkClient_;
         std::string imgHost_;
@@ -1015,7 +1040,25 @@ class ADTimePix : public ADDriver{
         static void prvImgWorkerThreadC(void *pPvt);
         void prvImgConnect();
         void prvImgDisconnect();
+
+        bool processPrvImg1DataLine(char* line_buffer, char* newline_pos, size_t total_read);
+        void prvImg1WorkerThread();
+        static void prvImg1WorkerThreadC(void *pPvt);
+        void prvImg1Connect();
+        void prvImg1Disconnect();
+
+        struct PreviewJsonimageStream;
         bool parseTcpPath(const std::string& filePath, std::string& host, int& port);
+        bool processPreviewJsonimageLine(const PreviewJsonimageStream& stream,
+                                         char* line_buffer, char* newline_pos, size_t total_read);
+        void runPreviewTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
+                                 std::string& host, int& port,
+                                 std::unique_ptr<NetworkClient>& networkClient,
+                                 std::vector<char>& lineBuffer, size_t& totalRead,
+                                 void (ADTimePix::*connectFn)(),
+                                 void (ADTimePix::*disconnectFn)(),
+                                 bool (ADTimePix::*processLineFn)(char*, char*, size_t),
+                                 const char* logTag);
         
         // TCP streaming methods for Img channel
         bool processImgDataLine(char* line_buffer, char* newline_pos, size_t total_read);

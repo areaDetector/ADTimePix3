@@ -78,6 +78,12 @@ void ADTimePix::syncTcpStreamEndpoints() {
         (void)checkPrvImgPath();
     }
 
+    int writePrvImg1 = 0;
+    getIntegerParam(ADTimePixWritePrvImg1, &writePrvImg1);
+    if (writePrvImg1 != 0) {
+        (void)checkPrvImg1Path();
+    }
+
     int writeImg = 0;
     getIntegerParam(ADTimePixWriteImg, &writeImg);
     if (writeImg != 0) {
@@ -192,6 +198,17 @@ asynStatus ADTimePix::acquireStart(){
         prvImgWorkerThreadId_ = NULL;
     }
     prvImgDisconnect();
+
+    if (prvImg1Mutex_) {
+        epicsMutexLock(prvImg1Mutex_);
+        prvImg1Running_ = false;
+        epicsMutexUnlock(prvImg1Mutex_);
+    }
+    if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+    prvImg1Disconnect();
     
     // Ensure any existing Img TCP connection is disconnected before starting new measurement
     // This prevents port conflicts
@@ -318,6 +335,17 @@ asynStatus ADTimePix::acquireStart(){
             prvImgWorkerThreadId_ = NULL;
         }
         prvImgDisconnect();
+
+        if (prvImg1Mutex_) {
+            epicsMutexLock(prvImg1Mutex_);
+            prvImg1Running_ = false;
+            epicsMutexUnlock(prvImg1Mutex_);
+        }
+        if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
+            epicsThreadMustJoin(prvImg1WorkerThreadId_);
+            prvImg1WorkerThreadId_ = NULL;
+        }
+        prvImg1Disconnect();
         
         epicsMutexLock(imgMutex_);
         imgRunning_ = false;
@@ -385,6 +413,8 @@ asynStatus ADTimePix::acquireStart(){
         getIntegerParam(ADTimePixPrvImgLogHeaders, &logHeaders);
         prvImgJsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
         prvImgFirstFrameReceived_ = false;
+        prvImg1JsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
+        prvImg1FirstFrameReceived_ = false;
     }
 
     // Path PV may have changed (port rotation or Phoebus WriteData); refresh before connect.
@@ -413,6 +443,30 @@ asynStatus ADTimePix::acquireStart(){
                 }
             }
             epicsMutexUnlock(prvImgMutex_);
+        }
+    }
+
+    // Start PrvImg1 TCP worker when WritePrvImg1 is enabled (integrated preview on 8089)
+    int writePrvImg1;
+    getIntegerParam(ADTimePixWritePrvImg1, &writePrvImg1);
+    if (writePrvImg1 != 0) {
+        std::string prvImg1Path;
+        getStringParam(ADTimePixPrvImg1Base, prvImg1Path);
+        if (prvImg1Path.find("tcp://") == 0) {
+            epicsThreadSleep(0.2);
+
+            epicsMutexLock(prvImg1Mutex_);
+            if (!prvImg1Running_ && !prvImg1WorkerThreadId_) {
+                prvImg1Running_ = true;
+                prvImg1WorkerThreadId_ = epicsThreadCreateOpt("prvImg1Worker", prvImg1WorkerThreadC, this, &opts);
+                if (!prvImg1WorkerThreadId_) {
+                    ERR("Failed to create PrvImg1 worker thread");
+                    prvImg1Running_ = false;
+                } else {
+                    LOG("Started PrvImg1 TCP worker thread in acquireStart");
+                }
+            }
+            epicsMutexUnlock(prvImg1Mutex_);
         }
     }
     
@@ -813,6 +867,15 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexUnlock(prvImgMutex_);
     }
 
+    if (prvImg1Mutex_) {
+        epicsMutexLock(prvImg1Mutex_);
+        prvImg1Running_ = false;
+        prvImg1FirstFrameReceived_ = false;
+        prvImg1AcquisitionRate_ = 0.0;
+        prvImg1RateSamples_.clear();
+        epicsMutexUnlock(prvImg1Mutex_);
+    }
+
     if (imgMutex_) {
         epicsMutexLock(imgMutex_);
         imgRunning_ = false;
@@ -839,6 +902,11 @@ asynStatus ADTimePix::acquireStop(){
         prvImgWorkerThreadId_ = NULL;
     }
 
+    if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+
     if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
         epicsThreadMustJoin(imgWorkerThreadId_);
         imgWorkerThreadId_ = NULL;
@@ -852,6 +920,7 @@ asynStatus ADTimePix::acquireStop(){
     }
 
     prvImgDisconnect();
+    prvImg1Disconnect();
     imgDisconnect();
     prvHstDisconnect();
 
