@@ -19,6 +19,12 @@ epicsThreadSleep(2)
 
 asynSetTraceIOMask($(PORT), 0, 2)
 
+# Driver trace (uncomment for IOC console diagnostics during preview TCP / acquire):
+# asynSetTraceMask($(PORT), 0, 8)    # ASYN_TRACEIO_DRIVER — "Processed PrvImg/PrvImg1 frame", jsonimage headers (PrvImgLogHeaders)
+# asynSetTraceMask($(PORT), 0, 4)    # ASYN_TRACE_FLOW — acquire start/stop, port rotation
+# asynSetTraceMask($(PORT), 0, 3)    # ERROR | WARNING — HTTP failures, trigger guards
+# asynSetTraceMask($(PORT), 0, 255)  # all trace levels (verbose)
+
 dbLoadRecords("$(ADTIMEPIX)/db/TimePix3Base.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(ADTIMEPIX)/db/ADTimePix3.template","P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 < load_chips.cmd
@@ -45,6 +51,20 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageTh1:,PORT
 # MPX3 dual threshold: PVA for NDArray addr 8 (imageTh1 / threshold 1)
 NDPvaConfigure("PVA2", $(QSIZE), 0, "$(PORT)", 8, "$(PREFIX)Pva2:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva2:, PORT=PVA2,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
+# PrvImg1 integrated preview: thresholdID=0 -> NDArray address 9
+NDStdArraysConfigure("ImageInt1", 3, 0, "$(PORT)", 9)
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageInt1:,PORT=ImageInt1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=20000000")
+
+# PrvImg1 integrated preview: thresholdID=1 -> NDArray address 10
+NDStdArraysConfigure("ImageIntTh1", 3, 0, "$(PORT)", 10)
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageIntTh1:,PORT=ImageIntTh1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=20000000")
+
+NDPvaConfigure("PVA3", $(QSIZE), 0, "$(PORT)", 9, "$(PREFIX)Pva3:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva3:, PORT=PVA3,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
+NDPvaConfigure("PVA4", $(QSIZE), 0, "$(PORT)", 10, "$(PREFIX)Pva4:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva4:, PORT=PVA4,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 

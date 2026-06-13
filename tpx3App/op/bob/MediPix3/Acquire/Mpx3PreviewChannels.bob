@@ -801,7 +801,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1Note</name>
-      <text>Phase 2: keep disabled until PrvImg1 TCP worker exists. IntgSize=-1 = integrated from measurement start.</text>
+      <text>Integrated preview (IntgSize=-1). Requires WritePrvImg1=1 and PrvImg1 TCP worker.</text>
       <x>10</x>
       <y>26</y>
       <width>535</width>

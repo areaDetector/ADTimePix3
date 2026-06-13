@@ -38,7 +38,7 @@ Defaults (from `init_detector_mpx3.cmd`):
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
 - preview on TCP **8088** (`PrvImgThs` **0,1**, jsonimage format)
 - **`BothCounters=Yes`**, **`TriggerMode=AutoTrgSt_TmrSp` (4)**, **4 triggers**, **0.5 s** period (Erik Accos recipe)
-- `PrvImg1` (integrated preview on 8089) disabled until a driver TCP worker exists
+- `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **9**/**10**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
 **Phoebus:** open `tpx3App/op/bob/MediPix3/MediPix3.bob` with the same `P`/`R` macros (preview TCP config in `Acquire/Mpx3PreviewChannels.bob`, live images in `Acquire/Mpx3PrvImgMonitor.bob`). For `PrvImgThs` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
@@ -75,7 +75,7 @@ Serval `GET http://localhost:8081/` shows `Server.Destination`:
 | Serval path | IOC consumer | MPX3 v1 default |
 |-------------|--------------|-----------------|
 | `Preview.ImageChannels[0]` (`PrvImg`) | Yes — `prvImgWorker` TCP client, NDArray/PVA | `WritePrvImg=1`, TCP 8088 |
-| `Preview.ImageChannels[1]` (`PrvImg1`) | **No** — no worker thread yet | `WritePrvImg1=0` |
+| `Preview.ImageChannels[1]` (`PrvImg1`) | Yes — `prvImg1Worker` TCP client | `WritePrvImg1=1`, TCP 8089 |
 | `Image[]` (main image channel) | Only if `WriteImg=1` and TCP + accumulation | `WriteImg=0` (file path unused) |
 
 The reference `serval_mpx3.json` and the **Serval manual** (destination example, §4 / pp. 18–19) configure **two preview TCP streams**: current frame and an image **integrated from the start of the measurement**. For EPICS v1, enable only the first preview TCP channel — matching what you validated in Phoebus FileWrite. A second preview TCP stream with no reader fills Serval’s queue (`Preview buffer full` on 8089) and breaks repeat acquire.
@@ -114,7 +114,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
-**EPICS v1:** one preview TCP consumer on **8088** routes by **`thresholdID`**: NDArray address **0** / **Pva1** (threshold 0) and address **8** / **Pva2** (threshold 1). Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start. **`BothCounters_RBV`** from detector config. Integrated preview on **8089** still needs a **`PrvImg1` worker** (Phase 2).
+**EPICS v1:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2). Integrated preview on **8089** routes to addr **9** / **10** (Pva3 / Pva4) via **`prvImg1Worker`**. Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start.
 
 ### BothCounters operational notes (2026-06)
 
@@ -129,7 +129,7 @@ Recommended checklist when enabling dual threshold:
 
 UDP `(2/4)` drops and a **horizontal split at y=256** in the image mean half the chip UDP packets did not arrive before Serval assembled the frame — usually trigger rate or hardware/emulator limits, not EPICS preview TCP.
 
-Each jsonimage line on the wire is: JSON header + binary pixel array. The manual example header (p. 22) includes `thresholdID`, `integrationSize`, `integrationMode`, `frameNumber`, `width`, `height`, etc. The driver parses header fields and demuxes by **`thresholdID`** to NDArray addresses 0 and 8; integrated preview from 8089 still requires a `PrvImg1` worker (Phase 2).
+Each jsonimage line on the wire is: JSON header + binary pixel array. The driver parses header fields and demuxes by **`thresholdID`**: frame preview on **8088** → addr 0/8; integrated preview on **8089** → addr 9/10.
 
 ### MPX3 detector fields not in Serval manual §4
 
@@ -173,7 +173,7 @@ Serval 4.x may **leave preview TCP listeners bound** after `measurement/stop`. I
 - Port rotation runs **only when the configured port is already in use**, or on bind-failure retry.
 - `acquireStop` disconnects the IOC TCP client before `measurement/stop`.
 
-**MPX3 v1 profile:** only `WritePrvImg=1` (TCP 8088). Keep `WritePrvImg1=0` unless a consumer exists.
+**MPX3 v1 profile:** `WritePrvImg=1` (TCP 8088) and `WritePrvImg1=1` (TCP 8089 integrated preview). Disable either channel if you do not need it.
 
 **Manual recovery if Serval is wedged:** restart Serval, then restart the IOC and `WriteData=1`.
 

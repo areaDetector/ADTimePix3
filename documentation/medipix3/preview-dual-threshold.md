@@ -1,6 +1,6 @@
 # Medipix3 preview and dual-threshold delivery (vendor notes)
 
-**Status:** Resolved — Erik confirmed Accos behaviour (2026-06-12). Phase 1 driver demux is implemented; Phase 2 (8089 integrated preview worker) remains open.  
+**Status:** Resolved — Erik confirmed Accos behaviour (2026-06-12). Phase 1 driver demux and Phase 2 (8089 integrated preview worker) are implemented.  
 **Related:** [integration.md](integration.md) (v1 IOC profile, validated single-channel preview, and Erik’s dual-threshold test recipe).
 
 This note captures correspondence with ASI on how Serval delivers Medipix3 preview and threshold images, and tracks EPICS driver work against the Accos reference client.
@@ -73,7 +73,7 @@ Same **channel schema** and **`jsonimage` wire format**; **not equivalent** in S
 | NDArray routing | **`thresholdID=0` → addr 0** (Pva1); **`thresholdID=1` → addr 8** (Pva2) |
 | NDAttributes | **`ThresholdID`** on each array; **`PrvImgThresholdID_RBV`** |
 | Detector config | **`BothCounters`** read/write; trigger guardrails (no Continuous + BothCounters) |
-| Second preview TCP | **`PrvImg1` PVs exist; no worker thread** — Phase 2 (8089 integrated preview) |
+| Second preview TCP | **`prvImg1WorkerThread`** — NDArray addr **9** / **10**, PVA **Pva3** / **Pva4** |
 | IOC / PVA | **`NDStdArrays` + Pva2** on address 8 when dual threshold enabled |
 
 Code references: `processPrvImgDataLine()` in `tpx3App/src/serval_stream.cpp`; destination push in `configureImageChannel()` in `tpx3App/src/serval_http.cpp`.
@@ -112,9 +112,9 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 
 ### Phase 2 — Optional second preview TCP (`PrvImg1`)
 
-- [ ] `prvImg1WorkerThread` mirroring `prvImgWorker`.
-- [ ] Port sync / rotation in `ensurePreviewTcpPortsFree()`.
-- [ ] Enable `WritePrvImg1=1` only with a consumer (integrated preview on 8089, `IntegrationSize: -1`).
+- [x] `prvImg1WorkerThread` mirroring `prvImgWorker`.
+- [x] Port sync / rotation in `ensurePreviewTcpPortsFree()`.
+- [x] Enable `WritePrvImg1=1` only with a consumer (integrated preview on 8089, `IntegrationSize: -1`).
 
 ### Phase 3 — Configuration alignment
 

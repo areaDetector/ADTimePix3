@@ -38,8 +38,8 @@ dbpf("$(PREFIX)cam1:PrvImgQueueSize","16")
 dbpf("$(PREFIX)cam1:PrvImgThs","0,1")
 dbpf("$(PREFIX)cam1:WritePrvImg","1")
 
-# Second preview layer (running sum) — disabled for v1: no IOC TCP consumer; Serval buffer fills on 8089
-dbpf("$(PREFIX)cam1:PrvImg1FilePath","file:/media/nvme/prv1")
+# Second preview layer: integrated-from-measurement-start on TCP 8089
+dbpf("$(PREFIX)cam1:PrvImg1FilePath","tcp://listen@localhost:8089")
 dbpf("$(PREFIX)cam1:PrvImg1FileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImg1FileFmt","3")
 dbpf("$(PREFIX)cam1:PrvImg1FileMode","0")
@@ -47,7 +47,8 @@ dbpf("$(PREFIX)cam1:PrvImg1IntgSize","-1")
 dbpf("$(PREFIX)cam1:PrvImg1IntgMode","0")
 dbpf("$(PREFIX)cam1:Prv1StpOnDskLim","0")
 dbpf("$(PREFIX)cam1:PrvImg1QueueSize","16")
-dbpf("$(PREFIX)cam1:WritePrvImg1","0")
+dbpf("$(PREFIX)cam1:PrvImg1Ths","0,1")
+dbpf("$(PREFIX)cam1:WritePrvImg1","1")
 
 dbpf("$(PREFIX)cam1:PrvPeriod","0.5")
 dbpf("$(PREFIX)cam1:PrvSmplgMode","0")

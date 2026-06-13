@@ -26,4 +26,6 @@ dbpf("$(PREFIX)cam1:WriteData","1")
 
 dbpf("$(PREFIX)Pva1:EnableCallbacks","1")
 dbpf("$(PREFIX)Pva2:EnableCallbacks","1")
+dbpf("$(PREFIX)Pva3:EnableCallbacks","1")
+dbpf("$(PREFIX)Pva4:EnableCallbacks","1")
 dbpf("$(PREFIX)Stats5:EnableCallbacks","1")
