@@ -258,6 +258,7 @@
 #define ADTimePixPrvImgThresholdIDString        "TPX3_PRVIMG_THRESHOLD_ID"  // (asynInt32,         r)      thresholdID from jsonimage header
 #define ADTimePixPrvImgIntegrationSizeString  "TPX3_PRVIMG_INTEGRATION_SIZE" // (asynInt32,      r)      integrationSize from jsonimage header
 #define ADTimePixPrvImgLogHeadersString         "TPX3_PRVIMG_LOG_HEADERS"   // (asynInt32,         r/w)    Log N jsonimage headers per acquire (0=off)
+#define ADTimePixPrvImgThreshDiffClipString     "TPX3_PRVIMG_THRESH_DIFF_CLIP" // (asynInt32,      r/w)    Emit max(0,T0-T1) on clip NDArray addrs (13/14)
     // Img TCP streaming metadata (from jsonimage header)
 #define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixImgTimeAtFrameString           "TPX3_IMG_TIME_AT_FRAME"    // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
@@ -647,7 +648,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvImgThresholdID;
         int ADTimePixPrvImgIntegrationSize;
         int ADTimePixPrvImgLogHeaders;
-        // Img TCP streaming metadata
+        int ADTimePixPrvImgThreshDiffClip;
         int ADTimePixImgFrameNumber;
         int ADTimePixImgTimeAtFrame;
         int ADTimePixImgAcqRate;
@@ -840,8 +841,12 @@ class ADTimePix : public ADDriver{
         static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF = 11;
         /** NDArray address for PrvImg1 integrated band-pass (T0 minus T1). */
         static constexpr int NDARRAY_ADDR_PRVIMG1_THRESH_DIFF = 12;
+        /** NDArray address for clipped frame band max(0, T0-T1). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF_CLIP = 13;
+        /** NDArray address for clipped integrated band max(0, T0-T1). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESH_DIFF_CLIP = 14;
         /** Number of NDArray callback addresses (0..NDARRAY_MAX_ADDR-1). */
-        static constexpr int NDARRAY_MAX_ADDR = 13;
+        static constexpr int NDARRAY_MAX_ADDR = 15;
 
         // TCP streaming for PrvImg1 channel (integrated preview)
         std::unique_ptr<NetworkClient> prvImg1NetworkClient_;
@@ -1055,7 +1060,7 @@ class ADTimePix : public ADDriver{
         bool parseTcpPath(const std::string& filePath, std::string& host, int& port);
         bool processPreviewJsonimageLine(const PreviewJsonimageStream& stream,
                                          char* line_buffer, char* newline_pos, size_t total_read);
-        void emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
+        void emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff, int addrDiffClip,
                                       int frame_number, const char* logTag);
         void runPreviewTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
                                  std::string& host, int& port,
