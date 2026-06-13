@@ -1,7 +1,6 @@
-# IXS dual-threshold band-pass (T0 - T1) — enable after uncommenting plugin block in st_mpx3.cmd.
-# BNL ID10 / Lambda-style between-threshold image for weak IXS + cosmic handling in spectra.
-# Raw streams: image1/th0 (addr 0), imageTh1 (addr 8), imageInt1 (9), imageIntTh1 (10).
-# Derived:     imageDiff1 (procFrameDiff), imageIntDiff1 (procIntDiff) -> Pva5 / Pva6.
+# IXS dual-threshold band-pass (T0 - T1) — legacy NDPluginProcess init.
+# Prefer driver NDArray addr 11/12 (wired in st_mpx3.cmd); use this only with the
+# commented plugin block in st_mpx3.cmd (not together with driver Pva5/Pva6).
 
 epicsThreadSleep(1)
 

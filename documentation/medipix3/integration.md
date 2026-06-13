@@ -114,7 +114,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
-**EPICS v1:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2). Integrated preview on **8089** routes to addr **9** / **10** (Pva3 / Pva4) via **`prvImg1Worker`**. Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start.
+**EPICS v1:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2). Integrated preview on **8089** routes to addr **9** / **10** (Pva3 / Pva4) via **`prvImg1Worker`**. With **`BothCounters=Yes`**, the driver also emits **T0−T1** band-pass images on addr **11** / **12** (Pva5 / Pva6) after each paired trigger — ID10/Lambda-style between-threshold counts. Set `PrvImgLogHeaders` (default 3) to log jsonimage headers at acquire start.
 
 ### BothCounters operational notes (2026-06)
 
@@ -125,7 +125,7 @@ Recommended checklist when enabling dual threshold:
 1. **DetConfig:** `BothCounters=Yes` (driver sets `PrvImgThs` to `0,1`; run **WriteData** to push destination).
 2. **TriggerMode** not Continuous (4 or 6).
 3. **AcquirePeriod** long enough for dual-counter readout — Erik’s Accos reference uses **0.5 s**; shorter periods may log `Dropping frame … missing UDP packet(s) … (2/4)`.
-4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`.
+4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`; band-pass **Pva5** / **Pva6** (addr 11/12) when IXS between-threshold images are needed.
 
 UDP `(2/4)` drops and a **horizontal split at y=256** in the image mean half the chip UDP packets did not arrive before Serval assembled the frame — usually trigger rate or hardware/emulator limits, not EPICS preview TCP.
 

@@ -66,17 +66,24 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva3:, PORT=PVA3,ADD
 NDPvaConfigure("PVA4", $(QSIZE), 0, "$(PORT)", 10, "$(PREFIX)Pva4:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva4:, PORT=PVA4,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
+# IXS / dual-threshold band-pass (T0 - T1): driver NDArray addr 11 (frame), 12 (integrated).
+# Emitted when BothCounters=Yes after each paired T1→T0 jsonimage trigger (ID10/Lambda-style).
+NDStdArraysConfigure("ImageDiff1", 3, 0, "$(PORT)", 11)
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageDiff1:,PORT=ImageDiff1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
+
+NDStdArraysConfigure("ImageIntDiff1", 3, 0, "$(PORT)", 12)
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageIntDiff1:,PORT=ImageIntDiff1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int32,FTVL=LONG,NELEMENTS=20000000")
+
+NDPvaConfigure("PVA5", $(QSIZE), 0, "$(PORT)", 11, "$(PREFIX)Pva5:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva5:, PORT=PVA5,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
+NDPvaConfigure("PVA6", $(QSIZE), 0, "$(PORT)", 12, "$(PREFIX)Pva6:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva6:, PORT=PVA6,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
 # ---------------------------------------------------------------------------
-# IXS / dual-threshold band-pass (T0 - T1): uncomment for ID10-style between-threshold
-# images (weak IXS, cosmic handling in spectra — validated on Lambda / Tagma at BNL).
-# Requires NDPluginProcess (in commonPlugins). Pairing uses background subtract:
-#   frame:      image1 (T0) - imageTh1 (T1)  -> imageDiff1  / Pva5
-#   integrated: imageInt1 - imageIntTh1       -> imageIntDiff1 / Pva6
-# After iocInit, uncomment < init_ixs_thresh_diff.cmd in st_mpx3.cmd (or include from init_detector_mpx3.cmd).
-# Alternative with two live inputs: ADCompVision (NDCVConfigure) if ADCOMPVISION is in RELEASE.local.
-# Production pairing without scan latency: future driver NDArray addr 11/12 (see preview-dual-threshold.md).
+# Legacy IXS band-pass via NDPluginProcess (optional; driver addr 11/12 preferred):
+# Uncomment plugin ports below AND init_ixs_thresh_diff.cmd at bottom (conflicts with driver Pva5/Pva6 wiring).
 #
-# NDProcessConfigure("FRMDIFF", $(QSIZE), 0, "Image1", 0, 0, 0)
 # dbLoadRecords("$(ADCORE)/db/NDProcess.template", "P=$(PREFIX),R=procFrameDiff:,PORT=FRMDIFF,ADDR=0,TIMEOUT=1,NDARRAY_PORT=Image1")
 # dbLoadRecords("ixs_thresh_diff.template", "P=$(PREFIX)")
 #

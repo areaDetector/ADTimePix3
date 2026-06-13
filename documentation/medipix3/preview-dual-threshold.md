@@ -71,6 +71,7 @@ Same **channel schema** and **`jsonimage` wire format**; **not equivalent** in S
 |------|--------|
 | jsonimage parser | Parses **`thresholdID`**, `integrationSize`, `frameNumber`, dimensions, etc. |
 | NDArray routing | **`thresholdID=0` → addr 0** (Pva1); **`thresholdID=1` → addr 8** (Pva2) |
+| IXS band-pass | **`T0−T1` per paired trigger → addr 11** (frame, Pva5); **integrated → addr 12** (Pva6) when **`BothCounters=Yes`** |
 | NDAttributes | **`ThresholdID`** on each array; **`PrvImgThresholdID_RBV`** |
 | Detector config | **`BothCounters`** read/write; trigger guardrails (no Continuous + BothCounters) |
 | Second preview TCP | **`prvImg1WorkerThread`** — NDArray addr **9** / **10**, PVA **Pva3** / **Pva4** |
@@ -120,6 +121,15 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 
 - [x] Driver sets **`PrvImgThs` to `0,1`** when **`BothCounters=Yes`** is written; user runs **WriteData** to push destination.
 - [x] Phoebus: dual image widgets (`Mpx3PrvImgMonitor.bob`, Pva1/Pva2).
+
+### Phase 4 — Driver threshold band-pass (IXS / ID10-style)
+
+- [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** difference **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
+- [x] Gated on **`BothCounters=Yes`**; skips diff when `frameNumber` mismatch between T0 and T1 buffers.
+- [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6** on driver addrs 11/12.
+- [ ] Phoebus band-pass row on `Mpx3PrvImgMonitor.bob` (Pva5/Pva6).
+
+Legacy **`NDPluginProcess`** sketch (`ixs_thresh_diff.template`) remains as optional fallback; driver pairing has no scan latency.
 
 ---
 
