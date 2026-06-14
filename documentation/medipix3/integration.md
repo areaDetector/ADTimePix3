@@ -76,10 +76,12 @@ Use the Medipix startup profile instead of the default Timepix3 IOC:
 
 ```bash
 cd iocs/tpx3IOC/iocBoot/iocTimePix
-./st_mpx3.sh
+../../bin/linux-x86_64/tpx3App st_mpx3.cmd
 ```
 
-Or from iocsh: `st_mpx3.cmd` (includes `unique_mpx3.cmd` and `init_detector_mpx3.cmd`).
+(`st_mpx3.cmd` has a `tpx3App` shebang; you can also run `./st_mpx3.cmd` if executable.) **libcpr** is built into the module (`tpx3Support/cpr` → `lib/linux-x86_64/libcpr.so`); `tpx3App` RUNPATH resolves it — no separate `LD_LIBRARY_PATH` to `cprSrc` is needed.
+
+Profile contents: `unique_mpx3.cmd`, `init_detector_mpx3.cmd`, and MPX3 ND/PVA wiring in `st_mpx3.cmd`.
 
 Defaults (from `init_detector_mpx3.cmd`):
 
@@ -97,7 +99,7 @@ Defaults (from `init_detector_mpx3.cmd`):
 
 1. Start Serval with a Medipix3 emulator profile (see ADMediPix3 `configs/serval/`).
 2. Build this module: `make -j` from the module root.
-3. Start IOC with `st_mpx3.sh`.
+3. Start IOC: `../../bin/linux-x86_64/tpx3App st_mpx3.cmd` from `iocBoot/iocTimePix`.
 4. Confirm `MPX3-TEST:cam1:DetectorFamily_RBV` = `MPX3` after connect.
 5. Confirm startup pushed config: `BothCounters_RBV`, `TriggerMode`, `WriteData` (or `dbpf` `WriteData=1` if Serval was late).
 6. Start acquisition: `caput MPX3-TEST:cam1:Acquire 1`
