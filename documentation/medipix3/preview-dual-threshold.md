@@ -1,6 +1,6 @@
 # Medipix3 preview and dual-threshold delivery (vendor notes)
 
-**Status:** Resolved — Erik confirmed Accos behaviour (2026-06-12). Phase 1 driver demux and Phase 2 (8089 integrated preview worker) are implemented.  
+**Status:** Phases 0–4 complete (2026-06) — Erik confirmed Accos behaviour; driver demux, integrated preview (`prvImg1Worker`), IXS band-pass (addr 11/12), and Phoebus (2×3 `Mpx3PrvImgMonitor`, health/voltages cross-links) validated on emulator.  
 **Related:** [integration.md](integration.md) (v1 IOC profile, validated single-channel preview, and Erik’s dual-threshold test recipe).
 
 This note captures correspondence with ASI on how Serval delivers Medipix3 preview and threshold images, and tracks EPICS driver work against the Accos reference client.
