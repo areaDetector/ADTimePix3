@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>Mpx3ServerFileWriter</name>
-  <width>1140</width>
-  <height>830</height>
+  <width>1130</width>
+  <height>645</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -14,7 +14,7 @@
     <text>Medipix3 Serval Preview Writer — $(P)$(R)</text>
     <x>5</x>
     <y>5</y>
-    <width>1130</width>
+    <width>1120</width>
     <height>24</height>
     <font>
       <font family="Sans" style="BOLD" size="14.0">

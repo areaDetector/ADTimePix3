@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>Mpx3PreviewChannels</name>
-  <width>1130</width>
-  <height>790</height>
+  <width>1125</width>
+  <height>615</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -11,8 +11,6 @@
   <grid_step_y>5</grid_step_y>
   <widget type="group" version="3.0.0">
     <name>FamilyStatus</name>
-    <x>5</x>
-    <y>5</y>
     <width>1120</width>
     <height>80</height>
     <widget type="label" version="2.0.0">
@@ -186,8 +184,7 @@
   </widget>
   <widget type="group" version="3.0.0">
     <name>WriteStatus</name>
-    <x>5</x>
-    <y>85</y>
+    <y>80</y>
     <width>1120</width>
     <height>110</height>
     <widget type="label" version="2.0.0">
@@ -351,10 +348,9 @@
   </widget>
   <widget type="group" version="3.0.0">
     <name>PrvImg0</name>
-    <x>5</x>
-    <y>195</y>
+    <y>190</y>
     <width>560</width>
-    <height>590</height>
+    <height>420</height>
     <widget type="label" version="2.0.0">
       <name>PrvImg0Title</name>
       <text>PrvImg [0]  frame / count  (tcp://listen@localhost:8088)</text>
@@ -762,10 +758,10 @@
   </widget>
   <widget type="group" version="3.0.0">
     <name>PrvImg1</name>
-    <x>565</x>
-    <y>195</y>
+    <x>560</x>
+    <y>190</y>
     <width>560</width>
-    <height>590</height>
+    <height>420</height>
     <widget type="label" version="2.0.0">
       <name>PrvImg1Title</name>
       <text>PrvImg1 [1]  integrated preview  (tcp://listen@localhost:8089)</text>
@@ -802,10 +798,10 @@
     <widget type="label" version="2.0.0">
       <name>PrvImg1Note</name>
       <text>Integrated preview (IntgSize=-1). Requires WritePrvImg1=1 and PrvImg1 TCP worker.</text>
-      <x>10</x>
+      <x>5</x>
       <y>26</y>
-      <width>535</width>
-      <height>28</height>
+      <width>510</width>
+      <height>40</height>
       <foreground_color>
         <color red="120" green="60" blue="0">
         </color>
