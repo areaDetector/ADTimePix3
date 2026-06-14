@@ -20,6 +20,56 @@ EPICS PVs (prefix `cam1:`):
 - `ChipType_RBV` — Serval `Info.ChipType`
 - `CapTdc_RBV`, `CapTofHist_RBV`, `CapDualPreview_RBV`, `CapImgThresholds_RBV` — capability flags
 
+## Impact on Timepix3 operation
+
+Medipix3 work is **additive**: one driver binary serves both families. After `GET /detector`, the driver sets `detectorFamily_` and branches MPX3-only logic; it does **not** replace the Timepix3 IOC profile or calibration paths.
+
+**For normal TPX3 use** (`st.cmd` / `st_base.cmd`, TPX3 hardware, default PVs), behaviour should match pre-integration operation. Use **`st_mpx3.cmd` only with MPX3** — that profile enables dual threshold, integrated preview plugins, and `vendor/mpx3/` calibration by design.
+
+### What stays separate
+
+| Layer | Timepix3 (TPX3) | Medipix3 (MPX3) |
+|--------|-----------------|-----------------|
+| IOC startup | `st.cmd`, `init_detector_*.cmd` | `st_mpx3.cmd`, `init_detector_mpx3.cmd` |
+| Calibration | `vendor/tpx3-*` (via `init_detector_paths.cmd`) | `vendor/mpx3/` |
+| Phoebus | `TimePix3.bob`; legacy `op/opi/*.opi` (CSS) | `MediPix3/*.bob` |
+| NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva6; addrs **0**, **8**, **9**, **10**, **11**, **12** |
+
+MPX3-only ND plugins (`imageTh1`, `imageInt1`, band-pass on addr 11/12, etc.) are loaded only in **`st_mpx3.cmd`**, not in the default Timepix3 startup.
+
+### Driver behaviour gated on family
+
+| Feature | TPX3 | MPX3 |
+|---------|------|------|
+| `applyFamilyDefaults()` (GainMode, `PrvImgThs` 0–7, …) | Skipped | Applied once after connect |
+| Serval `PUT /detector/config` | TDC, `TriggerDelay`, `PeriphClk80`, … | `BothCounters`, `GainMode`, `IDelayConfig`, … |
+| `BothCounters` + Continuous trigger guard | No effect (`detectorFamily_` check) | Blocks acquire / auto-switches mode |
+| `emitPreviewThresholdDiff()` (T0−T1 band) | No effect unless `BothCounters=Yes` | Active when `BothCounters=Yes` |
+| Capability PVs | `CapTdc=1`, `CapTofHist=1`, … | TDC/ToF off; `CapImgThresholds=1` |
+
+Code: `detectDetectorFamily()` / `applyFamilyDefaults()` in `tpx3App/src/detector_family.cpp` and `ADTimePix.cpp`; config split in `serval_http.cpp` (`detectorFamily_ != MPX3` vs MPX3 branch).
+
+### Shared code paths (both families)
+
+These run for all detectors but are intended to remain backward compatible for TPX3:
+
+1. **Refactored preview** (`processPreviewJsonimageLine` in `serval_stream.cpp`) — `thresholdID=0` → NDArray addr **0** (unchanged for typical TPX3 preview). Addr **8** is used only when Serval sends `thresholdID=1` (MPX3 dual-counter stream).
+2. **Preview TCP lifecycle** — disconnect on `acquireStop`, `syncTcpStreamEndpoints()`, port rotation when the configured port is busy. Improves repeat acquire for both families.
+3. **`prvImg1Worker`** — starts only when `WritePrvImg1` has a TCP path. Standard TPX3 profile usually leaves `WritePrvImg1=0`.
+4. **New DB records** in `Server.template` (`BothCounters`, `GainMode`, `PrvImgThreshDiffClip`, …) — loaded on every IOC; inactive unless written.
+5. **`NDARRAY_MAX_ADDR = 13`** — larger internal callback table for all families; TPX3 sites that only use addrs 0–3 are unaffected in routing.
+
+### Regression check (recommended before merge)
+
+On a TPX3 or Timepix3 emulator instance, with the **standard** IOC profile:
+
+1. `DetectorFamily_RBV` = TPX3 after connect.
+2. Acquire; confirm preview on **Pva1** (addr 0).
+3. ToF / histogram paths if used at your site.
+4. Stop → start acquire (preview TCP stability).
+
+Do **not** enable MPX3-only PVs (`BothCounters`, integrated `WritePrvImg1` with extra ND plugins) on a TPX3 IOC unless you intentionally test cross-family configuration.
+
 ## Medipix3 IOC profile
 
 Use the Medipix startup profile instead of the default Timepix3 IOC:
