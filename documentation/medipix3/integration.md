@@ -120,6 +120,60 @@ IOC paths (via `init_detector_paths_mpx3.cmd`):
 
 Upload on startup via `WriteBPCFile=1` and `WriteDACSFile=1` in `init_detector_hw_mpx3.cmd`. SERVAL must resolve these paths on **its** host. For a different calibration set, change `BPCFileName` / `DACSFileName` or point paths at a site-specific directory.
 
+## ASI hardware checkout (Erik, June 2026)
+
+Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** (email, June 2026). This is **not** the same profile as the emulator / Accos **dual-counter** recipe in `init_detector_hw_mpx3.cmd` — use one or the other depending on the test goal.
+
+| Goal | IOC script | Key settings |
+|------|------------|--------------|
+| Equalization / first hardware checkout | `init_detector_hw_mpx3_equalize.cmd` | Single threshold, 12-bit, 20 frames, super-low gain |
+| Dual-counter live view / IXS band-pass (emulator or post-cal) | `init_detector_hw_mpx3.cmd` | `BothCounters=1`, thresholds 0+1, 4 triggers @ 0.5 s |
+
+### Erik’s equalization checklist
+
+| Item | Erik’s recommendation | EPICS / notes |
+|------|----------------------|---------------|
+| Thresholds | **One** threshold, **12-bit** depth | `BothCounters=0`, `PixelDepth=12`, `PrvImgThs` / `PrvImg1Ths` = `0` |
+| Timing | **495 ms** shutter high, **5 ms** shutter down | `AcquireTime=0.495`, `AcquirePeriod≥0.5` (period must cover exposure + shutter down) |
+| Frames | **20** frames | `NumImages=20`, `ImageMode=1` (Multiple) |
+| Gain | **Super-low gain** mode | `GainMode` PV — **confirm exact Serval string with ASI** (`LGM` is a placeholder in `init_detector_hw_mpx3_equalize.cmd`) |
+| Threshold level | DAC **~50–90** so noise pixels are visible | Set via **Accos equalization** or chip DAC / `.dacs` — not automated in the IOC script |
+| Bias / sensor | **100 V**, Si **300 µm**, **positive** polarity | `BiasVolt=100`, `Polarity=0` (Positive); see detector delivery sheet if different |
+| Calibration | **Equalization with Accos** | Run Accos first; then upload resulting BPC/DACS via `WriteBPCFile` / `WriteDACSFile` |
+| ChargeSumming / Colour | **Inactive** for now | `ChargeSumming=0`, `Colour=0` — Erik to follow up with slides / meeting |
+| Integrated preview | **`IntegrationMode: last`**, not sum | Already IOC default: `PrvImg1IntgMode=2` on 8089 |
+
+### Live view vs full-rate saving (Erik)
+
+| Use case | Serval path | MPX3 IOC default |
+|----------|-------------|------------------|
+| Beamline live view | Preview (frame + integrated) + count histogram | `WritePrvImg=1` (8088), `WritePrvImg1=1` (8089) |
+| Data saving at full rate | `Image[]` | `WriteImg=0` until archiving is needed — enable TCP/file destination and `imgWorker` |
+
+Medipix3 has **no Timepix3-style raw `.tpx3` stream**. Highest practical rates (fast PC + SSD): **~2000 Hz** (12-bit continuous); **~750 Hz** (24-bit or dual 12-bit counter). Sequential shutter down: **~5 ms** safe, **~2 ms** minimum; **0.5 ms** (12-bit) / **1.3 ms** (24-bit) in other modes.
+
+### Optional equalization startup
+
+Paths still come from `init_detector_paths_mpx3.cmd`. For first hardware checkout, **replace** the hardware push in `init_detector_mpx3.cmd` temporarily:
+
+```bash
+# iocsh after iocInit, or edit init_detector_mpx3.cmd for one session:
+< init_detector_paths_mpx3.cmd
+< init_detector_hw_mpx3_equalize.cmd
+```
+
+After equalization, restore the dual-counter profile:
+
+```bash
+< init_detector_hw_mpx3.cmd
+```
+
+### Known follow-ups on hardware
+
+- **First-frame artefacts:** physical Timepix3 can show a corrupt first frame after calibration load; emulator may show a brief Signed diff flicker on Pva6 — treat both as hardware/emulator follow-ups.
+- **`GainMode` string** for “super low gain” — pending Erik confirmation.
+- **ChargeSumming / Colour** — keep off until ASI review.
+
 ## Serval channel model (Preview vs Image)
 
 Serval `GET http://localhost:8081/` shows `Server.Destination`:

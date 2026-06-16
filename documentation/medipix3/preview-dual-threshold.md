@@ -165,6 +165,7 @@ Result: **8 jsonimage frames** on TCP **8088** — for each `frameNumber` 0…3,
 | 2026-06-08 | Kaz → Erik | Follow-up: five questions (delivery path, header field, Thresholds list, 8089 meaning, detector fields). |
 | 2026-06-10 | Manual review | **Serval V4.1.3 manual** §4: 8088 frame / 8089 `IntegrationSize:-1` integrated from measurement start; example `IntegrationMode: last`; jsonimage **`thresholdID`**. |
 | 2026-06-12 | Erik → Kaz | Accos code + log: **8088**, **`thresholdID` 1 then 0**, 4 triggers → 8 frames, integrated socket **8089** same demux; working **`TriggerPeriod=0.5`**, **`ExposureTime=0.495`**, **`AUTOTRIGSTART_TIMERSTOP`**. |
+| 2026-06 | Erik → Kaz | Hardware checkout: single threshold 12-bit, 495 ms / 5 ms down / 20 frames, super-low gain, threshold DAC ~50–90, 100 V bias positive, equalize in Accos; preview + integrated for live view, **`Image[]`** for saving; no sum on 8089; ChargeSumming/Colour off. |
 
 ---
 
