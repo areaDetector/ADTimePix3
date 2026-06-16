@@ -25,7 +25,7 @@ dbpf("$(PREFIX)cam1:Img1FileFmt","0")
 dbpf("$(PREFIX)cam1:Img1FileMode","0")
 dbpf("$(PREFIX)cam1:WriteImg1","0")
 
-# Single-layer preview on TCP (frame channel). PrvImg1 disabled until driver has a worker.
+# Frame preview on TCP 8088; integrated preview on TCP 8089 (prvImg1Worker in driver).
 dbpf("$(PREFIX)cam1:PrvImgFilePath","tcp://listen@localhost:8088")
 dbpf("$(PREFIX)cam1:PrvImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:PrvImgFileFmt","3")

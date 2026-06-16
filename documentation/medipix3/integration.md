@@ -130,19 +130,22 @@ Serval `GET http://localhost:8081/` shows `Server.Destination`:
 | `Preview.ImageChannels[1]` (`PrvImg1`) | Yes — `prvImg1Worker` TCP client | `WritePrvImg1=1`, TCP 8089 |
 | `Image[]` (main image channel) | Only if `WriteImg=1` and TCP + accumulation | `WriteImg=0` (file path unused) |
 
-The reference `serval_mpx3.json` and the **Serval manual** (destination example, §4 / pp. 18–19) configure **two preview TCP streams**: current frame and an image **integrated from the start of the measurement**. For EPICS v1, enable only the first preview TCP channel — matching what you validated in Phoebus FileWrite. A second preview TCP stream with no reader fills Serval’s queue (`Preview buffer full` on 8089) and breaks repeat acquire.
+The reference `serval_mpx3.json` and the **Serval manual** (destination example, §4 / pp. 18–19) configure **two preview TCP streams**: current frame and an image **integrated from the start of the measurement**. The MPX3 IOC profile (`st_mpx3.cmd`) enables **both** channels: `WritePrvImg=1` on TCP **8088** (`prvImgWorker`) and `WritePrvImg1=1` on TCP **8089** (`prvImg1Worker`). Each stream must have an IOC TCP client during acquire — if Serval pushes to 8089 with no reader, Serval logs **`Preview buffer full`** and repeat acquire can fail.
 
-**Serval manual** (`20251202_ASIServer_TPX3_manual_V4.1.3.pdf`, table 4.3, pp. 19–20): `IntegrationSize` **0 or 1** = no integration; **-1** = integrate all preview samples **from measurement start**; **2…32** = integrate over the last *n* images. `IntegrationMode` is **sum**, **average**, or **last** (ASI’s two-channel example uses **`last`** on 8089, not sum).
+**Serval manual** (`20251202_ASIServer_TPX3_manual_V4.1.3.pdf`, table 4.3, pp. 19–20): `IntegrationSize` **0 or 1** = no integration; **-1** = integrate all preview samples **from measurement start**; **2…32** = integrate over the last *n* images. `IntegrationMode` is **sum**, **average**, or **last**. ASI recommends **`last`** on 8089 (not sum) — Serval sum integration is costly at higher frame rates. IOC default: `PrvImg1IntgMode=2` (**last**).
 
-After a clean IOC start, confirm Serval shows one preview channel:
+After a clean IOC start, confirm Serval shows both preview channels and the IOC has them enabled:
 
 ```bash
-curl -s http://localhost:8081/ | python3 -m json.tool | grep -A2 ImageChannels
+curl -s http://localhost:8081/ | python3 -m json.tool | grep -A6 ImageChannels
+caget MPX3-TEST:cam1:WritePrvImg MPX3-TEST:cam1:WritePrvImg1
 ```
 
-Or `caget MPX3-TEST:cam1:WritePrvImg1` → `0` and `WriteData=1`.
+Both should read **1** after `init_detector_paths_mpx3.cmd` and `WriteData=1`.
 
-**Autosave:** if `auto_settings.sav` was saved with `WritePrvImg1=1`, delete or rewrite it once, or `caput MPX3-TEST:cam1:WritePrvImg1 0` then `WriteData=1`.
+**If you disable integrated preview:** set `WritePrvImg1=0`, run `WriteData=1`, and restart acquire so Serval stops binding 8089. Leaving 8089 enabled in Serval destination without an IOC reader will fill the preview queue.
+
+**Autosave:** if `auto_settings.sav` disagrees with the intended profile (e.g. saved with `WritePrvImg1=0` while you need integrated preview), fix the PVs and `WriteData=1`, or delete/rewrite the autosave file once.
 
 ## IOC startup warnings
 
@@ -162,7 +165,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 | Preview `Mode` | `count` — pixel values are counter hits | Often `tot`, `count`, etc. |
 | Dual-layer preview (Serval manual §4, `serval_mpx3.json`) | **Two TCP channels** — frame vs integrated-from-measurement-start | Usually one preview TCP channel |
 | Channel 0 (e.g. 8088) | `IntegrationSize: 0` or `1` — **current frame** (no integration) | Frame preview |
-| Channel 1 (e.g. 8089) | `IntegrationSize: -1` — **integrated from measurement start**; ASI example uses `IntegrationMode: last` (non-zero overwrite). IOC default for disabled `PrvImg1` uses `IntgMode=sum` if enabled — choose mode to match intent | Optional second preview (`PrvImg1`) |
+| Channel 1 (e.g. 8089) | `IntegrationSize: -1` — **integrated from measurement start**; ASI example uses `IntegrationMode: last` (non-zero overwrite). IOC default: `PrvImg1IntgMode=2` (**last**) | Enabled in `st_mpx3.cmd` (`PrvImg1` / Pva3–Pva4) |
 
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
@@ -217,7 +220,7 @@ See **[preview-dual-threshold.md](preview-dual-threshold.md)** for Accos code re
 
 Preview uses `tcp://listen@localhost:PORT` so **Serval binds** the port and the IOC **connects** as a client (`PrvImg` worker thread).
 
-Serval 4.x may **leave preview TCP listeners bound** after `measurement/stop`. If the configured port is still listening, the driver picks the next free port and re-pushes `WriteData`. With **one preview channel** and clean stop, repeat acquire on **8088** often works without rotation.
+Serval 4.x may **leave preview TCP listeners bound** after `measurement/stop`. If the configured port is still listening, the driver picks the next free port and re-pushes `WriteData`. With **both preview channels** connected and a clean stop, repeat acquire on **8088** / **8089** usually works without rotation.
 
 **Driver behavior:**
 

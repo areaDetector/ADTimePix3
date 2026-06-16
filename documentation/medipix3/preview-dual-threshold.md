@@ -1,7 +1,7 @@
 # Medipix3 preview and dual-threshold delivery (vendor notes)
 
 **Status:** Phases 0–4 complete (2026-06) — Erik confirmed Accos behaviour; driver demux, integrated preview (`prvImg1Worker`), IXS band-pass (addr 11/12), and Phoebus (2×3 `Mpx3PrvImgMonitor`, health/voltages cross-links) validated on emulator.  
-**Related:** [integration.md](integration.md) (v1 IOC profile, validated single-channel preview, and Erik’s dual-threshold test recipe).
+**Related:** [integration.md](integration.md) (MPX3 IOC profile — dual preview TCP 8088/8089, dual-threshold demux, and Erik’s test recipes).
 
 This note captures correspondence with ASI on how Serval delivers Medipix3 preview and threshold images, and tracks EPICS driver work against the Accos reference client.
 
@@ -43,8 +43,8 @@ Per **ASI Serval manual** (`20251202_ASIServer_TPX3_manual_V4.1.3.pdf`, destinat
 - **8089** — `IntegrationSize: -1` (integrate all samples from measurement start); ASI example uses **`IntegrationMode: last`** (non-zero pixels overwrite), not `sum`
 
 - **Driver implication:** second **`PrvImg1` TCP worker** (orthogonal to threshold demux).
-- **v1 choice:** `WritePrvImg1=0` — no consumer on 8089 avoids `Preview buffer full` and broken repeat acquire.
-- **IOC note:** `init_detector_paths_mpx3.cmd` sets `PrvImg1IntgMode=0` (**sum**) when enabled; align with manual **`last`** or **`sum`** as needed.
+- **MPX3 IOC default:** `WritePrvImg1=1`, TCP **8089**, `PrvImg1IntgSize=-1`, `PrvImg1IntgMode=2` (**last**). ASI recommends **`last`** over sum at higher frame rates.
+- **Caution:** if Serval destination enables 8089 but the IOC does not connect (`WritePrvImg1=0`), Serval logs **`Preview buffer full`** and repeat acquire can fail — either connect a reader or disable the channel in destination and `WriteData=1`.
 
 These can coexist (e.g. dual threshold on 8088 **and** integrated preview on 8089) but serve different purposes.
 
@@ -126,7 +126,7 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 
 - [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
 - [x] **`PrvImgThreshDiffClip`**: **Clip** (default) → **`max(0, T0−T1)`** on addrs 11/12; **Signed** → raw signed diff for pairing diagnostics.
-- [x] Gated on **`BothCounters=Yes`**; skips diff when `frameNumber` mismatch between T0 and T1 buffers.
+- [x] Gated on **`BothCounters=Yes`**; pairs T1→T0 per trigger (warns on `frameNumber` mismatch, pairs by order).
 - [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6** only (no separate clip addrs).
 - [x] Phoebus 2×3 layout on `Mpx3PrvImgMonitor.bob` (frame row + integrated row; band T0−T1 in col 3, Pva5/Pva6 + **PrvImgThreshDiffClip**).
 
@@ -172,5 +172,5 @@ Result: **8 jsonimage frames** on TCP **8088** — for each `frameNumber` 0…3,
 
 - **ASI Serval manual** `20251202_ASIServer_TPX3_manual_V4.1.3.pdf` (bundled with Serval 4.1.5) — destination example pp. 18–19; `IntegrationSize` / `IntegrationMode` table 4.3 pp. 19–20; jsonimage header p. 22 (`thresholdID`).
 - ADMediPix3 `configs/serval/serval_mpx3.json` — reference destination (frame + integrated preview).
-- [integration.md](integration.md) — validated v1 single-channel preview and troubleshooting.
+- [integration.md](integration.md) — MPX3 IOC profile (8088 + 8089), troubleshooting, hardware notes.
 - [PROCESSED_IMAGE_FILE_SAVING.md](../PROCESSED_IMAGE_FILE_SAVING.md) — NDArray address map (address **8** = PrvImg threshold 1 / Pva2).
