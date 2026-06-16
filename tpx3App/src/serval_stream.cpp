@@ -78,6 +78,10 @@ struct ADTimePix::PreviewJsonimageStream {
     bool& t1ReadyForDiff;
     /** T0 received without preceding T1 (stream start); next T1 completes the pair. */
     bool& t0OrphanForDiff;
+    /** Last jsonimage frameNumber seen (pairing reset on measurement restart). */
+    int& lastSeenFrameForPair;
+    /** T0 uniqueId of last emitted band-pass (suppress duplicate callbacks). */
+    int& lastDiffT0Frame;
     const char* logTag;
 };
 
@@ -303,17 +307,28 @@ bool ADTimePix::processPreviewJsonimageLine(
         }
 
         if (stream.ndAddrThreshDiff >= 0) {
+            if (stream.lastSeenFrameForPair >= 0 &&
+                frame_number + 10 < stream.lastSeenFrameForPair) {
+                stream.t1ReadyForDiff = false;
+                stream.t0OrphanForDiff = false;
+                stream.lastDiffT0Frame = -1;
+            }
+            stream.lastSeenFrameForPair = frame_number;
+
             if (threshold_id == 1) {
                 if (stream.t0OrphanForDiff) {
                     emitPreviewThresholdDiff(stream.ndAddrThreshold0, stream.ndAddrThreshold1,
-                                             stream.ndAddrThreshDiff, frame_number, stream.logTag);
+                                             stream.ndAddrThreshDiff, frame_number, stream.logTag,
+                                             stream.lastDiffT0Frame);
                     stream.t0OrphanForDiff = false;
+                } else {
+                    stream.t1ReadyForDiff = true;
                 }
-                stream.t1ReadyForDiff = true;
             } else if (threshold_id == 0) {
                 if (stream.t1ReadyForDiff) {
                     emitPreviewThresholdDiff(stream.ndAddrThreshold0, stream.ndAddrThreshold1,
-                                             stream.ndAddrThreshDiff, frame_number, stream.logTag);
+                                             stream.ndAddrThreshDiff, frame_number, stream.logTag,
+                                             stream.lastDiffT0Frame);
                     stream.t1ReadyForDiff = false;
                 } else {
                     stream.t0OrphanForDiff = true;
@@ -332,8 +347,12 @@ bool ADTimePix::processPreviewJsonimageLine(
     return true;
 }
 
+// Band-pass is always T0 - T1 (addrs 0-8 / 9-10). Known issue: first integrated
+// diff (Pva6) may still flicker in Signed mode on emulator; leave for later
+// (physical TimePix3 can show a corrupt first frame after calibration load).
 void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
-                                           int frame_number, const char* logTag)
+                                           int frame_number, const char* logTag,
+                                           int& lastDiffT0Frame)
 {
     int bothCounters = 0;
     getIntegerParam(ADTimePixBothCounters, &bothCounters);
@@ -360,7 +379,10 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
 
     const int t0Frame = static_cast<int>(pT0->uniqueId);
     const int t1Frame = static_cast<int>(pT1->uniqueId);
-    // T1→T0 per trigger on the wire: on threshold_id==0, addrT1 holds the paired T1 image.
+    if (t0Frame == lastDiffT0Frame) {
+        return;
+    }
+    // T1→T0 per trigger on the wire: addrT1 holds the paired T1 when T0 is processed.
     // Frame numbers can differ (8088 per-message increment vs 8089 same frame); warn only.
     if (!previewThresholdFramesAligned(t0Frame, t1Frame)) {
         LOG_ARGS("%s threshold diff: frame ids T0=%d T1=%d (header %d), pairing by order",
@@ -432,9 +454,24 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
         doCallbacksGenericPointer(pDiff, NDArrayData, addrDiff);
     }
 
+    lastDiffT0Frame = t0Frame;
+
     LOG_ARGS("Processed %s threshold diff: T0=%d T1=%d, addr=%d (%d - %d%s)",
              logTag, t0Frame, t1Frame, addrDiff, addrT0, addrT1,
              clipDiff ? ", clipped" : "");
+}
+
+void ADTimePix::releasePreviewBandArrays()
+{
+    if (!pArrays) {
+        return;
+    }
+    for (int addr : {NDARRAY_ADDR_PRVIMG_THRESH_DIFF, NDARRAY_ADDR_PRVIMG1_THRESH_DIFF}) {
+        if (addr >= 0 && addr < NDARRAY_MAX_ADDR && pArrays[addr]) {
+            pArrays[addr]->release();
+            pArrays[addr] = nullptr;
+        }
+    }
 }
 
 /** Shared TCP read loop for jsonimage preview streams (PrvImg / PrvImg1). */
@@ -1756,6 +1793,8 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         prvImgJsonHeadersRemaining_,
         prvImgT1ReadyForDiff_,
         prvImgT0OrphanForDiff_,
+        prvImgLastSeenFrameForPair_,
+        prvImgLastDiffT0Frame_,
         "PrvImg"};
     return processPreviewJsonimageLine(stream, line_buffer, newline_pos, total_read);
 }
@@ -1781,6 +1820,8 @@ bool ADTimePix::processPrvImg1DataLine(char* line_buffer, char* newline_pos, siz
         prvImg1JsonHeadersRemaining_,
         prvImg1T1ReadyForDiff_,
         prvImg1T0OrphanForDiff_,
+        prvImg1LastSeenFrameForPair_,
+        prvImg1LastDiffT0Frame_,
         "PrvImg1"};
     return processPreviewJsonimageLine(stream, line_buffer, newline_pos, total_read);
 }

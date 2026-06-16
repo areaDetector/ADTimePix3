@@ -828,6 +828,8 @@ class ADTimePix : public ADDriver{
         bool prvImgFirstFrameReceived_;
         bool prvImgT1ReadyForDiff_;
         bool prvImgT0OrphanForDiff_;
+        int prvImgLastSeenFrameForPair_;
+        int prvImgLastDiffT0Frame_;
         static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
         /** Remaining jsonimage headers to log this acquire (from TPX3_PRVIMG_LOG_HEADERS). */
         int prvImgJsonHeadersRemaining_;
@@ -865,6 +867,8 @@ class ADTimePix : public ADDriver{
         bool prvImg1FirstFrameReceived_;
         bool prvImg1T1ReadyForDiff_;
         bool prvImg1T0OrphanForDiff_;
+        int prvImg1LastSeenFrameForPair_;
+        int prvImg1LastDiffT0Frame_;
         int prvImg1JsonHeadersRemaining_;
 
         // TCP streaming for Img channel
@@ -1061,7 +1065,9 @@ class ADTimePix : public ADDriver{
         bool processPreviewJsonimageLine(const PreviewJsonimageStream& stream,
                                          char* line_buffer, char* newline_pos, size_t total_read);
         void emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
-                                      int frame_number, const char* logTag);
+                                      int frame_number, const char* logTag,
+                                      int& lastDiffT0Frame);
+        void releasePreviewBandArrays();
         void runPreviewTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
                                  std::string& host, int& port,
                                  std::unique_ptr<NetworkClient>& networkClient,
