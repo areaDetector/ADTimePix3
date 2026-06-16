@@ -761,7 +761,7 @@
     <x>560</x>
     <y>190</y>
     <width>560</width>
-    <height>420</height>
+    <height>470</height>
     <widget type="label" version="2.0.0">
       <name>PrvImg1Title</name>
       <text>PrvImg1 [1]  integrated preview  (tcp://listen@localhost:8089)</text>
@@ -1034,6 +1034,53 @@
       <y>240</y>
       <width>70</width>
       <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvImg1ThsLbl</name>
+      <text>Thresholds</text>
+      <x>10</x>
+      <y>270</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>PrvImg1ThsRBV</name>
+      <pv_name>$(P)$(R)PrvImg1Ths_RBV</pv_name>
+      <x>95</x>
+      <y>266</y>
+      <width>435</width>
+      <height>22</height>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>PrvImg1Ths</name>
+      <pv_name>$(P)$(R)PrvImg1Ths</pv_name>
+      <x>95</x>
+      <y>292</y>
+      <width>435</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>Serval Preview.ImageChannels[1].Thresholds — use 0,1 with BothCounters</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PrvImg1Note2</name>
+      <text>NDArray addr 9 (Pva3). threshold 1 → addr 10 (Pva4). IntgMode=last matches Erik Accos recipe.</text>
+      <x>5</x>
+      <y>322</y>
+      <width>540</width>
+      <height>22</height>
+      <foreground_color>
+        <color red="80" green="80" blue="80">
+        </color>
+      </foreground_color>
     </widget>
   </widget>
 </display>
