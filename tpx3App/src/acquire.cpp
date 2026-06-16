@@ -413,8 +413,12 @@ asynStatus ADTimePix::acquireStart(){
         getIntegerParam(ADTimePixPrvImgLogHeaders, &logHeaders);
         prvImgJsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
         prvImgFirstFrameReceived_ = false;
+        prvImgT1ReadyForDiff_ = false;
+        prvImgT0OrphanForDiff_ = false;
         prvImg1JsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
         prvImg1FirstFrameReceived_ = false;
+        prvImg1T1ReadyForDiff_ = false;
+        prvImg1T0OrphanForDiff_ = false;
     }
 
     // Path PV may have changed (port rotation or Phoebus WriteData); refresh before connect.
@@ -861,6 +865,8 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
         prvImgFirstFrameReceived_ = false;
+        prvImgT1ReadyForDiff_ = false;
+        prvImgT0OrphanForDiff_ = false;
         prvImgAcquisitionRate_ = 0.0;
         prvImgRateSamples_.clear();
         setDoubleParam(ADTimePixPrvImgAcqRate, 0.0);
@@ -871,6 +877,8 @@ asynStatus ADTimePix::acquireStop(){
         epicsMutexLock(prvImg1Mutex_);
         prvImg1Running_ = false;
         prvImg1FirstFrameReceived_ = false;
+        prvImg1T1ReadyForDiff_ = false;
+        prvImg1T0OrphanForDiff_ = false;
         prvImg1AcquisitionRate_ = 0.0;
         prvImg1RateSamples_.clear();
         epicsMutexUnlock(prvImg1Mutex_);

@@ -1530,6 +1530,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImgAcquisitionRate_ = 0.0;
     prvImgLastRateUpdateTime_ = 0.0;
     prvImgFirstFrameReceived_ = false;
+    prvImgT1ReadyForDiff_ = false;
+    prvImgT0OrphanForDiff_ = false;
     prvImgJsonHeadersRemaining_ = 0;
 
     // Initialize TCP streaming for PrvImg1 channel (integrated preview)
@@ -1551,6 +1553,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImg1AcquisitionRate_ = 0.0;
     prvImg1LastRateUpdateTime_ = 0.0;
     prvImg1FirstFrameReceived_ = false;
+    prvImg1T1ReadyForDiff_ = false;
+    prvImg1T0OrphanForDiff_ = false;
     prvImg1JsonHeadersRemaining_ = 0;
     
     // Initialize TCP streaming for Img channel

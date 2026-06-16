@@ -826,6 +826,8 @@ class ADTimePix : public ADDriver{
         std::deque<double> prvImgRateSamples_;
         double prvImgLastRateUpdateTime_;
         bool prvImgFirstFrameReceived_;
+        bool prvImgT1ReadyForDiff_;
+        bool prvImgT0OrphanForDiff_;
         static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
         /** Remaining jsonimage headers to log this acquire (from TPX3_PRVIMG_LOG_HEADERS). */
         int prvImgJsonHeadersRemaining_;
@@ -861,6 +863,8 @@ class ADTimePix : public ADDriver{
         std::deque<double> prvImg1RateSamples_;
         double prvImg1LastRateUpdateTime_;
         bool prvImg1FirstFrameReceived_;
+        bool prvImg1T1ReadyForDiff_;
+        bool prvImg1T0OrphanForDiff_;
         int prvImg1JsonHeadersRemaining_;
 
         // TCP streaming for Img channel

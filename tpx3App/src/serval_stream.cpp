@@ -48,9 +48,9 @@ static int previewNdarrayAddressForThreshold(int thresholdId, int addrTh0, int a
     return (thresholdId == 1) ? addrTh1 : addrTh0;
 }
 
-/** True when T0/T1 buffers belong to the same trigger (T1 then T0 on the wire). */
-static bool previewThresholdFramesPaired(int t0Frame, int t1Frame) {
-    return t0Frame == t1Frame || t0Frame == t1Frame + 1;
+/** Advisory only: Serval frameNumber may match or differ by one between T0/T1. */
+static bool previewThresholdFramesAligned(int t0Frame, int t1Frame) {
+    return t0Frame == t1Frame || t0Frame == t1Frame + 1 || t1Frame == t0Frame + 1;
 }
 
 }  // namespace
@@ -74,6 +74,10 @@ struct ADTimePix::PreviewJsonimageStream {
     double& lastRateUpdateTime;
     bool& firstFrameReceived;
     int& jsonHeadersRemaining;
+    /** T1 received; next T0 completes the trigger pair (normal T1→T0 order). */
+    bool& t1ReadyForDiff;
+    /** T0 received without preceding T1 (stream start); next T1 completes the pair. */
+    bool& t0OrphanForDiff;
     const char* logTag;
 };
 
@@ -298,9 +302,23 @@ bool ADTimePix::processPreviewJsonimageLine(
             doCallbacksGenericPointer(pImage, NDArrayData, ndArrayAddr);
         }
 
-        if (threshold_id == 0 && stream.ndAddrThreshDiff >= 0) {
-            emitPreviewThresholdDiff(stream.ndAddrThreshold0, stream.ndAddrThreshold1,
-                                     stream.ndAddrThreshDiff, frame_number, stream.logTag);
+        if (stream.ndAddrThreshDiff >= 0) {
+            if (threshold_id == 1) {
+                if (stream.t0OrphanForDiff) {
+                    emitPreviewThresholdDiff(stream.ndAddrThreshold0, stream.ndAddrThreshold1,
+                                             stream.ndAddrThreshDiff, frame_number, stream.logTag);
+                    stream.t0OrphanForDiff = false;
+                }
+                stream.t1ReadyForDiff = true;
+            } else if (threshold_id == 0) {
+                if (stream.t1ReadyForDiff) {
+                    emitPreviewThresholdDiff(stream.ndAddrThreshold0, stream.ndAddrThreshold1,
+                                             stream.ndAddrThreshDiff, frame_number, stream.logTag);
+                    stream.t1ReadyForDiff = false;
+                } else {
+                    stream.t0OrphanForDiff = true;
+                }
+            }
         }
 
         LOG_ARGS("Processed %s frame: width=%d, height=%d, format=%s, frame=%d, thresholdID=%d",
@@ -342,10 +360,11 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
 
     const int t0Frame = static_cast<int>(pT0->uniqueId);
     const int t1Frame = static_cast<int>(pT1->uniqueId);
-    if (!previewThresholdFramesPaired(t0Frame, t1Frame)) {
-        LOG_ARGS("%s threshold diff skipped: frame mismatch T0=%d T1=%d (header %d)",
+    // T1→T0 per trigger on the wire: on threshold_id==0, addrT1 holds the paired T1 image.
+    // Frame numbers can differ (8088 per-message increment vs 8089 same frame); warn only.
+    if (!previewThresholdFramesAligned(t0Frame, t1Frame)) {
+        LOG_ARGS("%s threshold diff: frame ids T0=%d T1=%d (header %d), pairing by order",
                  logTag, t0Frame, t1Frame, frame_number);
-        return;
     }
 
     if (pT0->ndims != 2 || pT1->ndims != 2 ||
@@ -1735,6 +1754,8 @@ bool ADTimePix::processPrvImgDataLine(char* line_buffer, char* newline_pos, size
         prvImgLastRateUpdateTime_,
         prvImgFirstFrameReceived_,
         prvImgJsonHeadersRemaining_,
+        prvImgT1ReadyForDiff_,
+        prvImgT0OrphanForDiff_,
         "PrvImg"};
     return processPreviewJsonimageLine(stream, line_buffer, newline_pos, total_read);
 }
@@ -1758,6 +1779,8 @@ bool ADTimePix::processPrvImg1DataLine(char* line_buffer, char* newline_pos, siz
         prvImg1LastRateUpdateTime_,
         prvImg1FirstFrameReceived_,
         prvImg1JsonHeadersRemaining_,
+        prvImg1T1ReadyForDiff_,
+        prvImg1T0OrphanForDiff_,
         "PrvImg1"};
     return processPreviewJsonimageLine(stream, line_buffer, newline_pos, total_read);
 }
