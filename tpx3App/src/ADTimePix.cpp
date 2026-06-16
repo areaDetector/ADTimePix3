@@ -569,7 +569,9 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
                 callParamCallbacks(ADTriggerMode);
             }
             setStringParam(ADTimePixPrvImgThs, "0,1");
+            setStringParam(ADTimePixPrvImg1Ths, "0,1");
             callParamCallbacks(ADTimePixPrvImgThs);
+            callParamCallbacks(ADTimePixPrvImg1Ths);
         }
         status = initAcquisition();
     }

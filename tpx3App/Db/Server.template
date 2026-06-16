@@ -1452,6 +1452,26 @@ record(longin, "$(P)$(R)PrvImg1QueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# Preview ImageChannels[1] Thresholds[] (comma-separated, MPX3 integrated 8089)
+record(waveform, "$(P)$(R)PrvImg1Ths")
+{
+    field(DESC, "PrvImg1 Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)PrvImg1Ths_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 # Preview Histogram Channels[0] file path.
 record(waveform, "$(P)$(R)PrvHstFilePath")
 {

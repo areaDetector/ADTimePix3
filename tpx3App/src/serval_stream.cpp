@@ -48,6 +48,11 @@ static int previewNdarrayAddressForThreshold(int thresholdId, int addrTh0, int a
     return (thresholdId == 1) ? addrTh1 : addrTh0;
 }
 
+/** True when T0/T1 buffers belong to the same trigger (T1 then T0 on the wire). */
+static bool previewThresholdFramesPaired(int t0Frame, int t1Frame) {
+    return t0Frame == t1Frame || t0Frame == t1Frame + 1;
+}
+
 }  // namespace
 
 struct ADTimePix::PreviewJsonimageStream {
@@ -335,11 +340,11 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
         return;
     }
 
-    if (static_cast<int>(pT0->uniqueId) != frame_number ||
-        static_cast<int>(pT1->uniqueId) != frame_number) {
-        LOG_ARGS("%s threshold diff skipped: frame mismatch T0=%d T1=%d (want %d)",
-                 logTag, static_cast<int>(pT0->uniqueId),
-                 static_cast<int>(pT1->uniqueId), frame_number);
+    const int t0Frame = static_cast<int>(pT0->uniqueId);
+    const int t1Frame = static_cast<int>(pT1->uniqueId);
+    if (!previewThresholdFramesPaired(t0Frame, t1Frame)) {
+        LOG_ARGS("%s threshold diff skipped: frame mismatch T0=%d T1=%d (header %d)",
+                 logTag, t0Frame, t1Frame, frame_number);
         return;
     }
 
@@ -391,7 +396,7 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
         return;
     }
 
-    pDiff->uniqueId = pT0->uniqueId;
+    pDiff->uniqueId = t0Frame;
     pDiff->timeStamp = pT0->timeStamp;
     pDiff->epicsTS = pT0->epicsTS;
 
@@ -408,8 +413,8 @@ void ADTimePix::emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
         doCallbacksGenericPointer(pDiff, NDArrayData, addrDiff);
     }
 
-    LOG_ARGS("Processed %s threshold diff: frame=%d, addr=%d (T0=%d - T1=%d%s)",
-             logTag, frame_number, addrDiff, addrT0, addrT1,
+    LOG_ARGS("Processed %s threshold diff: T0=%d T1=%d, addr=%d (%d - %d%s)",
+             logTag, t0Frame, t1Frame, addrDiff, addrT0, addrT1,
              clipDiff ? ", clipped" : "");
 }
 
