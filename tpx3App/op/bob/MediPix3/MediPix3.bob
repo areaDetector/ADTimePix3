@@ -2,6 +2,8 @@
 <display version="2.0.0">
   <name>MediPix3</name>
   <macros>
+    <P>MPX3-TEST:</P>
+    <R>cam1:</R>
     <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
     <pathADet>/home/controls/common/bob/main</pathADet>
   </macros>
