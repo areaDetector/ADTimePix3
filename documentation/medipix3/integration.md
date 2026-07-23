@@ -93,7 +93,9 @@ Defaults (from `init_detector_mpx3.cmd`):
 - `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **9**/**10**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
-**Phoebus:** open `tpx3App/op/bob/MediPix3/MediPix3.bob` with the same `P`/`R` macros (preview TCP config in `Acquire/Mpx3PreviewChannels.bob` via `Mpx3ServerFileWriter.bob`, live images in `Acquire/Mpx3PrvImgMonitor.bob`, detector config in `Detector/Mpx3DetectorConfig.bob`). **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
+**Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: preview TCP in `Acquire/Mpx3PreviewChannels.bob` (via `Mpx3ServerFileWriter.bob`), live images in `Acquire/Mpx3PrvImgMonitor.bob`, detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
+
+**Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via `stats_profiles.cmd` after `commonPlugins.cmd`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention.
 
 ## Emulator workflow
 

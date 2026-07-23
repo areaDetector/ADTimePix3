@@ -40,6 +40,12 @@ ly = local / w
 | **Linear image** | `img_linear` from `bpc2ImgIndex` | Decode with mosaic **column stride**: `1`-chip: `w`; `4`-chip: `2*w`; `8`-chip: `xChips*w`. Then `i = img_linear % stride`, `j = img_linear / stride`. Mask PVs still use full `cols` from `rowsCols()` for `j*cols+i`. |
 | **BPC file `k`** | `0 .. numChips*w*w - 1` | `TPX3_BPC_PEL`, disk `.bpc` |
 
+### Y-origin (NDArray vs Phoebus / NDStats profiles)
+
+areaDetector and this driver treat **`(0,0)` as the top-left** of the image buffer: **X** increases right, **Y** increases **down**. `NDStats` row/column profiles follow the same order (`ProfileAverageY[0]` = top row).
+
+Phoebus Image widgets can default to a **bottom-left / Y-up** axis labeling that disagrees with AD indexing even when the pixel data look right. Facility screens under **`/epics/GUI/SNS/bob`** (ADet image + profile embeds) are adjusted so plotted axes match AD: **Y=0 at the top**, aligned with column profiles. Prefer those screens (or equivalent Image widget Y settings) for Medipix3/Timepix3 live view.
+
 ## Which function to use
 
 | Task | Function | Notes |
