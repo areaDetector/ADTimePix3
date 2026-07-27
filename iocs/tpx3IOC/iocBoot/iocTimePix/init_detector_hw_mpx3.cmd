@@ -31,3 +31,7 @@ dbpf("$(PREFIX)Pva4:EnableCallbacks","1")
 dbpf("$(PREFIX)Pva5:EnableCallbacks","1")
 dbpf("$(PREFIX)Pva6:EnableCallbacks","1")
 dbpf("$(PREFIX)Stats5:EnableCallbacks","1")
+
+# Enable NDStats row/column profiles for Phoebus (ADCore NDStatsProfiles.template).
+# Requires < $(ADCORE)/iocBoot/stats_profiles.cmd before iocInit (see st_mpx3.cmd).
+dbpf("$(PREFIX)$(STATS_PROF_R)StatsProfInit_.PROC","1")

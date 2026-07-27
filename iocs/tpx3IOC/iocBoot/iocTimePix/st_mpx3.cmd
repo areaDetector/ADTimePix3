@@ -108,7 +108,6 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva6:, PORT=PVA6,ADD
 
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 
-#< $(TOP)/iocBoot/iocTimePix/stats_profiles.cmd
 < $(ADCORE)/iocBoot/stats_profiles.cmd
 
 set_requestfile_path("$(ADTIMEPIX)/tpx3App/Db")
