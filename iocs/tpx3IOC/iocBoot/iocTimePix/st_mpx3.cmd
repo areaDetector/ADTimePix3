@@ -80,6 +80,20 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva5:, PORT=PVA5,ADD
 NDPvaConfigure("PVA6", $(QSIZE), 0, "$(PORT)", 12, "$(PREFIX)Pva6:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva6:, PORT=PVA6,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
+# Full-rate Image[] demux (TCP 8086): thresholdID=0 -> addr 1, thresholdID=1 -> addr 13.
+# Use for archive/HDF5 at detector rates; disable PVA callbacks for high-rate runs.
+NDStdArraysConfigure("ImageImg1", 3, 0, "$(PORT)", 1)
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageImg1:,PORT=ImageImg1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=20000000")
+
+NDStdArraysConfigure("ImageImgTh1", 3, 0, "$(PORT)", 13)
+dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=imageImgTh1:,PORT=ImageImgTh1,ADDR=0,NDARRAY_PORT=$(PORT),TIMEOUT=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=20000000")
+
+NDPvaConfigure("PVA7", $(QSIZE), 0, "$(PORT)", 1, "$(PREFIX)Pva7:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva7:, PORT=PVA7,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
+NDPvaConfigure("PVA8", $(QSIZE), 0, "$(PORT)", 13, "$(PREFIX)Pva8:Image", 0, 0, 0)
+dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva8:, PORT=PVA8,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+
 # ---------------------------------------------------------------------------
 # Legacy IXS band-pass via NDPluginProcess (optional; driver addr 11/12 preferred):
 # Uncomment plugin ports below AND init_ixs_thresh_diff.cmd at bottom (conflicts with driver Pva5/Pva6 wiring).

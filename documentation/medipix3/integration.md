@@ -33,7 +33,7 @@ Medipix3 work is **additive**: one driver binary serves both families. After `GE
 | IOC startup | `st.cmd`, `init_detector_*.cmd` | `st_mpx3.cmd`, `init_detector_mpx3.cmd` |
 | Calibration | `vendor/tpx3-*` (via `init_detector_paths.cmd`) | `vendor/mpx3/` |
 | Phoebus | `TimePix3.bob`; legacy `op/opi/*.opi` (CSS) | `MediPix3/*.bob` |
-| NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva6; addrs **0**, **8**, **9**, **10**, **11**, **12** |
+| NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva8; addrs **0**, **1**, **8**–**13** |
 
 MPX3-only ND plugins (`imageTh1`, `imageInt1`, band-pass on addr 11/12, etc.) are loaded only in **`st_mpx3.cmd`**, not in the default Timepix3 startup.
 
@@ -57,7 +57,7 @@ These run for all detectors but are intended to remain backward compatible for T
 2. **Preview TCP lifecycle** — disconnect on `acquireStop`, `syncTcpStreamEndpoints()`, port rotation when the configured port is busy. Improves repeat acquire for both families.
 3. **`prvImg1Worker`** — starts only when `WritePrvImg1` has a TCP path. Standard TPX3 profile usually leaves `WritePrvImg1=0`.
 4. **New DB records** in `Server.template` (`BothCounters`, `GainMode`, `PrvImgThreshDiffClip`, …) — loaded on every IOC; inactive unless written.
-5. **`NDARRAY_MAX_ADDR = 13`** — larger internal callback table for all families; TPX3 sites that only use addrs 0–3 are unaffected in routing.
+5. **`NDARRAY_MAX_ADDR = 14`** — larger internal callback table for all families; TPX3 sites that only use addrs 0–3 are unaffected in routing.
 
 ### Regression check (recommended before merge)
 
@@ -222,8 +222,17 @@ Disable: `dbpf WriteImg 0` then `WriteData 1`. Do **not** point Phoebus PVA at f
 
 | Phase | Work |
 |-------|------|
-| **B** | Img `thresholdID` demux to separate NDArray addrs (Preview already demuxes; Img currently lands on addr 1) |
+| **A** | ~~IOC TCP Image destination + docs~~ **done** (8086, opt-in `WriteImg`) |
+| **B** | ~~Img `thresholdID` demux~~ **done** — T0→addr **1** (Pva7), T1→addr **13** (Pva8); `ImgThresholdID_RBV`; accumulate T0 only |
 | **C** | Rate / HDF5 soak tests at detector rates |
+
+**Verify Phase B after rebuild/restart:** enable Image (`< init_detector_img_mpx3.cmd`), acquire, then:
+
+```bash
+caget MPX3-TEST:cam1:ImgThresholdID_RBV MPX3-TEST:cam1:ImgFrameNumber_RBV
+# During BothCounters acquire, ImgThresholdID_RBV should alternate 1 then 0 per trigger.
+# Low-rate check: pva://MPX3-TEST:Pva7:Image (T0) and Pva8:Image (T1). Disable PVA at high Hz.
+```
 
 ### Optional equalization startup
 
@@ -296,7 +305,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
-**EPICS v1:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2). Integrated preview on **8089** routes to addr **9** / **10** (Pva3 / Pva4) via **`prvImg1Worker`**. With **`BothCounters=Yes`**, the driver emits **T0−T1** on addr **11** / **12** (Pva5 / Pva6). **`PrvImgThreshDiffClip=Clip`** (default) applies **`max(0, diff)`** for IXS display; **Signed** mode keeps raw signed diff for pairing diagnostics.
+**EPICS:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2). Integrated preview on **8089** routes to addr **9** / **10** (Pva3 / Pva4) via **`prvImg1Worker`**. With **`BothCounters=Yes`**, the driver emits **T0−T1** on addr **11** / **12** (Pva5 / Pva6). **`PrvImgThreshDiffClip=Clip`** (default) applies **`max(0, diff)`** for IXS display; **Signed** mode keeps raw signed diff for pairing diagnostics. Full-rate **Image[]** TCP **8086** demuxes the same way to addr **1** / **13** (Pva7 / Pva8); running-sum accumulation uses **threshold 0 only**.
 
 ### BothCounters operational notes (2026-06)
 

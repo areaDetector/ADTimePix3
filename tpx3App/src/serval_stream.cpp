@@ -940,6 +940,9 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
         // Extract additional frame data
         int frame_number = j.value("frameNumber", 0);
         double time_at_frame = j.value("timeAtFrame", 0.0);
+        int threshold_id = jsonImageThresholdId(j);
+        const int ndArrayAddr = previewNdarrayAddressForThreshold(
+            threshold_id, NDARRAY_ADDR_IMG_THRESHOLD0, NDARRAY_ADDR_IMG_THRESHOLD1);
         
         // Determine pixel format
         bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
@@ -968,14 +971,14 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
         dims[2] = 0;
         
         NDArray *pImage = nullptr;
-        // Use pArrays[1] for Img channel to avoid conflict with PrvImg (pArrays[0])
-        if (this->pArrays && this->pArrays[1]) {
-            pImage = this->pArrays[1];
+        // Img T0 -> addr 1; Img T1 (MPX3 BothCounters) -> addr 13
+        if (this->pArrays && this->pArrays[ndArrayAddr]) {
+            pImage = this->pArrays[ndArrayAddr];
             pImage->release();
         }
         
-        this->pArrays[1] = this->pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
-        pImage = this->pArrays[1];
+        this->pArrays[ndArrayAddr] = this->pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
+        pImage = this->pArrays[ndArrayAddr];
         
         if (!pImage || !pImage->pData) {
             ERR("Failed to allocate NDArray or NDArray has no data pointer");
@@ -1071,9 +1074,11 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
         
         // Set Img metadata PVs
         setIntegerParam(ADTimePixImgFrameNumber, frame_number);
+        setIntegerParam(ADTimePixImgThresholdID, threshold_id);
         setDoubleParam(ADTimePixImgTimeAtFrame, time_at_frame);
         
-        // Calculate acquisition rate
+        // Calculate acquisition rate (frameNumber advances per trigger; BothCounters
+        // sends two jsonimages with the same frameNumber — frame_diff==0 is normal)
         epicsTimeStamp current_time;
         epicsTimeGetCurrent(&current_time);
         double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
@@ -1110,59 +1115,59 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
                     setDoubleParam(ADTimePixImgAcqRate, imgAcquisitionRate_);
                     imgLastRateUpdateTime_ = current_time_seconds;
                 }
+
+                imgPreviousFrameNumber_ = frame_number;
+                imgPreviousTimeAtFrame_ = current_time_seconds;
             }
-            
-            imgPreviousFrameNumber_ = frame_number;
-            imgPreviousTimeAtFrame_ = current_time_seconds;
         }
         
         // Get attributes
         if (pImage->pAttributeList) {
             this->getAttributes(pImage->pAttributeList);
+            int thresholdIdAttr = threshold_id;
+            pImage->pAttributeList->add("ThresholdID", "Serval jsonimage thresholdID",
+                                        NDAttrInt32, &thresholdIdAttr);
         }
         
-        // NEW: Create ImageData from frame for accumulation
-        ImageData::PixelFormat imgDataFormat = is_uint32 ? ImageData::PixelFormat::UINT32 : ImageData::PixelFormat::UINT16;
-        ImageData frame_image(width, height, imgDataFormat, ImageData::DataType::FRAME_DATA);
-        
-        // Copy pixel data from NDArray to ImageData
-        if (is_uint32) {
-            uint32_t* pData = reinterpret_cast<uint32_t*>(pImage->pData);
-            for (size_t y = 0; y < static_cast<size_t>(height); ++y) {
-                for (size_t x = 0; x < static_cast<size_t>(width); ++x) {
-                    size_t idx = y * width + x;
-                    frame_image.set_pixel_32(x, y, pData[idx]);
-                }
-            }
-        } else {
-            uint16_t* pData = reinterpret_cast<uint16_t*>(pImage->pData);
-            for (size_t y = 0; y < static_cast<size_t>(height); ++y) {
-                for (size_t x = 0; x < static_cast<size_t>(width); ++x) {
-                    size_t idx = y * width + x;
-                    frame_image.set_pixel_16(x, y, pData[idx]);
-                }
-            }
-        }
-        
-        // NEW: Process frame for accumulation (only if enabled)
+        // Accumulate threshold 0 only — mixing T0+T1 into one running sum is incorrect
         int accumulationEnable = 0;
         getIntegerParam(ADTimePixImgAccumulationEnable, &accumulationEnable);
-        if (accumulationEnable) {
+        if (accumulationEnable && threshold_id != 1) {
+            ImageData::PixelFormat imgDataFormat = is_uint32 ? ImageData::PixelFormat::UINT32 : ImageData::PixelFormat::UINT16;
+            ImageData frame_image(width, height, imgDataFormat, ImageData::DataType::FRAME_DATA);
+            
+            if (is_uint32) {
+                uint32_t* pData = reinterpret_cast<uint32_t*>(pImage->pData);
+                for (size_t y = 0; y < static_cast<size_t>(height); ++y) {
+                    for (size_t x = 0; x < static_cast<size_t>(width); ++x) {
+                        size_t idx = y * width + x;
+                        frame_image.set_pixel_32(x, y, pData[idx]);
+                    }
+                }
+            } else {
+                uint16_t* pData = reinterpret_cast<uint16_t*>(pImage->pData);
+                for (size_t y = 0; y < static_cast<size_t>(height); ++y) {
+                    for (size_t x = 0; x < static_cast<size_t>(width); ++x) {
+                        size_t idx = y * width + x;
+                        frame_image.set_pixel_16(x, y, pData[idx]);
+                    }
+                }
+            }
             processImgFrame(frame_image);
         }
         
         // Call parameter callbacks to update EPICS PVs (thread-safe)
         callParamCallbacks();
         
-        // Trigger NDArray callbacks (thread-safe) - Img channel uses address 1
+        // Trigger NDArray callbacks — T0 addr 1, T1 addr 13
         int arrayCallbacks = 0;
         getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
         if (arrayCallbacks && pImage) {
-            doCallbacksGenericPointer(pImage, NDArrayData, 1);
+            doCallbacksGenericPointer(pImage, NDArrayData, ndArrayAddr);
         }
         
-        LOG_ARGS("Processed Img frame: width=%d, height=%d, format=%s, frame=%d, counter=%d", 
-                 width, height, pixel_format_str.c_str(), frame_number, imagesAcquired);
+        LOG_ARGS("Processed Img frame: width=%d, height=%d, format=%s, frame=%d, thresholdID=%d, addr=%d, counter=%d", 
+                 width, height, pixel_format_str.c_str(), frame_number, threshold_id, ndArrayAddr, imagesAcquired);
         
     } catch (const std::exception& e) {
         ERR_ARGS("Error processing Img frame: %s", e.what());

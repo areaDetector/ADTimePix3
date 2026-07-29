@@ -261,6 +261,7 @@
 #define ADTimePixPrvImgThreshDiffClipString     "TPX3_PRVIMG_THRESH_DIFF_CLIP" // (asynInt32,      r/w)    Clip T0-T1 band on addrs 11/12 to max(0,diff)
     // Img TCP streaming metadata (from jsonimage header)
 #define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
+#define ADTimePixImgThresholdIDString           "TPX3_IMG_THRESHOLD_ID"     // (asynInt32,         r)      thresholdID from Image jsonimage header
 #define ADTimePixImgTimeAtFrameString           "TPX3_IMG_TIME_AT_FRAME"    // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
 #define ADTimePixImgAcqRateString               "TPX3_IMG_ACQ_RATE"         // (asynFloat64,       r)      Calculated acquisition rate (fps)
     // Img channel accumulation and display data
@@ -650,6 +651,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvImgLogHeaders;
         int ADTimePixPrvImgThreshDiffClip;
         int ADTimePixImgFrameNumber;
+        int ADTimePixImgThresholdID;
         int ADTimePixImgTimeAtFrame;
         int ADTimePixImgAcqRate;
         // Img channel accumulation and display data
@@ -845,8 +847,12 @@ class ADTimePix : public ADDriver{
         static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF = 11;
         /** NDArray address for PrvImg1 integrated band-pass (T0 minus T1). */
         static constexpr int NDARRAY_ADDR_PRVIMG1_THRESH_DIFF = 12;
+        /** NDArray address for full-rate Image[] threshold 0 (Img TCP; TPX3 default). */
+        static constexpr int NDARRAY_ADDR_IMG_THRESHOLD0 = 1;
+        /** NDArray address for full-rate Image[] threshold 1 (MPX3 BothCounters demux). */
+        static constexpr int NDARRAY_ADDR_IMG_THRESHOLD1 = 13;
         /** Number of NDArray callback addresses (0..NDARRAY_MAX_ADDR-1). */
-        static constexpr int NDARRAY_MAX_ADDR = 13;
+        static constexpr int NDARRAY_MAX_ADDR = 14;
 
         // TCP streaming for PrvImg1 channel (integrated preview)
         std::unique_ptr<NetworkClient> prvImg1NetworkClient_;
