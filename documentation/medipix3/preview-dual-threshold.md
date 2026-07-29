@@ -59,7 +59,7 @@ Same **channel schema** and **`jsonimage` wire format**; **not equivalent** in S
 | Serval role | Throttled live preview (`Preview.Period`, `SamplingMode`) | Full-rate acquisition output |
 | ADTimePix3 worker | `prvImgWorker` | `imgWorker` (if accumulation enabled) |
 | NDArray address | **0** | **1** (+ 2/3 accumulation) |
-| MPX3 v1 default | `WritePrvImg=1`, TCP 8088 | `WriteImg=0` |
+| MPX3 default | `WritePrvImg=1`, TCP 8088 | `WriteImg=0` (TCP **8086** ready; enable via `init_detector_img_mpx3.cmd`) |
 
 **Recommendation:** EPICS live view (Phoebus/PVA) should consume **`Preview.ImageChannels[0]`**. Use **`Image[]`** TCP for full-rate file saving and Img accumulation.
 

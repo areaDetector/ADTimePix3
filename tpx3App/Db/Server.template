@@ -543,6 +543,26 @@ record(longin, "$(P)$(R)ImgQueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# Image[0] Thresholds[] (comma-separated, MPX3 BothCounters — same socket, demux by thresholdID)
+record(waveform, "$(P)$(R)ImgThs")
+{
+    field(DESC, "Img Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGTHS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)ImgThs_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGTHS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 # Img TCP streaming metadata (from jsonimage header)
 record(longin, "$(P)$(R)ImgFrameNumber_RBV")
 {
@@ -917,6 +937,26 @@ record(longin, "$(P)$(R)Img1QueueSize_RBV")
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1QUEUESIZE")
    field(SCAN, "I/O Intr")
+}
+
+# Image[1] Thresholds[] (comma-separated, MPX3)
+record(waveform, "$(P)$(R)Img1Ths")
+{
+    field(DESC, "Img1 Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)Img1Ths_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
 }
 
 ###################################################################

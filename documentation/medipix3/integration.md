@@ -88,7 +88,8 @@ Defaults (from `init_detector_mpx3.cmd`):
 - PV prefix `MPX3-TEST:`
 - asyn port `MPX3`
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
-- preview on TCP **8088** (`PrvImgThs` **0,1**, jsonimage format)
+- preview on TCP **8088** / **8089** (`PrvImgThs` / `PrvImg1Ths` **0,1**, jsonimage)
+- full-rate **Image[]** TCP **8086** configured but **`WriteImg=0`** (opt-in via `init_detector_img_mpx3.cmd`)
 - **`BothCounters=Yes`**, **`TriggerMode=AutoTrgSt_TmrSp` (4)**, **4 triggers**, **0.5 s** period (Erik Accos recipe)
 - `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **9**/**10**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
@@ -150,9 +151,79 @@ Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** 
 | Use case | Serval path | MPX3 IOC default |
 |----------|-------------|------------------|
 | Beamline live view | Preview (frame + integrated) + count histogram | `WritePrvImg=1` (8088), `WritePrvImg1=1` (8089) |
-| Data saving at full rate | `Image[]` | `WriteImg=0` until archiving is needed — enable TCP/file destination and `imgWorker` |
+| Data saving at full rate | `Image[]` | TCP **8086**, `WriteImg=0` until needed — `< init_detector_img_mpx3.cmd` |
 
 Medipix3 has **no Timepix3-style raw `.tpx3` stream**. Highest practical rates (fast PC + SSD): **~2000 Hz** (12-bit continuous); **~750 Hz** (24-bit or dual 12-bit counter). Sequential shutter down: **~5 ms** safe, **~2 ms** minimum; **0.5 ms** (12-bit) / **1.3 ms** (24-bit) in other modes.
+
+## Family TCP port map (TPX3 / MPX3 / TPX4)
+
+Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phase A adopts Image **8086** now. TPX3 Raw primary remains **8085** in legacy `init_detector_paths.cmd` until a dedicated migration (target Raw[0]=**8084**).
+
+| Port | Slot | Role | MPX3 default | TPX3 today | TPX4 (future) |
+|-----:|------|------|--------------|------------|---------------|
+| 8080 | — | Serval HTTP | — | — | ASI examples |
+| 8081 | — | Serval HTTP | yes | yes | alternate |
+| 8084 | Raw[0] | Raw TCP primary | unused (file) | migrate target | yes |
+| 8085 | Raw[1] | Raw TCP secondary | unused | legacy Raw[0] / Raw1 | yes |
+| **8086** | **Image[0]** | Full-rate Image TCP | **paths ready, WriteImg=0** | legacy often 8087 | yes |
+| 8087 | Image[1] | Second Image[] (optional) | reserved / file | optional Img1 | optional |
+| **8088** | Preview[0] | Preview frame | **On** | optional | yes |
+| **8089** | Preview[1] | Preview integrated | **On** | often PrvImg | yes |
+| 8451 | — | Preview histogram | off | yes | TBD |
+
+**Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1.
+
+## Full-rate Image mode (Phase A)
+
+Preview stays the operator path (`PrvPeriod` throttle). `Image[]` is a separate Serval destination for every frame (no Period). Keep them on **different ports**.
+
+### Destination shape (when WriteImg=1)
+
+```json
+{
+  "Image": [{
+    "Base": "tcp://listen@localhost:8086",
+    "FilePattern": "f%MdHms_",
+    "Format": "jsonimage",
+    "Mode": "count",
+    "Thresholds": [0, 1],
+    "IntegrationSize": 1,
+    "StopMeasurementOnDiskLimit": false,
+    "QueueSize": 1024
+  }],
+  "Preview": {
+    "Period": 0.5,
+    "SamplingMode": "skipOnFrame",
+    "ImageChannels": [
+      { "Base": "tcp://listen@localhost:8088", "Format": "jsonimage", "Mode": "count",
+        "Thresholds": [0, 1], "IntegrationSize": 1, "QueueSize": 16 },
+      { "Base": "tcp://listen@localhost:8089", "Format": "jsonimage", "Mode": "count",
+        "Thresholds": [0, 1], "IntegrationSize": -1, "IntegrationMode": "last", "QueueSize": 16 }
+    ]
+  }
+}
+```
+
+Serval requires the same **Mode** on all output channels (manual limitation).
+
+### Enable / disable
+
+Paths are set in `init_detector_paths_mpx3.cmd` with `WriteImg=0`. To turn full-rate Image on:
+
+```bash
+# iocsh:
+< init_detector_img_mpx3.cmd
+# then acquire — imgWorker connects when WriteImg=1, tcp path, ImgAccumulationEnable=1
+```
+
+Disable: `dbpf WriteImg 0` then `WriteData 1`. Do **not** point Phoebus PVA at full-rate Image for 750–2000 Hz — use HDF5/TIFF plugins or accumulation (Phase C).
+
+### Known gaps (later phases)
+
+| Phase | Work |
+|-------|------|
+| **B** | Img `thresholdID` demux to separate NDArray addrs (Preview already demuxes; Img currently lands on addr 1) |
+| **C** | Rate / HDF5 soak tests at detector rates |
 
 ### Optional equalization startup
 
@@ -180,11 +251,11 @@ After equalization, restore the dual-counter profile:
 
 Serval `GET http://localhost:8081/` shows `Server.Destination`:
 
-| Serval path | IOC consumer | MPX3 v1 default |
-|-------------|--------------|-----------------|
+| Serval path | IOC consumer | MPX3 default |
+|-------------|--------------|--------------|
 | `Preview.ImageChannels[0]` (`PrvImg`) | Yes — `prvImgWorker` TCP client, NDArray/PVA | `WritePrvImg=1`, TCP 8088 |
 | `Preview.ImageChannels[1]` (`PrvImg1`) | Yes — `prvImg1Worker` TCP client | `WritePrvImg1=1`, TCP 8089 |
-| `Image[]` (main image channel) | Only if `WriteImg=1` and TCP + accumulation | `WriteImg=0` (file path unused) |
+| `Image[]` (full-rate) | `imgWorker` when TCP + accumulation | TCP **8086**, `WriteImg=0` (opt-in `init_detector_img_mpx3.cmd`) |
 
 The reference `serval_mpx3.json` and the **Serval manual** (destination example, §4 / pp. 18–19) configure **two preview TCP streams**: current frame and an image **integrated from the start of the measurement**. The MPX3 IOC profile (`st_mpx3.cmd`) enables **both** channels: `WritePrvImg=1` on TCP **8088** (`prvImgWorker`) and `WritePrvImg1=1` on TCP **8089** (`prvImg1Worker`). Each stream must have an IOC TCP client during acquire — if Serval pushes to 8089 with no reader, Serval logs **`Preview buffer full`** and repeat acquire can fail.
 

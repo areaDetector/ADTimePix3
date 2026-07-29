@@ -570,8 +570,12 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             }
             setStringParam(ADTimePixPrvImgThs, "0,1");
             setStringParam(ADTimePixPrvImg1Ths, "0,1");
+            setStringParam(ADTimePixImgThs, "0,1");
+            setStringParam(ADTimePixImg1Ths, "0,1");
             callParamCallbacks(ADTimePixPrvImgThs);
             callParamCallbacks(ADTimePixPrvImg1Ths);
+            callParamCallbacks(ADTimePixImgThs);
+            callParamCallbacks(ADTimePixImg1Ths);
         }
         status = initAcquisition();
     }
@@ -1781,16 +1785,17 @@ bool ADTimePix::mpx3BothCountersTriggerConflict(int triggerMode) const {
 }
 
 void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
-    static const char* kDefaultThresholds = "0,1,2,3,4,5,6,7";
+    /* MPX3 BothCounters uses thresholds 0 and 1; Colour mode (8 thresholds) is out of scope. */
+    static const char* kMpx3Thresholds = "0,1";
 
     if (family != DetectorFamily::MPX3) {
         return;
     }
 
-    setStringParam(ADTimePixImgThs, kDefaultThresholds);
-    setStringParam(ADTimePixImg1Ths, kDefaultThresholds);
-    setStringParam(ADTimePixPrvImgThs, kDefaultThresholds);
-    setStringParam(ADTimePixPrvImg1Ths, kDefaultThresholds);
+    setStringParam(ADTimePixImgThs, kMpx3Thresholds);
+    setStringParam(ADTimePixImg1Ths, kMpx3Thresholds);
+    setStringParam(ADTimePixPrvImgThs, kMpx3Thresholds);
+    setStringParam(ADTimePixPrvImg1Ths, kMpx3Thresholds);
     setIntegerParam(ADTimePixPrvImgFormat, 3);
     setIntegerParam(ADTimePixPrvImg1Format, 3);
     setStringParam(ADTimePixGainMode, "HGM");
