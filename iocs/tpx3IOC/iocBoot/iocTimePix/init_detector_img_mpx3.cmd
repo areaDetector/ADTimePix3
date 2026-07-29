@@ -6,6 +6,8 @@
 #
 # Keep Preview 8088/8089 on for operator feedback. Do not drive Phoebus from full-rate Image.
 # Next acquire starts imgWorker when WriteImg=1, path is tcp://, and ImgAccumulationEnable=1.
+# For HDF5 soak (Phase C): < init_detector_hdf5_img_mpx3.cmd after this file.
+# Port 8087 (optional Image[1] integrated companion) is deferred — revisit later.
 #
 # To disable again:
 #   dbpf("$(PREFIX)cam1:WriteImg","0")

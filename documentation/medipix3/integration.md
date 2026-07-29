@@ -166,12 +166,12 @@ Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phas
 | 8084 | Raw[0] | Raw TCP primary | unused (file) | migrate target | yes |
 | 8085 | Raw[1] | Raw TCP secondary | unused | legacy Raw[0] / Raw1 | yes |
 | **8086** | **Image[0]** | Full-rate Image TCP | **paths ready, WriteImg=0** | legacy often 8087 | yes |
-| 8087 | Image[1] | Second Image[] (optional) | reserved / file | optional Img1 | optional |
+| 8087 | Image[1] | Second Image[] (optional integrated companion) | **deferred** (revisit after merge; no `img1Worker` yet) | optional Img1 | optional |
 | **8088** | Preview[0] | Preview frame | **On** | optional | yes |
 | **8089** | Preview[1] | Preview integrated | **On** | often PrvImg | yes |
 | 8451 | — | Preview histogram | off | yes | TBD |
 
-**Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1.
+**Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Do **not** add 8087 to `init_detector_img_mpx3.cmd` for thresholds — Preview **8089** already covers operator integrated view.
 
 ## Full-rate Image mode (Phase A)
 
@@ -216,15 +216,53 @@ Paths are set in `init_detector_paths_mpx3.cmd` with `WriteImg=0`. To turn full-
 # then acquire — imgWorker connects when WriteImg=1, tcp path, ImgAccumulationEnable=1
 ```
 
-Disable: `dbpf WriteImg 0` then `WriteData 1`. Do **not** point Phoebus PVA at full-rate Image for 750–2000 Hz — use HDF5/TIFF plugins or accumulation (Phase C).
+Disable: `dbpf WriteImg 0` then `WriteData 1`. Do **not** point Phoebus PVA at full-rate Image for 750–2000 Hz — use HDF5 plugins (`HDFImgT0` / `HDFImgT1`) or accumulation.
 
-### Known gaps (later phases)
+### Phase C — HDF5 / rate soak
+
+Plugins in `st_mpx3.cmd` (fixed address at configure):
+
+| Plugin | NDArray addr | Threshold | PV prefix |
+|--------|-------------:|-----------|-----------|
+| `FileHDFImgT0` | **1** | T0 | `HDFImgT0:` |
+| `FileHDFImgT1` | **13** | T1 | `HDFImgT1:` |
+
+```bash
+# Host shell once:
+mkdir -p /tmp/mpx3_hdf
+
+# iocsh (restart IOC after rebuild so HDF plugins load):
+< init_detector_img_mpx3.cmd
+< init_detector_hdf5_img_mpx3.cmd
+dbpf("$(PREFIX)cam1:Acquire","1")              # latch dimensions (Capture not armed yet)
+# wait until DA_IDLE / ImgFrameNumber advances, then:
+< init_detector_hdf5_img_mpx3_arm.cmd          # Capture=1 (needs ≥1 array first)
+dbpf("$(PREFIX)cam1:Acquire","1")              # Stream writes up to NumCapture
+```
+
+If you arm Capture before any Image NDArray, NDFile logs:  
+`ERROR, must collect an array to get dimensions first` — harmless; acquire once, then arm.
+
+Check during/after acquire:
+
+```bash
+caget MPX3-TEST:cam1:ImgAcqRate_RBV MPX3-TEST:cam1:ImgFrameNumber_RBV
+caget MPX3-TEST:HDFImgT0:Capture_RBV MPX3-TEST:HDFImgT0:NumCaptured_RBV
+caget MPX3-TEST:HDFImgT1:NumCaptured_RBV
+ls $(MPX3_HDF_PATH=/tmp/mpx3_hdf)
+```
+
+**Soak ladder:** start with current Accos timing (0.5 s, 4 frames) → raise `NumImages` / shorten `AcquirePeriod` on emulator → hardware toward ~750 Hz (24-bit / dual) or ~2000 Hz (12-bit). Raise `FileHDFImgT*: queue` in `st_mpx3.cmd` if dropped frames. Keep **Pva7/Pva8** disabled at high rate (`init_detector_hdf5_img_mpx3.cmd` does this).
+
+**Deferred:** Image[1] TCP **8087** (Serval-side integrated companion) — revisit after areaDetector merge; needs `img1Worker` and a clear beamline need beyond Preview 8089.
+
+### Image mode phase status
 
 | Phase | Work |
 |-------|------|
 | **A** | ~~IOC TCP Image destination + docs~~ **done** (8086, opt-in `WriteImg`) |
 | **B** | ~~Img `thresholdID` demux~~ **done** — T0→addr **1** (Pva7), T1→addr **13** (Pva8); `ImgThresholdID_RBV`; accumulate T0 only |
-| **C** | Rate / HDF5 soak tests at detector rates |
+| **C** | ~~HDF5 plugins + soak recipe~~ **done** (scaffolding); run soak on emulator/hardware as rates allow |
 
 **Verify Phase B after rebuild/restart:** enable Image (`< init_detector_img_mpx3.cmd`), acquire, then:
 

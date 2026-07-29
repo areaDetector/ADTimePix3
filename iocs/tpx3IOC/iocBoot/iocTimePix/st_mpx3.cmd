@@ -94,6 +94,14 @@ dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva7:, PORT=PVA7,ADD
 NDPvaConfigure("PVA8", $(QSIZE), 0, "$(PORT)", 13, "$(PREFIX)Pva8:Image", 0, 0, 0)
 dbLoadRecords("$(ADCORE)/db/NDPva.template", "P=$(PREFIX),R=Pva8:, PORT=PVA8,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
 
+# HDF5 archive for Image[] demux (fixed NDArrayAddress at configure — preferred over runtime switch).
+# Queue 100: larger than Preview PVA; raise further for high-Hz soak. Enable via init_detector_hdf5_img_mpx3.cmd.
+NDFileHDF5Configure("FileHDFImgT0", 100, 0, "$(PORT)", 1)
+dbLoadRecords("$(ADCORE)/db/NDFileHDF5.template", "P=$(PREFIX),R=HDFImgT0:,PORT=FileHDFImgT0,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),XMLSIZE=2048")
+
+NDFileHDF5Configure("FileHDFImgT1", 100, 0, "$(PORT)", 13)
+dbLoadRecords("$(ADCORE)/db/NDFileHDF5.template", "P=$(PREFIX),R=HDFImgT1:,PORT=FileHDFImgT1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),XMLSIZE=2048")
+
 # ---------------------------------------------------------------------------
 # Legacy IXS band-pass via NDPluginProcess (optional; driver addr 11/12 preferred):
 # Uncomment plugin ports below AND init_ixs_thresh_diff.cmd at bottom (conflicts with driver Pva5/Pva6 wiring).
