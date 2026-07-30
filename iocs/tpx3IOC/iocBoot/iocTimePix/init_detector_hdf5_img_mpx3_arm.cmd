@@ -3,6 +3,8 @@
 #
 #   < init_detector_hdf5_img_mpx3_arm.cmd
 #   dbpf("$(PREFIX)cam1:Acquire","1")
+#
+# If Capture_RBV is already Done from a failed attempt, this re-arms Stream capture.
 
 dbpf("$(PREFIX)HDFImgT0:Capture","1")
 dbpf("$(PREFIX)HDFImgT1:Capture","1")

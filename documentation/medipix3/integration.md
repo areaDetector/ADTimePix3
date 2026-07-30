@@ -241,7 +241,14 @@ dbpf("$(PREFIX)cam1:Acquire","1")              # Stream writes up to NumCapture
 ```
 
 If you arm Capture before any Image NDArray, NDFile logs:  
-`ERROR, must collect an array to get dimensions first` — harmless; acquire once, then arm.
+`ERROR, must collect an array to get dimensions first` — acquire once, then arm.
+
+If HDF5 logs `H5Fcreate(): invalid file name` / empty path after colon: **`FileTemplate` was empty** (common after autosave). Re-run `init_detector_hdf5_img_mpx3.cmd` (sets `%s%s_%3.3d.h5` and path with trailing `/`), confirm:
+
+```bash
+caget -S MPX3-TEST:HDFImgT0:FileTemplate_RBV MPX3-TEST:HDFImgT0:FilePath_RBV
+# expect: %s%s_%3.3d.h5   and   /tmp/mpx3_hdf/
+```
 
 Check during/after acquire:
 
