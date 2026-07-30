@@ -93,12 +93,12 @@
     <name>PreviewWriterBtn</name>
     <actions>
       <action type="open_display">
-        <description>Medipix3 preview TCP channels</description>
+        <description>Medipix3 Serval Preview + Image destination</description>
         <file>Acquire/Mpx3ServerFileWriter.bob</file>
         <target>tab</target>
       </action>
     </actions>
-    <text>Preview</text>
+    <text>Dest</text>
     <x>205</x>
     <y>55</y>
     <width>80</width>
