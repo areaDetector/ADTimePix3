@@ -25,11 +25,17 @@ dbpf("$(PREFIX)cam1:ImgThs","0,1")      # BothCounters: dual thresholdID on one 
 dbpf("$(PREFIX)cam1:ImgAccumulationEnable","1")  # required for imgWorker when WriteImg=1
 dbpf("$(PREFIX)cam1:WriteImg","0")
 
-# Image[1] reserved (family port 8087) — optional second Image[] companion; off by default
+# Image[1] optional companion (family port 8087). File-first (Serval writes disk; no IOC TCP worker yet).
+# For TCP stream: set Img1FilePath=tcp://listen@localhost:8087, Img1FileFmt=3 — needs a reader (img1Worker deferred).
+# IntgSize=-1 + last mirrors Preview 8089; prefer last over sum at high rate (Erik).
 dbpf("$(PREFIX)cam1:Img1FilePath","file:/media/nvme/img1")
 dbpf("$(PREFIX)cam1:Img1FileTemplate","f%MdHms_")
-dbpf("$(PREFIX)cam1:Img1FileFmt","0")
-dbpf("$(PREFIX)cam1:Img1FileMode","0")
+dbpf("$(PREFIX)cam1:Img1FileFmt","0")    # tiff for file; use 3=jsonimage when TCP 8087
+dbpf("$(PREFIX)cam1:Img1FileMode","0")   # count
+dbpf("$(PREFIX)cam1:Img1IntgSize","-1")  # integrate from measurement start
+dbpf("$(PREFIX)cam1:Img1IntgMode","2")   # last (not sum)
+dbpf("$(PREFIX)cam1:Img1StpOnDskLim","0")
+dbpf("$(PREFIX)cam1:Img1QueueSize","1024")
 dbpf("$(PREFIX)cam1:Img1Ths","0,1")
 dbpf("$(PREFIX)cam1:WriteImg1","0")
 

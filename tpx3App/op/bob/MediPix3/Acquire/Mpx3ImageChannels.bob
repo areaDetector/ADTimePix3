@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3ImageChannels</name>
   <width>1125</width>
-  <height>470</height>
+  <height>720</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -15,7 +15,7 @@
     <height>70</height>
     <widget type="label" version="2.0.0">
       <name>ImgHdrLbl</name>
-      <text>Full-rate Image[] (opt-in) — keep Preview On for OP; do not drive Phoebus from Image at high Hz</text>
+      <text>Full-rate Image[] (opt-in) — Preview stays On for OP; do not drive Phoebus from Image at high Hz</text>
       <x>5</x>
       <y>4</y>
       <width>900</width>
@@ -67,24 +67,23 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>WriteImgEnLbl</name>
-      <text>WriteImg PV/SP</text>
+      <text>Img PV/SP</text>
       <x>220</x>
       <y>32</y>
-      <width>95</width>
+      <width>60</width>
     </widget>
     <widget type="led" version="2.0.0">
       <name>WriteImgLED</name>
       <pv_name>$(P)$(R)WriteImg</pv_name>
-      <x>320</x>
+      <x>285</x>
       <y>28</y>
       <width>18</width>
       <height>18</height>
-      <tooltip>WriteImg (setpoint)</tooltip>
     </widget>
     <widget type="led" version="2.0.0">
       <name>WriteImgRBV</name>
       <pv_name>$(P)$(R)WriteImg_RBV</pv_name>
-      <x>342</x>
+      <x>307</x>
       <y>28</y>
       <width>18</width>
       <height>18</height>
@@ -92,14 +91,40 @@
         <color red="255" green="0" blue="0">
         </color>
       </on_color>
-      <tooltip>WriteImg_RBV (Serval)</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>WriteImg1EnLbl</name>
+      <text>Img1 PV/SP</text>
+      <x>340</x>
+      <y>32</y>
+      <width>70</width>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <name>WriteImg1LED</name>
+      <pv_name>$(P)$(R)WriteImg1</pv_name>
+      <x>415</x>
+      <y>28</y>
+      <width>18</width>
+      <height>18</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <name>WriteImg1RBV</name>
+      <pv_name>$(P)$(R)WriteImg1_RBV</pv_name>
+      <x>437</x>
+      <y>28</y>
+      <width>18</width>
+      <height>18</height>
+      <on_color>
+        <color red="255" green="0" blue="0">
+        </color>
+      </on_color>
     </widget>
     <widget type="label" version="2.0.0">
       <name>PortMapNote</name>
-      <text>Family ports: Image 8086 (T0+T1 demux) · Preview 8088/8089 · 8087 deferred</text>
-      <x>380</x>
+      <text>Ports: Image 8086 · Image[1] 8087 (file or TCP) · Preview 8088/8089</text>
+      <x>470</x>
       <y>32</y>
-      <width>520</width>
+      <width>430</width>
       <height>20</height>
       <font>
         <font family="Sans" style="REGULAR" size="10.0">
@@ -110,14 +135,14 @@
   <widget type="group" version="3.0.0">
     <name>Img0</name>
     <y>75</y>
-    <width>720</width>
-    <height>390</height>
+    <width>560</width>
+    <height>420</height>
     <widget type="label" version="2.0.0">
       <name>Img0Title</name>
-      <text>Image[0]  full-rate / count  (tcp://listen@localhost:8086)</text>
+      <text>Image[0]  full-rate  (tcp://listen@localhost:8086)</text>
       <x>5</x>
       <y>4</y>
-      <width>500</width>
+      <width>400</width>
       <height>18</height>
       <font>
         <font family="Sans" style="BOLD" size="11.0">
@@ -132,7 +157,7 @@
       <name>WriteImgBtn</name>
       <pv_name>$(P)$(R)WriteImg</pv_name>
       <bit>-1</bit>
-      <x>530</x>
+      <x>450</x>
       <y>2</y>
       <width>75</width>
       <height>24</height>
@@ -144,7 +169,6 @@
         <color red="0" green="255" blue="0">
         </color>
       </on_color>
-      <tooltip>Enable Image[] in Serval destination; then WriteData</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgExistsLbl</name>
@@ -165,7 +189,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgPathLbl</name>
-      <text>TCP path (RBV)</text>
+      <text>Path (RBV)</text>
       <x>10</x>
       <y>58</y>
       <width>70</width>
@@ -176,7 +200,7 @@
       <pv_name>$(P)$(R)ImgFilePath_RBV</pv_name>
       <x>85</x>
       <y>54</y>
-      <width>600</width>
+      <width>440</width>
       <height>22</height>
       <background_color>
         <color red="218" green="218" blue="218">
@@ -186,7 +210,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgPathSetLbl</name>
-      <text>TCP path (set)</text>
+      <text>Path (set)</text>
       <x>10</x>
       <y>84</y>
       <width>70</width>
@@ -197,14 +221,13 @@
       <pv_name>$(P)$(R)ImgFilePath</pv_name>
       <x>85</x>
       <y>80</y>
-      <width>600</width>
+      <width>440</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
       <format>6</format>
-      <tooltip>Default: tcp://listen@localhost:8086</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgTmplLbl</name>
@@ -219,7 +242,7 @@
       <pv_name>$(P)$(R)ImgFileTemplate</pv_name>
       <x>85</x>
       <y>106</y>
-      <width>600</width>
+      <width>440</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
@@ -259,16 +282,16 @@
     <widget type="label" version="2.0.0">
       <name>ImgModeLbl</name>
       <text>Mode</text>
-      <x>320</x>
-      <y>136</y>
-      <width>50</width>
+      <x>10</x>
+      <y>162</y>
+      <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
       <name>ImgMode</name>
       <pv_name>$(P)$(R)ImgFileMode</pv_name>
-      <x>375</x>
-      <y>132</y>
+      <x>85</x>
+      <y>158</y>
       <width>120</width>
       <height>22</height>
       <background_color>
@@ -279,8 +302,8 @@
     <widget type="textupdate" version="2.0.0">
       <name>ImgModeRBV</name>
       <pv_name>$(P)$(R)ImgFileMode_RBV</pv_name>
-      <x>500</x>
-      <y>132</y>
+      <x>210</x>
+      <y>158</y>
       <width>90</width>
       <height>22</height>
       <format>6</format>
@@ -289,7 +312,7 @@
       <name>ImgIntgSizeLbl</name>
       <text>Intg size</text>
       <x>10</x>
-      <y>162</y>
+      <y>188</y>
       <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -297,36 +320,35 @@
       <name>ImgIntgSize</name>
       <pv_name>$(P)$(R)ImgIntgSize</pv_name>
       <x>85</x>
-      <y>158</y>
+      <y>184</y>
       <width>70</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Use 1 for full-rate (no Serval integration)</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>ImgIntgSizeRBV</name>
       <pv_name>$(P)$(R)ImgIntgSize_RBV</pv_name>
       <x>160</x>
-      <y>158</y>
+      <y>184</y>
       <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgIntgModeLbl</name>
       <text>Intg mode</text>
-      <x>260</x>
-      <y>162</y>
+      <x>250</x>
+      <y>188</y>
       <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="combo" version="2.0.0">
       <name>ImgIntgMode</name>
       <pv_name>$(P)$(R)ImgIntgMode</pv_name>
-      <x>335</x>
-      <y>158</y>
+      <x>325</x>
+      <y>184</y>
       <width>90</width>
       <height>22</height>
       <background_color>
@@ -337,8 +359,8 @@
     <widget type="textupdate" version="2.0.0">
       <name>ImgIntgModeRBV</name>
       <pv_name>$(P)$(R)ImgIntgMode_RBV</pv_name>
-      <x>430</x>
-      <y>158</y>
+      <x>420</x>
+      <y>184</y>
       <width>90</width>
       <height>22</height>
       <format>6</format>
@@ -347,7 +369,7 @@
       <name>ImgQueueLbl</name>
       <text>Queue</text>
       <x>10</x>
-      <y>188</y>
+      <y>214</y>
       <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -355,7 +377,7 @@
       <name>ImgQueue</name>
       <pv_name>$(P)$(R)ImgQueueSize</pv_name>
       <x>85</x>
-      <y>184</y>
+      <y>210</y>
       <width>70</width>
       <height>22</height>
       <background_color>
@@ -367,15 +389,15 @@
       <name>ImgQueueRBV</name>
       <pv_name>$(P)$(R)ImgQueueSize_RBV</pv_name>
       <x>160</x>
-      <y>184</y>
+      <y>210</y>
       <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgAccLbl</name>
       <text>Accum</text>
-      <x>260</x>
-      <y>188</y>
+      <x>250</x>
+      <y>214</y>
       <width>50</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -383,28 +405,17 @@
       <name>ImgAccumulationEnable</name>
       <pv_name>$(P)$(R)ImgAccumulationEnable</pv_name>
       <bit>-1</bit>
-      <x>315</x>
-      <y>182</y>
+      <x>305</x>
+      <y>208</y>
       <width>90</width>
       <height>24</height>
-      <off_label>Off</off_label>
-      <on_label>On</on_label>
-      <tooltip>Required for imgWorker TCP connect when WriteImg=1</tooltip>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>ImgAccRBV</name>
-      <pv_name>$(P)$(R)ImgAccumulationEnable_RBV</pv_name>
-      <x>415</x>
-      <y>184</y>
-      <width>70</width>
-      <height>22</height>
-      <format>6</format>
+      <tooltip>Required for imgWorker when WriteImg=1 and path is tcp://</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ImgThsLbl</name>
       <text>Thresholds</text>
       <x>10</x>
-      <y>214</y>
+      <y>240</y>
       <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -412,8 +423,8 @@
       <name>ImgThsRBV</name>
       <pv_name>$(P)$(R)ImgThs_RBV</pv_name>
       <x>85</x>
-      <y>210</y>
-      <width>600</width>
+      <y>236</y>
+      <width>440</width>
       <height>22</height>
       <background_color>
         <color red="218" green="218" blue="218">
@@ -425,36 +436,32 @@
       <name>ImgThs</name>
       <pv_name>$(P)$(R)ImgThs</pv_name>
       <x>85</x>
-      <y>236</y>
-      <width>600</width>
+      <y>262</y>
+      <width>440</width>
       <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
       <format>6</format>
-      <tooltip>Serval Image[].Thresholds — use 0,1 with BothCounters (same TCP, demux by thresholdID)</tooltip>
+      <tooltip>BothCounters: 0,1 on one TCP — demux by thresholdID → addr 1 / 13</tooltip>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HeaderMetaTitle</name>
-      <text>jsonimage header (live)</text>
+      <text>jsonimage header (live — imgWorker)</text>
       <x>5</x>
-      <y>270</y>
-      <width>200</width>
+      <y>296</y>
+      <width>250</width>
       <font>
         <font family="Sans" style="BOLD" size="10.0">
         </font>
       </font>
-      <background_color>
-        <color red="240" green="248" blue="255">
-        </color>
-      </background_color>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ThIdLbl</name>
       <text>thresholdID</text>
       <x>5</x>
-      <y>296</y>
+      <y>322</y>
       <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -462,7 +469,7 @@
       <name>ThIdRBV</name>
       <pv_name>$(P)$(R)ImgThresholdID_RBV</pv_name>
       <x>90</x>
-      <y>294</y>
+      <y>320</y>
       <width>50</width>
       <height>22</height>
     </widget>
@@ -470,7 +477,7 @@
       <name>FrameLbl</name>
       <text>frame#</text>
       <x>155</x>
-      <y>296</y>
+      <y>322</y>
       <width>50</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -478,33 +485,33 @@
       <name>FrameRBV</name>
       <pv_name>$(P)$(R)ImgFrameNumber_RBV</pv_name>
       <x>210</x>
-      <y>294</y>
+      <y>320</y>
       <width>60</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>RateLbl</name>
       <text>Hz</text>
-      <x>290</x>
-      <y>296</y>
+      <x>285</x>
+      <y>322</y>
       <width>30</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>RateRBV</name>
       <pv_name>$(P)$(R)ImgAcqRate_RBV</pv_name>
-      <x>325</x>
-      <y>294</y>
+      <x>320</x>
+      <y>320</y>
       <width>80</width>
       <height>22</height>
       <precision>3</precision>
     </widget>
     <widget type="label" version="2.0.0">
       <name>AddrNote</name>
-      <text>NDArray: thresholdID 0 → addr 1 (Pva7); thresholdID 1 → addr 13 (Pva8). Accumulates T0 only.</text>
+      <text>NDArray: T0→addr 1 (Pva7), T1→addr 13 (Pva8). HDF: HDFImgT0/T1.</text>
       <x>5</x>
-      <y>330</y>
-      <width>690</width>
+      <y>355</y>
+      <width>530</width>
       <height>36</height>
       <font>
         <font family="Sans" style="REGULAR" size="10.0">
@@ -512,31 +519,344 @@
       </font>
       <wrap_words>true</wrap_words>
     </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>Img1</name>
+    <x>565</x>
+    <y>75</y>
+    <width>560</width>
+    <height>420</height>
     <widget type="label" version="2.0.0">
-      <name>EnableHint</name>
-      <text>Enable: WriteImg On → WriteData → Acquire. HDF archive: HDFImgT0 (addr 1) / HDFImgT1 (addr 13), not HDF1.</text>
+      <name>Img1Title</name>
+      <text>Image[1]  companion  (file or tcp://…:8087)</text>
       <x>5</x>
-      <y>368</y>
-      <width>690</width>
+      <y>4</y>
+      <width>400</width>
       <height>18</height>
+      <font>
+        <font family="Sans" style="BOLD" size="11.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>WriteImg1Btn</name>
+      <pv_name>$(P)$(R)WriteImg1</pv_name>
+      <bit>-1</bit>
+      <x>450</x>
+      <y>2</y>
+      <width>75</width>
+      <height>24</height>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+      <tooltip>Opt-in. File path: Serval writes disk. TCP 8087: needs a reader (no img1Worker yet).</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1Hint</name>
+      <text>IntgSize=-1 + last ≈ Preview 8089 role; file-first default. Prefer last over sum.</text>
+      <x>5</x>
+      <y>28</y>
+      <width>520</width>
+      <height>18</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="9.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1ExistsLbl</name>
+      <text>Exists</text>
+      <x>10</x>
+      <y>52</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1Exists</name>
+      <pv_name>$(P)$(R)Img1FilePathExists_RBV</pv_name>
+      <x>85</x>
+      <y>48</y>
+      <width>50</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1PathLbl</name>
+      <text>Path (RBV)</text>
+      <x>10</x>
+      <y>78</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1PathRBV</name>
+      <pv_name>$(P)$(R)Img1FilePath_RBV</pv_name>
+      <x>85</x>
+      <y>74</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1PathSetLbl</name>
+      <text>Path (set)</text>
+      <x>10</x>
+      <y>104</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Img1Path</name>
+      <pv_name>$(P)$(R)Img1FilePath</pv_name>
+      <x>85</x>
+      <y>100</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>file:/media/nvme/img1  or  tcp://listen@localhost:8087 (set Fmt=jsonimage for TCP)</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1TmplLbl</name>
+      <text>File pattern</text>
+      <x>10</x>
+      <y>130</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Img1Tmpl</name>
+      <pv_name>$(P)$(R)Img1FileTemplate</pv_name>
+      <x>85</x>
+      <y>126</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1FmtLbl</name>
+      <text>Format</text>
+      <x>10</x>
+      <y>156</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Img1Fmt</name>
+      <pv_name>$(P)$(R)Img1FileFmt</pv_name>
+      <x>85</x>
+      <y>152</y>
+      <width>120</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1FmtRBV</name>
+      <pv_name>$(P)$(R)Img1FileFmt_RBV</pv_name>
+      <x>210</x>
+      <y>152</y>
+      <width>90</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1ModeLbl</name>
+      <text>Mode</text>
+      <x>10</x>
+      <y>182</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Img1Mode</name>
+      <pv_name>$(P)$(R)Img1FileMode</pv_name>
+      <x>85</x>
+      <y>178</y>
+      <width>120</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1ModeRBV</name>
+      <pv_name>$(P)$(R)Img1FileMode_RBV</pv_name>
+      <x>210</x>
+      <y>178</y>
+      <width>90</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1IntgSizeLbl</name>
+      <text>Intg size</text>
+      <x>10</x>
+      <y>208</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Img1IntgSize</name>
+      <pv_name>$(P)$(R)Img1IntgSize</pv_name>
+      <x>85</x>
+      <y>204</y>
+      <width>70</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>-1 = from measurement start (like Preview 8089)</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1IntgSizeRBV</name>
+      <pv_name>$(P)$(R)Img1IntgSize_RBV</pv_name>
+      <x>160</x>
+      <y>204</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1IntgModeLbl</name>
+      <text>Intg mode</text>
+      <x>250</x>
+      <y>208</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Img1IntgMode</name>
+      <pv_name>$(P)$(R)Img1IntgMode</pv_name>
+      <x>325</x>
+      <y>204</y>
+      <width>90</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1IntgModeRBV</name>
+      <pv_name>$(P)$(R)Img1IntgMode_RBV</pv_name>
+      <x>420</x>
+      <y>204</y>
+      <width>90</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1QueueLbl</name>
+      <text>Queue</text>
+      <x>10</x>
+      <y>234</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Img1Queue</name>
+      <pv_name>$(P)$(R)Img1QueueSize</pv_name>
+      <x>85</x>
+      <y>230</y>
+      <width>70</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1QueueRBV</name>
+      <pv_name>$(P)$(R)Img1QueueSize_RBV</pv_name>
+      <x>160</x>
+      <y>230</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1ThsLbl</name>
+      <text>Thresholds</text>
+      <x>10</x>
+      <y>260</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Img1ThsRBV</name>
+      <pv_name>$(P)$(R)Img1Ths_RBV</pv_name>
+      <x>85</x>
+      <y>256</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Img1Ths</name>
+      <pv_name>$(P)$(R)Img1Ths</pv_name>
+      <x>85</x>
+      <y>282</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>BothCounters: 0,1 — same socket demux when TCP (needs img1Worker later)</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Img1TcpNote</name>
+      <text>TCP 8087: set path tcp://listen@localhost:8087 and Format=jsonimage, then WriteData. Do not enable TCP without a reader (buffer full). IOC img1Worker not implemented — use file:/ for Serval-side archive now.</text>
+      <x>5</x>
+      <y>320</y>
+      <width>530</width>
+      <height>70</height>
       <font>
         <font family="Sans" style="REGULAR" size="10.0">
         </font>
       </font>
+      <wrap_words>true</wrap_words>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>HdfStatus</name>
-    <x>730</x>
-    <y>75</y>
-    <width>390</width>
-    <height>390</height>
+    <y>500</y>
+    <width>1120</width>
+    <height>210</height>
     <widget type="label" version="2.0.0">
       <name>HdfTitle</name>
-      <text>HDF5 soak (HDFImgT0 / T1)</text>
+      <text>HDF5 soak for Image[0] demux (HDFImgT0 addr 1 / HDFImgT1 addr 13) — not HDF1</text>
       <x>5</x>
       <y>4</y>
-      <width>280</width>
+      <width>700</width>
       <height>18</height>
       <font>
         <font family="Sans" style="BOLD" size="11.0">
@@ -548,31 +868,18 @@
       </foreground_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>HdfNote</name>
-      <text>Latch dims with one Acquire, then arm Capture. FileTemplate must be %s%s_%3.3d.h5</text>
-      <x>5</x>
-      <y>28</y>
-      <width>370</width>
-      <height>40</height>
-      <font>
-        <font family="Sans" style="REGULAR" size="10.0">
-        </font>
-      </font>
-      <wrap_words>true</wrap_words>
-    </widget>
-    <widget type="label" version="2.0.0">
       <name>HdfT0Lbl</name>
       <text>T0 Enable / Captured</text>
-      <x>5</x>
-      <y>80</y>
+      <x>10</x>
+      <y>35</y>
       <width>140</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT0En</name>
       <pv_name>$(P)HDFImgT0:EnableCallbacks_RBV</pv_name>
-      <x>155</x>
-      <y>78</y>
+      <x>160</x>
+      <y>33</y>
       <width>70</width>
       <height>22</height>
       <format>6</format>
@@ -580,24 +887,24 @@
     <widget type="textupdate" version="2.0.0">
       <name>HdfT0Num</name>
       <pv_name>$(P)HDFImgT0:NumCaptured_RBV</pv_name>
-      <x>235</x>
-      <y>78</y>
+      <x>240</x>
+      <y>33</y>
       <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HdfT1Lbl</name>
       <text>T1 Enable / Captured</text>
-      <x>5</x>
-      <y>110</y>
+      <x>330</x>
+      <y>35</y>
       <width>140</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT1En</name>
       <pv_name>$(P)HDFImgT1:EnableCallbacks_RBV</pv_name>
-      <x>155</x>
-      <y>108</y>
+      <x>480</x>
+      <y>33</y>
       <width>70</width>
       <height>22</height>
       <format>6</format>
@@ -605,70 +912,56 @@
     <widget type="textupdate" version="2.0.0">
       <name>HdfT1Num</name>
       <pv_name>$(P)HDFImgT1:NumCaptured_RBV</pv_name>
-      <x>235</x>
-      <y>108</y>
+      <x>560</x>
+      <y>33</y>
       <width>70</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HdfPathLbl</name>
-      <text>T0 path (RBV)</text>
-      <x>5</x>
-      <y>145</y>
-      <width>90</width>
+      <text>T0 path</text>
+      <x>10</x>
+      <y>65</y>
+      <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT0Path</name>
       <pv_name>$(P)HDFImgT0:FilePath_RBV</pv_name>
-      <x>100</x>
-      <y>143</y>
-      <width>270</width>
+      <x>85</x>
+      <y>63</y>
+      <width>400</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HdfTmplLbl</name>
       <text>T0 template</text>
-      <x>5</x>
-      <y>175</y>
-      <width>90</width>
+      <x>500</x>
+      <y>65</y>
+      <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT0Tmpl</name>
       <pv_name>$(P)HDFImgT0:FileTemplate_RBV</pv_name>
-      <x>100</x>
-      <y>173</y>
-      <width>270</width>
+      <x>585</x>
+      <y>63</y>
+      <width>200</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>Img1Defer</name>
-      <text>Image[1] / TCP 8087 (integrated companion) deferred — use Preview 8089 for OP integrate.</text>
-      <x>5</x>
-      <y>220</y>
-      <width>370</width>
-      <height>50</height>
-      <font>
-        <font family="Sans" style="REGULAR" size="10.0">
-        </font>
-      </font>
-      <wrap_words>true</wrap_words>
-    </widget>
-    <widget type="label" version="2.0.0">
       <name>ScriptHint</name>
-      <text>Scripts: init_detector_img_mpx3.cmd · init_detector_hdf5_img_mpx3.cmd · _arm.cmd</text>
-      <x>5</x>
-      <y>290</y>
-      <width>370</width>
-      <height>40</height>
+      <text>Scripts: init_detector_img_mpx3.cmd · init_detector_hdf5_img_mpx3.cmd · _arm.cmd. Latch dims → arm Capture.</text>
+      <x>10</x>
+      <y>100</y>
+      <width>900</width>
+      <height>20</height>
       <font>
         <font family="Sans" style="REGULAR" size="10.0">
         </font>
       </font>
-      <wrap_words>true</wrap_words>
     </widget>
   </widget>
 </display>

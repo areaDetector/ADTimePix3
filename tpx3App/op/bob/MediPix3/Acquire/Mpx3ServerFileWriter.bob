@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3ServerFileWriter</name>
   <width>1130</width>
-  <height>1160</height>
+  <height>1400</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -48,7 +48,7 @@
     <x>5</x>
     <y>655</y>
     <width>1130</width>
-    <height>480</height>
+    <height>730</height>
     <resize>4</resize>
     <transparent>true</transparent>
   </widget>

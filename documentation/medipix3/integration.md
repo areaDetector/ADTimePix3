@@ -94,7 +94,7 @@ Defaults (from `init_detector_mpx3.cmd`):
 - `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **9**/**10**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
-**Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: destination writer **`Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`, 8086 + HDFImgT0/T1 status); live preview images in `Acquire/Mpx3PrvImgMonitor.bob`; detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` / `ImgThs` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
+**Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: destination writer **`Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`: Img[0] 8086 + Img[1] file/8087 + HDFImgT0/T1 status); live preview images in `Acquire/Mpx3PrvImgMonitor.bob`; detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` / `ImgThs` / `Img1Ths` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
 
 **Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via **`$(ADCORE)/iocBoot/stats_profiles.cmd`** (`NDStatsProfiles.template`) after `commonPlugins.cmd`; `init_detector_hw_mpx3.cmd` processes `StatsProfInit_` after `iocInit`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention (`$(P)$(R)Cal:…`).
 
@@ -166,12 +166,12 @@ Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phas
 | 8084 | Raw[0] | Raw TCP primary | unused (file) | migrate target | yes |
 | 8085 | Raw[1] | Raw TCP secondary | unused | legacy Raw[0] / Raw1 | yes |
 | **8086** | **Image[0]** | Full-rate Image TCP | **paths ready, WriteImg=0** | legacy often 8087 | yes |
-| 8087 | Image[1] | Second Image[] (optional integrated companion) | **deferred** (revisit after merge; no `img1Worker` yet) | optional Img1 | optional |
+| 8087 | Image[1] | Second Image[] (file or TCP companion) | **paths + UI** (`WriteImg1=0`); file-first; TCP needs reader (`img1Worker` deferred) | optional Img1 | optional |
 | **8088** | Preview[0] | Preview frame | **On** | optional | yes |
 | **8089** | Preview[1] | Preview integrated | **On** | often PrvImg | yes |
 | 8451 | — | Preview histogram | off | yes | TBD |
 
-**Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Do **not** add 8087 to `init_detector_img_mpx3.cmd` for thresholds — Preview **8089** already covers operator integrated view.
+**Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Image[1] defaults to **`file:/media/nvme/img1`** with `IntgSize=-1` / `last` (Preview-8089-like role on Serval); switch path to `tcp://listen@localhost:8087` and `Img1FileFmt=jsonimage` only when a TCP consumer exists.
 
 ## Full-rate Image mode (Phase A)
 
@@ -261,7 +261,7 @@ ls $(MPX3_HDF_PATH=/tmp/mpx3_hdf)
 
 **Soak ladder:** start with current Accos timing (0.5 s, 4 frames) → raise `NumImages` / shorten `AcquirePeriod` on emulator → hardware toward ~750 Hz (24-bit / dual) or ~2000 Hz (12-bit). Raise `FileHDFImgT*: queue` in `st_mpx3.cmd` if dropped frames. Keep **Pva7/Pva8** disabled at high rate (`init_detector_hdf5_img_mpx3.cmd` does this).
 
-**Deferred:** Image[1] TCP **8087** (Serval-side integrated companion) — revisit after areaDetector merge; needs `img1Worker` and a clear beamline need beyond Preview 8089.
+**Deferred:** Image[1] **`img1Worker`** (IOC TCP consumer for 8087). Config/UI for Image[1] is available (file or TCP path, `WriteImg1`); Serval file writes work without a worker. Do not enable TCP 8087 without a reader.
 
 ### Image mode phase status
 
