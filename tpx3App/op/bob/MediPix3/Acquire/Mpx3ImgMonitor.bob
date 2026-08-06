@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Mpx3ImgMonitor</name>
+  <width>980</width>
+  <height>720</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>Image[] monitor (LOW RATE ONLY) — Pva7/Pva8 · addr 1/13 · disable at high Hz</text>
+    <x>5</x>
+    <y>5</y>
+    <width>970</width>
+    <height>36</height>
+    <font>
+      <font family="Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="255" green="255" blue="255">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color red="140" green="40" blue="40">
+      </color>
+    </background_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Warn</name>
+    <text>Operator live view = Preview (PrvImg). Enable PVA below only for demux checks. HDF soak scripts disable these.</text>
+    <x>5</x>
+    <y>48</y>
+    <width>700</width>
+    <height>20</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="10.0">
+      </font>
+    </font>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Pva7Lbl</name>
+    <text>Pva7 Enable</text>
+    <x>720</x>
+    <y>50</y>
+    <width>70</width>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="bool_button" version="2.0.0">
+    <name>Pva7En</name>
+    <pv_name>$(P)Pva7:EnableCallbacks</pv_name>
+    <bit>-1</bit>
+    <x>795</x>
+    <y>45</y>
+    <width>60</width>
+    <height>24</height>
+    <off_label>Off</off_label>
+    <on_label>On</on_label>
+    <off_color>
+      <color red="0" green="100" blue="0">
+      </color>
+    </off_color>
+    <on_color>
+      <color red="255" green="180" blue="0">
+      </color>
+    </on_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Pva8Lbl</name>
+    <text>Pva8</text>
+    <x>865</x>
+    <y>50</y>
+    <width>40</width>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="bool_button" version="2.0.0">
+    <name>Pva8En</name>
+    <pv_name>$(P)Pva8:EnableCallbacks</pv_name>
+    <bit>-1</bit>
+    <x>910</x>
+    <y>45</y>
+    <width>60</width>
+    <height>24</height>
+    <off_label>Off</off_label>
+    <on_label>On</on_label>
+    <off_color>
+      <color red="0" green="100" blue="0">
+      </color>
+    </off_color>
+    <on_color>
+      <color red="255" green="180" blue="0">
+      </color>
+    </on_color>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>Status</name>
+    <y>75</y>
+    <width>970</width>
+    <height>70</height>
+    <widget type="led" version="2.0.0">
+      <name>WriteImgLED</name>
+      <pv_name>$(P)$(R)WriteImg_RBV</pv_name>
+      <x>15</x>
+      <y>20</y>
+      <width>22</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>WriteImgLbl</name>
+      <text>WriteImg</text>
+      <x>45</x>
+      <y>22</y>
+      <width>65</width>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgPath</name>
+      <pv_name>$(P)$(R)ImgFilePath_RBV</pv_name>
+      <x>115</x>
+      <y>18</y>
+      <width>400</width>
+      <height>24</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ThIdLbl</name>
+      <text>Img thresholdID</text>
+      <x>530</x>
+      <y>22</y>
+      <width>100</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgThId</name>
+      <pv_name>$(P)$(R)ImgThresholdID_RBV</pv_name>
+      <x>640</x>
+      <y>18</y>
+      <width>40</width>
+      <height>24</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>FrmLbl</name>
+      <text>frame#</text>
+      <x>695</x>
+      <y>22</y>
+      <width>50</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgFrm</name>
+      <pv_name>$(P)$(R)ImgFrameNumber_RBV</pv_name>
+      <x>750</x>
+      <y>18</y>
+      <width>60</width>
+      <height>24</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RateLbl</name>
+      <text>Hz</text>
+      <x>825</x>
+      <y>22</y>
+      <width>30</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgRate</name>
+      <pv_name>$(P)$(R)ImgAcqRate_RBV</pv_name>
+      <x>860</x>
+      <y>18</y>
+      <width>80</width>
+      <height>24</height>
+      <precision>1</precision>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>T0Title</name>
+    <text>T0 — $(P)Pva7:Image (addr 1)</text>
+    <x>20</x>
+    <y>155</y>
+    <width>450</width>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>T1Title</name>
+    <text>T1 — $(P)Pva8:Image (addr 13)</text>
+    <x>500</x>
+    <y>155</y>
+    <width>450</width>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_T0</name>
+    <pv_name>pva://$(P)Pva7:Image</pv_name>
+    <x>20</x>
+    <y>180</y>
+    <width>450</width>
+    <height>450</height>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y</title>
+      <minimum>512.0</minimum>
+      <maximum>0.0</maximum>
+    </y_axis>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+    <tooltip>Full-rate Image T0 — enable Pva7 only at low rate</tooltip>
+  </widget>
+  <widget type="image" version="2.0.0">
+    <name>Image_T1</name>
+    <pv_name>pva://$(P)Pva8:Image</pv_name>
+    <x>500</x>
+    <y>180</y>
+    <width>450</width>
+    <height>450</height>
+    <color_map>
+      <name>JET</name>
+    </color_map>
+    <x_axis>
+      <visible>true</visible>
+      <title>X</title>
+      <minimum>0.0</minimum>
+      <maximum>512.0</maximum>
+    </x_axis>
+    <y_axis>
+      <visible>true</visible>
+      <title>Y</title>
+      <minimum>512.0</minimum>
+      <maximum>0.0</maximum>
+    </y_axis>
+    <data_width>512</data_width>
+    <data_height>512</data_height>
+    <tooltip>Full-rate Image T1 — BothCounters; enable Pva8 only at low rate</tooltip>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Footer</name>
+    <text>Need archive? Use Dest → HDF Config (HDFImgT0/T1). Need live OP? Use PrvImg monitor.</text>
+    <x>20</x>
+    <y>645</y>
+    <width>900</width>
+    <height>20</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="10.0">
+      </font>
+    </font>
+  </widget>
+</display>

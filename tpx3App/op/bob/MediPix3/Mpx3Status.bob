@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3Status</name>
   <width>350</width>
-  <height>150</height>
+  <height>160</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -12,7 +12,7 @@
   <widget type="rectangle" version="2.0.0">
     <name>Border</name>
     <width>350</width>
-    <height>150</height>
+    <height>160</height>
     <line_width>1</line_width>
     <transparent>true</transparent>
   </widget>
@@ -140,6 +140,45 @@
     <x>45</x>
     <y>85</y>
     <width>65</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>ImgMonBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Image[] low-rate PVA monitor</description>
+        <file>Acquire/Mpx3ImgMonitor.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Img</text>
+    <x>120</x>
+    <y>110</y>
+    <width>70</width>
+    <height>20</height>
+    <background_color>
+      <color red="255" green="200" blue="100">
+      </color>
+    </background_color>
+    <tooltip>Pva7/Pva8 — low rate only</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>HdfBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>HDFImgT0/T1 configuration</description>
+        <file>Acquire/Mpx3HdfImgConfig.bob</file>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>HDF</text>
+    <x>205</x>
+    <y>110</y>
+    <width>80</width>
     <height>20</height>
     <background_color>
       <color red="115" green="223" blue="255">

@@ -853,10 +853,10 @@
     <height>210</height>
     <widget type="label" version="2.0.0">
       <name>HdfTitle</name>
-      <text>HDF5 soak for Image[0] demux (HDFImgT0 addr 1 / HDFImgT1 addr 13) — not HDF1</text>
+      <text>HDF5 / Image view — status strip (full config &amp; monitor open below)</text>
       <x>5</x>
       <y>4</y>
-      <width>700</width>
+      <width>650</width>
       <height>18</height>
       <font>
         <font family="Sans" style="BOLD" size="11.0">
@@ -867,61 +867,119 @@
         </color>
       </foreground_color>
     </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>HdfConfigBtn</name>
+      <actions>
+        <action type="open_display">
+          <description>HDFImgT0/T1 configuration</description>
+          <file>Mpx3HdfImgConfig.bob</file>
+          <target>tab</target>
+        </action>
+      </actions>
+      <text>HDF Config</text>
+      <x>700</x>
+      <y>2</y>
+      <width>95</width>
+      <height>24</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>Path, template, Capture, NumCaptured for HDFImgT0 and HDFImgT1</tooltip>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>ImgMonitorBtn</name>
+      <actions>
+        <action type="open_display">
+          <description>Low-rate Image PVA monitor</description>
+          <file>Mpx3ImgMonitor.bob</file>
+          <target>tab</target>
+        </action>
+      </actions>
+      <text>Img Monitor</text>
+      <x>805</x>
+      <y>2</y>
+      <width>100</width>
+      <height>24</height>
+      <background_color>
+        <color red="255" green="200" blue="100">
+        </color>
+      </background_color>
+      <tooltip>Pva7/Pva8 heatmaps — low rate / demux check only</tooltip>
+    </widget>
     <widget type="label" version="2.0.0">
       <name>HdfT0Lbl</name>
-      <text>T0 Enable / Captured</text>
+      <text>T0 En / Cap / Caught</text>
       <x>10</x>
-      <y>35</y>
-      <width>140</width>
+      <y>40</y>
+      <width>130</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT0En</name>
       <pv_name>$(P)HDFImgT0:EnableCallbacks_RBV</pv_name>
-      <x>160</x>
-      <y>33</y>
-      <width>70</width>
+      <x>150</x>
+      <y>38</y>
+      <width>60</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>HdfT0Cap</name>
+      <pv_name>$(P)HDFImgT0:Capture_RBV</pv_name>
+      <x>220</x>
+      <y>38</y>
+      <width>50</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT0Num</name>
       <pv_name>$(P)HDFImgT0:NumCaptured_RBV</pv_name>
-      <x>240</x>
-      <y>33</y>
-      <width>70</width>
+      <x>280</x>
+      <y>38</y>
+      <width>60</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HdfT1Lbl</name>
-      <text>T1 Enable / Captured</text>
-      <x>330</x>
-      <y>35</y>
-      <width>140</width>
+      <text>T1 En / Cap / Caught</text>
+      <x>360</x>
+      <y>40</y>
+      <width>130</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT1En</name>
       <pv_name>$(P)HDFImgT1:EnableCallbacks_RBV</pv_name>
-      <x>480</x>
-      <y>33</y>
-      <width>70</width>
+      <x>500</x>
+      <y>38</y>
+      <width>60</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>HdfT1Cap</name>
+      <pv_name>$(P)HDFImgT1:Capture_RBV</pv_name>
+      <x>570</x>
+      <y>38</y>
+      <width>50</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>HdfT1Num</name>
       <pv_name>$(P)HDFImgT1:NumCaptured_RBV</pv_name>
-      <x>560</x>
-      <y>33</y>
-      <width>70</width>
+      <x>630</x>
+      <y>38</y>
+      <width>60</width>
       <height>22</height>
     </widget>
     <widget type="label" version="2.0.0">
       <name>HdfPathLbl</name>
       <text>T0 path</text>
       <x>10</x>
-      <y>65</y>
+      <y>72</y>
       <width>70</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -929,7 +987,7 @@
       <name>HdfT0Path</name>
       <pv_name>$(P)HDFImgT0:FilePath_RBV</pv_name>
       <x>85</x>
-      <y>63</y>
+      <y>70</y>
       <width>400</width>
       <height>22</height>
       <format>6</format>
@@ -938,7 +996,7 @@
       <name>HdfTmplLbl</name>
       <text>T0 template</text>
       <x>500</x>
-      <y>65</y>
+      <y>72</y>
       <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
@@ -946,17 +1004,17 @@
       <name>HdfT0Tmpl</name>
       <pv_name>$(P)HDFImgT0:FileTemplate_RBV</pv_name>
       <x>585</x>
-      <y>63</y>
+      <y>70</y>
       <width>200</width>
       <height>22</height>
       <format>6</format>
     </widget>
     <widget type="label" version="2.0.0">
       <name>ScriptHint</name>
-      <text>Scripts: init_detector_img_mpx3.cmd · init_detector_hdf5_img_mpx3.cmd · _arm.cmd. Latch dims → arm Capture.</text>
+      <text>Open HDF Config for path/Capture edits, or use init_detector_hdf5_img_mpx3.cmd · _arm.cmd. Img Monitor = debug PVA only.</text>
       <x>10</x>
-      <y>100</y>
-      <width>900</width>
+      <y>105</y>
+      <width>980</width>
       <height>20</height>
       <font>
         <font family="Sans" style="REGULAR" size="10.0">

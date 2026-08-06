@@ -10,7 +10,7 @@
   <x>292</x>
   <y>47</y>
   <width>715</width>
-  <height>900</height>
+  <height>915</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -201,7 +201,7 @@
     <x>2</x>
     <y>745</y>
     <width>350</width>
-    <height>150</height>
+    <height>160</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <border_width>1</border_width>
