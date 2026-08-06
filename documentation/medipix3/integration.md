@@ -35,7 +35,7 @@ Medipix3 work is **additive**: one driver binary serves both families. After `GE
 | Phoebus | `TimePix3.bob`; legacy `op/opi/*.opi` (CSS) | `MediPix3/*.bob` |
 | NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva8; addrs **0**, **1**, **8**–**13** |
 
-MPX3-only ND plugins (`imageTh1`, `imageInt1`, band-pass on addr 11/12, etc.) are loaded only in **`st_mpx3.cmd`**, not in the default Timepix3 startup.
+MPX3-only ND plugins (`imageTh1`, `imageInt1`, band-pass on addr 9/12, etc.) are loaded only in **`st_mpx3.cmd`**, not in the default Timepix3 startup.
 
 ### Driver behaviour gated on family
 
@@ -91,7 +91,7 @@ Defaults (from `init_detector_mpx3.cmd`):
 - preview on TCP **8088** / **8089** (`PrvImgThs` / `PrvImg1Ths` **0,1**, jsonimage)
 - full-rate **Image[]** TCP **8086** configured but **`WriteImg=0`** (opt-in via `init_detector_img_mpx3.cmd`)
 - **`BothCounters=Yes`**, **`TriggerMode=AutoTrgSt_TmrSp` (4)**, **4 triggers**, **0.5 s** period (Erik Accos recipe)
-- `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **9**/**10**, PVA **Pva3**/**Pva4**
+- `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **10**/**11**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
 **Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: destination writer **`Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`: Img[0] 8086 + Img[1] file/8087 + HDFImgT0/T1 status); live preview images in `Acquire/Mpx3PrvImgMonitor.bob`; detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` / `ImgThs` / `Img1Ths` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
@@ -350,7 +350,7 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
-**EPICS:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2). Integrated preview on **8089** routes to addr **9** / **10** (Pva3 / Pva4) via **`prvImg1Worker`**. With **`BothCounters=Yes`**, the driver emits **T0−T1** on addr **11** / **12** (Pva5 / Pva6). **`PrvImgThreshDiffClip=Clip`** (default) applies **`max(0, diff)`** for IXS display; **Signed** mode keeps raw signed diff for pairing diagnostics. Full-rate **Image[]** TCP **8086** demuxes the same way to addr **1** / **13** (Pva7 / Pva8); running-sum accumulation uses **threshold 0 only**.
+**EPICS:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2) and emits **T0−T1** on addr **9** (Pva5). Integrated preview on **8089** routes to addr **10** / **11** (Pva3 / Pva4) via **`prvImg1Worker`**, with **T0−T1** on addr **12** (Pva6). **`PrvImgThreshDiffClip=Clip`** (default) applies **`max(0, diff)`** for IXS display; **Signed** mode keeps raw signed diff for pairing diagnostics. Full-rate **Image[]** TCP **8086** demuxes the same way to addr **1** / **13** (Pva7 / Pva8); running-sum accumulation uses **threshold 0 only**.
 
 ### BothCounters operational notes (2026-06)
 
@@ -361,11 +361,11 @@ Recommended checklist when enabling dual threshold:
 1. **DetConfig:** `BothCounters=Yes` (driver sets `PrvImgThs` to `0,1`; run **WriteData** to push destination).
 2. **TriggerMode** not Continuous (4 or 6).
 3. **AcquirePeriod** long enough for dual-counter readout — Erik’s Accos reference uses **0.5 s**; shorter periods may log `Dropping frame … missing UDP packet(s) … (2/4)`.
-4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`; band-pass **Pva5** / **Pva6** (addr 11/12) with **`PrvImgThreshDiffClip`** as needed.
+4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`; band-pass **Pva5** / **Pva6** (addr 9/12) with **`PrvImgThreshDiffClip`** as needed.
 
 UDP `(2/4)` drops and a **horizontal split at y=256** in the image mean half the chip UDP packets did not arrive before Serval assembled the frame — usually trigger rate or hardware/emulator limits, not EPICS preview TCP.
 
-Each jsonimage line on the wire is: JSON header + binary pixel array. The driver parses header fields and demuxes by **`thresholdID`**: frame preview on **8088** → addr 0/8; integrated preview on **8089** → addr 9/10.
+Each jsonimage line on the wire is: JSON header + binary pixel array. The driver parses header fields and demuxes by **`thresholdID`**: frame preview on **8088** → addr 0/8 (band 9); integrated preview on **8089** → addr 10/11 (band 12).
 
 ### MPX3 detector fields not in Serval manual §4
 

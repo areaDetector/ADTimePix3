@@ -9,7 +9,7 @@
     <height>1350</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
-      <text>Medipix3 Preview — thresholds + T0−T1 band (addr 11/12, PrvImgThreshDiffClip)</text>
+      <text>Medipix3 Preview — thresholds + T0−T1 band (addr 9/12, PrvImgThreshDiffClip)</text>
       <x>10</x>
       <y>10</y>
       <width>1380</width>
@@ -234,7 +234,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>FrameBandTitle</name>
-      <text>T0−T1 band — PVA $(P)Pva5:Image (addr 11)</text>
+      <text>T0−T1 band — PVA $(P)Pva5:Image (addr 9)</text>
       <x>920</x>
       <y>225</y>
       <width>440</width>
@@ -338,14 +338,14 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>IntegTh0Title</name>
-      <text>T0 — PVA $(P)Pva3:Image (addr 9)</text>
+      <text>T0 — PVA $(P)Pva3:Image (addr 10)</text>
       <x>20</x>
       <y>730</y>
       <width>440</width>
     </widget>
     <widget type="label" version="2.0.0">
       <name>IntegTh1Title</name>
-      <text>T1 — PVA $(P)Pva4:Image (addr 10)</text>
+      <text>T1 — PVA $(P)Pva4:Image (addr 11)</text>
       <x>470</x>
       <y>730</y>
       <width>440</width>

@@ -258,7 +258,7 @@
 #define ADTimePixPrvImgThresholdIDString        "TPX3_PRVIMG_THRESHOLD_ID"  // (asynInt32,         r)      thresholdID from jsonimage header
 #define ADTimePixPrvImgIntegrationSizeString  "TPX3_PRVIMG_INTEGRATION_SIZE" // (asynInt32,      r)      integrationSize from jsonimage header
 #define ADTimePixPrvImgLogHeadersString         "TPX3_PRVIMG_LOG_HEADERS"   // (asynInt32,         r/w)    Log N jsonimage headers per acquire (0=off)
-#define ADTimePixPrvImgThreshDiffClipString     "TPX3_PRVIMG_THRESH_DIFF_CLIP" // (asynInt32,      r/w)    Clip T0-T1 band on addrs 11/12 to max(0,diff)
+#define ADTimePixPrvImgThreshDiffClipString     "TPX3_PRVIMG_THRESH_DIFF_CLIP" // (asynInt32,      r/w)    Clip T0-T1 band on addrs 9/12 to max(0,diff)
     // Img TCP streaming metadata (from jsonimage header)
 #define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixImgThresholdIDString           "TPX3_IMG_THRESHOLD_ID"     // (asynInt32,         r)      thresholdID from Image jsonimage header
@@ -835,17 +835,17 @@ class ADTimePix : public ADDriver{
         static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
         /** Remaining jsonimage headers to log this acquire (from TPX3_PRVIMG_LOG_HEADERS). */
         int prvImgJsonHeadersRemaining_;
-        /** NDArray address for PrvImg threshold 0 preview (default stream). */
+        /** NDArray address for PrvImg threshold 0 preview (default stream, TCP 8088). */
         static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD0 = 0;
-        /** NDArray address for PrvImg threshold 1 preview (MPX3 dual threshold). */
+        /** NDArray address for PrvImg threshold 1 preview (MPX3 dual threshold, TCP 8088). */
         static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD1 = 8;
+        /** NDArray address for PrvImg frame band-pass T0−T1 (TCP 8088). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF = 9;
         /** NDArray address for PrvImg1 integrated preview threshold 0 (TCP 8089). */
-        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD0 = 9;
-        /** NDArray address for PrvImg1 integrated preview threshold 1. */
-        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD1 = 10;
-        /** NDArray address for PrvImg frame band-pass (threshold 0 minus threshold 1). */
-        static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF = 11;
-        /** NDArray address for PrvImg1 integrated band-pass (T0 minus T1). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD0 = 10;
+        /** NDArray address for PrvImg1 integrated preview threshold 1 (TCP 8089). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD1 = 11;
+        /** NDArray address for PrvImg1 integrated band-pass T0−T1 (TCP 8089). */
         static constexpr int NDARRAY_ADDR_PRVIMG1_THRESH_DIFF = 12;
         /** NDArray address for full-rate Image[] threshold 0 (Img TCP; TPX3 default). */
         static constexpr int NDARRAY_ADDR_IMG_THRESHOLD0 = 1;

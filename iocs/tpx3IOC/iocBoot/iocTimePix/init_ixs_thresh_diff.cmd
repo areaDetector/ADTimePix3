@@ -1,5 +1,5 @@
 # IXS dual-threshold band-pass (T0 - T1) — legacy NDPluginProcess init.
-# Prefer driver NDArray addr 11/12 (wired in st_mpx3.cmd); use this only with the
+# Prefer driver NDArray addr 9/12 (wired in st_mpx3.cmd); use this only with the
 # commented plugin block in st_mpx3.cmd (not together with driver Pva5/Pva6).
 
 epicsThreadSleep(1)

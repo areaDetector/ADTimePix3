@@ -745,7 +745,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>LogHdrNote</name>
-      <text>NDArray addr 0 (Pva1). threshold 1 → addr 8 (Pva2) when BothCounters=Yes.</text>
+      <text>NDArray addr 0 (Pva1). threshold 1 → addr 8 (Pva2); T0−T1 band → addr 9 (Pva5).</text>
       <x>5</x>
       <y>372</y>
       <width>520</width>
@@ -1072,7 +1072,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>PrvImg1Note2</name>
-      <text>NDArray addr 9 (Pva3). threshold 1 → addr 10 (Pva4). IntgMode=last matches Erik Accos recipe.</text>
+      <text>NDArray addr 10 (Pva3). threshold 1 → addr 11 (Pva4); T0−T1 band → addr 12 (Pva6). IntgMode=last matches Erik Accos recipe.</text>
       <x>5</x>
       <y>322</y>
       <width>540</width>

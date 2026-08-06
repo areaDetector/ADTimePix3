@@ -1,6 +1,7 @@
 # Medipix3 preview and dual-threshold delivery (vendor notes)
 
-**Status:** Phases 0–4 complete (2026-06) — Erik confirmed Accos behaviour; driver demux, integrated preview (`prvImg1Worker`), IXS band-pass (addr 11/12), and Phoebus (2×3 `Mpx3PrvImgMonitor`, health/voltages cross-links) validated on emulator.  
+**Status:** Phases 0–4 complete (2026-06) — Erik confirmed Accos behaviour; driver demux, integrated preview (`prvImg1Worker`), IXS band-pass (addr 9/12), and Phoebus (2×3 `Mpx3PrvImgMonitor`, health/voltages cross-links) validated on emulator.  
+**Address map (2026-08):** TCP **8088** → NDArray **0 / 8 / 9** (T0 / T1 / band); TCP **8089** → **10 / 11 / 12**; Image **1 / 13** unchanged.  
 **Related:** [integration.md](integration.md) (MPX3 IOC profile — dual preview TCP 8088/8089, dual-threshold demux, and Erik’s test recipes).
 
 This note captures correspondence with ASI on how Serval delivers Medipix3 preview and threshold images, and tracks EPICS driver work against the Accos reference client.
@@ -71,10 +72,10 @@ Same **channel schema** and **`jsonimage` wire format**; **not equivalent** in S
 |------|--------|
 | jsonimage parser | Parses **`thresholdID`**, `integrationSize`, `frameNumber`, dimensions, etc. |
 | NDArray routing | **`thresholdID=0` → addr 0** (Pva1); **`thresholdID=1` → addr 8** (Pva2) |
-| IXS band-pass | **`T0−T1` or `max(0,T0−T1)` on addr 11/12** (Pva5/Pva6) when **`BothCounters=Yes`**; mode from **`PrvImgThreshDiffClip`** (default Clip) |
+| IXS band-pass | **`T0−T1` or `max(0,T0−T1)` on addr 9/12** (Pva5/Pva6) when **`BothCounters=Yes`**; mode from **`PrvImgThreshDiffClip`** (default Clip) |
 | NDAttributes | **`ThresholdID`** on each array; **`PrvImgThresholdID_RBV`** |
 | Detector config | **`BothCounters`** read/write; trigger guardrails (no Continuous + BothCounters) |
-| Second preview TCP | **`prvImg1WorkerThread`** — NDArray addr **9** / **10**, PVA **Pva3** / **Pva4** |
+| Second preview TCP | **`prvImg1WorkerThread`** — NDArray addr **10** / **11**, PVA **Pva3** / **Pva4** |
 | IOC / PVA | **`NDStdArrays` + Pva2** on address 8 when dual threshold enabled |
 
 Code references: `processPrvImgDataLine()` in `tpx3App/src/serval_stream.cpp`; destination push in `configureImageChannel()` in `tpx3App/src/serval_http.cpp`.
@@ -124,8 +125,8 @@ Accos reference (Erik, 2026-06-12): one loop reads jsonimage from the preview so
 
 ### Phase 4 — Driver threshold band-pass (IXS / ID10-style)
 
-- [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** **T0−T1** on NDArray addr **11** (frame) and **12** (integrated).
-- [x] **`PrvImgThreshDiffClip`**: **Clip** (default) → **`max(0, T0−T1)`** on addrs 11/12; **Signed** → raw signed diff for pairing diagnostics.
+- [x] After each paired **T1→T0** jsonimage on PrvImg / PrvImg1, emit **`NDInt32`** **T0−T1** on NDArray addr **9** (frame) and **12** (integrated).
+- [x] **`PrvImgThreshDiffClip`**: **Clip** (default) → **`max(0, T0−T1)`** on addrs 9/12; **Signed** → raw signed diff for pairing diagnostics.
 - [x] Gated on **`BothCounters=Yes`**; pairs T1→T0 per trigger (warns on `frameNumber` mismatch, pairs by order).
 - [x] MPX3 IOC: **`imageDiff1`** / **`imageIntDiff1`** + **Pva5** / **Pva6** only (no separate clip addrs).
 - [x] Phoebus 2×3 layout on `Mpx3PrvImgMonitor.bob` (frame row + integrated row; band T0−T1 in col 3, Pva5/Pva6 + **PrvImgThreshDiffClip**).

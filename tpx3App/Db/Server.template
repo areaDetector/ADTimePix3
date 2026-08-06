@@ -1285,7 +1285,7 @@ record(longout, "$(P)$(R)PrvImgLogHeaders")
 
 record(bo, "$(P)$(R)PrvImgThreshDiffClip")
 {
-    field(DESC, "Clip T0-T1 band addr 11/12")
+    field(DESC, "Clip T0-T1 band addr 9/12")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESH_DIFF_CLIP")
     field(ZNAM, "Signed")
@@ -1296,7 +1296,7 @@ record(bo, "$(P)$(R)PrvImgThreshDiffClip")
 }
 record(bi, "$(P)$(R)PrvImgThreshDiffClip_RBV")
 {
-    field(DESC, "T0-T1 band clip mode addr 11/12")
+    field(DESC, "T0-T1 band clip mode addr 9/12")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESH_DIFF_CLIP")
     field(ZNAM, "Signed")
