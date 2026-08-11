@@ -141,6 +141,57 @@ bool NetworkClient::connect(const std::string& host, int port) {
     return true;
 }
 
+namespace {
+
+bool resolveHostIpv4(const std::string& host, struct in_addr& out) {
+    if (inet_pton(AF_INET, host.c_str(), &out) > 0) {
+        return true;
+    }
+
+    struct addrinfo hints{};
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    char port_str[] = "0";
+    struct addrinfo* result = nullptr;
+    const int err = getaddrinfo(host.c_str(), port_str, &hints, &result);
+    if (err != 0 || result == nullptr) {
+        return false;
+    }
+
+    const auto* addr_in = reinterpret_cast<struct sockaddr_in*>(result->ai_addr);
+    out = addr_in->sin_addr;
+    freeaddrinfo(result);
+    return true;
+}
+
+}  // namespace
+
+bool NetworkClient::isTcpPortInUse(const std::string& host, int port) {
+    struct in_addr bind_addr{};
+    if (!resolveHostIpv4(host, bind_addr)) {
+        return false;
+    }
+
+    const int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        return false;
+    }
+
+    int reuse = 1;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+
+    struct sockaddr_in sa{};
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(static_cast<uint16_t>(port));
+    sa.sin_addr = bind_addr;
+
+    const bool in_use = (bind(fd, reinterpret_cast<struct sockaddr*>(&sa), sizeof(sa)) != 0 &&
+                         errno == EADDRINUSE);
+    ::close(fd);
+    return in_use;
+}
+
 void NetworkClient::disconnect() {
     if (socket_fd_ >= 0) {
         ::close(socket_fd_);

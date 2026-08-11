@@ -39,6 +39,12 @@ public:
     bool connect(const std::string& host, int port);
 
     /**
+     * @brief True if host:port already has a local TCP listener (port not bindable).
+     * Uses bind(), not connect(), so a free port does not log spurious errors.
+     */
+    static bool isTcpPortInUse(const std::string& host, int port);
+
+    /**
      * @brief Disconnect from server
      */
     void disconnect();

@@ -18,8 +18,8 @@
 
 // version numbers
 #define ADTIMEPIX_VERSION      1
-#define ADTIMEPIX_REVISION     6
-#define ADTIMEPIX_MODIFICATION 4
+#define ADTIMEPIX_REVISION     7
+#define ADTIMEPIX_MODIFICATION 0
 
 
 #include "ADDriver.h"
@@ -41,6 +41,7 @@
 #include "img_accumulation.h"
 #include "histogram_io.h"
 #include "network_client.h"
+#include "detector_family.h"
 
 // Driver-specific PV string definitions here
 /*                                         String                        asyn interface         access  Description  */
@@ -76,6 +77,23 @@
 #define ADTimePixNumberOfChipsString        "TPX3_NUM_CHIPS"        // (asynInt32,         r)      NumberOfChip
 #define ADTimePixNumberOfRowsString         "TPX3_NUM_ROWS"         // (asynInt32,         r)      NumberOfRows
 #define ADTimePixMpxTypeString              "TPX3_MPX_TYPE"         // (asynInt32,         r)      MpxType
+#define ADTimePixChipTypeString             "TPX3_CHIP_TYPE"        // (asynOctet,         r)      ChipType (MPX3, TPX3)
+#define ADTimePixDetectorFamilyString       "TPX3_DETECTOR_FAMILY"  // (asynInt32,         r)      0=Unknown, 1=TPX3, 2=MPX3
+#define ADTimePixCapTdcString               "TPX3_CAP_TDC"          // (asynInt32,         r)      TDC / ToF hardware supported
+#define ADTimePixCapTofHistString           "TPX3_CAP_TOF_HIST"     // (asynInt32,         r)      ToF histogram stream supported
+#define ADTimePixCapDualPreviewString       "TPX3_CAP_DUAL_PREVIEW" // (asynInt32,         r)      Two preview image layers
+#define ADTimePixCapImgThresholdsString     "TPX3_CAP_IMG_THRESHOLDS" // (asynInt32,       r)      Image Thresholds[] in Serval config
+#define ADTimePixBothCountersString         "TPX3_BOTH_COUNTERS"      // (asynInt32,       r/w)    Detector Config BothCounters (MPX3 dual threshold)
+#define ADTimePixGainModeString             "TPX3_GAIN_MODE"          // (asynOctet,       r/w)    MPX3 Config GainMode
+#define ADTimePixChargeSummingString        "TPX3_CHARGE_SUMMING"     // (asynInt32,       r/w)    MPX3 Config ChargeSumming
+#define ADTimePixColourString               "TPX3_COLOUR"             // (asynInt32,       r/w)    MPX3 Config Colour
+#define ADTimePixPixelDepthString           "TPX3_PIXEL_DEPTH"        // (asynInt32,       r/w)    MPX3 Config PixelDepth
+#define ADTimePixCounterSelectInString      "TPX3_COUNTER_SELECT_IN"  // (asynInt32,       r/w)    MPX3 Config CounterSelectIn
+#define ADTimePixCounterSelectOutString     "TPX3_COUNTER_SELECT_OUT" // (asynInt32,       r/w)    MPX3 Config CounterSelectOut
+#define ADTimePixIDelay0String              "TPX3_IDELAY0"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[0]
+#define ADTimePixIDelay1String              "TPX3_IDELAY1"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[1]
+#define ADTimePixIDelay2String              "TPX3_IDELAY2"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[2]
+#define ADTimePixIDelay3String              "TPX3_IDELAY3"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[3]
 
 #define ADTimePixBoardsIDString             "TPX3_BOARDS_ID"        // (asynOctet,         r)      Boards->ChipboardId
 #define ADTimePixBoardsIPString             "TPX3_BOARDS_IP"        // (asynOctet,         r)      Boards->IpAddress
@@ -237,8 +255,13 @@
 #define ADTimePixPrvImgFrameNumberString        "TPX3_PRVIMG_FRAME_NUMBER"  // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixPrvImgTimeAtFrameString        "TPX3_PRVIMG_TIME_AT_FRAME" // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
 #define ADTimePixPrvImgAcqRateString            "TPX3_PRVIMG_ACQ_RATE"      // (asynFloat64,       r)      Calculated acquisition rate (fps)
+#define ADTimePixPrvImgThresholdIDString        "TPX3_PRVIMG_THRESHOLD_ID"  // (asynInt32,         r)      thresholdID from jsonimage header
+#define ADTimePixPrvImgIntegrationSizeString  "TPX3_PRVIMG_INTEGRATION_SIZE" // (asynInt32,      r)      integrationSize from jsonimage header
+#define ADTimePixPrvImgLogHeadersString         "TPX3_PRVIMG_LOG_HEADERS"   // (asynInt32,         r/w)    Log N jsonimage headers per acquire (0=off)
+#define ADTimePixPrvImgThreshDiffClipString     "TPX3_PRVIMG_THRESH_DIFF_CLIP" // (asynInt32,      r/w)    Clip T0-T1 band on addrs 9/12 to max(0,diff)
     // Img TCP streaming metadata (from jsonimage header)
 #define ADTimePixImgFrameNumberString           "TPX3_IMG_FRAME_NUMBER"     // (asynInt32,         r)      Frame number from jsonimage
+#define ADTimePixImgThresholdIDString           "TPX3_IMG_THRESHOLD_ID"     // (asynInt32,         r)      thresholdID from Image jsonimage header
 #define ADTimePixImgTimeAtFrameString           "TPX3_IMG_TIME_AT_FRAME"    // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
 #define ADTimePixImgAcqRateString               "TPX3_IMG_ACQ_RATE"         // (asynFloat64,       r)      Calculated acquisition rate (fps)
     // Img channel accumulation and display data
@@ -445,7 +468,24 @@ class ADTimePix : public ADDriver{
         int ADTimePixNumberOfChips;        
         int ADTimePixNumberOfRows;         
         int ADTimePixMpxType;
-        
+        int ADTimePixChipType;
+        int ADTimePixDetectorFamily;
+        int ADTimePixCapTdc;
+        int ADTimePixCapTofHist;
+        int ADTimePixCapDualPreview;
+        int ADTimePixCapImgThresholds;
+        int ADTimePixBothCounters;
+        int ADTimePixGainMode;
+        int ADTimePixChargeSumming;
+        int ADTimePixColour;
+        int ADTimePixPixelDepth;
+        int ADTimePixCounterSelectIn;
+        int ADTimePixCounterSelectOut;
+        int ADTimePixIDelay0;
+        int ADTimePixIDelay1;
+        int ADTimePixIDelay2;
+        int ADTimePixIDelay3;
+
         int ADTimePixBoardsID;             
         int ADTimePixBoardsIP;
         int ADTimePixBoardsCh1;            
@@ -606,8 +646,12 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvImgFrameNumber;
         int ADTimePixPrvImgTimeAtFrame;
         int ADTimePixPrvImgAcqRate;
-        // Img TCP streaming metadata
+        int ADTimePixPrvImgThresholdID;
+        int ADTimePixPrvImgIntegrationSize;
+        int ADTimePixPrvImgLogHeaders;
+        int ADTimePixPrvImgThreshDiffClip;
         int ADTimePixImgFrameNumber;
+        int ADTimePixImgThresholdID;
         int ADTimePixImgTimeAtFrame;
         int ADTimePixImgAcqRate;
         // Img channel accumulation and display data
@@ -728,6 +772,11 @@ class ADTimePix : public ADDriver{
 
         asynStatus getMeasurementConfig();
         asynStatus sendMeasurementConfig();
+        void updateDetectorFamily(int mpxType, const std::string& chipType, const std::string& chipboardId);
+        void applyFamilyDefaults(DetectorFamily family);
+        /** MPX3: BothCounters=true is incompatible with TriggerMode index 5 (CONTINUOUS). */
+        bool mpx3BothCountersTriggerConflict(int triggerMode) const;
+        static const char kMpx3BothCountersTriggerMsg[];
         /** Push processed Img (running sum and sum-of-N) as NDArrays to addresses 2 and 3 for file plugins. */
         void pushProcessedImgToPlugins();
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */
@@ -750,6 +799,9 @@ class ADTimePix : public ADDriver{
         std::string serverURL;
         /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). When set, asyn performs teardown on IOC exit. */
         int asynFlags_;
+        DetectorFamily detectorFamily_;
+        DetectorCapabilities detectorCapabilities_;
+        bool detectorFamilyApplied_;
         // GraphicsMagick Image member removed - TCP streaming used instead
 
         bool acquiring=false;
@@ -776,8 +828,55 @@ class ADTimePix : public ADDriver{
         std::deque<double> prvImgRateSamples_;
         double prvImgLastRateUpdateTime_;
         bool prvImgFirstFrameReceived_;
+        bool prvImgT1ReadyForDiff_;
+        bool prvImgT0OrphanForDiff_;
+        int prvImgLastSeenFrameForPair_;
+        int prvImgLastDiffT0Frame_;
         static constexpr size_t PRVIMG_MAX_RATE_SAMPLES = 10;
-        
+        /** Remaining jsonimage headers to log this acquire (from TPX3_PRVIMG_LOG_HEADERS). */
+        int prvImgJsonHeadersRemaining_;
+        /** NDArray address for PrvImg threshold 0 preview (default stream, TCP 8088). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD0 = 0;
+        /** NDArray address for PrvImg threshold 1 preview (MPX3 dual threshold, TCP 8088). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESHOLD1 = 8;
+        /** NDArray address for PrvImg frame band-pass T0−T1 (TCP 8088). */
+        static constexpr int NDARRAY_ADDR_PRVIMG_THRESH_DIFF = 9;
+        /** NDArray address for PrvImg1 integrated preview threshold 0 (TCP 8089). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD0 = 10;
+        /** NDArray address for PrvImg1 integrated preview threshold 1 (TCP 8089). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESHOLD1 = 11;
+        /** NDArray address for PrvImg1 integrated band-pass T0−T1 (TCP 8089). */
+        static constexpr int NDARRAY_ADDR_PRVIMG1_THRESH_DIFF = 12;
+        /** NDArray address for full-rate Image[] threshold 0 (Img TCP; TPX3 default). */
+        static constexpr int NDARRAY_ADDR_IMG_THRESHOLD0 = 1;
+        /** NDArray address for full-rate Image[] threshold 1 (MPX3 BothCounters demux). */
+        static constexpr int NDARRAY_ADDR_IMG_THRESHOLD1 = 13;
+        /** Number of NDArray callback addresses (0..NDARRAY_MAX_ADDR-1). */
+        static constexpr int NDARRAY_MAX_ADDR = 14;
+
+        // TCP streaming for PrvImg1 channel (integrated preview)
+        std::unique_ptr<NetworkClient> prvImg1NetworkClient_;
+        std::string prvImg1Host_;
+        int prvImg1Port_;
+        bool prvImg1Connected_;
+        bool prvImg1Running_;
+        epicsThreadId prvImg1WorkerThreadId_ = nullptr;
+        epicsMutexId prvImg1Mutex_;
+        std::vector<char> prvImg1LineBuffer_;
+        size_t prvImg1TotalRead_;
+        int prvImg1Format_;
+        int prvImg1PreviousFrameNumber_;
+        double prvImg1PreviousTimeAtFrame_;
+        double prvImg1AcquisitionRate_;
+        std::deque<double> prvImg1RateSamples_;
+        double prvImg1LastRateUpdateTime_;
+        bool prvImg1FirstFrameReceived_;
+        bool prvImg1T1ReadyForDiff_;
+        bool prvImg1T0OrphanForDiff_;
+        int prvImg1LastSeenFrameForPair_;
+        int prvImg1LastDiffT0Frame_;
+        int prvImg1JsonHeadersRemaining_;
+
         // TCP streaming for Img channel
         std::unique_ptr<NetworkClient> imgNetworkClient_;
         std::string imgHost_;
@@ -915,6 +1014,9 @@ class ADTimePix : public ADDriver{
 
         //function that starts image acquisition
         asynStatus acquireStart();
+        asynStatus ensurePreviewTcpPortsFree(bool forceRotate = false);
+        /** Re-parse PrvImg/Img TCP path PVs into host/port used by worker threads. */
+        void syncTcpStreamEndpoints();
 
         //function that stops image acquisition
         asynStatus acquireStop();
@@ -957,7 +1059,29 @@ class ADTimePix : public ADDriver{
         static void prvImgWorkerThreadC(void *pPvt);
         void prvImgConnect();
         void prvImgDisconnect();
+
+        bool processPrvImg1DataLine(char* line_buffer, char* newline_pos, size_t total_read);
+        void prvImg1WorkerThread();
+        static void prvImg1WorkerThreadC(void *pPvt);
+        void prvImg1Connect();
+        void prvImg1Disconnect();
+
+        struct PreviewJsonimageStream;
         bool parseTcpPath(const std::string& filePath, std::string& host, int& port);
+        bool processPreviewJsonimageLine(const PreviewJsonimageStream& stream,
+                                         char* line_buffer, char* newline_pos, size_t total_read);
+        void emitPreviewThresholdDiff(int addrT0, int addrT1, int addrDiff,
+                                      int frame_number, const char* logTag,
+                                      int& lastDiffT0Frame);
+        void releasePreviewBandArrays();
+        void runPreviewTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
+                                 std::string& host, int& port,
+                                 std::unique_ptr<NetworkClient>& networkClient,
+                                 std::vector<char>& lineBuffer, size_t& totalRead,
+                                 void (ADTimePix::*connectFn)(),
+                                 void (ADTimePix::*disconnectFn)(),
+                                 bool (ADTimePix::*processLineFn)(char*, char*, size_t),
+                                 const char* logTag);
         
         // TCP streaming methods for Img channel
         bool processImgDataLine(char* line_buffer, char* newline_pos, size_t total_read);

@@ -306,8 +306,31 @@ asynStatus ADTimePix::checkPrvImgPath()
 
 asynStatus ADTimePix::checkPrvImg1Path()
 {
-    return checkChannelPath(ADTimePixPrvImg1Base, -1, ADTimePixPrvImg1FilePathExists,
-                          "PrvImg1", "PrvImg1 file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://localhost:8085");
+    asynStatus status = checkChannelPath(ADTimePixPrvImg1Base, -1, ADTimePixPrvImg1FilePathExists,
+                          "PrvImg1", "PrvImg1 file path must be file:/path_to_img_folder, http://localhost:8081, or tcp://listen@hostname:port");
+
+    if (status == asynSuccess) {
+        std::string filePath;
+        getStringParam(ADTimePixPrvImg1Base, filePath);
+        if (filePath.find("tcp://") == 0) {
+            std::string host;
+            int port;
+            if (parseTcpPath(filePath, host, port)) {
+                epicsMutexLock(prvImg1Mutex_);
+                prvImg1Host_ = host;
+                prvImg1Port_ = port;
+                getIntegerParam(ADTimePixPrvImg1Format, &prvImg1Format_);
+                epicsMutexUnlock(prvImg1Mutex_);
+                LOG_ARGS("Parsed PrvImg1 TCP path: host=%s, port=%d", host.c_str(), port);
+            } else {
+                ERR_ARGS("Failed to parse PrvImg1 TCP path: %s", filePath.c_str());
+                setIntegerParam(ADTimePixPrvImg1FilePathExists, 0);
+                return asynError;
+            }
+        }
+    }
+
+    return status;
 }
 
 asynStatus ADTimePix::checkPrvHstPath() // file:/, http://, tcp:// format
@@ -343,8 +366,24 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
     status = parseAsynUser(pasynUser, &function, &addr, &paramName);
     if (status != asynSuccess) return status;
 
+    const bool isThresholdList = (function == ADTimePixImgThs || function == ADTimePixImg1Ths ||
+                                  function == ADTimePixPrvImgThs || function == ADTimePixPrvImg1Ths);
+    std::string octetValue(value, nChars);
+    const auto nullPos = octetValue.find('\0');
+    if (nullPos != std::string::npos) {
+        octetValue.resize(nullPos);
+    }
+    if (isThresholdList) {
+        const auto first = octetValue.find_first_not_of(" \t");
+        if (first == std::string::npos) {
+            LOG_ARGS("Ignoring empty threshold list write for paramName=%s", paramName);
+            *nActual = nChars;
+            return asynSuccess;
+        }
+    }
+
     /* Set the parameter in the parameter library. */
-    status = (asynStatus)setStringParam(addr, function, (char *)value);
+    status = (asynStatus)setStringParam(addr, function, octetValue.c_str());
 
     if (function == ADTimePixBPCFilePath)  {
         status = this->checkBPCPath();        
@@ -366,6 +405,8 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
         status = this->checkPrvHstPath();
     } else if (function == ADTimePixTofTdcReference) {
         status = this->sendMeasurementConfig();
+    } else if (function == ADTimePixGainMode && detectorFamily_ == DetectorFamily::MPX3) {
+        status = initAcquisition();
     }
      /* Do callbacks so higher layers see any changes */
     status = (asynStatus)callParamCallbacks(addr, addr);
@@ -511,12 +552,42 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixBiasVolt || function == ADTimePixBiasEnable || function == ADTimePixTriggerIn || function == ADTimePixTriggerOut || function == ADTimePixLogLevel \
-                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode) {  // set and enable bias, log level
+                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode \
+                || function == ADTimePixPolarity || function == ADTimePixChargeSumming || function == ADTimePixColour \
+                || function == ADTimePixPixelDepth || function == ADTimePixCounterSelectIn || function == ADTimePixCounterSelectOut \
+                || function == ADTimePixIDelay0 || function == ADTimePixIDelay1 || function == ADTimePixIDelay2 || function == ADTimePixIDelay3) {
         status = initAcquisition();
-    }    
+    }
 
-    else if(function == ADNumImages || function == ADTriggerMode) { 
-        if(function == ADNumImages) {
+    else if(function == ADTimePixBothCounters) {
+        if (value != 0) {
+            int triggerMode = 0;
+            getIntegerParam(ADTriggerMode, &triggerMode);
+            if (mpx3BothCountersTriggerConflict(triggerMode)) {
+                LOG("MPX3 BothCounters: auto-switching TriggerMode 5 (CONTINUOUS) -> 4 (AUTOTRIGSTART_TIMERSTOP)");
+                setIntegerParam(ADTriggerMode, 4);
+                callParamCallbacks(ADTriggerMode);
+            }
+            setStringParam(ADTimePixPrvImgThs, "0,1");
+            setStringParam(ADTimePixPrvImg1Ths, "0,1");
+            setStringParam(ADTimePixImgThs, "0,1");
+            setStringParam(ADTimePixImg1Ths, "0,1");
+            callParamCallbacks(ADTimePixPrvImgThs);
+            callParamCallbacks(ADTimePixPrvImg1Ths);
+            callParamCallbacks(ADTimePixImgThs);
+            callParamCallbacks(ADTimePixImg1Ths);
+        }
+        status = initAcquisition();
+    }
+
+    else if(function == ADNumImages || function == ADTriggerMode) {
+        if(function == ADTriggerMode && mpx3BothCountersTriggerConflict(value)) {
+            LOG_ARGS("%s", kMpx3BothCountersTriggerMsg);
+            setIntegerParam(ADTriggerMode, 4);
+            setStringParam(ADStatusMessage, kMpx3BothCountersTriggerMsg);
+            callParamCallbacks(ADTriggerMode);
+        }
+        else if(function == ADNumImages) {
             int imageMode;
             getIntegerParam(ADImageMode,&imageMode);
             if (imageMode == 0 && value != 1) {
@@ -1066,10 +1137,12 @@ void ADTimePix::resetPrvHstAccumulation() {
 // ADTimePix Constructor/Destructor
 //----------------------------------------------------------------------------
 
-/* maxAddr=8: eight asyn addr lists, indices 0..7 — PrvImg=0, Img=1, Img sum=2, Img sumN=3,
- * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF bin centers (ms)=7 */
+/* maxAddr=14: asyn addr lists 0..13 — PrvImg thresh0=0, Img thresh0=1, Img sum=2, Img sumN=3,
+ * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF=7, PrvImg thresh1=8,
+ * PrvImg T0-T1 band=9 (8088), PrvImg1 integrated thresh0=10 / thresh1=11 / T0-T1 band=12 (8089;
+ * clip via PrvImgThreshDiffClip), Img thresh1=13 (MPX3 BothCounters full-rate demux) */
 ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
-    : ADDriver(portName, 8, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+    : ADDriver(portName, NDARRAY_MAX_ADDR, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         ASYN_MULTIDEVICE | ASYN_CANBLOCK | asynFlags,
@@ -1078,6 +1151,9 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
         stackSize),
       pixelConfigDiffMutex_(NULL),
       asynFlags_(asynFlags),
+      detectorFamily_(DetectorFamily::Unknown),
+      detectorCapabilities_(),
+      detectorFamilyApplied_(false),
       imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
 
@@ -1135,6 +1211,23 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixNumberOfChipsString,   asynParamInt32, &ADTimePixNumberOfChips);
     createParam(ADTimePixNumberOfRowsString,    asynParamInt32, &ADTimePixNumberOfRows);
     createParam(ADTimePixMpxTypeString,         asynParamInt32, &ADTimePixMpxType);
+    createParam(ADTimePixChipTypeString,        asynParamOctet, &ADTimePixChipType);
+    createParam(ADTimePixDetectorFamilyString,  asynParamInt32, &ADTimePixDetectorFamily);
+    createParam(ADTimePixCapTdcString,          asynParamInt32, &ADTimePixCapTdc);
+    createParam(ADTimePixCapTofHistString,      asynParamInt32, &ADTimePixCapTofHist);
+    createParam(ADTimePixCapDualPreviewString,  asynParamInt32, &ADTimePixCapDualPreview);
+    createParam(ADTimePixCapImgThresholdsString, asynParamInt32, &ADTimePixCapImgThresholds);
+    createParam(ADTimePixBothCountersString,     asynParamInt32, &ADTimePixBothCounters);
+    createParam(ADTimePixGainModeString,         asynParamOctet, &ADTimePixGainMode);
+    createParam(ADTimePixChargeSummingString,    asynParamInt32, &ADTimePixChargeSumming);
+    createParam(ADTimePixColourString,           asynParamInt32, &ADTimePixColour);
+    createParam(ADTimePixPixelDepthString,       asynParamInt32, &ADTimePixPixelDepth);
+    createParam(ADTimePixCounterSelectInString,  asynParamInt32, &ADTimePixCounterSelectIn);
+    createParam(ADTimePixCounterSelectOutString, asynParamInt32, &ADTimePixCounterSelectOut);
+    createParam(ADTimePixIDelay0String,          asynParamInt32, &ADTimePixIDelay0);
+    createParam(ADTimePixIDelay1String,          asynParamInt32, &ADTimePixIDelay1);
+    createParam(ADTimePixIDelay2String,          asynParamInt32, &ADTimePixIDelay2);
+    createParam(ADTimePixIDelay3String,          asynParamInt32, &ADTimePixIDelay3);
 
     createParam(ADTimePixBoardsIDString,        asynParamOctet, &ADTimePixBoardsID);
     createParam(ADTimePixBoardsIPString,        asynParamOctet, &ADTimePixBoardsIP);
@@ -1291,8 +1384,13 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvImgFrameNumberString,            asynParamInt32, &ADTimePixPrvImgFrameNumber);
     createParam(ADTimePixPrvImgTimeAtFrameString,            asynParamFloat64, &ADTimePixPrvImgTimeAtFrame);
     createParam(ADTimePixPrvImgAcqRateString,                asynParamFloat64, &ADTimePixPrvImgAcqRate);
+    createParam(ADTimePixPrvImgThresholdIDString,            asynParamInt32, &ADTimePixPrvImgThresholdID);
+    createParam(ADTimePixPrvImgIntegrationSizeString,        asynParamInt32, &ADTimePixPrvImgIntegrationSize);
+    createParam(ADTimePixPrvImgLogHeadersString,             asynParamInt32, &ADTimePixPrvImgLogHeaders);
+    createParam(ADTimePixPrvImgThreshDiffClipString,         asynParamInt32, &ADTimePixPrvImgThreshDiffClip);
     // Img TCP streaming metadata
     createParam(ADTimePixImgFrameNumberString,               asynParamInt32, &ADTimePixImgFrameNumber);
+    createParam(ADTimePixImgThresholdIDString,               asynParamInt32, &ADTimePixImgThresholdID);
     createParam(ADTimePixImgTimeAtFrameString,               asynParamFloat64, &ADTimePixImgTimeAtFrame);
     createParam(ADTimePixImgAcqRateString,                   asynParamFloat64, &ADTimePixImgAcqRate);
     // Img channel accumulation and display data
@@ -1437,6 +1535,36 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImgAcquisitionRate_ = 0.0;
     prvImgLastRateUpdateTime_ = 0.0;
     prvImgFirstFrameReceived_ = false;
+    prvImgT1ReadyForDiff_ = false;
+    prvImgT0OrphanForDiff_ = false;
+    prvImgLastSeenFrameForPair_ = -1;
+    prvImgLastDiffT0Frame_ = -1;
+    prvImgJsonHeadersRemaining_ = 0;
+
+    // Initialize TCP streaming for PrvImg1 channel (integrated preview)
+    prvImg1NetworkClient_.reset();
+    prvImg1Host_ = "";
+    prvImg1Port_ = 0;
+    prvImg1Connected_ = false;
+    prvImg1Running_ = false;
+    prvImg1WorkerThreadId_ = nullptr;
+    prvImg1Mutex_ = epicsMutexMustCreate();
+    if (!prvImg1Mutex_) {
+        ERR("Failed to create PrvImg1 mutex");
+    }
+    prvImg1LineBuffer_.resize(MAX_BUFFER_SIZE);
+    prvImg1TotalRead_ = 0;
+    prvImg1Format_ = 0;
+    prvImg1PreviousFrameNumber_ = 0;
+    prvImg1PreviousTimeAtFrame_ = 0.0;
+    prvImg1AcquisitionRate_ = 0.0;
+    prvImg1LastRateUpdateTime_ = 0.0;
+    prvImg1FirstFrameReceived_ = false;
+    prvImg1T1ReadyForDiff_ = false;
+    prvImg1T0OrphanForDiff_ = false;
+    prvImg1LastSeenFrameForPair_ = -1;
+    prvImg1LastDiffT0Frame_ = -1;
+    prvImg1JsonHeadersRemaining_ = 0;
     
     // Initialize TCP streaming for Img channel
     imgNetworkClient_.reset();
@@ -1552,6 +1680,29 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // This prevents INVALID status from very large default values
     setIntegerParam(ADNumImages, 0);
 
+    setIntegerParam(ADTimePixDetectorFamily, static_cast<int>(DetectorFamily::Unknown));
+    setStringParam(ADTimePixChipType, "");
+    setIntegerParam(ADTimePixCapTdc, 0);
+    setIntegerParam(ADTimePixCapTofHist, 0);
+    setIntegerParam(ADTimePixCapDualPreview, 0);
+    setIntegerParam(ADTimePixCapImgThresholds, 0);
+    setIntegerParam(ADTimePixBothCounters, 0);
+    setStringParam(ADTimePixGainMode, "SHGM");
+    setIntegerParam(ADTimePixChargeSumming, 0);
+    setIntegerParam(ADTimePixColour, 0);
+    setIntegerParam(ADTimePixPixelDepth, 1);
+    setIntegerParam(ADTimePixCounterSelectIn, 0);
+    setIntegerParam(ADTimePixCounterSelectOut, 0);
+    setIntegerParam(ADTimePixIDelay0, 15);
+    setIntegerParam(ADTimePixIDelay1, 15);
+    setIntegerParam(ADTimePixIDelay2, 15);
+    setIntegerParam(ADTimePixIDelay3, 10);
+    setIntegerParam(ADTimePixPrvImgThresholdID, 0);
+    setIntegerParam(ADTimePixImgThresholdID, 0);
+    setIntegerParam(ADTimePixPrvImgIntegrationSize, 0);
+    setIntegerParam(ADTimePixPrvImgLogHeaders, 3);
+    setIntegerParam(ADTimePixPrvImgThreshDiffClip, 1);
+
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 
     if(strlen(serverURL) <= 0){
@@ -1600,6 +1751,64 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 }
 
 
+void ADTimePix::updateDetectorFamily(int mpxType, const std::string& chipType,
+                                     const std::string& chipboardId) {
+    const DetectorFamily family = detectDetectorFamily(mpxType, chipType, chipboardId);
+    const bool familyChanged = (family != detectorFamily_);
+    detectorFamily_ = family;
+    detectorCapabilities_ = capabilitiesForFamily(family);
+
+    setStringParam(ADTimePixChipType, chipType.c_str());
+    setIntegerParam(ADTimePixDetectorFamily, static_cast<int>(family));
+    setIntegerParam(ADTimePixCapTdc, detectorCapabilities_.supportsTdc ? 1 : 0);
+    setIntegerParam(ADTimePixCapTofHist, detectorCapabilities_.supportsTofHistogram ? 1 : 0);
+    setIntegerParam(ADTimePixCapDualPreview, detectorCapabilities_.supportsDualPreview ? 1 : 0);
+    setIntegerParam(ADTimePixCapImgThresholds, detectorCapabilities_.supportsImageThresholds ? 1 : 0);
+
+    if (familyChanged || !detectorFamilyApplied_) {
+        applyFamilyDefaults(family);
+        detectorFamilyApplied_ = true;
+        FLOW_ARGS("Detector family %s (MpxType=%d ChipType=%s ChipboardId=%s)",
+                  detectorFamilyName(family), mpxType, chipType.c_str(), chipboardId.c_str());
+    }
+}
+
+const char ADTimePix::kMpx3BothCountersTriggerMsg[] =
+    "MPX3: BothCounters requires non-Continuous TriggerMode (use AutoTrgSt_TmrSp=4)";
+
+bool ADTimePix::mpx3BothCountersTriggerConflict(int triggerMode) const {
+    if (detectorFamily_ != DetectorFamily::MPX3) {
+        return false;
+    }
+    int bothCounters = 0;
+    ADTimePix* self = const_cast<ADTimePix*>(this);
+    self->getIntegerParam(ADTimePixBothCounters, &bothCounters);
+    return bothCounters != 0 && triggerMode == 5;
+}
+
+void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
+    /* MPX3 BothCounters uses thresholds 0 and 1; Colour mode (8 thresholds) is out of scope. */
+    static const char* kMpx3Thresholds = "0,1";
+
+    if (family != DetectorFamily::MPX3) {
+        return;
+    }
+
+    setStringParam(ADTimePixImgThs, kMpx3Thresholds);
+    setStringParam(ADTimePixImg1Ths, kMpx3Thresholds);
+    setStringParam(ADTimePixPrvImgThs, kMpx3Thresholds);
+    setStringParam(ADTimePixPrvImg1Ths, kMpx3Thresholds);
+    setIntegerParam(ADTimePixPrvImgFormat, 3);
+    setIntegerParam(ADTimePixPrvImg1Format, 3);
+    setStringParam(ADTimePixGainMode, "HGM");
+    setIntegerParam(ADTimePixPixelDepth, 1);
+    setIntegerParam(ADTimePixIDelay0, 15);
+    setIntegerParam(ADTimePixIDelay1, 15);
+    setIntegerParam(ADTimePixIDelay2, 15);
+    setIntegerParam(ADTimePixIDelay3, 10);
+}
+
+
 void ADTimePix::shutdownPortDriver() {
     FLOW("ADTimePix shutdownPortDriver");
 
@@ -1631,6 +1840,18 @@ void ADTimePix::shutdownPortDriver() {
         prvImgWorkerThreadId_ = NULL;
     }
     prvImgDisconnect();
+
+    // Stop PrvImg1 TCP streaming
+    if (prvImg1Mutex_) {
+        epicsMutexLock(prvImg1Mutex_);
+        prvImg1Running_ = false;
+        epicsMutexUnlock(prvImg1Mutex_);
+    }
+    if (prvImg1WorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+    prvImg1Disconnect();
 
     // Stop Img TCP streaming
     if (imgMutex_) {
@@ -1699,6 +1920,22 @@ ADTimePix::~ADTimePix(){
     if (prvImgMutex_) {
         epicsMutexDestroy(prvImgMutex_);
         prvImgMutex_ = NULL;
+    }
+
+    // Stop PrvImg1 TCP streaming
+    epicsMutexLock(prvImg1Mutex_);
+    prvImg1Running_ = false;
+    epicsMutexUnlock(prvImg1Mutex_);
+
+    if (prvImg1WorkerThreadId_ != NULL) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+    prvImg1Disconnect();
+
+    if (prvImg1Mutex_) {
+        epicsMutexDestroy(prvImg1Mutex_);
+        prvImg1Mutex_ = NULL;
     }
     
     // Stop Img TCP streaming

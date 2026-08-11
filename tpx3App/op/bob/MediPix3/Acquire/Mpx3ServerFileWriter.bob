@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Mpx3ServerFileWriter</name>
+  <width>1130</width>
+  <height>1400</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>Medipix3 Serval Destination Writer — $(P)$(R)</text>
+    <x>5</x>
+    <y>5</y>
+    <width>1120</width>
+    <height>24</height>
+    <font>
+      <font family="Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color red="220" green="235" blue="255">
+      </color>
+    </background_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>PreviewChannels</name>
+    <file>Mpx3PreviewChannels.bob</file>
+    <x>5</x>
+    <y>32</y>
+    <width>1130</width>
+    <height>620</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ImageChannels</name>
+    <file>Mpx3ImageChannels.bob</file>
+    <x>5</x>
+    <y>655</y>
+    <width>1130</width>
+    <height>730</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+  </widget>
+</display>

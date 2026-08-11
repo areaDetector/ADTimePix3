@@ -21,7 +21,12 @@ dbpf("$(PREFIX)cam1:WriteDACSFile","1")  # Instruct SERVAL to load DACS from dis
 dbpf("$(PREFIX)cam1:ImageMode","2")     # areaDetector Continuous
 dbpf("$(PREFIX)cam1:TriggerMode","5")   # Timepix3 CONTINUOUS
 dbpf("$(PREFIX)Pva1:EnableCallbacks","1")     # PVA1 plugin
+dbpf("$(PREFIX)Stats1:EnableCallbacks","1")   # STATS1 — cursor profiles for PVA preview (ProfileStats)
 dbpf("$(PREFIX)Stats5:EnableCallbacks","1")   # STATS5 plugin
 dbpf("$(PREFIX)cam1:NumImages","1000000000")  # Pseudo-unlimited; use 0 for true unlimited on hardware
+
+# Enable NDStats row/column profiles for Phoebus (ADCore NDStatsProfiles.template).
+# Requires < $(ADCORE)/iocBoot/stats_profiles.cmd before iocInit (see st_base.cmd).
+dbpf("$(PREFIX)$(STATS_PROF_R)StatsProfInit_.PROC","1")
 
 #dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan
