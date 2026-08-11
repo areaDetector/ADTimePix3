@@ -1154,10 +1154,8 @@ void ADTimePix::prvHstWorkerThread() {
     }
     
     prvHstDisconnect();
-    // Clear thread ID before exiting to allow acquireStop to detect thread already exited
-    epicsMutexLock(prvHstMutex_);
-    prvHstWorkerThreadId_ = NULL;
-    epicsMutexUnlock(prvHstMutex_);
+    // Leave prvHstWorkerThreadId_ set until acquireStop/destructor joins
+    // (joinable threads must be joined; clearing here races with epicsThreadMustJoin).
     
     printf("PrvHst worker thread exiting\n");
 }

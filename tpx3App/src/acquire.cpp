@@ -599,6 +599,7 @@ asynStatus ADTimePix::acquireStart(){
                             epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
                             opts.priority = epicsThreadPriorityMedium;
                             opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
+                            opts.joinable = 1;  // Required: acquireStop uses epicsThreadMustJoin
                             
                             if (!prvHstMutex_) {
                                 printf("PrvHst: Mutex became null before second lock\n");
