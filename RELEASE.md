@@ -9,13 +9,25 @@ Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
 The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for **4.1.x** (latest tested; includes dual-image and other Serval fixes).
 
-Driver depends on Serval versions, at this time. Latest release is **R1-6-3** (driver **1.6.3**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest release is **R1-7-0** (driver **1.7.0**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
-R1-6-4 (TBD, 2026)
+R1-7-0 (August 2026)
 --------
 
-Driver / user-visible version **1.6.4** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+Driver / user-visible version **1.7.0** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+* **Medipix3 (MPX3) family support** (unified driver):
+  * Runtime detector family detection from Serval metadata (`DetectorFamily_RBV`, capability PVs).
+  * Dedicated IOC profile: `st_mpx3.cmd` / `st_mpx3.sh`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
+  * Dual-threshold preview: demux by `thresholdID` on TCP **8088** / **8089**; BothCounters; T0−T1 band-pass (Pva5/Pva6).
+  * Opt-in full-rate Image[] TCP (**8086**) with threshold demux (Pva7/Pva8) and HDF soak plugins.
+  * MediPix3 Phoebus screens (`MediPix3.bob`, detector config, preview writer, image channels).
+  * Docs: `documentation/medipix3/` (integration, dual-threshold preview, hardware notes).
+* **Timepix3 fixes / IOC**:
+  * Make `prvHstWorker` joinable so `acquireStop` does not hang after Preview histogram streaming.
+  * Enable NDStats row/column profile axes for PVA preview plots (`stats_profiles.cmd`, Stats1 init, mosaic `XSIZE`/`YSIZE`).
+* Timepix3 behaviour remains the default path when family is TPX3; MPX3 uses the dedicated startup profile.
 
 
 R1-6-3 (June 7, 2026)
