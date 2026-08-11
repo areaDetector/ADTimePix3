@@ -27,9 +27,11 @@ epicsEnvSet("IOCNAME",                  "tpx3")
 epicsEnvSet("QSIZE",                    "30")
 epicsEnvSet("NCHANS",                   "2048")
 epicsEnvSet("HIST_SIZE",                "4096")
-epicsEnvSet("XSIZE",                    "256")
-epicsEnvSet("YSIZE",                    "256")
-epicsEnvSet("NELMT",                    "65536")
+# Image / NDStats profile max size — keep in sync with MASK_BPC_NELEMENTS / mosaic.
+# 256×256 → profiles truncate at ~250 on a 512×512 Preview (wrong row-axis span).
+epicsEnvSet("XSIZE",                    "512")
+epicsEnvSet("YSIZE",                    "512")
+epicsEnvSet("NELMT",                    "262144")
 # --- Mask BPC waveform size (st_base.cmd → MaskBPC.template, macro NELEMENTS) ---
 # Must be >= detector PixCount (mask upload / compare / PixelConfigDiff). Too small: DB load fails, PVs invalid.
 #
