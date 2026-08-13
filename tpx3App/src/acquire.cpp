@@ -9,11 +9,13 @@
 
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "network_client.h"
 #include "serval_http.h"
 
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <set>
 #include <string>
 
 #include <epicsThread.h>
@@ -49,6 +51,128 @@ void ADTimePix::updateTdcRatesFromMeasurementInfo(const json& info) {
 }
 
 
+namespace {
+
+std::string makeListenTcpPath(const std::string& host, int port) {
+    return "tcp://listen@" + host + ":" + std::to_string(port);
+}
+
+int nextFreeTcpPort(const std::string& host, int startPort, const std::set<int>& reserved) {
+    for (int port = startPort; port <= 65535; ++port) {
+        if (reserved.count(port) != 0) {
+            continue;
+        }
+        if (!NetworkClient::isTcpPortInUse(host, port)) {
+            return port;
+        }
+    }
+    return -1;
+}
+
+}  // namespace
+
+void ADTimePix::syncTcpStreamEndpoints() {
+    int writePrvImg = 0;
+    getIntegerParam(ADTimePixWritePrvImg, &writePrvImg);
+    if (writePrvImg != 0) {
+        (void)checkPrvImgPath();
+    }
+
+    int writePrvImg1 = 0;
+    getIntegerParam(ADTimePixWritePrvImg1, &writePrvImg1);
+    if (writePrvImg1 != 0) {
+        (void)checkPrvImg1Path();
+    }
+
+    int writeImg = 0;
+    getIntegerParam(ADTimePixWriteImg, &writeImg);
+    if (writeImg != 0) {
+        std::string imgPath;
+        getStringParam(ADTimePixImgBase, imgPath);
+        if (imgPath.find("tcp://") == 0) {
+            (void)checkImgPath();
+        }
+    }
+}
+
+/**
+ * Serval keeps preview TCP listeners bound after measurement/stop. Reassign only when
+ * the configured port is already listening locally (stale Serval TcpSender).
+ */
+asynStatus ADTimePix::ensurePreviewTcpPortsFree(bool forceRotate) {
+    struct PreviewTcpChannel {
+        int writeParam;
+        int baseParam;
+    };
+
+    const PreviewTcpChannel channels[] = {
+        {ADTimePixWritePrvImg, ADTimePixPrvImgBase},
+        {ADTimePixWritePrvImg1, ADTimePixPrvImg1Base},
+        {ADTimePixWriteImg, ADTimePixImgBase},
+        {ADTimePixWritePrvHst, ADTimePixPrvHstBase},
+    };
+
+    std::set<int> reservedPorts;
+    bool changed = false;
+
+    for (const PreviewTcpChannel& channel : channels) {
+        int writeChannel = 0;
+        getIntegerParam(channel.writeParam, &writeChannel);
+        if (writeChannel == 0) {
+            continue;
+        }
+
+        std::string path;
+        getStringParam(channel.baseParam, path);
+        if (path.find("tcp://") != 0) {
+            continue;
+        }
+
+        std::string host;
+        int port = 0;
+        if (!parseTcpPath(path, host, port)) {
+            continue;
+        }
+
+        reservedPorts.insert(port);
+
+        const bool portBusy = NetworkClient::isTcpPortInUse(host, port);
+        if (!forceRotate && !portBusy) {
+            continue;
+        }
+
+        const int searchFrom = forceRotate ? (port + 1) : (portBusy ? port + 1 : port);
+        const int candidate = nextFreeTcpPort(host, searchFrom, reservedPorts);
+        if (candidate < 0) {
+            ERR_ARGS("No free TCP port found for preview channel (starting at %d)", searchFrom);
+            setStringParam(ADStatusMessage,
+                             "Preview TCP ports in use; restart Serval or choose different preview ports");
+            return asynError;
+        }
+
+        reservedPorts.insert(candidate);
+        if (candidate == port) {
+            continue;
+        }
+
+        const std::string newPath = makeListenTcpPath(host, candidate);
+        setStringParam(channel.baseParam, newPath);
+        LOG_ARGS("Preview TCP port %d -> %d (%s)", port, candidate,
+                 forceRotate ? "forced rotate" : "port in use");
+        changed = true;
+    }
+
+    syncTcpStreamEndpoints();
+
+    if (!changed) {
+        return asynSuccess;
+    }
+
+    callParamCallbacks();
+    return fileWriter();
+}
+
+
 /*
  * Function that is used to initialize and connect to the device.
  * 
@@ -74,6 +198,17 @@ asynStatus ADTimePix::acquireStart(){
         prvImgWorkerThreadId_ = NULL;
     }
     prvImgDisconnect();
+
+    if (prvImg1Mutex_) {
+        epicsMutexLock(prvImg1Mutex_);
+        prvImg1Running_ = false;
+        epicsMutexUnlock(prvImg1Mutex_);
+    }
+    if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+    prvImg1Disconnect();
     
     // Ensure any existing Img TCP connection is disconnected before starting new measurement
     // This prevents port conflicts
@@ -91,8 +226,31 @@ asynStatus ADTimePix::acquireStart(){
     setIntegerParam(ADStatus, ADStatusAcquire);
     setStringParam(ADStatusMessage, "Starting acquisition...");
 
+    int triggerMode = 0;
+    getIntegerParam(ADTriggerMode, &triggerMode);
+    if (mpx3BothCountersTriggerConflict(triggerMode)) {
+        ERR_ARGS("%s", kMpx3BothCountersTriggerMsg);
+        setStringParam(ADStatusMessage, kMpx3BothCountersTriggerMsg);
+        setIntegerParam(ADStatus, ADStatusError);
+        callParamCallbacks();
+        return asynError;
+    }
+
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.joinable = 1;
+
+    // Stop any prior measurement so Serval can re-bind preview TCP ports.
+    // Serval may leave listeners open after stop; ensurePreviewTcpPortsFree() handles that.
+    {
+        string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
+        cpr::Response stop_r = ADTimePix3ServalHttp::get(stopMeasurementURL);
+        if (stop_r.status_code == 200) {
+            epicsThreadSleep(0.2);
+        } else if (stop_r.status_code != 404) {
+            logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
+                           (long)stop_r.status_code, stop_r.text);
+        }
+    }
 
     // Check if measurement is already running and stop it first to free ports
     string measurementURL = this->serverURL + std::string("/measurement");
@@ -117,8 +275,7 @@ asynStatus ADTimePix::acquireStart(){
                         string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
                         cpr::Response stop_r = ADTimePix3ServalHttp::get(stopMeasurementURL);
                         if (stop_r.status_code == 200) {
-                            // Wait for Serval to release ports (minimum: 100ms)
-                            epicsThreadSleep(0.1);  // 100ms - allows port release
+                            epicsThreadSleep(0.2);
                         } else {
                             logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
                                            (long)stop_r.status_code, stop_r.text);
@@ -141,12 +298,34 @@ asynStatus ADTimePix::acquireStart(){
         }
     }
 
+    status = ensurePreviewTcpPortsFree();
+    if (status != asynSuccess) {
+        setStringParam(ADStatusMessage, "Failed to reassign occupied preview TCP ports");
+        setIntegerParam(ADStatus, ADStatusIdle);
+        return asynError;
+    }
+
     string startMeasurementURL = this->serverURL + std::string("/measurement/start");
     r = ADTimePix3ServalHttp::get(startMeasurementURL);
 
+    if (r.status_code != 200 && r.text.find("Address already in use") != std::string::npos) {
+        WARN("measurement/start failed with port conflict; rotating preview ports and retrying once");
+        status = ensurePreviewTcpPortsFree(true);
+        if (status == asynSuccess) {
+            epicsThreadSleep(0.3);
+            r = ADTimePix3ServalHttp::get(startMeasurementURL);
+        }
+    }
+
     if (r.status_code != 200){
         logHttpFailure("acquireStart GET /measurement/start", "GET", startMeasurementURL, (long)r.status_code, r.text);
-        setStringParam(ADStatusMessage, "Failed to start acquisition");
+        if (r.text.find("Address already in use") != std::string::npos) {
+            setStringParam(ADStatusMessage,
+                           "Preview TCP port in use (Serval did not release a prior listener). "
+                           "Restart Serval or change preview ports, then WriteData=1.");
+        } else {
+            setStringParam(ADStatusMessage, "Failed to start acquisition");
+        }
         // Ensure any partially started worker thread is stopped
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
@@ -156,6 +335,17 @@ asynStatus ADTimePix::acquireStart(){
             prvImgWorkerThreadId_ = NULL;
         }
         prvImgDisconnect();
+
+        if (prvImg1Mutex_) {
+            epicsMutexLock(prvImg1Mutex_);
+            prvImg1Running_ = false;
+            epicsMutexUnlock(prvImg1Mutex_);
+        }
+        if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
+            epicsThreadMustJoin(prvImg1WorkerThreadId_);
+            prvImg1WorkerThreadId_ = NULL;
+        }
+        prvImg1Disconnect();
         
         epicsMutexLock(imgMutex_);
         imgRunning_ = false;
@@ -211,11 +401,33 @@ asynStatus ADTimePix::acquireStart(){
     }
         prvHstDisconnect();
         
+        setIntegerParam(ADStatus, ADStatusIdle);
         return asynError;
     }
 
     this->callbackThreadId = epicsThreadCreateOpt("timePixCallback", timePixCallbackC, this, &opts);
     this->acquiring = true;
+
+    {
+        int logHeaders = 0;
+        getIntegerParam(ADTimePixPrvImgLogHeaders, &logHeaders);
+        prvImgJsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
+        prvImgFirstFrameReceived_ = false;
+        prvImgT1ReadyForDiff_ = false;
+        prvImgT0OrphanForDiff_ = false;
+        prvImgLastSeenFrameForPair_ = -1;
+        prvImgLastDiffT0Frame_ = -1;
+        prvImg1JsonHeadersRemaining_ = (logHeaders > 0) ? logHeaders : 0;
+        prvImg1FirstFrameReceived_ = false;
+        prvImg1T1ReadyForDiff_ = false;
+        prvImg1T0OrphanForDiff_ = false;
+        prvImg1LastSeenFrameForPair_ = -1;
+        prvImg1LastDiffT0Frame_ = -1;
+        releasePreviewBandArrays();
+    }
+
+    // Path PV may have changed (port rotation or Phoebus WriteData); refresh before connect.
+    syncTcpStreamEndpoints();
     
     // Start PrvImg TCP streaming worker thread if WritePrvImg is enabled and path is TCP
     // Wait a bit for Serval to bind to the port before trying to connect
@@ -240,6 +452,30 @@ asynStatus ADTimePix::acquireStart(){
                 }
             }
             epicsMutexUnlock(prvImgMutex_);
+        }
+    }
+
+    // Start PrvImg1 TCP worker when WritePrvImg1 is enabled (integrated preview on 8089)
+    int writePrvImg1;
+    getIntegerParam(ADTimePixWritePrvImg1, &writePrvImg1);
+    if (writePrvImg1 != 0) {
+        std::string prvImg1Path;
+        getStringParam(ADTimePixPrvImg1Base, prvImg1Path);
+        if (prvImg1Path.find("tcp://") == 0) {
+            epicsThreadSleep(0.2);
+
+            epicsMutexLock(prvImg1Mutex_);
+            if (!prvImg1Running_ && !prvImg1WorkerThreadId_) {
+                prvImg1Running_ = true;
+                prvImg1WorkerThreadId_ = epicsThreadCreateOpt("prvImg1Worker", prvImg1WorkerThreadC, this, &opts);
+                if (!prvImg1WorkerThreadId_) {
+                    ERR("Failed to create PrvImg1 worker thread");
+                    prvImg1Running_ = false;
+                } else {
+                    LOG("Started PrvImg1 TCP worker thread in acquireStart");
+                }
+            }
+            epicsMutexUnlock(prvImg1Mutex_);
         }
     }
     
@@ -363,6 +599,7 @@ asynStatus ADTimePix::acquireStart(){
                             epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
                             opts.priority = epicsThreadPriorityMedium;
                             opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
+                            opts.joinable = 1;  // Required: acquireStop uses epicsThreadMustJoin
                             
                             if (!prvHstMutex_) {
                                 printf("PrvHst: Mutex became null before second lock\n");
@@ -617,7 +854,7 @@ void ADTimePix::timePixCallback(){
  * @return: status  -> error if no camera or command fails to execute, success otherwise
  */ 
 asynStatus ADTimePix::acquireStop(){
-    asynStatus status;
+    asynStatus status = asynSuccess;
 
     this->acquiring=false;
     
@@ -627,9 +864,84 @@ asynStatus ADTimePix::acquireStop(){
 
     this->callbackThreadId = NULL;
 
-    // Stop Serval measurement FIRST to tell Serval to stop sending new data
-    // This MUST happen before we signal worker threads to exit, otherwise
-    // worker threads will close the socket while Serval is still trying to write
+    // Stop TCP worker threads and disconnect before telling Serval to stop.
+    // Serval TcpSender threads block on full preview buffers when no client reads
+    // (e.g. PrvImg1); closing the IOC side first avoids prolonged waitForClose hangs.
+    if (prvImgMutex_) {
+        epicsMutexLock(prvImgMutex_);
+        prvImgRunning_ = false;
+        prvImgFirstFrameReceived_ = false;
+        prvImgT1ReadyForDiff_ = false;
+        prvImgT0OrphanForDiff_ = false;
+        prvImgLastSeenFrameForPair_ = -1;
+        prvImgLastDiffT0Frame_ = -1;
+        prvImgAcquisitionRate_ = 0.0;
+        prvImgRateSamples_.clear();
+        setDoubleParam(ADTimePixPrvImgAcqRate, 0.0);
+        epicsMutexUnlock(prvImgMutex_);
+    }
+
+    if (prvImg1Mutex_) {
+        epicsMutexLock(prvImg1Mutex_);
+        prvImg1Running_ = false;
+        prvImg1FirstFrameReceived_ = false;
+        prvImg1T1ReadyForDiff_ = false;
+        prvImg1T0OrphanForDiff_ = false;
+        prvImg1LastSeenFrameForPair_ = -1;
+        prvImg1LastDiffT0Frame_ = -1;
+        prvImg1AcquisitionRate_ = 0.0;
+        prvImg1RateSamples_.clear();
+        epicsMutexUnlock(prvImg1Mutex_);
+    }
+
+    if (imgMutex_) {
+        epicsMutexLock(imgMutex_);
+        imgRunning_ = false;
+        imgFirstFrameReceived_ = false;
+        imgAcquisitionRate_ = 0.0;
+        imgRateSamples_.clear();
+        setDoubleParam(ADTimePixImgAcqRate, 0.0);
+        resetImgAccumulation();
+        epicsMutexUnlock(imgMutex_);
+    }
+
+    if (prvHstMutex_) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstRunning_ = false;
+        prvHstFirstFrameReceived_ = false;
+        prvHstAcquisitionRate_ = 0.0;
+        prvHstRateSamples_.clear();
+        setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
+        epicsMutexUnlock(prvHstMutex_);
+    }
+
+    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImgWorkerThreadId_);
+        prvImgWorkerThreadId_ = NULL;
+    }
+
+    if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(prvImg1WorkerThreadId_);
+        prvImg1WorkerThreadId_ = NULL;
+    }
+
+    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadMustJoin(imgWorkerThreadId_);
+        imgWorkerThreadId_ = NULL;
+    }
+
+    if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
+        epicsThreadId prvHstThreadId = prvHstWorkerThreadId_;
+        prvHstWorkerThreadId_ = NULL;
+        epicsThreadSleep(0.1);
+        epicsThreadMustJoin(prvHstThreadId);
+    }
+
+    prvImgDisconnect();
+    prvImg1Disconnect();
+    imgDisconnect();
+    prvHstDisconnect();
+
     string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
     cpr::Response r = ADTimePix3ServalHttp::get(stopMeasurementURL);
 
@@ -640,108 +952,8 @@ asynStatus ADTimePix::acquireStop(){
         return asynError;
     }
 
-    // Wait for Serval to process the stop command and stop its TcpSender threads
-    // Serval needs time to:
-    // 1. Process the stop command
-    // 2. Signal its TcpSender threads to stop
-    // 3. Allow TcpSender threads to finish sending any buffered data
-    // 4. Close Serval's side of the socket gracefully
-    // Delay to prevent "Broken pipe" errors (minimum: 300ms for reliable operation)
-    epicsThreadSleep(0.3);  // 300ms - allows Serval TcpSender threads to stop cleanly
-    
-    // NOW signal ALL worker threads to stop (after Serval has stopped sending)
-    // Signal all channels at once to ensure clean shutdown of all TcpSender threads
-    if (prvImgMutex_) {
-        epicsMutexLock(prvImgMutex_);
-        prvImgRunning_ = false;
-        // Reset metadata tracking for next acquisition
-        prvImgFirstFrameReceived_ = false;
-        prvImgAcquisitionRate_ = 0.0;
-        prvImgRateSamples_.clear();
-        setDoubleParam(ADTimePixPrvImgAcqRate, 0.0);
-        epicsMutexUnlock(prvImgMutex_);
-    }
-    
-    if (imgMutex_) {
-        epicsMutexLock(imgMutex_);
-        imgRunning_ = false;
-        // Reset metadata tracking for next acquisition
-        imgFirstFrameReceived_ = false;
-        imgAcquisitionRate_ = 0.0;
-        imgRateSamples_.clear();
-        setDoubleParam(ADTimePixImgAcqRate, 0.0);
-        // Reset accumulation data
-        resetImgAccumulation();
-        epicsMutexUnlock(imgMutex_);
-    }
-    
-    // Signal PrvHst to stop at the same time as other channels
-    if (prvHstMutex_) {
-        epicsMutexLock(prvHstMutex_);
-        prvHstRunning_ = false;
-        // Reset metadata tracking for next acquisition
-        prvHstFirstFrameReceived_ = false;
-        prvHstAcquisitionRate_ = 0.0;
-        prvHstRateSamples_.clear();
-        epicsMutexUnlock(prvHstMutex_);
-    }
-    
-    // Join worker threads - they will detect closed connection (bytes_read <= 0) and exit
-    // or exit when they see prvImgRunning_/imgRunning_/prvHstRunning_ is false
-    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-    
-    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(imgWorkerThreadId_);
-        imgWorkerThreadId_ = NULL;
-    }
-    
-    // Signal PrvHst worker thread to stop
-    if (prvHstMutex_) {
-        epicsMutexLock(prvHstMutex_);
-        prvHstRunning_ = false;
-        // Reset metadata tracking for next acquisition (but keep accumulated data)
-        prvHstFirstFrameReceived_ = false;
-        prvHstAcquisitionRate_ = 0.0;
-        prvHstRateSamples_.clear();
-        // Don't reset counters here - let user control via reset PV
-        // Only reset rate tracking
-        setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
-        epicsMutexUnlock(prvHstMutex_);
-    }
-    
-    // Wait for PrvHst worker thread to exit
-    // The thread may have already exited when connection closed and cleared its own thread ID
-    // So we need to check if thread ID is still valid before trying to join
-    epicsMutexLock(prvHstMutex_);
-    epicsThreadId prvHstThreadId = prvHstWorkerThreadId_;
-    epicsMutexUnlock(prvHstMutex_);
-    
-    if (prvHstThreadId != NULL && prvHstThreadId != epicsThreadGetIdSelf()) {
-        // Give thread a moment to exit gracefully if it's still running
-        epicsThreadSleep(0.2);
-        
-        // Re-check if thread ID is still valid (thread may have cleared it)
-        epicsMutexLock(prvHstMutex_);
-        if (prvHstWorkerThreadId_ == prvHstThreadId) {
-            // Thread ID still valid, try to join
-            prvHstWorkerThreadId_ = NULL;  // Clear pointer first
-            epicsMutexUnlock(prvHstMutex_);
-            epicsThreadMustJoin(prvHstThreadId);
-        } else {
-            // Thread already cleared its own ID, so it already exited
-            epicsMutexUnlock(prvHstMutex_);
-            printf("PrvHst worker thread already exited (cleared its own thread ID)\n");
-        }
-    }
-    
-    // Explicitly disconnect to ensure clean state
-    // Worker threads may have already disconnected when they detected the closed connection
-    prvImgDisconnect();
-    imgDisconnect();
-    prvHstDisconnect();
+    // Allow Serval TcpSender threads to finish closing (may take >300ms when buffers were full)
+    epicsThreadSleep(0.5);
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setStringParam(ADStatusMessage, "Acquisition stopped");
@@ -785,7 +997,6 @@ asynStatus ADTimePix::acquireStop(){
             setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
         }
         if (measurement_j["Info"].contains("Status")) {
-            // Status might be null, so use dump() which handles null safely
             setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
         }
     }

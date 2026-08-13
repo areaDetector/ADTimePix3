@@ -133,6 +133,179 @@ record(longin, "$(P)$(R)MpxType_RBV"){
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MPX_TYPE")
   field(SCAN, "I/O Intr")
 }
+record(stringin, "$(P)$(R)ChipType_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHIP_TYPE")
+  field(SCAN, "I/O Intr")
+  field(DESC, "ChipType (MPX3/TPX3)")
+}
+record(mbbi, "$(P)$(R)DetectorFamily_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_DETECTOR_FAMILY")
+  field(ZRST, "Unknown")
+  field(ZRVL, "0")
+  field(ONST, "TPX3")
+  field(ONVL, "1")
+  field(TWST, "MPX3")
+  field(TWVL, "2")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Runtime detector family")
+}
+record(bi, "$(P)$(R)CapTdc_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_TDC")
+  field(SCAN, "I/O Intr")
+  field(DESC, "TDC hardware supported")
+}
+record(bi, "$(P)$(R)CapTofHist_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_TOF_HIST")
+  field(SCAN, "I/O Intr")
+  field(DESC, "ToF histogram stream supported")
+}
+record(bi, "$(P)$(R)CapDualPreview_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_DUAL_PREVIEW")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Two preview image layers")
+}
+record(bi, "$(P)$(R)CapImgThresholds_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CAP_IMG_THRESHOLDS")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Image Thresholds[] in Serval config")
+}
+record(bo, "$(P)$(R)BothCounters"){
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOTH_COUNTERS")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(DESC, "MPX3 BothCounters in detector config")
+}
+record(bi, "$(P)$(R)BothCounters_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOTH_COUNTERS")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(SCAN, "I/O Intr")
+  field(DESC, "MPX3 BothCounters from detector config")
+}
+
+# MPX3-only detector Config fields (Serval Config JSON)
+record(waveform, "$(P)$(R)GainMode"){
+  field(DESC, "MPX3 GainMode")
+  field(DTYP, "asynOctetWrite")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GAIN_MODE")
+  field(FTVL, "CHAR")
+  field(NELM, "32")
+  info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)GainMode_RBV"){
+  field(DTYP, "asynOctetRead")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GAIN_MODE")
+  field(FTVL, "CHAR")
+  field(NELM, "32")
+  field(SCAN, "I/O Intr")
+}
+record(bo, "$(P)$(R)ChargeSumming"){
+  field(DESC, "MPX3 ChargeSumming")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHARGE_SUMMING")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+}
+record(bi, "$(P)$(R)ChargeSumming_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_CHARGE_SUMMING")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(SCAN, "I/O Intr")
+}
+record(bo, "$(P)$(R)Colour"){
+  field(DESC, "MPX3 Colour mode")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_COLOUR")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+}
+record(bi, "$(P)$(R)Colour_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_COLOUR")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)PixelDepth"){
+  field(DESC, "MPX3 PixelDepth")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_DEPTH")
+}
+record(longin, "$(P)$(R)PixelDepth_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_DEPTH")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)CounterSelectIn"){
+  field(DESC, "MPX3 CounterSelectIn")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_COUNTER_SELECT_IN")
+}
+record(longin, "$(P)$(R)CounterSelectIn_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_COUNTER_SELECT_IN")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)CounterSelectOut"){
+  field(DESC, "MPX3 CounterSelectOut")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_COUNTER_SELECT_OUT")
+}
+record(longin, "$(P)$(R)CounterSelectOut_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_COUNTER_SELECT_OUT")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)IDelay0"){
+  field(DESC, "MPX3 IDelayConfig[0]")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY0")
+}
+record(longin, "$(P)$(R)IDelay0_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY0")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)IDelay1"){
+  field(DESC, "MPX3 IDelayConfig[1]")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY1")
+}
+record(longin, "$(P)$(R)IDelay1_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY1")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)IDelay2"){
+  field(DESC, "MPX3 IDelayConfig[2]")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY2")
+}
+record(longin, "$(P)$(R)IDelay2_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY2")
+  field(SCAN, "I/O Intr")
+}
+record(longout, "$(P)$(R)IDelay3"){
+  field(DESC, "MPX3 IDelayConfig[3]")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY3")
+}
+record(longin, "$(P)$(R)IDelay3_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_IDELAY3")
+  field(SCAN, "I/O Intr")
+}
+
 record(stringin, "$(P)$(R)BChBoardId_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_BOARDS_ID")

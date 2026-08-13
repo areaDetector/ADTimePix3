@@ -1,0 +1,861 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Mpx3HdfImgConfig</name>
+  <width>1125</width>
+  <height>620</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>HDF5 Image[] archive — HDFImgT0 (addr 1) / HDFImgT1 (addr 13) — not HDF1</text>
+    <x>5</x>
+    <y>5</y>
+    <width>1115</width>
+    <height>28</height>
+    <font>
+      <font family="Sans" style="BOLD" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="255" green="255" blue="255">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </background_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Recipe</name>
+    <text>Recipe: WriteImg=1 + WriteData → Enable plugins → Acquire once (latch dims) → Capture=1 → Acquire again. Disable Pva7/Pva8 at high Hz.</text>
+    <x>5</x>
+    <y>38</y>
+    <width>900</width>
+    <height>20</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="10.0">
+      </font>
+    </font>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>ApplyDefaultsBtn</name>
+    <actions>
+      <action type="write_pv">
+        <description>T0 path</description>
+        <pv_name>$(P)HDFImgT0:FilePath</pv_name>
+        <value>/tmp/mpx3_hdf/</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 name</description>
+        <pv_name>$(P)HDFImgT0:FileName</pv_name>
+        <value>img_t0</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 template</description>
+        <pv_name>$(P)HDFImgT0:FileTemplate</pv_name>
+        <value>%s%s_%3.3d.h5</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 number</description>
+        <pv_name>$(P)HDFImgT0:FileNumber</pv_name>
+        <value>0</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 autoinc</description>
+        <pv_name>$(P)HDFImgT0:AutoIncrement</pv_name>
+        <value>1</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 stream</description>
+        <pv_name>$(P)HDFImgT0:FileWriteMode</pv_name>
+        <value>2</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 numcap</description>
+        <pv_name>$(P)HDFImgT0:NumCapture</pv_name>
+        <value>100</value>
+      </action>
+      <action type="write_pv">
+        <description>T0 enable</description>
+        <pv_name>$(P)HDFImgT0:EnableCallbacks</pv_name>
+        <value>1</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 path</description>
+        <pv_name>$(P)HDFImgT1:FilePath</pv_name>
+        <value>/tmp/mpx3_hdf/</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 name</description>
+        <pv_name>$(P)HDFImgT1:FileName</pv_name>
+        <value>img_t1</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 template</description>
+        <pv_name>$(P)HDFImgT1:FileTemplate</pv_name>
+        <value>%s%s_%3.3d.h5</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 number</description>
+        <pv_name>$(P)HDFImgT1:FileNumber</pv_name>
+        <value>0</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 autoinc</description>
+        <pv_name>$(P)HDFImgT1:AutoIncrement</pv_name>
+        <value>1</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 stream</description>
+        <pv_name>$(P)HDFImgT1:FileWriteMode</pv_name>
+        <value>2</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 numcap</description>
+        <pv_name>$(P)HDFImgT1:NumCapture</pv_name>
+        <value>100</value>
+      </action>
+      <action type="write_pv">
+        <description>T1 enable</description>
+        <pv_name>$(P)HDFImgT1:EnableCallbacks</pv_name>
+        <value>1</value>
+      </action>
+      <action type="write_pv">
+        <description>Disable Pva7</description>
+        <pv_name>$(P)Pva7:EnableCallbacks</pv_name>
+        <value>0</value>
+      </action>
+      <action type="write_pv">
+        <description>Disable Pva8</description>
+        <pv_name>$(P)Pva8:EnableCallbacks</pv_name>
+        <value>0</value>
+      </action>
+    </actions>
+    <text>Apply defaults</text>
+    <x>910</x>
+    <y>35</y>
+    <width>100</width>
+    <height>26</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>Same as init_detector_hdf5_img_mpx3.cmd (/tmp/mpx3_hdf/). Does not arm Capture.</tooltip>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>ArmCaptureBtn</name>
+    <actions>
+      <action type="write_pv">
+        <description>Arm T0</description>
+        <pv_name>$(P)HDFImgT0:Capture</pv_name>
+        <value>1</value>
+      </action>
+      <action type="write_pv">
+        <description>Arm T1</description>
+        <pv_name>$(P)HDFImgT1:Capture</pv_name>
+        <value>1</value>
+      </action>
+    </actions>
+    <text>Arm Capture</text>
+    <x>1015</x>
+    <y>35</y>
+    <width>100</width>
+    <height>26</height>
+    <background_color>
+      <color red="255" green="200" blue="100">
+      </color>
+    </background_color>
+    <tooltip>After dims latched (one Acquire with Enable on). Same as init_detector_hdf5_img_mpx3_arm.cmd</tooltip>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>HdfT0</name>
+    <y>70</y>
+    <width>555</width>
+    <height>530</height>
+    <widget type="label" version="2.0.0">
+      <name>T0Title</name>
+      <text>HDFImgT0 — threshold 0 (NDArray addr 1)</text>
+      <x>5</x>
+      <y>4</y>
+      <width>400</width>
+      <height>18</height>
+      <font>
+        <font family="Sans" style="BOLD" size="11.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0EnLbl</name>
+      <text>Enable</text>
+      <x>10</x>
+      <y>35</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>T0Enable</name>
+      <pv_name>$(P)HDFImgT0:EnableCallbacks</pv_name>
+      <bit>-1</bit>
+      <x>85</x>
+      <y>30</y>
+      <width>75</width>
+      <height>24</height>
+      <off_label>Off</off_label>
+      <on_label>On</on_label>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0EnableRBV</name>
+      <pv_name>$(P)HDFImgT0:EnableCallbacks_RBV</pv_name>
+      <x>170</x>
+      <y>32</y>
+      <width>70</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0PathLbl</name>
+      <text>Path</text>
+      <x>10</x>
+      <y>65</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T0Path</name>
+      <pv_name>$(P)HDFImgT0:FilePath</pv_name>
+      <x>85</x>
+      <y>61</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>Must end with /</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0PathRBV</name>
+      <pv_name>$(P)HDFImgT0:FilePath_RBV</pv_name>
+      <x>85</x>
+      <y>87</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0NameLbl</name>
+      <text>FileName</text>
+      <x>10</x>
+      <y>120</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T0Name</name>
+      <pv_name>$(P)HDFImgT0:FileName</pv_name>
+      <x>85</x>
+      <y>116</y>
+      <width>200</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0NameRBV</name>
+      <pv_name>$(P)HDFImgT0:FileName_RBV</pv_name>
+      <x>295</x>
+      <y>116</y>
+      <width>230</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0TmplLbl</name>
+      <text>Template</text>
+      <x>10</x>
+      <y>150</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T0Tmpl</name>
+      <pv_name>$(P)HDFImgT0:FileTemplate</pv_name>
+      <x>85</x>
+      <y>146</y>
+      <width>200</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>%s%s_%3.3d.h5 required for Stream</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0TmplRBV</name>
+      <pv_name>$(P)HDFImgT0:FileTemplate_RBV</pv_name>
+      <x>295</x>
+      <y>146</y>
+      <width>230</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0NumLbl</name>
+      <text>FileNumber</text>
+      <x>10</x>
+      <y>180</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T0FileNum</name>
+      <pv_name>$(P)HDFImgT0:FileNumber</pv_name>
+      <x>85</x>
+      <y>176</y>
+      <width>70</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0AutoLbl</name>
+      <text>AutoInc</text>
+      <x>170</x>
+      <y>180</y>
+      <width>55</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>T0AutoInc</name>
+      <pv_name>$(P)HDFImgT0:AutoIncrement</pv_name>
+      <bit>-1</bit>
+      <x>230</x>
+      <y>174</y>
+      <width>60</width>
+      <height>24</height>
+      <off_label>Off</off_label>
+      <on_label>On</on_label>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0ModeLbl</name>
+      <text>WriteMode</text>
+      <x>300</x>
+      <y>180</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>T0WriteMode</name>
+      <pv_name>$(P)HDFImgT0:FileWriteMode</pv_name>
+      <x>375</x>
+      <y>176</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>Use Stream (2) for soak</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0NumCapLbl</name>
+      <text>NumCapture</text>
+      <x>10</x>
+      <y>215</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T0NumCap</name>
+      <pv_name>$(P)HDFImgT0:NumCapture</pv_name>
+      <x>85</x>
+      <y>211</y>
+      <width>70</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0NumCapRBV</name>
+      <pv_name>$(P)HDFImgT0:NumCapture_RBV</pv_name>
+      <x>165</x>
+      <y>211</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0CapLbl</name>
+      <text>Capture</text>
+      <x>250</x>
+      <y>215</y>
+      <width>55</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>T0Capture</name>
+      <pv_name>$(P)HDFImgT0:Capture</pv_name>
+      <bit>-1</bit>
+      <x>310</x>
+      <y>209</y>
+      <width>75</width>
+      <height>24</height>
+      <off_label>Off</off_label>
+      <on_label>On</on_label>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+      <tooltip>Arm only after first NDArray latched dimensions</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0CapRBV</name>
+      <pv_name>$(P)HDFImgT0:Capture_RBV</pv_name>
+      <x>395</x>
+      <y>211</y>
+      <width>60</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0CaughtLbl</name>
+      <text>NumCaptured</text>
+      <x>10</x>
+      <y>250</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0Caught</name>
+      <pv_name>$(P)HDFImgT0:NumCaptured_RBV</pv_name>
+      <x>85</x>
+      <y>246</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0WriteLbl</name>
+      <text>WriteStatus</text>
+      <x>170</x>
+      <y>250</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0WriteStat</name>
+      <pv_name>$(P)HDFImgT0:WriteStatus</pv_name>
+      <x>255</x>
+      <y>246</y>
+      <width>90</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T0WriteMsg</name>
+      <pv_name>$(P)HDFImgT0:WriteMessage</pv_name>
+      <x>85</x>
+      <y>276</y>
+      <width>440</width>
+      <height>40</height>
+      <format>6</format>
+      <wrap_words>true</wrap_words>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T0Hint</name>
+      <text>Scripts still valid: init_detector_hdf5_img_mpx3.cmd · _arm.cmd</text>
+      <x>10</x>
+      <y>330</y>
+      <width>520</width>
+      <height>40</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="10.0">
+        </font>
+      </font>
+      <wrap_words>true</wrap_words>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>HdfT1</name>
+    <x>565</x>
+    <y>70</y>
+    <width>555</width>
+    <height>530</height>
+    <widget type="label" version="2.0.0">
+      <name>T1Title</name>
+      <text>HDFImgT1 — threshold 1 (NDArray addr 13)</text>
+      <x>5</x>
+      <y>4</y>
+      <width>400</width>
+      <height>18</height>
+      <font>
+        <font family="Sans" style="BOLD" size="11.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="10" green="0" blue="184">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1EnLbl</name>
+      <text>Enable</text>
+      <x>10</x>
+      <y>35</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>T1Enable</name>
+      <pv_name>$(P)HDFImgT1:EnableCallbacks</pv_name>
+      <bit>-1</bit>
+      <x>85</x>
+      <y>30</y>
+      <width>75</width>
+      <height>24</height>
+      <off_label>Off</off_label>
+      <on_label>On</on_label>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1EnableRBV</name>
+      <pv_name>$(P)HDFImgT1:EnableCallbacks_RBV</pv_name>
+      <x>170</x>
+      <y>32</y>
+      <width>70</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1PathLbl</name>
+      <text>Path</text>
+      <x>10</x>
+      <y>65</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T1Path</name>
+      <pv_name>$(P)HDFImgT1:FilePath</pv_name>
+      <x>85</x>
+      <y>61</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+      <tooltip>Must end with /</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1PathRBV</name>
+      <pv_name>$(P)HDFImgT1:FilePath_RBV</pv_name>
+      <x>85</x>
+      <y>87</y>
+      <width>440</width>
+      <height>22</height>
+      <background_color>
+        <color red="218" green="218" blue="218">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1NameLbl</name>
+      <text>FileName</text>
+      <x>10</x>
+      <y>120</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T1Name</name>
+      <pv_name>$(P)HDFImgT1:FileName</pv_name>
+      <x>85</x>
+      <y>116</y>
+      <width>200</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1NameRBV</name>
+      <pv_name>$(P)HDFImgT1:FileName_RBV</pv_name>
+      <x>295</x>
+      <y>116</y>
+      <width>230</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1TmplLbl</name>
+      <text>Template</text>
+      <x>10</x>
+      <y>150</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T1Tmpl</name>
+      <pv_name>$(P)HDFImgT1:FileTemplate</pv_name>
+      <x>85</x>
+      <y>146</y>
+      <width>200</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1TmplRBV</name>
+      <pv_name>$(P)HDFImgT1:FileTemplate_RBV</pv_name>
+      <x>295</x>
+      <y>146</y>
+      <width>230</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1NumLbl</name>
+      <text>FileNumber</text>
+      <x>10</x>
+      <y>180</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T1FileNum</name>
+      <pv_name>$(P)HDFImgT1:FileNumber</pv_name>
+      <x>85</x>
+      <y>176</y>
+      <width>70</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1AutoLbl</name>
+      <text>AutoInc</text>
+      <x>170</x>
+      <y>180</y>
+      <width>55</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>T1AutoInc</name>
+      <pv_name>$(P)HDFImgT1:AutoIncrement</pv_name>
+      <bit>-1</bit>
+      <x>230</x>
+      <y>174</y>
+      <width>60</width>
+      <height>24</height>
+      <off_label>Off</off_label>
+      <on_label>On</on_label>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1ModeLbl</name>
+      <text>WriteMode</text>
+      <x>300</x>
+      <y>180</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>T1WriteMode</name>
+      <pv_name>$(P)HDFImgT1:FileWriteMode</pv_name>
+      <x>375</x>
+      <y>176</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1NumCapLbl</name>
+      <text>NumCapture</text>
+      <x>10</x>
+      <y>215</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>T1NumCap</name>
+      <pv_name>$(P)HDFImgT1:NumCapture</pv_name>
+      <x>85</x>
+      <y>211</y>
+      <width>70</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1NumCapRBV</name>
+      <pv_name>$(P)HDFImgT1:NumCapture_RBV</pv_name>
+      <x>165</x>
+      <y>211</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1CapLbl</name>
+      <text>Capture</text>
+      <x>250</x>
+      <y>215</y>
+      <width>55</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="bool_button" version="2.0.0">
+      <name>T1Capture</name>
+      <pv_name>$(P)HDFImgT1:Capture</pv_name>
+      <bit>-1</bit>
+      <x>310</x>
+      <y>209</y>
+      <width>75</width>
+      <height>24</height>
+      <off_label>Off</off_label>
+      <on_label>On</on_label>
+      <off_color>
+        <color red="0" green="100" blue="0">
+        </color>
+      </off_color>
+      <on_color>
+        <color red="0" green="255" blue="0">
+        </color>
+      </on_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1CapRBV</name>
+      <pv_name>$(P)HDFImgT1:Capture_RBV</pv_name>
+      <x>395</x>
+      <y>211</y>
+      <width>60</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1CaughtLbl</name>
+      <text>NumCaptured</text>
+      <x>10</x>
+      <y>250</y>
+      <width>70</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1Caught</name>
+      <pv_name>$(P)HDFImgT1:NumCaptured_RBV</pv_name>
+      <x>85</x>
+      <y>246</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1WriteLbl</name>
+      <text>WriteStatus</text>
+      <x>170</x>
+      <y>250</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1WriteStat</name>
+      <pv_name>$(P)HDFImgT1:WriteStatus</pv_name>
+      <x>255</x>
+      <y>246</y>
+      <width>90</width>
+      <height>22</height>
+      <format>6</format>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>T1WriteMsg</name>
+      <pv_name>$(P)HDFImgT1:WriteMessage</pv_name>
+      <x>85</x>
+      <y>276</y>
+      <width>440</width>
+      <height>40</height>
+      <format>6</format>
+      <wrap_words>true</wrap_words>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>T1Hint</name>
+      <text>BothCounters: T1 files only when thresholdID=1 frames arrive on 8086.</text>
+      <x>10</x>
+      <y>330</y>
+      <width>520</width>
+      <height>40</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="10.0">
+        </font>
+      </font>
+      <wrap_words>true</wrap_words>
+    </widget>
+  </widget>
+</display>

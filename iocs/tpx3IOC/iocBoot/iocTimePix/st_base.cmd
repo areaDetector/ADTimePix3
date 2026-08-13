@@ -61,6 +61,10 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 # Load all other plugins using commonPlugins.cmd
 < $(ADCORE)/iocBoot/commonPlugins.cmd
 #
+# Phoebus row/column profile axes (NDStatsProfiles Cal:*.AVAL). Same as st_mpx3.cmd.
+# Requires synApps calc; after iocInit run StatsProfInit_ (see init_detector_hw.cmd).
+< $(ADCORE)/iocBoot/stats_profiles.cmd
+#
 
 # Sum of last N frames
 #NDFileTIFFConfigure("FileTIFFSum", 30, 0, "TPX3", 2)

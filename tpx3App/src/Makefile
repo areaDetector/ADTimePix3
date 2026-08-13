@@ -15,6 +15,7 @@ USR_CPPFLAGS += -std=c++17
 
 INC += ADTimePix.h
 INC += ADTimePixLog.h
+INC += detector_family.h
 INC += network_client.h
 INC += serval_http.h
 
@@ -23,6 +24,7 @@ INC += serval_http.h
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
+LIB_SRCS += detector_family.cpp
 LIB_SRCS += mask_io.cpp
 LIB_SRCS += img_accumulation.cpp
 LIB_SRCS += histogram_io.cpp

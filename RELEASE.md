@@ -9,13 +9,25 @@ Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
 The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for **4.1.x** (latest tested; includes dual-image and other Serval fixes).
 
-Driver depends on Serval versions, at this time. Latest release is **R1-6-3** (driver **1.6.3**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest release is **R1-7-0** (driver **1.7.0**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
-R1-6-4 (TBD, 2026)
+R1-7-0 (August 2026)
 --------
 
-Driver / user-visible version **1.6.4** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+Driver / user-visible version **1.7.0** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+* **Medipix3 (MPX3) family support** (unified driver):
+  * Runtime detector family detection from Serval metadata (`DetectorFamily_RBV`, capability PVs).
+  * Dedicated IOC profile: `st_mpx3.cmd` / `st_mpx3.sh`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
+  * Dual-threshold preview: demux by `thresholdID` on TCP **8088** / **8089**; BothCounters; T0−T1 band-pass (Pva5/Pva6).
+  * Opt-in full-rate Image[] TCP (**8086**) with threshold demux (Pva7/Pva8) and HDF soak plugins.
+  * MediPix3 Phoebus screens (`MediPix3.bob`, detector config, preview writer, image channels).
+  * Docs: `documentation/medipix3/` (integration, dual-threshold preview, hardware notes).
+* **Timepix3 fixes / IOC**:
+  * Make `prvHstWorker` joinable so `acquireStop` does not hang after Preview histogram streaming.
+  * Enable NDStats row/column profile axes for PVA preview plots (`stats_profiles.cmd`, Stats1 init, mosaic `XSIZE`/`YSIZE`).
+* Timepix3 behaviour remains the default path when family is TPX3; MPX3 uses the dedicated startup profile.
 
 
 R1-6-3 (June 7, 2026)
@@ -86,7 +98,7 @@ R1-6-2 (April 29, 2026)
   * **Database**: **`ADTimePix3.template`** -- **`BChBoard2Id_RBV`**, **`IpAddr2_RBV`**, **`Chip5_RBV`...`Chip8_RBV`**. New asyn parameter names in **`ADTimePix.h`** / **`createParam`**.
   * **Mask / BPC (`mask_io.cpp`)**: For **`numChips == 8`** and **DetectorOrientation UP (0)** only, **`pelIndex`** and **`bpc2ImgIndex`** use a rectangular mosaic with **`chip = Y_CHIP * xChips + X_CHIP`** from **`rowsCols()`**; intra-chip order matches single-chip **UP**. Other orientations for eight tiles remain TODO (verify on hardware vs Serval **`Layout`**).
   * **Documentation**: **`documentation/8chip-migration.md`**; README and **`documentation/MIGRATION_SUPPORT2.md`** updated (**`MASK_BPC_NELEMENTS`** checklist, links).
-  * **Phoebus / OPI (8-chip UX)**: **`TimePix3Detector.bob`** embeds **`CHIP0`...`CHIP7`** (operator-adjustable layout); **`Acquire/DetectorConfig.bob`** adds Vth panels for **`CHIP4`...`CHIP7`**; **`Acquire/ImgAccumulation.bob`**, **`Mask/PixelConfigMaskPanel.bob`**, and **`Mask/Mask.bob`** add **1024x512** image variants when **`PixCount_RBV`** matches the 8-chip mosaic (**524288**); **`Detector/TimePixDetectorVoltages.opi`** lists second-board rails **`Pwr3`...`Pwr5`** (same file under **`op/bob/Detector`** and **`op/opi/Detector`**).
+  * **Phoebus / OPI (8-chip UX)**: **`TimePix3Detector.bob`** embeds **`CHIP0`...`CHIP7`** (operator-adjustable layout); **`Acquire/DetectorConfig.bob`** adds Vth panels for **`CHIP4`...`CHIP7`**; **`Acquire/ImgAccumulation.bob`**, **`Mask/PixelConfigMaskPanel.bob`**, and **`Mask/Mask.bob`** add **1024x512** image variants when **`PixCount_RBV`** matches the 8-chip mosaic (**524288**); **`Detector/TimePixDetectorVoltages.bob`** (Display Builder, **`op/bob/Detector`**) or **`TimePixDetectorVoltages.opi`** (legacy BOY, **`op/opi/Detector`**) lists second-board rails **`Pwr3`...`Pwr5`**; **`Detector/TimePixDetectorHealth.bob`** provides summary health with cross-links to voltages.
   * **IOC hardware init (calibration push)**: `iocs/tpx3IOC/iocBoot/iocTimePix/init_detector_hw.cmd` now documents that `WriteBPCFile=1` and `WriteDACSFile=1` trigger driver `uploadBPC()` / `uploadDACS()` calls to SERVAL `/config/load` (using paths from `init_detector_paths.cmd`), with troubleshooting notes for `HttpCode`, `WriteFileMessage`, and detector/SERVAL readiness.
 
 * **Phoebus histogram InfoDisplay layout tweak**: Manually adjusted the layout in `tpx3App/op/bob/Acquire/PrvHstHistogram.bob` so InfoDisplay text fits properly (increased container/text height).

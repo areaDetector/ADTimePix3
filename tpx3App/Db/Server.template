@@ -543,12 +543,40 @@ record(longin, "$(P)$(R)ImgQueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# Image[0] Thresholds[] (comma-separated, MPX3 BothCounters — same socket, demux by thresholdID)
+record(waveform, "$(P)$(R)ImgThs")
+{
+    field(DESC, "Img Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGTHS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)ImgThs_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGTHS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 # Img TCP streaming metadata (from jsonimage header)
 record(longin, "$(P)$(R)ImgFrameNumber_RBV")
 {
     field(DESC, "Frame number from jsonimage")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_FRAME_NUMBER")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)ImgThresholdID_RBV")
+{
+    field(DESC, "thresholdID from Image jsonimage")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_THRESHOLD_ID")
     field(SCAN, "I/O Intr")
 }
 
@@ -919,6 +947,26 @@ record(longin, "$(P)$(R)Img1QueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# Image[1] Thresholds[] (comma-separated, MPX3)
+record(waveform, "$(P)$(R)Img1Ths")
+{
+    field(DESC, "Img1 Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)Img1Ths_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 ###################################################################
 #  Preview                                                        #
 #  These records control the preview period                       #
@@ -1160,6 +1208,26 @@ record(longin, "$(P)$(R)PrvImgQueueSize_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# Preview ImageChannels[0] Thresholds[] (comma-separated, MPX3)
+record(waveform, "$(P)$(R)PrvImgThs")
+{
+    field(DESC, "PrvImg Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMGTHS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)PrvImgThs_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMGTHS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 # PrvImg TCP streaming metadata (from jsonimage header)
 record(longin, "$(P)$(R)PrvImgFrameNumber_RBV")
 {
@@ -1186,6 +1254,53 @@ record(ai, "$(P)$(R)PrvImgAcqRate_RBV")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_ACQ_RATE")
     field(PREC, "3")
     field(EGU, "Hz")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)PrvImgThresholdID_RBV")
+{
+    field(DESC, "thresholdID from jsonimage header")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESHOLD_ID")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)PrvImgIntegrationSize_RBV")
+{
+    field(DESC, "integrationSize from jsonimage header")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_INTEGRATION_SIZE")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)PrvImgLogHeaders")
+{
+    field(DESC, "Jsonimage headers logged per acquire")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_LOG_HEADERS")
+    field(PINI, "YES")
+    field(VAL,  "3")
+    info(autosaveFields, "VAL")
+}
+
+record(bo, "$(P)$(R)PrvImgThreshDiffClip")
+{
+    field(DESC, "Clip T0-T1 band addr 9/12")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESH_DIFF_CLIP")
+    field(ZNAM, "Signed")
+    field(ONAM, "Clip")
+    field(PINI, "YES")
+    field(VAL,  "1")
+    info(autosaveFields, "VAL")
+}
+record(bi, "$(P)$(R)PrvImgThreshDiffClip_RBV")
+{
+    field(DESC, "T0-T1 band clip mode addr 9/12")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRVIMG_THRESH_DIFF_CLIP")
+    field(ZNAM, "Signed")
+    field(ONAM, "Clip")
     field(SCAN, "I/O Intr")
 }
 
@@ -1383,6 +1498,26 @@ record(longin, "$(P)$(R)PrvImg1QueueSize_RBV")
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1QUEUESIZE")
    field(SCAN, "I/O Intr")
+}
+
+# Preview ImageChannels[1] Thresholds[] (comma-separated, MPX3 integrated 8089)
+record(waveform, "$(P)$(R)PrvImg1Ths")
+{
+    field(DESC, "PrvImg1 Thresholds list")
+    field(PINI, "YES")
+    field(DTYP, "asynOctetWrite")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    info(autosaveFields, "VAL")
+}
+record(waveform, "$(P)$(R)PrvImg1Ths_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1THS")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
 }
 
 # Preview Histogram Channels[0] file path.

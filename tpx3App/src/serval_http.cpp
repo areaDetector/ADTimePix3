@@ -94,6 +94,84 @@ static string strip_quotes(string str) {
     return str;
 }
 
+static string chipBoardEntryLabel(const json& chip) {
+    if (chip.is_string()) {
+        return strip_quotes(chip.dump());
+    }
+    if (chip.is_object()) {
+        if (chip.contains("Name") && chip["Name"].is_string()) {
+            return chip["Name"].get<string>();
+        }
+        if (chip.contains("Id")) {
+            if (chip["Id"].is_number_integer()) {
+                return std::to_string(chip["Id"].get<int>());
+            }
+            if (chip["Id"].is_string()) {
+                return chip["Id"].get<string>();
+            }
+        }
+    }
+    return strip_quotes(chip.dump());
+}
+
+static int jsonIntOr(const json& j, int def = 0) {
+    if (j.is_number_integer()) return j.get<int>();
+    if (j.is_number()) return static_cast<int>(j.get<double>());
+    if (j.is_boolean()) return j.get<bool>() ? 1 : 0;
+    return def;
+}
+
+static double jsonDoubleOr(const json& j, double def = 0.0) {
+    if (j.is_number()) return j.get<double>();
+    return def;
+}
+
+static bool jsonBoolOr(const json& j, bool def = false) {
+    if (j.is_boolean()) return j.get<bool>();
+    if (j.is_number()) return j.get<int>() != 0;
+    return def;
+}
+
+static string jsonStringOr(const json& j, const string& def = "") {
+    if (j.is_string()) return j.get<string>();
+    if (j.is_null()) return def;
+    return strip_quotes(j.dump());
+}
+
+static void stripTpx3DetectorConfigFields(json& config_j) {
+    static const char* keys[] = {
+        "TriggerDelay",
+        "GlobalTimestampInterval",
+        "Tdc",
+        "ExternalReferenceClock",
+        "PeriphClk80",
+        nullptr,
+    };
+    for (const char** key = keys; *key != nullptr; ++key) {
+        config_j.erase(*key);
+    }
+}
+
+static bool parseThresholdList(const string& text, json& out) {
+    out = json::array();
+    std::stringstream ss(text);
+    string item;
+    while (std::getline(ss, item, ',')) {
+        const auto start = item.find_first_not_of(" \t");
+        if (start == string::npos) continue;
+        const auto end = item.find_last_not_of(" \t");
+        item = item.substr(start, end - start + 1);
+        try {
+            out.push_back(std::stoi(item));
+        } catch (const std::exception&) {
+            return false;
+        }
+    }
+    return !out.empty();
+}
+
+static const char kDefaultThresholdList[] = "0,1,2,3,4,5,6,7";
+
 cpr::Response ADTimePix::servalHttpGetAuthOnly(const std::string& url) {
     return ADTimePix3ServalHttp::getAuthOnly(url);
 }
@@ -790,6 +868,24 @@ void ADTimePix::updateDetectorHealthFromJson(const json& detector_j) {
 */
 
 asynStatus ADTimePix::fetchDacs(json& data, int chip) {
+    if (!data.contains("Chips") || !data["Chips"].is_array() ||
+        static_cast<size_t>(chip) >= data["Chips"].size()) {
+        return asynError;
+    }
+
+    const json& dacs = data["Chips"][chip]["DACs"];
+    if (detectorFamily_ == DetectorFamily::MPX3 || !dacs.contains("Ibias_Preamp_ON")) {
+        if (detectorHealthIsArray(data)) {
+            setIntegerParam(chip, ADTimePixChipNTemperature, chipTemperatureFromHealthV4(data, chip));
+        } else if (data.contains("Health") && data["Health"].is_object()) {
+            setIntegerParam(chip, ADTimePixChipNTemperature, chipTemperatureFromHealthV3(data, chip));
+        } else {
+            setIntegerParam(chip, ADTimePixChipNTemperature, 0);
+        }
+        setIntegerParam(chip, ADTimePixAdjust, -1);
+        return asynSuccess;
+    }
+
     setIntegerParam(chip, ADTimePixCP_PLL,             data["Chips"][chip]["DACs"]["Ibias_CP_PLL"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1OFF,          data["Chips"][chip]["DACs"]["Ibias_DiscS1_OFF"].get<int>());
     setIntegerParam(chip, ADTimePixDiscS1ON,           data["Chips"][chip]["DACs"]["Ibias_DiscS1_ON"].get<int>());
@@ -1198,16 +1294,28 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADMaxSizeX,     detector_j["Info"]["PixCount"].get<int>() / detector_j["Info"]["NumberOfRows"].get<int>());  // Sensor Size X
         setIntegerParam(ADTimePixMpxType,       detector_j["Info"]["MpxType"].get<int>());
 
+        std::string chipType;
+        if (detector_j["Info"].contains("ChipType")) {
+            chipType = strip_quotes(detector_j["Info"]["ChipType"].dump());
+        }
+        std::string chipboardId;
+        if (detector_j["Info"].contains("Boards") && detector_j["Info"]["Boards"].is_array() &&
+            !detector_j["Info"]["Boards"].empty() &&
+            detector_j["Info"]["Boards"][0].contains("ChipboardId")) {
+            chipboardId = strip_quotes(detector_j["Info"]["Boards"][0]["ChipboardId"].dump());
+        }
+        updateDetectorFamily(detector_j["Info"]["MpxType"].get<int>(), chipType, chipboardId);
+
         if (detector_j["Info"].contains("Boards") && detector_j["Info"]["Boards"].is_array() &&
             !detector_j["Info"]["Boards"].empty()) {
             const json& B0 = detector_j["Info"]["Boards"][0];
             setStringParam(ADTimePixBoardsID, strip_quotes(B0["ChipboardId"].dump().c_str()));
             setStringParam(ADTimePixBoardsIP, strip_quotes(B0["IpAddress"].dump().c_str()));
             if (B0.contains("Chips") && B0["Chips"].is_array() && B0["Chips"].size() > 0) {
-                setStringParam(ADTimePixBoardsCh1, strip_quotes(B0["Chips"][0].dump().c_str()));
-                setStringParam(ADTimePixBoardsCh2, B0["Chips"].size() > 1 ? strip_quotes(B0["Chips"][1].dump().c_str()) : "");
-                setStringParam(ADTimePixBoardsCh3, B0["Chips"].size() > 2 ? strip_quotes(B0["Chips"][2].dump().c_str()) : "");
-                setStringParam(ADTimePixBoardsCh4, B0["Chips"].size() > 3 ? strip_quotes(B0["Chips"][3].dump().c_str()) : "");
+                setStringParam(ADTimePixBoardsCh1, chipBoardEntryLabel(B0["Chips"][0]).c_str());
+                setStringParam(ADTimePixBoardsCh2, B0["Chips"].size() > 1 ? chipBoardEntryLabel(B0["Chips"][1]).c_str() : "");
+                setStringParam(ADTimePixBoardsCh3, B0["Chips"].size() > 2 ? chipBoardEntryLabel(B0["Chips"][2]).c_str() : "");
+                setStringParam(ADTimePixBoardsCh4, B0["Chips"].size() > 3 ? chipBoardEntryLabel(B0["Chips"][3]).c_str() : "");
             } else {
                 setStringParam(ADTimePixBoardsCh1, "");
                 setStringParam(ADTimePixBoardsCh2, "");
@@ -1219,10 +1327,10 @@ asynStatus ADTimePix::getDetector(){
                 setStringParam(ADTimePixBoards2ID, strip_quotes(B1["ChipboardId"].dump().c_str()));
                 setStringParam(ADTimePixBoards2IP, strip_quotes(B1["IpAddress"].dump().c_str()));
                 if (B1.contains("Chips") && B1["Chips"].is_array() && B1["Chips"].size() >= 4) {
-                    setStringParam(ADTimePixBoardsCh5, strip_quotes(B1["Chips"][0].dump().c_str()));
-                    setStringParam(ADTimePixBoardsCh6, strip_quotes(B1["Chips"][1].dump().c_str()));
-                    setStringParam(ADTimePixBoardsCh7, strip_quotes(B1["Chips"][2].dump().c_str()));
-                    setStringParam(ADTimePixBoardsCh8, strip_quotes(B1["Chips"][3].dump().c_str()));
+                    setStringParam(ADTimePixBoardsCh5, chipBoardEntryLabel(B1["Chips"][0]).c_str());
+                    setStringParam(ADTimePixBoardsCh6, chipBoardEntryLabel(B1["Chips"][1]).c_str());
+                    setStringParam(ADTimePixBoardsCh7, chipBoardEntryLabel(B1["Chips"][2]).c_str());
+                    setStringParam(ADTimePixBoardsCh8, chipBoardEntryLabel(B1["Chips"][3]).c_str());
                 } else {
                     setStringParam(ADTimePixBoardsCh5, "");
                     setStringParam(ADTimePixBoardsCh6, "");
@@ -1252,38 +1360,81 @@ asynStatus ADTimePix::getDetector(){
             setStringParam(ADTimePixBoardsCh8, "");
         }
 
-        setIntegerParam(ADTimePixSuppAcqModes,  detector_j["Info"]["SuppAcqModes"].get<int>());
-        setDoubleParam(ADTimePixClockReadout,   detector_j["Info"]["ClockReadout"].get<double>());
-        setIntegerParam(ADTimePixMaxPulseCount, detector_j["Info"]["MaxPulseCount"].get<int>());
-        setDoubleParam(ADTimePixMaxPulseHeight, detector_j["Info"]["MaxPulseHeight"].get<double>());
-        setDoubleParam(ADTimePixMaxPulsePeriod, detector_j["Info"]["MaxPulsePeriod"].get<double>());
-        setDoubleParam(ADTimePixTimerMaxVal,    detector_j["Info"]["TimerMaxVal"].get<double>());
-        setDoubleParam(ADTimePixTimerMinVal,    detector_j["Info"]["TimerMinVal"].get<double>());
-        setDoubleParam(ADTimePixTimerStep,      detector_j["Info"]["TimerStep"].get<double>());
-        setDoubleParam(ADTimePixClockTimepix,   detector_j["Info"]["ClockTimepix"].get<double>());
+        const json& info = detector_j["Info"];
+        const json& cfg = detector_j["Config"];
+
+        setIntegerParam(ADTimePixSuppAcqModes,  jsonIntOr(info["SuppAcqModes"]));
+        setDoubleParam(ADTimePixClockReadout,   jsonDoubleOr(info["ClockReadout"]));
+        setIntegerParam(ADTimePixMaxPulseCount, jsonIntOr(info["MaxPulseCount"]));
+        setDoubleParam(ADTimePixMaxPulseHeight, jsonDoubleOr(info["MaxPulseHeight"]));
+        setDoubleParam(ADTimePixMaxPulsePeriod, jsonDoubleOr(info["MaxPulsePeriod"]));
+        setDoubleParam(ADTimePixTimerMaxVal,    jsonDoubleOr(info["TimerMaxVal"]));
+        setDoubleParam(ADTimePixTimerMinVal,    jsonDoubleOr(info["TimerMinVal"]));
+        setDoubleParam(ADTimePixTimerStep,      jsonDoubleOr(info["TimerStep"]));
+        setDoubleParam(ADTimePixClockTimepix,   jsonDoubleOr(info.value("ClockTimepix", json())));
 
         // Detector Config Readback
-        setIntegerParam(ADTimePixFan1PWM,                detector_j["Config"]["Fan1PWM"].get<int>());
-        setIntegerParam(ADTimePixFan2PWM,                detector_j["Config"]["Fan2PWM"].get<int>());
-        setIntegerParam(ADTimePixBiasVolt,               detector_j["Config"]["BiasVoltage"].get<int>());
-        setIntegerParam(ADTimePixBiasEnable,             int(detector_j["Config"]["BiasEnabled"]));         // bool->int true->1, false->0
-    //    setStringParam(ADTimePixChainMode,               strip_quotes(detector_j["Config"]["ChainMode"].dump().c_str()));
-        setIntegerParam(ADTimePixTriggerIn,              detector_j["Config"]["TriggerIn"].get<int>());
-        setIntegerParam(ADTimePixTriggerOut,             detector_j["Config"]["TriggerOut"].get<int>());
-    //    setStringParam(ADTimePixPolarity,                strip_quotes(detector_j["Config"]["Polarity"].dump().c_str()));
-        setStringParam(ADTimePixTriggerMode,             strip_quotes(detector_j["Config"]["TriggerMode"].dump().c_str()));
-        //setStringParam(ADTriggerMode,             strip_quotes(detector_j["Config"]["TriggerMode"].dump().c_str()));
-        setDoubleParam(ADTimePixExposureTime,            detector_j["Config"]["ExposureTime"].get<double>());
-        setDoubleParam(ADAcquireTime,                    detector_j["Config"]["ExposureTime"].get<double>());       // Exposure Time RBV
-        setDoubleParam(ADTimePixTriggerPeriod,           detector_j["Config"]["TriggerPeriod"].get<double>());
-        setDoubleParam(ADAcquirePeriod,                  detector_j["Config"]["TriggerPeriod"].get<double>());     // Exposure Period RBV
-        setIntegerParam(ADTimePixnTriggers,              detector_j["Config"]["nTriggers"].get<int>());
-        setIntegerParam(ADTimePixPeriphClk80,            int(detector_j["Config"]["PeriphClk80"]));          // bool->int true->1, false->0
-        setDoubleParam(ADTimePixTriggerDelay,            detector_j["Config"]["TriggerDelay"].get<double>());
-        setStringParam(ADTimePixTdc,                     strip_quotes(detector_j["Config"]["Tdc"].dump().c_str()));
-        setDoubleParam(ADTimePixGlobalTimestampInterval, detector_j["Config"]["GlobalTimestampInterval"].get<double>());
-        setIntegerParam(ADTimePixExternalReferenceClock, int(detector_j["Config"]["ExternalReferenceClock"]));   // bool->int true->1, false->0
-        setIntegerParam(ADTimePixLogLevel,               detector_j["Config"]["LogLevel"].get<int>());
+        setIntegerParam(ADTimePixFan1PWM,                jsonIntOr(cfg["Fan1PWM"]));
+        setIntegerParam(ADTimePixFan2PWM,                jsonIntOr(cfg["Fan2PWM"]));
+        setIntegerParam(ADTimePixBiasVolt,               jsonIntOr(cfg["BiasVoltage"]));
+        setIntegerParam(ADTimePixBiasEnable,             jsonBoolOr(cfg["BiasEnabled"]) ? 1 : 0);
+    //    setStringParam(ADTimePixChainMode,               strip_quotes(cfg["ChainMode"].dump().c_str()));
+        setIntegerParam(ADTimePixTriggerIn,              jsonIntOr(cfg["TriggerIn"]));
+        setIntegerParam(ADTimePixTriggerOut,             jsonIntOr(cfg["TriggerOut"]));
+        if (cfg.contains("Polarity")) {
+            const std::string pol = jsonStringOr(cfg["Polarity"]);
+            setIntegerParam(ADTimePixPolarity, (pol == "Negative") ? 1 : 0);
+        }
+        if (cfg.contains("ChainMode")) {
+            const std::string chain = jsonStringOr(cfg["ChainMode"]);
+            int chainIdx = 0;
+            if (chain == "LEADER") chainIdx = 1;
+            else if (chain == "FOLLOWER") chainIdx = 2;
+            setIntegerParam(ADTimePixChainMode, chainIdx);
+        }
+        setStringParam(ADTimePixTriggerMode,             jsonStringOr(cfg["TriggerMode"]).c_str());
+        setDoubleParam(ADTimePixExposureTime,            jsonDoubleOr(cfg["ExposureTime"]));
+        setDoubleParam(ADAcquireTime,                    jsonDoubleOr(cfg["ExposureTime"]));
+        setDoubleParam(ADTimePixTriggerPeriod,           jsonDoubleOr(cfg["TriggerPeriod"]));
+        setDoubleParam(ADAcquirePeriod,                  jsonDoubleOr(cfg["TriggerPeriod"]));
+        setIntegerParam(ADTimePixnTriggers,              jsonIntOr(cfg["nTriggers"]));
+        setIntegerParam(ADNumImages,                     jsonIntOr(cfg["nTriggers"]));
+        setIntegerParam(ADTimePixPeriphClk80,              jsonBoolOr(cfg.value("PeriphClk80", json())) ? 1 : 0);
+        setDoubleParam(ADTimePixTriggerDelay,            jsonDoubleOr(cfg.value("TriggerDelay", json())));
+        setStringParam(ADTimePixTdc,                     jsonStringOr(cfg.value("Tdc", json())).c_str());
+        setDoubleParam(ADTimePixGlobalTimestampInterval, jsonDoubleOr(cfg.value("GlobalTimestampInterval", json())));
+        setIntegerParam(ADTimePixExternalReferenceClock, jsonBoolOr(cfg.value("ExternalReferenceClock", json())) ? 1 : 0);
+        setIntegerParam(ADTimePixLogLevel,               jsonIntOr(cfg["LogLevel"]));
+        if (cfg.contains("BothCounters")) {
+            setIntegerParam(ADTimePixBothCounters, jsonBoolOr(cfg["BothCounters"]) ? 1 : 0);
+        }
+        if (cfg.contains("GainMode")) {
+            setStringParam(ADTimePixGainMode, jsonStringOr(cfg["GainMode"]).c_str());
+        }
+        if (cfg.contains("ChargeSumming")) {
+            setIntegerParam(ADTimePixChargeSumming, jsonBoolOr(cfg["ChargeSumming"]) ? 1 : 0);
+        }
+        if (cfg.contains("Colour")) {
+            setIntegerParam(ADTimePixColour, jsonBoolOr(cfg["Colour"]) ? 1 : 0);
+        }
+        if (cfg.contains("PixelDepth")) {
+            setIntegerParam(ADTimePixPixelDepth, jsonIntOr(cfg["PixelDepth"]));
+        }
+        if (cfg.contains("CounterSelectIn")) {
+            setIntegerParam(ADTimePixCounterSelectIn, jsonIntOr(cfg["CounterSelectIn"]));
+        }
+        if (cfg.contains("CounterSelectOut")) {
+            setIntegerParam(ADTimePixCounterSelectOut, jsonIntOr(cfg["CounterSelectOut"]));
+        }
+        if (cfg.contains("IDelayConfig") && cfg["IDelayConfig"].is_array()) {
+            const json& idelay = cfg["IDelayConfig"];
+            static const int idelayParams[] = {
+                ADTimePixIDelay0, ADTimePixIDelay1, ADTimePixIDelay2, ADTimePixIDelay3
+            };
+            for (size_t i = 0; i < 4 && i < idelay.size(); ++i) {
+                setIntegerParam(idelayParams[i], jsonIntOr(idelay[i]));
+            }
+        }
 
 
         // Detector Chips: Chip0
@@ -1369,13 +1520,12 @@ asynStatus ADTimePix::getServer(){
     cpr::Response r = ADTimePix3ServalHttp::get(server, 5000);
 
     if (r.status_code != 200) {
-    //    printf("Text server: %s\n", r.text.c_str());
-    //    printf("Header server: %s\n", r.header["Content-Type"].c_str());
-    //    printf("Error server: %s\n", r.error.message.c_str());
-    //    printf("Status code server: %li\n", r.status_code);
-    //    printf("Elapsed server: %li\n", r.elapsed);
-    //    printf("Reason server: %s\n", r.reason.c_str());
-    //    printf("Url server: %s\n", r.url.c_str());
+        // Before the first WriteData push, Serval has no destination; IOC init dbpf on Write*
+        // channel PVs triggers getServer() and Serval logs this as a known warning.
+        if (r.text.find("Destination is not set") != std::string::npos) {
+            FLOW("Serval destination not configured yet (expected before WriteData)");
+            return asynSuccess;
+        }
 
         setIntegerParam(ADTimePixDetConnected,0);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
@@ -1679,16 +1829,17 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
 
     if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
+    const std::string channelBase = fileStr;
 
     // Use correct JSON structure based on channel type
     if (!isPreview) {
         // Main image channel
         int channelIndex = isChannel1 ? 1 : 0;
-        server_j["Image"][channelIndex]["Base"] = fileStr;
+        server_j["Image"][channelIndex]["Base"] = channelBase;
     } else {
         // Preview image channels
         int channelIndex = isChannel1 ? 1 : 0;
-        server_j["Preview"]["ImageChannels"][channelIndex]["Base"] = fileStr;
+        server_j["Preview"]["ImageChannels"][channelIndex]["Base"] = channelBase;
     }
 
     if (getParameterSafely(filePatParam, fileStr) != asynSuccess) return asynError;
@@ -1720,6 +1871,12 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     }
 
     if (getParameterSafely(formatParam, intNum) != asynSuccess) return asynError;
+    if (channelBase.compare(0, 6, "tcp://") == 0 && (intNum == 0 || intNum == 2)) {
+        LOG_ARGS("TCP channel %s: format index %d invalid for tcp; using jsonimage (3)",
+                 jsonPath.c_str(), intNum);
+        intNum = 3;
+        setIntegerParam(formatParam, intNum);
+    }
     if (!validateArrayIndex(intNum, IMG_FORMATS.size())) {
         ERR_ARGS("Invalid format index: %d", intNum);
         return asynError;
@@ -1834,6 +1991,33 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
     } else {
         int channelIndex = isChannel1 ? 1 : 0;
         server_j["Preview"]["ImageChannels"][channelIndex]["QueueSize"] = intNum;
+    }
+
+    if (detectorCapabilities_.supportsImageThresholds) {
+        int thsParam;
+        if (!isPreview) {
+            thsParam = isChannel1 ? ADTimePixImg1Ths : ADTimePixImgThs;
+        } else {
+            thsParam = isChannel1 ? ADTimePixPrvImg1Ths : ADTimePixPrvImgThs;
+        }
+        std::string thsStr;
+        if (getParameterSafely(thsParam, thsStr) == asynSuccess) {
+            if (thsStr.empty()) {
+                thsStr = kDefaultThresholdList;
+            }
+            json thsArr;
+            if (parseThresholdList(thsStr, thsArr)) {
+                const int channelIndex = isChannel1 ? 1 : 0;
+                if (!isPreview) {
+                    server_j["Image"][channelIndex]["Thresholds"] = thsArr;
+                } else {
+                    server_j["Preview"]["ImageChannels"][channelIndex]["Thresholds"] = thsArr;
+                }
+            } else {
+                ERR_ARGS("Invalid threshold list for channel param %d: %s", thsParam, thsStr.c_str());
+                return asynError;
+            }
+        }
     }
 
     return asynSuccess;
@@ -2270,10 +2454,21 @@ asynStatus ADTimePix::initAcquisition(){
         setIntegerParam(ADTimePixDetConnected,1);
     //    printf("initAcquisition: %s\n", r.text.c_str());
 
+        if (detectorFamily_ == DetectorFamily::Unknown) {
+            (void)getDetector();
+        }
+
         json config_j = json::parse(r.text.c_str());
         //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
         getIntegerParam(ADTriggerMode, &intNum);
+        const int triggerModeIdx = intNum;
+        if (mpx3BothCountersTriggerConflict(triggerModeIdx)) {
+            ERR_ARGS("%s", kMpx3BothCountersTriggerMsg);
+            setStringParam(ADTimePixWriteMsg, kMpx3BothCountersTriggerMsg);
+            setIntegerParam(ADTimePixHttpCode, 400);
+            return asynError;
+        }
         json triggerMode;
         triggerMode[0] = "PEXSTART_NEXSTOP";
         triggerMode[1] = "NEXSTART_PEXSTOP";
@@ -2339,47 +2534,85 @@ asynStatus ADTimePix::initAcquisition(){
         getIntegerParam(ADTimePixTriggerOut, &intNum);
         config_j["TriggerOut"] = intNum;
 
-        getDoubleParam(ADTimePixTriggerDelay, &doubleNum);
-        config_j["TriggerDelay"] = doubleNum;
-        getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
-        config_j["GlobalTimestampInterval"] = doubleNum;
+        if (detectorFamily_ != DetectorFamily::MPX3) {
+            getDoubleParam(ADTimePixTriggerDelay, &doubleNum);
+            config_j["TriggerDelay"] = doubleNum;
+            getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
+            config_j["GlobalTimestampInterval"] = doubleNum;
 
-        getIntegerParam(ADTimePixTdc0, &intNum);
-        json tdc;
-        tdc[0] = "P0123";
-        tdc[1] = "N0123";
-        tdc[2] = "PN0123";
-        tdc[3] = "P0";
-        tdc[4] = "N0";
-        tdc[5] = "PN0";
-        config_j["Tdc"][0] = tdc[intNum];
-        getIntegerParam(ADTimePixTdc1, &intNum);
-        tdc[0] = "P0123";
-        tdc[1] = "N0123";
-        tdc[2] = "PN0123";
-        tdc[3] = "P0";
-        tdc[4] = "N0";
-        tdc[5] = "PN0";
-        config_j["Tdc"][1] = tdc[intNum];
+            getIntegerParam(ADTimePixTdc0, &intNum);
+            json tdc;
+            tdc[0] = "P0123";
+            tdc[1] = "N0123";
+            tdc[2] = "PN0123";
+            tdc[3] = "P0";
+            tdc[4] = "N0";
+            tdc[5] = "PN0";
+            config_j["Tdc"][0] = tdc[intNum];
+            getIntegerParam(ADTimePixTdc1, &intNum);
+            tdc[0] = "P0123";
+            tdc[1] = "N0123";
+            tdc[2] = "PN0123";
+            tdc[3] = "P0";
+            tdc[4] = "N0";
+            tdc[5] = "PN0";
+            config_j["Tdc"][1] = tdc[intNum];
 
-        getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
-        json externalClock;
-        externalClock[0] = "false";
-        externalClock[1] = "true";
-        config_j["ExternalReferenceClock"] = externalClock[intNum];
+            getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
+            json externalClock;
+            externalClock[0] = "false";
+            externalClock[1] = "true";
+            config_j["ExternalReferenceClock"] = externalClock[intNum];
 
-        getIntegerParam(ADTimePixPeriphClk80, &intNum);
-        json peripheralClock80;
-        peripheralClock80[0] = "false";
-        peripheralClock80[1] = "true";
-        config_j["PeriphClk80"] = peripheralClock80[intNum];
+            getIntegerParam(ADTimePixPeriphClk80, &intNum);
+            json peripheralClock80;
+            peripheralClock80[0] = "false";
+            peripheralClock80[1] = "true";
+            config_j["PeriphClk80"] = peripheralClock80[intNum];
+        } else {
+            stripTpx3DetectorConfigFields(config_j);
+            getIntegerParam(ADTimePixBothCounters, &intNum);
+            config_j["BothCounters"] = (intNum != 0);
+
+            getIntegerParam(ADTimePixChargeSumming, &intNum);
+            config_j["ChargeSumming"] = (intNum != 0);
+            getIntegerParam(ADTimePixColour, &intNum);
+            config_j["Colour"] = (intNum != 0);
+
+            std::string gainMode;
+            getStringParam(ADTimePixGainMode, gainMode);
+            if (!gainMode.empty()) {
+                config_j["GainMode"] = gainMode;
+            }
+
+            getIntegerParam(ADTimePixPixelDepth, &intNum);
+            config_j["PixelDepth"] = intNum;
+            getIntegerParam(ADTimePixCounterSelectIn, &intNum);
+            config_j["CounterSelectIn"] = intNum;
+            getIntegerParam(ADTimePixCounterSelectOut, &intNum);
+            config_j["CounterSelectOut"] = intNum;
+
+            json idelay = json::array();
+            static const int idelayParams[] = {
+                ADTimePixIDelay0, ADTimePixIDelay1, ADTimePixIDelay2, ADTimePixIDelay3
+            };
+            for (int i = 0; i < 4; ++i) {
+                getIntegerParam(idelayParams[i], &intNum);
+                idelay.push_back(intNum);
+            }
+            config_j["IDelayConfig"] = idelay;
+        }
 
         getIntegerParam(ADTimePixLogLevel, &intNum);
         config_j["LogLevel"] = intNum;
 
         r = ADTimePix3ServalHttp::putJson(det_config, config_j.dump());
 
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
+        if (r.status_code == 200 && detectorFamily_ == DetectorFamily::MPX3) {
+            (void)getDetector();
+        }
     }
 
     callParamCallbacks();

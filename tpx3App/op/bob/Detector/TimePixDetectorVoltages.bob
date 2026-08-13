@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
-  <name>TimePixDetectorHealth</name>
+  <name>TimePixDetectorVoltages</name>
   <width>340</width>
-  <height>505</height>
+  <height>520</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -11,7 +11,7 @@
   <grid_step_y>5</grid_step_y>
   <widget type="label" version="2.0.0">
     <name>Title</name>
-    <text>Detector health — $(P)$(R)</text>
+    <text>Detector voltages — $(P)$(R)</text>
     <x>5</x>
     <y>5</y>
     <width>330</width>
@@ -32,139 +32,14 @@
     <vertical_alignment>1</vertical_alignment>
   </widget>
   <widget type="group" version="3.0.0">
-    <name>EnvironmentGroup</name>
+    <name>Spidr1Group</name>
     <x>5</x>
     <y>30</y>
     <width>330</width>
-    <height>130</height>
+    <height>205</height>
     <widget type="label" version="2.0.0">
-      <name>EnvironmentTitle</name>
-      <text>Environment</text>
-      <x>5</x>
-      <y>2</y>
-      <width>120</width>
-      <background_color>
-        <color red="240" green="240" blue="240">
-        </color>
-      </background_color>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>LocalTempLbl</name>
-      <text>LocalTemp</text>
-      <x>5</x>
-      <y>28</y>
-      <width>80</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>LocalTempRBV</name>
-      <pv_name>$(P)$(R)LocalTemp_RBV</pv_name>
-      <x>90</x>
-      <y>26</y>
-      <width>200</width>
-      <height>22</height>
-      <format>1</format>
-      <precision>3</precision>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>FPGATempLbl</name>
-      <text>FPGATemp</text>
-      <x>5</x>
-      <y>53</y>
-      <width>80</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>FPGATempRBV</name>
-      <pv_name>$(P)$(R)FPGATemp_RBV</pv_name>
-      <x>90</x>
-      <y>51</y>
-      <width>200</width>
-      <height>22</height>
-      <format>1</format>
-      <precision>3</precision>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>HumidityLbl</name>
-      <text>Humidity</text>
-      <x>5</x>
-      <y>78</y>
-      <width>80</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>HumidityRBV</name>
-      <pv_name>$(P)$(R)Humidity_RBV</pv_name>
-      <x>90</x>
-      <y>76</y>
-      <width>200</width>
-      <height>22</height>
-      <precision>3</precision>
-    </widget>
-  </widget>
-  <widget type="group" version="3.0.0">
-    <name>CoolingGroup</name>
-    <x>5</x>
-    <y>165</y>
-    <width>330</width>
-    <height>105</height>
-    <widget type="label" version="2.0.0">
-      <name>CoolingTitle</name>
-      <text>Cooling</text>
-      <x>5</x>
-      <y>2</y>
-      <width>120</width>
-      <background_color>
-        <color red="240" green="240" blue="240">
-        </color>
-      </background_color>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>Fan1SpeedLbl</name>
-      <text>Fan1Speed</text>
-      <x>5</x>
-      <y>28</y>
-      <width>80</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>Fan1SpeedRBV</name>
-      <pv_name>$(P)$(R)Fan1Speed_RBV</pv_name>
-      <x>90</x>
-      <y>26</y>
-      <width>200</width>
-      <height>22</height>
-      <format>1</format>
-      <precision>3</precision>
-    </widget>
-    <widget type="label" version="2.0.0">
-      <name>Fan2SpeedLbl</name>
-      <text>Fan2Speed</text>
-      <x>5</x>
-      <y>53</y>
-      <width>80</width>
-      <horizontal_alignment>2</horizontal_alignment>
-    </widget>
-    <widget type="textupdate" version="2.0.0">
-      <name>Fan2SpeedRBV</name>
-      <pv_name>$(P)$(R)Fan2Speed_RBV</pv_name>
-      <x>90</x>
-      <y>51</y>
-      <width>200</width>
-      <height>22</height>
-      <format>1</format>
-      <precision>3</precision>
-    </widget>
-  </widget>
-  <widget type="group" version="3.0.0">
-    <name>DetectorRailsGroup</name>
-    <x>5</x>
-    <y>275</y>
-    <width>330</width>
-    <height>155</height>
-    <widget type="label" version="2.0.0">
-      <name>DetectorRailsTitle</name>
-      <text>Bias and power rails</text>
+      <name>Spidr1Title</name>
+      <text>1st SPIDR (Pwr0–2)</text>
       <x>5</x>
       <y>2</y>
       <width>160</width>
@@ -174,79 +49,244 @@
       </background_color>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>BiasVoltageLbl</name>
-      <text>BiasVoltage</text>
+      <name>Pwr0VDDLbl</name>
+      <text>Pwr0 VDD</text>
       <x>5</x>
       <y>28</y>
       <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
-      <name>BiasVoltageRBV</name>
-      <pv_name>$(P)$(R)BiasVoltage_RBV</pv_name>
+      <name>Pwr0VDDRBV</name>
+      <pv_name>$(P)$(R)Pwr0_VDD_RBV</pv_name>
       <x>90</x>
       <y>26</y>
       <width>200</width>
       <height>22</height>
       <format>1</format>
-      <precision>7</precision>
+      <precision>4</precision>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>ChipTempsLbl</name>
-      <text>ChipTemps</text>
+      <name>Pwr1VDDLbl</name>
+      <text>Pwr1 VDD</text>
       <x>5</x>
       <y>53</y>
       <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
-      <name>ChipTempsRBV</name>
-      <pv_name>$(P)$(R)ChipTemps_RBV</pv_name>
+      <name>Pwr1VDDRBV</name>
+      <pv_name>$(P)$(R)Pwr1_VDD_RBV</pv_name>
       <x>90</x>
       <y>51</y>
       <width>200</width>
       <height>22</height>
-      <format>6</format>
+      <format>1</format>
+      <precision>4</precision>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>VDDLbl</name>
-      <text>VDD</text>
+      <name>Pwr2VDDLbl</name>
+      <text>Pwr2 VDD</text>
       <x>5</x>
       <y>78</y>
       <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
-      <name>VDDRBV</name>
-      <pv_name>$(P)$(R)VDD_RBV</pv_name>
+      <name>Pwr2VDDRBV</name>
+      <pv_name>$(P)$(R)Pwr2_VDD_RBV</pv_name>
       <x>90</x>
       <y>76</y>
       <width>200</width>
       <height>22</height>
-      <format>6</format>
+      <format>1</format>
+      <precision>4</precision>
     </widget>
     <widget type="label" version="2.0.0">
-      <name>AVDDLbl</name>
-      <text>AVDD</text>
+      <name>Pwr0AVDDLbl</name>
+      <text>Pwr0 AVDD</text>
       <x>5</x>
       <y>103</y>
       <width>80</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
     <widget type="textupdate" version="2.0.0">
-      <name>AVDDRBV</name>
-      <pv_name>$(P)$(R)AVDD_RBV</pv_name>
+      <name>Pwr0AVDDRBV</name>
+      <pv_name>$(P)$(R)Pwr0_AVDD_RBV</pv_name>
       <x>90</x>
       <y>101</y>
       <width>200</width>
       <height>22</height>
-      <format>6</format>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr1AVDDLbl</name>
+      <text>Pwr1 AVDD</text>
+      <x>5</x>
+      <y>128</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr1AVDDRBV</name>
+      <pv_name>$(P)$(R)Pwr1_AVDD_RBV</pv_name>
+      <x>90</x>
+      <y>126</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr2AVDDLbl</name>
+      <text>Pwr2 AVDD</text>
+      <x>5</x>
+      <y>153</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr2AVDDRBV</name>
+      <pv_name>$(P)$(R)Pwr2_AVDD_RBV</pv_name>
+      <x>90</x>
+      <y>151</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>Spidr2Group</name>
+    <x>5</x>
+    <y>240</y>
+    <width>330</width>
+    <height>205</height>
+    <widget type="label" version="2.0.0">
+      <name>Spidr2Title</name>
+      <text>2nd SPIDR (Pwr3–5)</text>
+      <x>5</x>
+      <y>2</y>
+      <width>160</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr3VDDLbl</name>
+      <text>Pwr3 VDD</text>
+      <x>5</x>
+      <y>28</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr3VDDRBV</name>
+      <pv_name>$(P)$(R)Pwr3_VDD_RBV</pv_name>
+      <x>90</x>
+      <y>26</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr4VDDLbl</name>
+      <text>Pwr4 VDD</text>
+      <x>5</x>
+      <y>53</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr4VDDRBV</name>
+      <pv_name>$(P)$(R)Pwr4_VDD_RBV</pv_name>
+      <x>90</x>
+      <y>51</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr5VDDLbl</name>
+      <text>Pwr5 VDD</text>
+      <x>5</x>
+      <y>78</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr5VDDRBV</name>
+      <pv_name>$(P)$(R)Pwr5_VDD_RBV</pv_name>
+      <x>90</x>
+      <y>76</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr3AVDDLbl</name>
+      <text>Pwr3 AVDD</text>
+      <x>5</x>
+      <y>103</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr3AVDDRBV</name>
+      <pv_name>$(P)$(R)Pwr3_AVDD_RBV</pv_name>
+      <x>90</x>
+      <y>101</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr4AVDDLbl</name>
+      <text>Pwr4 AVDD</text>
+      <x>5</x>
+      <y>128</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr4AVDDRBV</name>
+      <pv_name>$(P)$(R)Pwr4_AVDD_RBV</pv_name>
+      <x>90</x>
+      <y>126</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Pwr5AVDDLbl</name>
+      <text>Pwr5 AVDD</text>
+      <x>5</x>
+      <y>153</y>
+      <width>80</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Pwr5AVDDRBV</name>
+      <pv_name>$(P)$(R)Pwr5_AVDD_RBV</pv_name>
+      <x>90</x>
+      <y>151</y>
+      <width>200</width>
+      <height>22</height>
+      <format>1</format>
+      <precision>4</precision>
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
     <name>ActionsGroup</name>
     <x>5</x>
-    <y>435</y>
+    <y>450</y>
     <width>330</width>
     <height>65</height>
     <widget type="label" version="2.0.0">
@@ -261,15 +301,15 @@
       </background_color>
     </widget>
     <widget type="action_button" version="3.0.0">
-      <name>PowerVoltagesBtn</name>
+      <name>DetectorHealthBtn</name>
       <actions>
         <action type="open_display">
-          <description>Power voltages</description>
-          <file>TimePixDetectorVoltages.bob</file>
+          <description>Detector health</description>
+          <file>TimePixDetectorHealth.bob</file>
           <target>tab</target>
         </action>
       </actions>
-      <text>Power voltages</text>
+      <text>Detector health</text>
       <x>80</x>
       <y>5</y>
       <width>120</width>
@@ -278,7 +318,7 @@
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Open detailed power-rail monitor</tooltip>
+      <tooltip>Open detector health summary</tooltip>
     </widget>
     <widget type="action_button" version="3.0.0">
       <name>RefreshBtn</name>
@@ -298,7 +338,7 @@
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Pulse Health=1 to read back detector health from Serval</tooltip>
+      <tooltip>Pulse Health=1 to read back power rails from Serval</tooltip>
     </widget>
   </widget>
 </display>
