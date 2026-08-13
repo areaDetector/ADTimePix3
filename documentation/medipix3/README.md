@@ -1,6 +1,6 @@
 # Medipix3 documentation
 
-Unified **ADTimePix3** driver support for Medipix3 (MPX3) on branch `medipix3-integration`. Planning and scope: [ADMediPix3](https://github.com/kgofron/ADMediPix3).
+**ADServal** (unified driver; module **ADTimePix3**) Medipix3 (MPX3) support — merged **R1-7-0**, August 2026. Early planning: [ADMediPix3](https://github.com/kgofron/ADMediPix3). Integration history: [../NAMING.md](../NAMING.md).
 
 Validated on the Medipix3 emulator and in a **first ASI hardware preview** (July 2026, via [ad-timepix3-deploy](https://github.com/kgofron/ad-timepix3-deploy)): real detector connection, dual-threshold previews after lowering chip-0 TH0/TH1 in `.dacs`. Equalization and dual-counter IXS band-pass on hardware are still to follow — see [integration.md](integration.md) § ASI hardware checkout.
 

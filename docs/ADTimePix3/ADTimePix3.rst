@@ -1,5 +1,5 @@
 ======================================
-ADTimePix3
+ADServal (ADTimePix3)
 ======================================
 
 :author: Kazimierz Gofron, Oak Ridge National Laboratory
@@ -9,7 +9,8 @@ ADTimePix3
 Notes
 -----
 
-* Latest release: **R1-6-3** (driver **1.6.3**). See `RELEASE.md` in the repository for full release notes.
+* **ADServal**: unified EPICS areaDetector driver for ASI pixel detectors on Serval (TimePix3, Medipix3; TimePix4 planned). Shipped from module/repository **ADTimePix3**. See ``documentation/NAMING.md``.
+* Latest release: **R1-7-0** (driver **1.7.0**, August 2026). See ``RELEASE.md`` in the repository for full release notes.
 * Depends on the CPR version **1.14.2** (bundled under ``tpx3Support``).
 * Build baseline for bundled CPR is **C++17** (``-std=c++17`` in ``tpx3Support`` and ``tpx3App/src`` Makefiles).
 * Depends on the json version v3.11.2 (bundled under ``tpx3Support``).
@@ -17,7 +18,8 @@ Notes
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * Layout support in driver and OPI is most complete for **1 chip** and **2x2 quad**; **8-chip** (e.g. 2x4 mosaic, two SPIDR boards) has IOC/DB/driver support -- see ``documentation/8chip-migration.md``; validate BPC/mask mapping and screens on your hardware.
 * **Medipix3** (development on branch ``medipix3-integration``): unified driver with runtime detector-family detection and IOC profile ``st_mpx3.cmd`` -- see ``documentation/medipix3/integration.md`` and ``documentation/README.md``.
-* **Serval versions**: The master branch supports Serval 4.x.x and 3.x.x. Serval 4.1.5 is recommended for 4.x (dual-image fix). Serval 4.1.5-rc2 requires the matching TimePix3 Emulator version. Data replay is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
+* **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for 4.x. Data replay is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
+* **Detector families**: TimePix3 (default IOC profile), Medipix3 (`st_mpx3.cmd`, R1-7-0+); see ``documentation/medipix3/``.
 * Driver is specific to Serval version, since features differ.
 * The driver has been developed using the TimePix3 Emulator and real detectors (quad-chip and single-chip).
 

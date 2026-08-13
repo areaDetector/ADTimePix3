@@ -1,8 +1,15 @@
-# Medipix3 integration (unified ADTimePix3 driver)
+# Medipix3 integration (unified ADServal driver)
 
-Development branch: `medipix3-integration` on [kgofron/ADTimePix3](https://github.com/kgofron/ADTimePix3).
+**ADServal** is the product name for the unified Serval driver; the EPICS module and repository remain **ADTimePix3** ([NAMING.md](../NAMING.md)).
 
-Planning and scope live in the separate [ADMediPix3](https://github.com/kgofron/ADMediPix3) repository.
+## Development history
+
+Medipix3 was integrated for release **R1-7-0** (driver **1.7.0**, August 2026):
+
+- Merged to [areaDetector/ADTimePix3](https://github.com/areaDetector/ADTimePix3) via PR #15 from [kgofron/ADTimePix3](https://github.com/kgofron/ADTimePix3) (tag **R1-7-0**).
+- Feature work lived on branch **`medipix3-integration`** on kgofron/ADTimePix3 (removed after merge).
+- Local developer backup: **`/epics/support2/areaDetector/ADTimePix3_mpx3.bkp`** — not an official release tree; use **areaDetector/ADTimePix3** `master` / **R1-7-0** as reference.
+- Planning notes: [ADMediPix3](https://github.com/kgofron/ADMediPix3) (separate repo; scope absorbed into the unified driver).
 
 ## Runtime detector family
 

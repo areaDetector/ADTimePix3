@@ -1,10 +1,10 @@
-# ADTimePix3 documentation index
+# ADServal documentation index
 
-Technical notes for the unified **Timepix3 / Medipix3** areaDetector module. Sphinx release docs and screenshots: [`docs/ADTimePix3/`](../docs/ADTimePix3/).
+Technical notes for the unified **ADServal** areaDetector module (shipped as **ADTimePix3**): **TimePix3** and **Medipix3** on Serval; **TimePix4** planned. Naming: [NAMING.md](NAMING.md). Sphinx release docs and screenshots: [`docs/ADTimePix3/`](../docs/ADTimePix3/).
 
 ## Medipix3
 
-Development branch: `medipix3-integration`. See **[medipix3/](medipix3/)**.
+Merged in **R1-7-0** (August 2026). See **[medipix3/](medipix3/)** and [NAMING.md](NAMING.md) (integration history).
 
 | Document | Description |
 |----------|-------------|
@@ -36,6 +36,7 @@ Development branch: `medipix3-integration`. See **[medipix3/](medipix3/)**.
 
 | Document | Description |
 |----------|-------------|
+| [NAMING.md](NAMING.md) | ADServal vs legacy ADTimePix3; migration; repo history |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | License, REUSE, contribution notes |
 | [MIGRATION_SUPPORT2.md](MIGRATION_SUPPORT2.md) | support2 migration checklist |
 | [OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md) | Serval HTTP / fileWriter refactor history |

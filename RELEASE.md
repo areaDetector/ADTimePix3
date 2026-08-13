@@ -10,7 +10,7 @@ The repository was transferred a while back to the [areaDetector](https://github
 **Naming.** Release notes and new documentation use **ADServal** for the unified driver.
 The EPICS support module, `$(ADTIMEPIX)` install path, C++ symbols (`ADTimePix`, `ADTIMEPIX_*`),
 and this GitHub repository remain **ADTimePix3** until a planned rename and compatibility stub.
-[areaDetector/ADTimePix](https://github.com/areaDetector/ADTimePix) is an unused placeholder
+Full naming guide: **`documentation/NAMING.md`**. [areaDetector/ADTimePix](https://github.com/areaDetector/ADTimePix) is an unused placeholder
 (initial commit only); it is not this driver. Earlier TimePix driver efforts predated the
 current Serval-based implementation here.
 
