@@ -7,8 +7,9 @@ PNG captures for [integration.md](../integration.md) and Sphinx release docs (`d
 | `Mpx3_preview_monitor.png` | `Acquire/Mpx3PrvImgMonitor.bob` | Dual-threshold preview (8088/8089), T0/T1 and T0−T1 band (Pva5/Pva6) |
 | `Mpx3_dest_writer.png` | `Acquire/Mpx3ServerFileWriter.bob` | Serval destination writer: PrvImg, Img[], WriteData |
 | `Mpx3_img_monitor.png` | `Acquire/Mpx3ImgMonitor.bob` | Full-rate Image[] demux (8086), Pva7/Pva8 — low rate only |
+| `Mpx3_detector_config.png` | `Detector/Mpx3DetectorConfig.bob` | Detector config: GainMode, BothCounters, trigger timing, IDelayConfig |
 
-**Planned:** `Mpx3_main.png` (`MediPix3.bob`), `Mpx3_detector_config.png`, `Mpx3_hdf_img_config.png`, acquire-active variants.
+**Planned:** `Mpx3_main.png` (`MediPix3.bob`), `Mpx3_hdf_img_config.png`, acquire-active variants.
 
 Reference in markdown (used in [integration.md](../integration.md)):
 

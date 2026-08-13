@@ -21,6 +21,7 @@ mask.bpc
 # documentation/PRVIMG_METADATA_RECOMMENDATIONS.md
 # Local-only scratchpads (not committed)
 documentation/IDEAS.local.md
+documentation/medipix3/drafts/
 
 # json files
 *.json
