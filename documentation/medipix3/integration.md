@@ -109,6 +109,10 @@ Screenshots ([screenshots/](screenshots/)):
 
 *Figure: `Mpx3ServerFileWriter.bob` — family status, PrvImg/PrvImg1 and Img[] paths, WriteData push to Serval.*
 
+![Detector config — GainMode, BothCounters, trigger timing, IDelayConfig](screenshots/Mpx3_detector_config.png)
+
+*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip and trigger PVs pushed to Serval on change (`GainMode` is a string PV today; mbbo pending ASI enum list).*
+
 **Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via **`$(ADCORE)/iocBoot/stats_profiles.cmd`** (`NDStatsProfiles.template`) after `commonPlugins.cmd`; `init_detector_hw_mpx3.cmd` processes `StatsProfInit_` after `iocInit`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention (`$(P)$(R)Cal:…`).
 
 ## Emulator workflow
