@@ -8,7 +8,9 @@ dbd/
 include/
 .vscode/
 TemplateReadme.md
-autosave/
+# IOC autosave runtime data (README.md is tracked)
+iocs/tpx3IOC/iocBoot/iocTimePix/autosave/*
+!iocs/tpx3IOC/iocBoot/iocTimePix/autosave/README.md
 envPaths
 mask.bpc
 

@@ -30,7 +30,7 @@ Driver / user-visible version **1.7.0** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
 * **Unified TimePix3 + Medipix3 driver**: One driver binary and shared Serval HTTP/TCP stack for ASI pixel detectors on Serval. Runtime family from Serval metadata (`DetectorFamily_RBV`, capability PVs). **TPX3** sites keep existing IOC/OPI (`st_base.cmd`, `TimePix3.bob`); **MPX3** uses a dedicated startup profile and Phoebus screens (below). Prior TPX3-only releases remain valid for TPX3-only deployments (**R1-6-3** and earlier).
 * **Medipix3 (MPX3)** — new in this release:
-  * IOC profile: `st_mpx3.cmd` / `st_mpx3.sh`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
+  * IOC profile: `st_mpx3.cmd`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
   * Dual-threshold preview: demux by `thresholdID` on TCP **8088** / **8089**; BothCounters; T0−T1 band-pass (Pva5/Pva6).
   * Opt-in full-rate Image[] TCP (**8086**) with threshold demux (Pva7/Pva8) and HDF soak plugins.
   * Phoebus: `MediPix3.bob`, detector config, preview writer, image channels.

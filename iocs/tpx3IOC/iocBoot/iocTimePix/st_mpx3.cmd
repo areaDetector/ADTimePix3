@@ -129,6 +129,7 @@ dbLoadRecords("$(ADCORE)/db/NDFileHDF5.template", "P=$(PREFIX),R=HDFImgT1:,PORT=
 # ---------------------------------------------------------------------------
 
 < $(ADCORE)/iocBoot/commonPlugins.cmd
+< autosave_mpx3.cmd
 
 < $(ADCORE)/iocBoot/stats_profiles.cmd
 

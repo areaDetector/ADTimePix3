@@ -60,6 +60,7 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 #
 # Load all other plugins using commonPlugins.cmd
 < $(ADCORE)/iocBoot/commonPlugins.cmd
+< autosave_tpx3.cmd
 #
 # Phoebus row/column profile axes (NDStatsProfiles Cal:*.AVAL). Same as st_mpx3.cmd.
 # Requires synApps calc; after iocInit run StatsProfInit_ (see init_detector_hw.cmd).
