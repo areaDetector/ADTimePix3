@@ -1,15 +1,26 @@
-ADTimePix3 Releases
-==================
+ADServal Releases
+=================
 
-The repository was transferred a while back to areaDetector organization.
+Unified EPICS areaDetector driver for ASI pixel detectors via Serval
+(TimePix3, Medipix3; TimePix4 planned). Repository: [areaDetector/ADTimePix3](https://github.com/areaDetector/ADTimePix3)
+(legacy module name; see *Naming* below).
 
-* see https://github.com/areaDetector/ADTimePix3
+The repository was transferred a while back to the [areaDetector](https://github.com/areaDetector) organization.
+
+**Naming.** Release notes and new documentation use **ADServal** for the unified driver.
+The EPICS support module, `$(ADTIMEPIX)` install path, C++ symbols (`ADTimePix`, `ADTIMEPIX_*`),
+and this GitHub repository remain **ADTimePix3** until a planned rename and compatibility stub.
+[areaDetector/ADTimePix](https://github.com/areaDetector/ADTimePix) is an unused placeholder
+(initial commit only); it is not this driver. Earlier TimePix driver efforts predated the
+current Serval-based implementation here.
 
 Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
 The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for **4.1.x** (latest tested; includes dual-image and other Serval fixes).
 
-Driver depends on Serval versions, at this time. Latest release is **R1-7-0** (driver **1.7.0**); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
+
+Driver depends on Serval versions, at this time. Latest release is **R1-7-0** (driver **1.7.0**, unified TPX3 + MPX3); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
 R1-7-0 (August 2026)
@@ -17,17 +28,16 @@ R1-7-0 (August 2026)
 
 Driver / user-visible version **1.7.0** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
-* **Medipix3 (MPX3) family support** (unified driver):
-  * Runtime detector family detection from Serval metadata (`DetectorFamily_RBV`, capability PVs).
-  * Dedicated IOC profile: `st_mpx3.cmd` / `st_mpx3.sh`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
+* **Unified TimePix3 + Medipix3 driver**: One driver binary and shared Serval HTTP/TCP stack for ASI pixel detectors on Serval. Runtime family from Serval metadata (`DetectorFamily_RBV`, capability PVs). **TPX3** sites keep existing IOC/OPI (`st_base.cmd`, `TimePix3.bob`); **MPX3** uses a dedicated startup profile and Phoebus screens (below). Prior TPX3-only releases remain valid for TPX3-only deployments (**R1-6-3** and earlier).
+* **Medipix3 (MPX3)** — new in this release:
+  * IOC profile: `st_mpx3.cmd` / `st_mpx3.sh`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
   * Dual-threshold preview: demux by `thresholdID` on TCP **8088** / **8089**; BothCounters; T0−T1 band-pass (Pva5/Pva6).
   * Opt-in full-rate Image[] TCP (**8086**) with threshold demux (Pva7/Pva8) and HDF soak plugins.
-  * MediPix3 Phoebus screens (`MediPix3.bob`, detector config, preview writer, image channels).
-  * Docs: `documentation/medipix3/` (integration, dual-threshold preview, hardware notes).
-* **Timepix3 fixes / IOC**:
+  * Phoebus: `MediPix3.bob`, detector config, preview writer, image channels.
+  * Docs: `documentation/medipix3/` (integration, dual-threshold preview, hardware notes). Validated on emulator and first ASI hardware preview (July 2026); equalization / IXS band-pass on hardware still to follow.
+* **TimePix3 (TPX3)** — fixes in this release (behaviour unchanged when family is TPX3):
   * Make `prvHstWorker` joinable so `acquireStop` does not hang after Preview histogram streaming.
   * Enable NDStats row/column profile axes for PVA preview plots (`stats_profiles.cmd`, Stats1 init, mosaic `XSIZE`/`YSIZE`).
-* Timepix3 behaviour remains the default path when family is TPX3; MPX3 uses the dedicated startup profile.
 
 
 R1-6-3 (June 7, 2026)
