@@ -315,8 +315,48 @@ After equalization, restore the dual-counter profile:
 ### Known follow-ups on hardware
 
 - **First-frame artefacts:** physical Timepix3 can show a corrupt first frame after calibration load; emulator may show a brief Signed diff flicker on Pva6 — treat both as hardware/emulator follow-ups.
-- **`GainMode` string** for “super low gain” — pending Erik confirmation.
+- **`GainMode` string** for “super low gain” — pending Erik confirmation (Email 1, Aug 2026).
 - **ChargeSumming / Colour** — keep off until ASI review.
+
+## Open work (TODO)
+
+### Mask / BPC — not correct for MPX3 yet
+
+Preview and dual-threshold paths are validated; **mask edit, PixelConfig vs disk BPC, and `MaskBPC` diff are not**. Do not treat mask/BPC tooling as production-ready on Medipix3 until this is resolved.
+
+**Observed (Aug 2026, `Mask.bob` / `PixelConfigMaskPanel.bob`, `vendor/mpx3/eq-01.bpc`):**
+
+- **`PixelConfigDiff`** reports **131883** differing pixels across the 512×512 quad (status text: “Count 131883 … wrote 131883 masked pels”).
+- Per-chip refresh: **CHIP0 length mismatch** (decoded **131072** vs expected chip slice **65536**); CHIP1–3 show large byte mismatches (~56k differing bytes each).
+- **`|Δ|` heatmap:** one quadrant (bottom-left in the OPI layout) differs from the other three — consistent with a **chip-0 layout/orientation** problem rather than random noise.
+
+**Vendor context (Erik):** electron-microscopy sites often use **chip 0 rotated** relative to the other chips (wire-bond / connection direction). Our 2×2 **`pelIndex`** / **`TPX3_DET_ORIENTATION`** logic was developed primarily for Timepix3 quad layouts; MPX3 may need a **chip-specific rotation** or a different on-disk BPC convention.
+
+**Working hypotheses:**
+
+1. **`eq-01.bpc` is the wrong file** for this hardware (8-chip file vs 4-chip quad, or emulator vs deploy calibration).
+2. **Compare path is wrong** — SERVAL PixelConfig decode length vs file offset `i × 65536` (see [PIXELCONFIG_BPC_DIFF.md](../PIXELCONFIG_BPC_DIFF.md)); CHIP0 “131072 vs 65536” suggests a double-length decode or wrong chip index.
+3. **Orientation / chip0 rotation** not applied in `mask_io.cpp` for MPX3 2×2 (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)).
+
+**Next steps:**
+
+- Confirm with Erik: authoritative **2×2 MPX3 BPC layout**, **chip-0 rotation** convention, and whether `vendor/mpx3/eq-01.bpc` matches the connected quad.
+- Re-run **`RefreshPixelConfig`** after uploading BPC from Accos post-equalization.
+- Add MPX3-specific **`pelIndex`** tests / golden vectors; validate against Serval `Layout` and ASI reference mask export.
+- Optional Email 2 topic: BPC byte order and chip tile map for MPX3.
+
+**Code / docs:** `tpx3App/src/mask_io.cpp`, `MaskBPC.template`, `documentation/PIXELCONFIG_BPC_DIFF.md`.
+
+### Other open items
+
+| Item | Notes |
+|------|--------|
+| Hardware equalization + dual-counter IXS on real MPX3 | After Erik replies to Email 1 |
+| HDF5 / Image[] rate soak | Recipe in place; run on emulator then hardware |
+| **`img1Worker`** (Image[1] TCP 8087) | Deferred |
+| **`GainMode` → mbbo** | Blocked on ASI enum list |
+| Phoebus screenshots | `Mpx3_main`, `Mpx3_hdf_img_config`, acquire-active variants |
+| Sphinx MPX3 figures | `docs/ADTimePix3/Screenshots/MediPix3/` |
 
 ## Serval channel model (Preview vs Image)
 
