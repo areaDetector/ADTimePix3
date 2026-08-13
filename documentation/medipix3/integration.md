@@ -103,6 +103,12 @@ Defaults (from `init_detector_mpx3.cmd`):
 
 **Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: destination writer **`Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`: Img[0] 8086 + Img[1] file/8087 + HDF status strip); **`Acquire/Mpx3HdfImgConfig.bob`** (HDFImgT0/T1 path/Capture); **`Acquire/Mpx3ImgMonitor.bob`** (Pva7/Pva8 — low rate only); live preview images in `Acquire/Mpx3PrvImgMonitor.bob`; detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` / `ImgThs` / `Img1Ths` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
 
+Screenshots ([screenshots/](screenshots/)):
+
+![Serval destination writer — Preview 8088/8089, Image 8086, WriteData](screenshots/Mpx3_dest_writer.png)
+
+*Figure: `Mpx3ServerFileWriter.bob` — family status, PrvImg/PrvImg1 and Img[] paths, WriteData push to Serval.*
+
 **Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via **`$(ADCORE)/iocBoot/stats_profiles.cmd`** (`NDStatsProfiles.template`) after `commonPlugins.cmd`; `init_detector_hw_mpx3.cmd` processes `StatsProfInit_` after `iocInit`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention (`$(P)$(R)Cal:…`).
 
 ## Emulator workflow
@@ -224,6 +230,10 @@ Paths are set in `init_detector_paths_mpx3.cmd` with `WriteImg=0`. To turn full-
 ```
 
 Disable: `dbpf WriteImg 0` then `WriteData 1`. Do **not** point Phoebus PVA at full-rate Image for 750–2000 Hz — use HDF5 plugins (`HDFImgT0` / `HDFImgT1`) or accumulation.
+
+![Image[] monitor — Pva7/Pva8 on TCP 8086 (low rate only)](screenshots/Mpx3_img_monitor.png)
+
+*Figure: `Mpx3ImgMonitor.bob` — full-rate Image demux by `thresholdID` to NDArray addr **1** (T0, Pva7) and **13** (T1, Pva8). Disable PVA callbacks at high Hz; use HDFImgT0/T1 for archive.*
 
 ### Phase C — HDF5 / rate soak
 
@@ -358,6 +368,10 @@ This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a
 So the “two images” on **two TCP ports** are **current frame vs time-integrated preview**, not “low threshold vs high threshold”. Dual-threshold images (when **`BothCounters`**) arrive as **consecutive jsonimage messages on 8088**, distinguished by **`thresholdID`**.
 
 **EPICS:** preview TCP **8088** routes by **`thresholdID`** to addr **0** / **8** (Pva1 / Pva2) and emits **T0−T1** on addr **9** (Pva5). Integrated preview on **8089** routes to addr **10** / **11** (Pva3 / Pva4) via **`prvImg1Worker`**, with **T0−T1** on addr **12** (Pva6). **`PrvImgThreshDiffClip=Clip`** (default) applies **`max(0, diff)`** for IXS display; **Signed** mode keeps raw signed diff for pairing diagnostics. Full-rate **Image[]** TCP **8086** demuxes the same way to addr **1** / **13** (Pva7 / Pva8); running-sum accumulation uses **threshold 0 only**.
+
+![Preview monitor — frame 8088 and integrated 8089, T0/T1 and T0−T1 band](screenshots/Mpx3_preview_monitor.png)
+
+*Figure: `Mpx3PrvImgMonitor.bob` — six PVA image widgets: current frame (Pva1/Pva2/Pva5 on 8088) and integrated-from-measurement-start (Pva3/Pva4/Pva6 on 8089). Band-pass uses driver addr **9** / **12** (not NDPluginProcess).*
 
 ### BothCounters operational notes (2026-06)
 

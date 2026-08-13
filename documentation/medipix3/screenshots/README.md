@@ -10,7 +10,7 @@ PNG captures for [integration.md](../integration.md) and Sphinx release docs (`d
 
 **Planned:** `Mpx3_main.png` (`MediPix3.bob`), `Mpx3_detector_config.png`, `Mpx3_hdf_img_config.png`, acquire-active variants.
 
-Reference in markdown:
+Reference in markdown (used in [integration.md](../integration.md)):
 
 ```markdown
 ![Preview monitor](screenshots/Mpx3_preview_monitor.png)
