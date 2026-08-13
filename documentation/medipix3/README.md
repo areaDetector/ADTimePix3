@@ -8,6 +8,7 @@ Validated on the Medipix3 emulator and in a **first ASI hardware preview** (July
 |----------|-------------|
 | [integration.md](integration.md) | IOC profile (`st_mpx3.cmd`), emulator workflow, **ASI hardware checkout**, calibration, Preview + **Image mode (8086)**, HDF5 soak, family TCP map, troubleshooting |
 | [preview-dual-threshold.md](preview-dual-threshold.md) | ASI vendor notes, dual-threshold delivery, open questions, implementation plan |
+| [screenshots/](screenshots/) | Phoebus OPI captures for integration docs |
 | [COORDINATE_MAP.md](../COORDINATE_MAP.md) | Image `(i,j)` / BPC indexing; **top-left Y-origin** vs Phoebus / NDStats profiles |
 
 Shared driver topics (TCP streaming, NDArray addresses, masks) live in the [documentation index](../README.md).
