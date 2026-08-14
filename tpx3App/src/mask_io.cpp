@@ -1,6 +1,13 @@
 /*
  * ADTimePix3 - BPC / mask I/O and chip-image coordinate mapping (mask_io)
  *
+ * Timepix3: one config byte per chip pixel (65536 B/chip at 256x256).
+ * Medipix3 (dual counter): two threshold slices per chip — [th0: 64KiB][th1: 64KiB]
+ * (131072 B/chip). MPX3 disable-byte semantics TBD (do not assume TPX3 bit 0).
+ * mask_io paths today use pelIndex() as TPX3 (first slice only); MPX3 needs
+ * threshold-aware indexing and refreshPixelConfigFromServal() chip stride —
+ * see PIXELCONFIG_BPC_DIFF.md. TPX3 Accos bad pixels use byte 31 (0b11111).
+ *
  * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
  * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
  *

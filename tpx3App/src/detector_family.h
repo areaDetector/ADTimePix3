@@ -23,6 +23,10 @@ struct DetectorCapabilities {
     bool supportsDualPreview = false;
     bool supportsImageThresholds = false;
     int previewLayerCount = 0;
+    /** One config byte per chip pixel per threshold slice. Disable/mask bit map: see PIXELCONFIG_BPC_DIFF.md. */
+    int bpcBytesPerPel = 1;
+    /** Threshold slices concatenated per chip in the .bpc file. TPX3: 1; MPX3 dual-counter: 2 (th0||th1). */
+    int bpcThresholdSlices = 1;
 };
 
 DetectorFamily detectDetectorFamily(int mpxType, const std::string& chipType,

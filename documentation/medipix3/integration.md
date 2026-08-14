@@ -337,32 +337,33 @@ Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow 
 
 ## Open work (TODO)
 
-### Mask / BPC — not correct for MPX3 yet
+### Mask / BPC — MPX3 dual-threshold layout identified; driver compare still wrong
 
-Preview and dual-threshold paths are validated; **mask edit, PixelConfig vs disk BPC, and `MaskBPC` diff are not**. Do not treat mask/BPC tooling as production-ready on Medipix3 until this is resolved.
+Preview and dual-threshold paths are validated. **Mask edit / `PixelConfigDiff` are not production-ready on Medipix3** until the driver uses the **131072-byte-per-chip** compare path and threshold-aware mask indexing.
 
-**Observed (Aug 2026, `Mask.bob` / `PixelConfigMaskPanel.bob`, `vendor/mpx3/eq-01.bpc`):**
+**Resolved (Aug 2026)** — Serval root dump `documentation/medipix3/drafts/serval-mpx3-quad-root-2026-08-14.json` vs `vendor/mpx3/eq-01.bpc`:
 
-- **`PixelConfigDiff`** reports **131883** differing pixels across the 512×512 quad (status text: “Count 131883 … wrote 131883 masked pels”).
-- Per-chip refresh: **CHIP0 length mismatch** (decoded **131072** vs expected chip slice **65536**); CHIP1–3 show large byte mismatches (~56k differing bytes each).
-- **`|Δ|` heatmap:** one quadrant (bottom-left in the OPI layout) differs from the other three — consistent with a **chip-0 layout/orientation** problem rather than random noise.
+- **`PixelConfig`** decodes to **131072 bytes on all four chips** (not 65536).
+- On-disk **`eq-01.bpc`** is **524288 B = 4 × 131072** (not 8 × 65536).
+- Layout per chip: **`[threshold 0: 64 KiB][threshold 1: 64 KiB]`** — separate config bytes per counter (values often differ between slices).
+- Compare at **`offset = chip × 131072`**, length **131072** → **0 byte mismatches** for chips 0–3.
+- The earlier **`RefreshPixelConfig`** errors (CHIP0 length 131072 vs 65536; ~56k mismatches on chips 1–3) match the driver using **`chip × 65536`** (`kPixelConfigBytes` in `serval_http.cpp`) — **not** a bad `eq-01.bpc` file.
+- **Byte semantics TBD:** ~25% of MPX3 bytes per slice have bit 0 set (values 1/3/5/7, clustered) — likely **equalization encoding**, not ~10 Accos bad pixels/chip. **Do not use `BPCn` / bit-0 export as MPX3 bad-pixel list.** Ask ASI for disable bit map (Email 2).
 
-**Vendor context (Erik):** electron-microscopy sites often use **chip 0 rotated** relative to the other chips (wire-bond / connection direction). Our 2×2 **`pelIndex`** / **`TPX3_DET_ORIENTATION`** logic was developed primarily for Timepix3 quad layouts; MPX3 may need a **chip-specific rotation** or a different on-disk BPC convention.
+**Still open:**
 
-**Working hypotheses:**
-
-1. **`eq-01.bpc` is the wrong file** for this hardware (8-chip file vs 4-chip quad, or emulator vs deploy calibration).
-2. **Compare path is wrong** — SERVAL PixelConfig decode length vs file offset `i × 65536` (see [PIXELCONFIG_BPC_DIFF.md](../PIXELCONFIG_BPC_DIFF.md)); CHIP0 “131072 vs 65536” suggests a double-length decode or wrong chip index.
-3. **Orientation / chip0 rotation** not applied in `mask_io.cpp` for MPX3 2×2 (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)).
+- **Family-specific mask I/O:** Timepix3 = **1 byte/pel/chip**; Medipix3 = **2 bytes/pel/chip** (two sequential 64 KiB threshold slices, not interleaved). `mask_io.cpp` / `pelIndex()` / `RefreshPixelConfig` still follow the TPX3 model (first slice only; chip stride 65536). Branch on **`DetectorFamily`** / `bpcThresholdSlices` in `detector_family.h`.
+- **Driver fix:** MPX3 chip stride **131072**; threshold index for mask edit and **`PixelConfigDiff`** (tie to preview **`thresholdID`** or a new PV).
+- **`|Δ|` heatmap** one-quadrant pattern — may shrink after compare fix; chip-specific **`Layout.Orientation`** in Serval JSON (e.g. chip 0 `RtLBtT`, chips 2–3 `LtRTtB`) may still need MPX3 **`pelIndex`** validation.
+- **Email 2:** ask ASI for MPX3 pixel-byte bit map (disable vs trim); confirm 131072 layout when `BothCounters=0`.
 
 **Next steps:**
 
-- Confirm with Erik: authoritative **2×2 MPX3 BPC layout**, **chip-0 rotation** convention, and whether `vendor/mpx3/eq-01.bpc` matches the connected quad.
-- Re-run **`RefreshPixelConfig`** after uploading BPC from Accos post-equalization.
-- Add MPX3-specific **`pelIndex`** tests / golden vectors; validate against Serval `Layout` and ASI reference mask export.
-- Optional Email 2 topic: BPC byte order and chip tile map for MPX3.
+- Fix **`refreshPixelConfigFromServal()`** for MPX3 (131072 stride).
+- After ASI confirms disable byte: threshold-specific mask test on emulator.
+- Re-run **`RefreshPixelConfig`** after driver fix; then Accos post-equalization BPC upload on hardware.
 
-**Code / docs:** `tpx3App/src/mask_io.cpp`, `MaskBPC.template`, `documentation/PIXELCONFIG_BPC_DIFF.md`.
+**Code / docs:** `tpx3App/src/serval_http.cpp`, `tpx3App/src/mask_io.cpp`, [PIXELCONFIG_BPC_DIFF.md](../PIXELCONFIG_BPC_DIFF.md).
 
 ### Other open items
 

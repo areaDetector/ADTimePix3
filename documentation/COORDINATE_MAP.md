@@ -4,6 +4,25 @@ This note defines how **Binary Pixel Configuration (BPC)** byte indices relate t
 
 Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON_AND_STREAMING.md](MASKED_PIXELS_JSON_AND_STREAMING.md), [8chip-migration.md](8chip-migration.md).
 
+## Timepix3 vs Medipix3 — bytes per pixel in `.bpc`
+
+| Family | Bytes per chip pixel (mask/config) | Per-chip block in file | Serval `PixelConfig` |
+|--------|-----------------------------------|------------------------|----------------------|
+| **Timepix3** | **1** byte / pel | `w×w` (65536 at 256×256) | 65536 B |
+| **Medipix3** (dual counter) | **2** bytes / pel — **not** interleaved | `[th0: w×w][th1: w×w]` → **131072 B** | 131072 B |
+
+**Timepix3:** Accos bad pixels in reference cals use **byte 31** (`0b11111`); see [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md). The IOC today toggles **bit 0** on operator mask (planned: write 31).
+
+**Medipix3:** File layout **[th0 slice][th1 slice]** per chip is validated; **which bit(s) or byte value disable counting is TBD** — do not use TPX3 bit-0 rules on MPX3. Low odd bytes (1, 3, 5, 7) in `eq-01.bpc` look like equalization state, not a bad-pixel map.
+
+**File index for MPX3** (chip `c`, threshold `t`, local pel index `p` within chip, `P = w×w`):
+
+```text
+bpc_index = c * (2 * P) + t * P + p
+```
+
+**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths were written for **TPX3** (one slice). They map image `(i, j)` into the **first** 64 KiB of each chip block only. **`refreshPixelConfigFromServal()`** uses TPX3 chip stride (`chip × 65536`). MPX3 mask handling must branch on **`DetectorFamily`** / `bpcThresholdSlices` (see `detector_family.h`).
+
 Offline tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **global `(i, j)`** convention as **`bpc2ImgIndex`** for masked-pel listings. Mask editing and **`PixelConfigDiff`** use **`pelIndex(i, j)`** instead.
 
 ## Geometry from the IOC
@@ -18,11 +37,13 @@ Offline tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **gl
 | `yChips` | `numChips / xChips` | Chip rows |
 | `w` | `chipPelWidth` = `rows / xChips` | Pixels per chip edge (often 256) |
 
-**BPC file layout:** chip `c` occupies bytes `[c * w*w, (c+1) * w*w)`. Chip id in file order:
+**BPC file layout (Timepix3):** chip `c` occupies bytes `[c * w*w, (c+1) * w*w)`. Chip id in file order:
 
 ```text
-chip = bpc_index / (w * w)     /* use integer division; not (index+1)/count */
+chip = bpc_index / (w * w)     /* TPX3; use integer division */
 ```
+
+**BPC file layout (Medipix3, dual counter):** chip `c` occupies **`2 * w*w`** bytes: threshold-0 slice then threshold-1 slice. See table above and [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md).
 
 **Intra-chip local coordinates** (masked-pels JSON, streaming):
 

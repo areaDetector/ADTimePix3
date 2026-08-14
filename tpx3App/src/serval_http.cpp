@@ -32,7 +32,7 @@ extern const char* driverName;
 
 namespace {
 
-constexpr size_t kPixelConfigBytes = 65536;
+constexpr size_t kPixelConfigBytes = 65536;  /* TPX3 per chip; MPX3 uses 2× (see bpcThresholdSlices) */
 const cpr::Authentication kServalAuth{"user", "pass", cpr::AuthMode::BASIC};
 const cpr::Parameters kServalParams{{"anon", "true"}, {"key", "value"}};
 const cpr::Header kJsonHeader{{"Content-Type", "application/json"}};
