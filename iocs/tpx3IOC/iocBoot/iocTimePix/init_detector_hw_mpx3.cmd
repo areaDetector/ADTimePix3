@@ -6,7 +6,7 @@ epicsThreadSleep(2)
 
 # Detector + acquisition (each dbpf may call initAcquisition and PUT /detector/config)
 dbpf("$(PREFIX)cam1:BiasVolt","100")
-dbpf("$(PREFIX)cam1:GainMode","HGM")
+dbpf("$(PREFIX)cam1:GainMode","1")          # HGM — calibrated ~10 keV (Accos dual-threshold profile)
 dbpf("$(PREFIX)cam1:PixelDepth","12")
 dbpf("$(PREFIX)cam1:ImageMode","1")          # Multiple (finite triggers)
 dbpf("$(PREFIX)cam1:TriggerMode","4")       # AutoTrgSt_TmrSp — required with BothCounters (not Continuous)

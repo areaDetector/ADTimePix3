@@ -425,18 +425,18 @@
       <width>110</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
-    <widget type="textentry" version="3.0.0">
+    <widget type="combo" version="2.0.0">
       <name>GainModeSP</name>
       <pv_name>$(P)$(R)GainMode</pv_name>
       <x>110</x>
       <y>26</y>
       <width>140</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <format>6</format>
-      <tooltip>Medipix3 pre-amplifier gain (Serval Config). Erik Accos example: HGM. Common: LGM, HGM, SHGM — confirm with ASI / chip DAC docs.</tooltip>
+      <tooltip>Medipix3 pre-amplifier gain (Serval Config): SHGM, HGM, LGM, SLGM (super-high to super-low). HGM ~10 keV calibrated; SLGM for equalization frame tests.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>GainModeRBV</name>

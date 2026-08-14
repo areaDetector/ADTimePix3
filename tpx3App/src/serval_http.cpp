@@ -1409,7 +1409,8 @@ asynStatus ADTimePix::getDetector(){
             setIntegerParam(ADTimePixBothCounters, jsonBoolOr(cfg["BothCounters"]) ? 1 : 0);
         }
         if (cfg.contains("GainMode")) {
-            setStringParam(ADTimePixGainMode, jsonStringOr(cfg["GainMode"]).c_str());
+            setIntegerParam(ADTimePixGainMode,
+                            gainModeFromString(jsonStringOr(cfg["GainMode"])));
         }
         if (cfg.contains("ChargeSumming")) {
             setIntegerParam(ADTimePixChargeSumming, jsonBoolOr(cfg["ChargeSumming"]) ? 1 : 0);
@@ -2579,11 +2580,8 @@ asynStatus ADTimePix::initAcquisition(){
             getIntegerParam(ADTimePixColour, &intNum);
             config_j["Colour"] = (intNum != 0);
 
-            std::string gainMode;
-            getStringParam(ADTimePixGainMode, gainMode);
-            if (!gainMode.empty()) {
-                config_j["GainMode"] = gainMode;
-            }
+            getIntegerParam(ADTimePixGainMode, &intNum);
+            config_j["GainMode"] = gainModeToString(intNum);
 
             getIntegerParam(ADTimePixPixelDepth, &intNum);
             config_j["PixelDepth"] = intNum;
@@ -2610,9 +2608,10 @@ asynStatus ADTimePix::initAcquisition(){
 
         setIntegerParam(ADTimePixHttpCode, r.status_code);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
-        if (r.status_code == 200 && detectorFamily_ == DetectorFamily::MPX3) {
-            (void)getDetector();
-        }
+        /* Do not call getDetector() here: Config readback can lag the PUT on MPX3
+         * (emulator and some hardware paths) and would overwrite driver params such as
+         * GainMode that were just pushed from EPICS. callParamCallbacks() below
+         * publishes the values we sent. */
     }
 
     callParamCallbacks();

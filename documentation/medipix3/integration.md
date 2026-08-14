@@ -111,7 +111,7 @@ Screenshots ([screenshots/](screenshots/)):
 
 ![Detector config — GainMode, BothCounters, trigger timing, IDelayConfig](screenshots/Mpx3_detector_config.png)
 
-*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip and trigger PVs pushed to Serval on change. **`GainMode`** Serval enum: `SHGM`, `HGM`, `LGM`, `SLGM` (waveform PV today; mbbo planned).*
+*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip and trigger PVs pushed to Serval on change. **`GainMode`** Serval enum: `SHGM`, `HGM`, `LGM`, `SLGM` (`mbbo` 0–3).*
 
 **BothCounters — two profiles:** Erik (Aug 2026) recommends **`BothCounters=Off`** for default beamline use; if enabled, use **th1 high (~250)**. The **`init_detector_hw_mpx3.cmd`** / Accos recipe (**`BothCounters=Yes`**, th0+th1 low, IXS band-pass) is an **opt-in** profile for emulator and dual-threshold science — not Erik’s default recommendation.
 
@@ -326,7 +326,7 @@ After equalization, restore the dual-counter profile:
 
 | Topic | Erik (ASI) | EPICS impact |
 |-------|------------|--------------|
-| **`GainMode`** | **`SHGM`, `HGM`, `LGM`, `SLGM`** (super-high → super-low). **`HGM`** calibrated ~10 keV; **`SLGM`** uncalibrated frame tests / equalization. | `init_detector_hw_mpx3_equalize.cmd` uses **`SLGM`**; dual-counter profile uses **`HGM`**. Waveform PV today; **mbbo** planned. |
+| **`GainMode`** | **`SHGM`, `HGM`, `LGM`, `SLGM`** (super-high → super-low). **`HGM`** calibrated ~10 keV; **`SLGM`** uncalibrated frame tests / equalization. | `init_detector_hw_mpx3_equalize.cmd` uses **`SLGM`** (3); dual-counter profile uses **`HGM`** (1). **`GainMode`** mbbo PV (0–3). |
 | **Equalization** | June checklist **still correct**. | `init_detector_hw_mpx3_equalize.cmd` unchanged except `SLGM`. |
 | **`ChargeSumming`** | Default **off**. When on: th0 = arbitrated image, th1 = charge-summed (separate calibration). | Keep `ChargeSumming=0` in default profiles. |
 | **`Colour`** | Default **off** (spectral). 4 images (8 with BothCounters); thresholds 0,2,4,6 (+ odd with BothCounters); special sensor. | Keep `Colour=0` unless ASI enables spectral hardware. |
@@ -372,7 +372,6 @@ Preview and dual-threshold paths are validated. **Mask edit / `PixelConfigDiff` 
 | Hardware equalization + dual-counter IXS on real MPX3 | Equalization recipe confirmed; run on hardware when quad available |
 | HDF5 / Image[] rate soak | Recipe in place; run on emulator then hardware |
 | **`img1Worker`** (Image[1] TCP 8087) | Deferred |
-| **`GainMode` → mbbo** | Enum confirmed (`SHGM`,`HGM`,`LGM`,`SLGM`); implement DB + Phoebus combo |
 | Phoebus screenshots | `Mpx3_main`, `Mpx3_hdf_img_config`, acquire-active variants |
 | Sphinx MPX3 figures | `docs/ADTimePix3/Screenshots/MediPix3/` |
 
@@ -450,7 +449,7 @@ Each jsonimage line on the wire is: JSON header + binary pixel array. The driver
 
 | Field | Role | Notes |
 |-------|------|-------|
-| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low). **`HGM`**: calibrated ~10 keV (Accos recipe, `init_detector_hw_mpx3.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`init_detector_hw_mpx3_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** PV → `PUT /detector/config`. |
+| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low, mbbo 0–3). **`HGM`**: calibrated ~10 keV (Accos recipe, `init_detector_hw_mpx3.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`init_detector_hw_mpx3_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** mbbo → `PUT /detector/config`. |
 | **`Preview period`** | Throttle live preview rate | Serval **`Preview.Period`** (seconds), separate from **`TriggerPeriod`**. Set via **`PrvPeriod`** PV; pushed on **`WriteData`**. Erik’s working UI used **0.5 s** preview period with **0.5 s** trigger period. **`PrvSmplgMode`**: `skipOnFrame` (0) or `skipOnPeriod` (1). |
 | **`BiasVoltage`** | Sensor bias | Erik: **100 V**. Low values (e.g. 12) can prevent useful counts on hardware/emulator. |
 | **`PixelDepth`** | Counter bit depth | Erik: **12**. Driver pushes integer to Serval; readback may show string `"12"`. |

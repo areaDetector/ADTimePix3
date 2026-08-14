@@ -84,7 +84,7 @@
 #define ADTimePixCapDualPreviewString       "TPX3_CAP_DUAL_PREVIEW" // (asynInt32,         r)      Two preview image layers
 #define ADTimePixCapImgThresholdsString     "TPX3_CAP_IMG_THRESHOLDS" // (asynInt32,       r)      Image Thresholds[] in Serval config
 #define ADTimePixBothCountersString         "TPX3_BOTH_COUNTERS"      // (asynInt32,       r/w)    Detector Config BothCounters (MPX3 dual threshold)
-#define ADTimePixGainModeString             "TPX3_GAIN_MODE"          // (asynOctet,       r/w)    MPX3 Config GainMode
+#define ADTimePixGainModeString             "TPX3_GAIN_MODE"          // (asynInt32,       r/w)    MPX3 Config GainMode (0=SHGM..3=SLGM)
 #define ADTimePixChargeSummingString        "TPX3_CHARGE_SUMMING"     // (asynInt32,       r/w)    MPX3 Config ChargeSumming
 #define ADTimePixColourString               "TPX3_COLOUR"             // (asynInt32,       r/w)    MPX3 Config Colour
 #define ADTimePixPixelDepthString           "TPX3_PIXEL_DEPTH"        // (asynInt32,       r/w)    MPX3 Config PixelDepth
@@ -774,6 +774,10 @@ class ADTimePix : public ADDriver{
         asynStatus sendMeasurementConfig();
         void updateDetectorFamily(int mpxType, const std::string& chipType, const std::string& chipboardId);
         void applyFamilyDefaults(DetectorFamily family);
+        /** Map Serval GainMode string to mbbo index (0=SHGM..3=SLGM); unknown → 0. */
+        static int gainModeFromString(const std::string& s);
+        /** Map mbbo index to Serval GainMode string. */
+        static const char* gainModeToString(int index);
         /** MPX3: BothCounters=true is incompatible with TriggerMode index 5 (CONTINUOUS). */
         bool mpx3BothCountersTriggerConflict(int triggerMode) const;
         static const char kMpx3BothCountersTriggerMsg[];

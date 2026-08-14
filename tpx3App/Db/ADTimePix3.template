@@ -192,20 +192,33 @@ record(bi, "$(P)$(R)BothCounters_RBV"){
 }
 
 # MPX3-only detector Config fields (Serval Config JSON)
-record(waveform, "$(P)$(R)GainMode"){
+record(mbbo, "$(P)$(R)GainMode"){
   field(DESC, "MPX3 GainMode")
-  field(DTYP, "asynOctetWrite")
-  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GAIN_MODE")
-  field(FTVL, "CHAR")
-  field(NELM, "32")
+  field(DTYP, "asynInt32")
+  field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GAIN_MODE")
+  field(ZRST, "SHGM")
+  field(ZRVL, "0")
+  field(ONST, "HGM")
+  field(ONVL, "1")
+  field(TWST, "LGM")
+  field(TWVL, "2")
+  field(THST, "SLGM")
+  field(THVL, "3")
   info(autosaveFields, "VAL")
 }
-record(waveform, "$(P)$(R)GainMode_RBV"){
-  field(DTYP, "asynOctetRead")
+record(mbbi, "$(P)$(R)GainMode_RBV"){
+  field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_GAIN_MODE")
-  field(FTVL, "CHAR")
-  field(NELM, "32")
+  field(ZRST, "SHGM")
+  field(ZRVL, "0")
+  field(ONST, "HGM")
+  field(ONVL, "1")
+  field(TWST, "LGM")
+  field(TWVL, "2")
+  field(THST, "SLGM")
+  field(THVL, "3")
   field(SCAN, "I/O Intr")
+  field(DESC, "MPX3 GainMode readback")
 }
 record(bo, "$(P)$(R)ChargeSumming"){
   field(DESC, "MPX3 ChargeSumming")
