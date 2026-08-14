@@ -111,7 +111,9 @@ Screenshots ([screenshots/](screenshots/)):
 
 ![Detector config — GainMode, BothCounters, trigger timing, IDelayConfig](screenshots/Mpx3_detector_config.png)
 
-*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip and trigger PVs pushed to Serval on change (`GainMode` is a string PV today; mbbo pending ASI enum list).*
+*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip and trigger PVs pushed to Serval on change. **`GainMode`** Serval enum: `SHGM`, `HGM`, `LGM`, `SLGM` (waveform PV today; mbbo planned).*
+
+**BothCounters — two profiles:** Erik (Aug 2026) recommends **`BothCounters=Off`** for default beamline use; if enabled, use **th1 high (~250)**. The **`init_detector_hw_mpx3.cmd`** / Accos recipe (**`BothCounters=Yes`**, th0+th1 low, IXS band-pass) is an **opt-in** profile for emulator and dual-threshold science — not Erik’s default recommendation.
 
 **Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via **`$(ADCORE)/iocBoot/stats_profiles.cmd`** (`NDStatsProfiles.template`) after `commonPlugins.cmd`; `init_detector_hw_mpx3.cmd` processes `StatsProfInit_` after `iocInit`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention (`$(P)$(R)Cal:…`).
 
@@ -156,11 +158,11 @@ Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** 
 | Thresholds | **One** threshold, **12-bit** depth | `BothCounters=0`, `PixelDepth=12`, `PrvImgThs` / `PrvImg1Ths` = `0` |
 | Timing | **495 ms** shutter high, **5 ms** shutter down | `AcquireTime=0.495`, `AcquirePeriod≥0.5` (period must cover exposure + shutter down) |
 | Frames | **20** frames | `NumImages=20`, `ImageMode=1` (Multiple) |
-| Gain | **Super-low gain** mode | `GainMode` PV — **confirm exact Serval string with ASI** (`LGM` is a placeholder in `init_detector_hw_mpx3_equalize.cmd`) |
+| Gain | **Super-low gain** (`SLGM`) | Erik Aug 2026: **`SLGM`** for uncalibrated frame / equalization tests; **`HGM`** after cal (~10 keV). Enum: `SHGM`, `HGM`, `LGM`, `SLGM`. |
 | Threshold level | DAC **~50–90** so noise pixels are visible | Set via **Accos equalization** or chip DAC / `.dacs` — not automated in the IOC script |
 | Bias / sensor | **100 V**, Si **300 µm**, **positive** polarity | `BiasVolt=100`, `Polarity=0` (Positive); see detector delivery sheet if different |
 | Calibration | **Equalization with Accos** | Run Accos first; then upload resulting BPC/DACS via `WriteBPCFile` / `WriteDACSFile` |
-| ChargeSumming / Colour | **Inactive** for now | `ChargeSumming=0`, `Colour=0` — Erik to follow up with slides / meeting |
+| ChargeSumming / Colour | **Off by default** | `ChargeSumming=0`, `Colour=0`. Erik Aug 2026: ChargeSumming uses th0 (arbitrated) + th1 (charge-summed, separate cal); Colour = spectral mode (4 or 8 images), needs special sensor. |
 | Integrated preview | **`IntegrationMode: last`**, not sum | Already IOC default: `PrvImg1IntgMode=2` on 8089 |
 
 ### Live view vs full-rate saving (Erik)
@@ -170,7 +172,7 @@ Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** 
 | Beamline live view | Preview (frame + integrated) + count histogram | `WritePrvImg=1` (8088), `WritePrvImg1=1` (8089) |
 | Data saving at full rate | `Image[]` | TCP **8086**, `WriteImg=0` until needed — `< init_detector_img_mpx3.cmd` |
 
-Medipix3 has **no Timepix3-style raw `.tpx3` stream**. Highest practical rates (fast PC + SSD): **~2000 Hz** (12-bit continuous); **~750 Hz** (24-bit or dual 12-bit counter). Sequential shutter down: **~5 ms** safe, **~2 ms** minimum; **0.5 ms** (12-bit) / **1.3 ms** (24-bit) in other modes.
+Medipix3 has **no Timepix3-style raw `.tpx3` stream** and sends **full image arrays** (no zero-suppression / pixel-hit stream). Highest practical rates (fast PC + SSD): **~2000 Hz** (12-bit continuous); **~750 Hz** (24-bit or dual 12-bit counter). Sequential shutter down: **~5 ms** safe, **~2 ms** minimum; **0.5 ms** (12-bit) / **1.3 ms** (24-bit) in other modes.
 
 ## Family TCP port map (TPX3 / MPX3 / TPX4)
 
@@ -319,8 +321,19 @@ After equalization, restore the dual-counter profile:
 ### Known follow-ups on hardware
 
 - **First-frame artefacts:** physical Timepix3 can show a corrupt first frame after calibration load; emulator may show a brief Signed diff flicker on Pva6 — treat both as hardware/emulator follow-ups.
-- **`GainMode` string** for “super low gain” — pending Erik confirmation (Email 1, Aug 2026).
-- **ChargeSumming / Colour** — keep off until ASI review.
+
+### Erik Aug 2026 (Email 1 reply) — config summary
+
+| Topic | Erik (ASI) | EPICS impact |
+|-------|------------|--------------|
+| **`GainMode`** | **`SHGM`, `HGM`, `LGM`, `SLGM`** (super-high → super-low). **`HGM`** calibrated ~10 keV; **`SLGM`** uncalibrated frame tests / equalization. | `init_detector_hw_mpx3_equalize.cmd` uses **`SLGM`**; dual-counter profile uses **`HGM`**. Waveform PV today; **mbbo** planned. |
+| **Equalization** | June checklist **still correct**. | `init_detector_hw_mpx3_equalize.cmd` unchanged except `SLGM`. |
+| **`ChargeSumming`** | Default **off**. When on: th0 = arbitrated image, th1 = charge-summed (separate calibration). | Keep `ChargeSumming=0` in default profiles. |
+| **`Colour`** | Default **off** (spectral). 4 images (8 with BothCounters); thresholds 0,2,4,6 (+ odd with BothCounters); special sensor. | Keep `Colour=0` unless ASI enables spectral hardware. |
+| **`BothCounters`** | **Not recommended by default.** If used: set to 1 with **th1 high (~250)**. | **`init_detector_hw_mpx3.cmd`** (Accos / IXS dual-threshold) is a **separate opt-in profile**, not Erik’s default. |
+| **`IDelayConfig`** | Standard values; manual per-system tuning **no longer required**. | `[15,15,15,10]` in IOC defaults remains fine. |
+
+Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). BPC/mask layout and destination reference docs — **still open** (Email 2).
 
 ## Open work (TODO)
 
@@ -355,10 +368,10 @@ Preview and dual-threshold paths are validated; **mask edit, PixelConfig vs disk
 
 | Item | Notes |
 |------|--------|
-| Hardware equalization + dual-counter IXS on real MPX3 | After Erik replies to Email 1 |
+| Hardware equalization + dual-counter IXS on real MPX3 | Equalization recipe confirmed; run on hardware when quad available |
 | HDF5 / Image[] rate soak | Recipe in place; run on emulator then hardware |
 | **`img1Worker`** (Image[1] TCP 8087) | Deferred |
-| **`GainMode` → mbbo** | Blocked on ASI enum list |
+| **`GainMode` → mbbo** | Enum confirmed (`SHGM`,`HGM`,`LGM`,`SLGM`); implement DB + Phoebus combo |
 | Phoebus screenshots | `Mpx3_main`, `Mpx3_hdf_img_config`, acquire-active variants |
 | Sphinx MPX3 figures | `docs/ADTimePix3/Screenshots/MediPix3/` |
 
@@ -436,11 +449,11 @@ Each jsonimage line on the wire is: JSON header + binary pixel array. The driver
 
 | Field | Role | Notes |
 |-------|------|-------|
-| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string (not preview-specific). Erik’s Accos example: **`HGM`**. Driver IOC default: **`SHGM`**. Typical ASI strings include **`LGM`**, **`HGM`**, **`SHGM`** — confirm allowed values with ASI or chip documentation; written via **`GainMode`** PV → `PUT /detector/config`. |
+| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low). **`HGM`**: calibrated ~10 keV (Accos recipe, `init_detector_hw_mpx3.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`init_detector_hw_mpx3_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** PV → `PUT /detector/config`. |
 | **`Preview period`** | Throttle live preview rate | Serval **`Preview.Period`** (seconds), separate from **`TriggerPeriod`**. Set via **`PrvPeriod`** PV; pushed on **`WriteData`**. Erik’s working UI used **0.5 s** preview period with **0.5 s** trigger period. **`PrvSmplgMode`**: `skipOnFrame` (0) or `skipOnPeriod` (1). |
 | **`BiasVoltage`** | Sensor bias | Erik: **100 V**. Low values (e.g. 12) can prevent useful counts on hardware/emulator. |
 | **`PixelDepth`** | Counter bit depth | Erik: **12**. Driver pushes integer to Serval; readback may show string `"12"`. |
-| **`IDelayConfig`** | Inter-chip delay tuning | Erik: `[15, 15, 15, 10]` — on **`Mpx3DetectorConfig.bob`**. |
+| **`IDelayConfig`** | Inter-chip delay tuning | Erik Aug 2026: **`[15, 15, 15, 10]`** are standard; manual per-system tuning no longer required. On **`Mpx3DetectorConfig.bob`**. |
 
 ### Erik’s validated dual-threshold recipe (Accos, 2026-06-12)
 

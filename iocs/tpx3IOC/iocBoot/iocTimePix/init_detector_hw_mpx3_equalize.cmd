@@ -3,13 +3,13 @@
 # Not for dual-counter / IXS band-pass testing (use init_detector_hw_mpx3.cmd instead).
 #
 # Threshold DAC ~50-90: set via Accos equalization or chip DAC / .dacs before acquire.
-# GainMode: confirm exact Serval string for "super low gain" with ASI (LGM is a placeholder).
+# GainMode SLGM (super-low): Erik Aug 2026 — frame tests without calibration (noise-hit pattern).
 
 epicsThreadSleep(2)
 
 dbpf("$(PREFIX)cam1:BiasVolt","100")
 dbpf("$(PREFIX)cam1:Polarity","0")          # Positive (Si 300 um — see delivery sheet)
-dbpf("$(PREFIX)cam1:GainMode","LGM")        # TODO: confirm super-low gain string with ASI
+dbpf("$(PREFIX)cam1:GainMode","SLGM")       # Super-low gain (uncalibrated frame / equalization tests)
 dbpf("$(PREFIX)cam1:PixelDepth","12")
 dbpf("$(PREFIX)cam1:ChargeSumming","0")
 dbpf("$(PREFIX)cam1:Colour","0")

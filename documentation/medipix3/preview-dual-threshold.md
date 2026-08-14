@@ -168,6 +168,7 @@ Result: **8 jsonimage frames** on TCP **8088** — for each `frameNumber` 0…3,
 | 2026-06-12 | Erik → Kaz | Accos code + log: **8088**, **`thresholdID` 1 then 0**, 4 triggers → 8 frames, integrated socket **8089** same demux; working **`TriggerPeriod=0.5`**, **`ExposureTime=0.495`**, **`AUTOTRIGSTART_TIMERSTOP`**. |
 | 2026-06 | Erik → Kaz | Hardware checkout: single threshold 12-bit, 495 ms / 5 ms down / 20 frames, super-low gain, threshold DAC ~50–90, 100 V bias positive, equalize in Accos; preview + integrated for live view, **`Image[]`** for saving; no sum on 8089; ChargeSumming/Colour off. |
 | 2026-07 | Erik → Kaz | First real-detector preview via [ad-timepix3-deploy](https://github.com/kgofron/ad-timepix3-deploy): connection OK; lowered chip-0 TH0/TH1 in `.dacs` → noise in one quadrant; notes on `caget -V`, `MediPix3/` screen path, P/R macros. |
+| 2026-08 | Erik → Kaz | Email 1 reply: **`GainMode`** enum **`SHGM`/`HGM`/`LGM`/`SLGM`**; equalization checklist unchanged; **`SLGM`** for uncalibrated frame tests; **`ChargeSumming`/`Colour`** off by default; **`BothCounters`** not default (if on, th1 ~250); **`IDelayConfig`** standard; full arrays not zero-suppression. BPC/mask layout still open. |
 
 ---
 
