@@ -121,6 +121,24 @@ static int jsonIntOr(const json& j, int def = 0) {
     return def;
 }
 
+/** Serval PixelDepth may be integer or string ("12", "24"). */
+static int pixelDepthFromJson(const json& j, int def = 12) {
+    if (j.is_number_integer()) return j.get<int>();
+    if (j.is_number()) return static_cast<int>(j.get<double>());
+    if (j.is_string()) {
+        const string s = j.get<string>();
+        if (s == "24") return 24;
+        if (s == "12") return 12;
+        try {
+            const int v = std::stoi(s);
+            return (v == 24) ? 24 : 12;
+        } catch (...) {
+            return def;
+        }
+    }
+    return def;
+}
+
 static double jsonDoubleOr(const json& j, double def = 0.0) {
     if (j.is_number()) return j.get<double>();
     return def;
@@ -1419,7 +1437,7 @@ asynStatus ADTimePix::getDetector(){
             setIntegerParam(ADTimePixColour, jsonBoolOr(cfg["Colour"]) ? 1 : 0);
         }
         if (cfg.contains("PixelDepth")) {
-            setIntegerParam(ADTimePixPixelDepth, jsonIntOr(cfg["PixelDepth"]));
+            setIntegerParam(ADTimePixPixelDepth, pixelDepthFromJson(cfg["PixelDepth"]));
         }
         if (cfg.contains("CounterSelectIn")) {
             setIntegerParam(ADTimePixCounterSelectIn, jsonIntOr(cfg["CounterSelectIn"]));
@@ -2584,6 +2602,11 @@ asynStatus ADTimePix::initAcquisition(){
             config_j["GainMode"] = gainModeToString(intNum);
 
             getIntegerParam(ADTimePixPixelDepth, &intNum);
+            if (mpx3BothCountersPixelDepthConflict(intNum)) {
+                intNum = 12;
+                setIntegerParam(ADTimePixPixelDepth, intNum);
+                setStringParam(ADStatusMessage, kMpx3BothCountersPixelDepthMsg);
+            }
             config_j["PixelDepth"] = intNum;
             getIntegerParam(ADTimePixCounterSelectIn, &intNum);
             config_j["CounterSelectIn"] = intNum;
@@ -2608,6 +2631,25 @@ asynStatus ADTimePix::initAcquisition(){
 
         setIntegerParam(ADTimePixHttpCode, r.status_code);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
+        if (r.status_code != 200 && detectorFamily_ == DetectorFamily::MPX3) {
+            status = asynError;
+            /* Resync setpoints from Serval so mbbo/mbbi match after a rejected PUT. */
+            cpr::Response rGet = ADTimePix3ServalHttp::get(det_config);
+            if (rGet.status_code == 200) {
+                try {
+                    const json cfg = json::parse(rGet.text);
+                    if (cfg.contains("PixelDepth")) {
+                        setIntegerParam(ADTimePixPixelDepth,
+                                        pixelDepthFromJson(cfg["PixelDepth"]));
+                    }
+                    if (cfg.contains("GainMode")) {
+                        setIntegerParam(ADTimePixGainMode,
+                                        gainModeFromString(jsonStringOr(cfg["GainMode"])));
+                    }
+                } catch (const std::exception&) {
+                }
+            }
+        }
         /* Do not call getDetector() here: Config readback can lag the PUT on MPX3
          * (emulator and some hardware paths) and would overwrite driver params such as
          * GainMode that were just pushed from EPICS. callParamCallbacks() below

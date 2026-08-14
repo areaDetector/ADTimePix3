@@ -87,7 +87,7 @@
 #define ADTimePixGainModeString             "TPX3_GAIN_MODE"          // (asynInt32,       r/w)    MPX3 Config GainMode (0=SHGM..3=SLGM)
 #define ADTimePixChargeSummingString        "TPX3_CHARGE_SUMMING"     // (asynInt32,       r/w)    MPX3 Config ChargeSumming
 #define ADTimePixColourString               "TPX3_COLOUR"             // (asynInt32,       r/w)    MPX3 Config Colour
-#define ADTimePixPixelDepthString           "TPX3_PIXEL_DEPTH"        // (asynInt32,       r/w)    MPX3 Config PixelDepth
+#define ADTimePixPixelDepthString           "TPX3_PIXEL_DEPTH"        // (asynInt32,       r/w)    MPX3 Config PixelDepth (12 or 24)
 #define ADTimePixCounterSelectInString      "TPX3_COUNTER_SELECT_IN"  // (asynInt32,       r/w)    MPX3 Config CounterSelectIn
 #define ADTimePixCounterSelectOutString     "TPX3_COUNTER_SELECT_OUT" // (asynInt32,       r/w)    MPX3 Config CounterSelectOut
 #define ADTimePixIDelay0String              "TPX3_IDELAY0"            // (asynInt32,       r/w)    MPX3 Config IDelayConfig[0]
@@ -781,6 +781,9 @@ class ADTimePix : public ADDriver{
         /** MPX3: BothCounters=true is incompatible with TriggerMode index 5 (CONTINUOUS). */
         bool mpx3BothCountersTriggerConflict(int triggerMode) const;
         static const char kMpx3BothCountersTriggerMsg[];
+        /** MPX3: PixelDepth 24 is incompatible with BothCounters=true (Serval rejects PUT). */
+        bool mpx3BothCountersPixelDepthConflict(int pixelDepth) const;
+        static const char kMpx3BothCountersPixelDepthMsg[];
         /** Push processed Img (running sum and sum-of-N) as NDArrays to addresses 2 and 3 for file plugins. */
         void pushProcessedImgToPlugins();
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */

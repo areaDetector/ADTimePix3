@@ -452,7 +452,7 @@ Each jsonimage line on the wire is: JSON header + binary pixel array. The driver
 | **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low, mbbo 0–3). **`HGM`**: calibrated ~10 keV (Accos recipe, `init_detector_hw_mpx3.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`init_detector_hw_mpx3_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** mbbo → `PUT /detector/config`. |
 | **`Preview period`** | Throttle live preview rate | Serval **`Preview.Period`** (seconds), separate from **`TriggerPeriod`**. Set via **`PrvPeriod`** PV; pushed on **`WriteData`**. Erik’s working UI used **0.5 s** preview period with **0.5 s** trigger period. **`PrvSmplgMode`**: `skipOnFrame` (0) or `skipOnPeriod` (1). |
 | **`BiasVoltage`** | Sensor bias | Erik: **100 V**. Low values (e.g. 12) can prevent useful counts on hardware/emulator. |
-| **`PixelDepth`** | Counter bit depth | Erik: **12**. Driver pushes integer to Serval; readback may show string `"12"`. |
+| **`PixelDepth`** | Counter bit depth | Erik: **12** (default). Serval accepts **12** or **24**. **`PixelDepth`** mbbo PV (12 / 24). **24-bit is rejected when `BothCounters=Yes`** (Serval: *"Pixel depth cannot be 24 when both counters are in use"*). |
 | **`IDelayConfig`** | Inter-chip delay tuning | Erik Aug 2026: **`[15, 15, 15, 10]`** are standard; manual per-system tuning no longer required. On **`Mpx3DetectorConfig.bob`**. |
 
 ### Erik’s validated dual-threshold recipe (Accos, 2026-06-12)

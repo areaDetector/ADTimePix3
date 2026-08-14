@@ -248,15 +248,25 @@ record(bi, "$(P)$(R)Colour_RBV"){
   field(ONAM, "Yes")
   field(SCAN, "I/O Intr")
 }
-record(longout, "$(P)$(R)PixelDepth"){
+record(mbbo, "$(P)$(R)PixelDepth"){
   field(DESC, "MPX3 PixelDepth")
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_DEPTH")
+  field(ZRST, "12-bit")
+  field(ZRVL, "12")
+  field(ONST, "24-bit")
+  field(ONVL, "24")
+  info(autosaveFields, "VAL")
 }
-record(longin, "$(P)$(R)PixelDepth_RBV"){
+record(mbbi, "$(P)$(R)PixelDepth_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_PIXEL_DEPTH")
+  field(ZRST, "12-bit")
+  field(ZRVL, "12")
+  field(ONST, "24-bit")
+  field(ONVL, "24")
   field(SCAN, "I/O Intr")
+  field(DESC, "MPX3 PixelDepth readback")
 }
 record(longout, "$(P)$(R)CounterSelectIn"){
   field(DESC, "MPX3 CounterSelectIn")

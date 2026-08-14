@@ -558,6 +558,24 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             value = 0;
             setIntegerParam(ADTimePixGainMode, value);
         }
+        if (function == ADTimePixPixelDepth && value != 12 && value != 24) {
+            value = 12;
+            setIntegerParam(ADTimePixPixelDepth, value);
+        }
+        if (function == ADTimePixPixelDepth && mpx3BothCountersPixelDepthConflict(value)) {
+            LOG_ARGS("%s", kMpx3BothCountersPixelDepthMsg);
+            setIntegerParam(ADTimePixPixelDepth, 12);
+            setStringParam(ADStatusMessage, kMpx3BothCountersPixelDepthMsg);
+            setStringParam(ADTimePixWriteMsg, kMpx3BothCountersPixelDepthMsg);
+            setIntegerParam(ADTimePixHttpCode, 400);
+            callParamCallbacks(ADTimePixPixelDepth);
+            callParamCallbacks(ADTimePixWriteMsg);
+            callParamCallbacks(ADTimePixHttpCode);
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                          "%s", kMpx3BothCountersPixelDepthMsg);
+            ERR_ARGS("%s", kMpx3BothCountersPixelDepthMsg);
+            return asynError;
+        }
         status = initAcquisition();
     }
 
@@ -578,6 +596,14 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             callParamCallbacks(ADTimePixPrvImg1Ths);
             callParamCallbacks(ADTimePixImgThs);
             callParamCallbacks(ADTimePixImg1Ths);
+            int pixelDepth = 12;
+            getIntegerParam(ADTimePixPixelDepth, &pixelDepth);
+            if (mpx3BothCountersPixelDepthConflict(pixelDepth)) {
+                LOG_ARGS("%s", kMpx3BothCountersPixelDepthMsg);
+                setIntegerParam(ADTimePixPixelDepth, 12);
+                setStringParam(ADStatusMessage, kMpx3BothCountersPixelDepthMsg);
+                callParamCallbacks(ADTimePixPixelDepth);
+            }
         }
         status = initAcquisition();
     }
@@ -1692,7 +1718,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setIntegerParam(ADTimePixGainMode, 0);  // SHGM
     setIntegerParam(ADTimePixChargeSumming, 0);
     setIntegerParam(ADTimePixColour, 0);
-    setIntegerParam(ADTimePixPixelDepth, 1);
+    setIntegerParam(ADTimePixPixelDepth, 12);
     setIntegerParam(ADTimePixCounterSelectIn, 0);
     setIntegerParam(ADTimePixCounterSelectOut, 0);
     setIntegerParam(ADTimePixIDelay0, 15);
@@ -1796,6 +1822,9 @@ void ADTimePix::updateDetectorFamily(int mpxType, const std::string& chipType,
 const char ADTimePix::kMpx3BothCountersTriggerMsg[] =
     "MPX3: BothCounters requires non-Continuous TriggerMode (use AutoTrgSt_TmrSp=4)";
 
+const char ADTimePix::kMpx3BothCountersPixelDepthMsg[] =
+    "MPX3: PixelDepth 24 incompatible with BothCounters (use 12-bit)";
+
 bool ADTimePix::mpx3BothCountersTriggerConflict(int triggerMode) const {
     if (detectorFamily_ != DetectorFamily::MPX3) {
         return false;
@@ -1804,6 +1833,16 @@ bool ADTimePix::mpx3BothCountersTriggerConflict(int triggerMode) const {
     ADTimePix* self = const_cast<ADTimePix*>(this);
     self->getIntegerParam(ADTimePixBothCounters, &bothCounters);
     return bothCounters != 0 && triggerMode == 5;
+}
+
+bool ADTimePix::mpx3BothCountersPixelDepthConflict(int pixelDepth) const {
+    if (detectorFamily_ != DetectorFamily::MPX3) {
+        return false;
+    }
+    int bothCounters = 0;
+    ADTimePix* self = const_cast<ADTimePix*>(this);
+    self->getIntegerParam(ADTimePixBothCounters, &bothCounters);
+    return bothCounters != 0 && pixelDepth == 24;
 }
 
 void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
@@ -1821,7 +1860,7 @@ void ADTimePix::applyFamilyDefaults(DetectorFamily family) {
     setIntegerParam(ADTimePixPrvImgFormat, 3);
     setIntegerParam(ADTimePixPrvImg1Format, 3);
     setIntegerParam(ADTimePixGainMode, 1);  // HGM
-    setIntegerParam(ADTimePixPixelDepth, 1);
+    setIntegerParam(ADTimePixPixelDepth, 12);
     setIntegerParam(ADTimePixIDelay0, 15);
     setIntegerParam(ADTimePixIDelay1, 15);
     setIntegerParam(ADTimePixIDelay2, 15);

@@ -507,16 +507,18 @@
       <width>110</width>
       <horizontal_alignment>2</horizontal_alignment>
     </widget>
-    <widget type="textentry" version="3.0.0">
+    <widget type="combo" version="2.0.0">
       <name>PixelDepthSP</name>
       <pv_name>$(P)$(R)PixelDepth</pv_name>
       <x>110</x>
       <y>101</y>
       <width>140</width>
+      <height>22</height>
       <background_color>
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
+      <tooltip>Medipix3 counter bit depth (Serval Config): 12 or 24. 24-bit is rejected when BothCounters=Yes.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>PixelDepthRBV</name>
