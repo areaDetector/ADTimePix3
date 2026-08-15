@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
   <width>470</width>
-  <height>970</height>
+  <height>1045</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -402,9 +402,57 @@
     </widget>
   </widget>
   <widget type="group" version="3.0.0">
-    <name>Mpx3ChipGroup</name>
+    <name>LayoutGroup</name>
     <x>5</x>
     <y>460</y>
+    <width>460</width>
+    <height>70</height>
+    <widget type="label" version="2.0.0">
+      <name>LayoutTitle</name>
+      <text>Layout</text>
+      <x>5</x>
+      <y>2</y>
+      <width>120</width>
+      <background_color>
+        <color red="240" green="240" blue="240">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>DetOrientLbl</name>
+      <text>DetOrient</text>
+      <x>5</x>
+      <y>18</y>
+      <width>105</width>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>DetOrientSP</name>
+      <pv_name>$(P)$(R)DetOrient</pv_name>
+      <x>110</x>
+      <y>18</y>
+      <width>140</width>
+      <height>22</height>
+      <background_color>
+        <color red="115" green="223" blue="255">
+        </color>
+      </background_color>
+      <tooltip>Serval layout rotate (preview + Image[]). Enum from driver readEnum().</tooltip>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>DetOrientRBV</name>
+      <pv_name>$(P)$(R)DetOrient_RBV</pv_name>
+      <x>255</x>
+      <y>18</y>
+      <width>170</width>
+      <format>6</format>
+      <tooltip>Serval Layout.DetectorOrientation after connect / rotate</tooltip>
+    </widget>
+  </widget>
+  <widget type="group" version="3.0.0">
+    <name>Mpx3ChipGroup</name>
+    <x>5</x>
+    <y>535</y>
     <width>460</width>
     <height>230</height>
     <widget type="label" version="2.0.0">
@@ -666,7 +714,7 @@
   <widget type="group" version="3.0.0">
     <name>DualThresholdGroup</name>
     <x>5</x>
-    <y>695</y>
+    <y>770</y>
     <width>460</width>
     <height>115</height>
     <widget type="label" version="2.0.0">
@@ -729,7 +777,7 @@
   <widget type="group" version="3.0.0">
     <name>StatusGroup</name>
     <x>5</x>
-    <y>815</y>
+    <y>890</y>
     <width>460</width>
     <height>150</height>
     <widget type="label" version="2.0.0">
@@ -816,5 +864,21 @@
         </color>
       </foreground_color>
     </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>DetOrientHint</name>
+    <text>Rotates preview and Image streams. Mask/BPC overlay may not match until MPX3 mask_io mapping is implemented.</text>
+    <x>20</x>
+    <y>520</y>
+    <width>450</width>
+    <height>14</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="9.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="64" green="64" blue="64">
+      </color>
+    </foreground_color>
   </widget>
 </display>

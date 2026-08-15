@@ -627,21 +627,10 @@ asynStatus ADTimePix::rotateLayout(){
     std::string layout_url = this->serverURL + std::string("/detector/layout/rotate?reset=true");   // Serval 4.1.1
 
     getIntegerParam(ADTimePixDetectorOrientation, &intNum);
-    json detectorOrientation;
-    detectorOrientation[0] = "UP";
-    detectorOrientation[1] = "RIGHT";
-    detectorOrientation[2] = "DOWN";
-    detectorOrientation[3] = "LEFT";
-    detectorOrientation[4] = "UP_MIRRORED";
-    detectorOrientation[5] = "RIGHT_MIRRORED";
-    detectorOrientation[6] = "DOWN_MIRRORED";
-    detectorOrientation[7] = "LEFT_MIRRORED";
-
-//    json detOrientation_j;
-//    detOrientation_j["DetectorOrientation"] = detectorOrientation[intNum];
-//    std::string json_data = detOrientation_j.dump(3,' ', true).c_str();
-//    std::string json_data = "{\"DetectorOrientation\":\"" + std::string(detectorOrientation[intNum]) + "\"}";
-//    std::string json_data = "{\"" + std::string("DetectorOrientation") + "\":" + std::string(detectorOrientation[intNum]) + "}";
+    if (intNum < 0 || intNum >= detOrientationCount()) {
+        intNum = 0;
+        setIntegerParam(ADTimePixDetectorOrientation, intNum);
+    }
 
     getStringParam(ADSDKVersion, API_Ver);
     switch (intNum) {
@@ -1517,7 +1506,8 @@ asynStatus ADTimePix::getDetector(){
         if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
             detector_j["Layout"].contains("DetectorOrientation")) {
             setIntegerParam(ADTimePixDetectorOrientation,
-                mDetOrientationMap[strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str())]);
+                detOrientationIndexFromName(
+                    strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str())));
         }
         if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
             detector_j["Layout"].contains("Original") && detector_j["Layout"]["Original"].is_object() &&

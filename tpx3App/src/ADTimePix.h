@@ -411,6 +411,8 @@ class ADTimePix : public ADDriver{
         virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t nChars, size_t *nActual);
         virtual asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
         virtual asynStatus writeFloat64(asynUser* pasynUser, epicsFloat64 value);
+        virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
+                                    size_t nElements, size_t *nIn);
 
         asynStatus rotateLayout();
 
@@ -791,6 +793,11 @@ class ADTimePix : public ADDriver{
         /** Push PrvHst spectra (running sum, sum-of-N, frame, ToF axis) as NDArrays to addresses 4–7 for file plugins. */
         void pushProcessedHstToPlugins();
 
+        /** Serval Layout.DetectorOrientation names (index 0..7). Used by readEnum and GET /detector. */
+        static int detOrientationCount();
+        static const char* detOrientationName(int index);
+        static int detOrientationIndexFromName(const std::string& name, int def = 0);
+
         #define ADTIMEPIX_LAST_PARAM ADTimePixMaskedPelsExportStatus  // Last parameter in the list
 
     private:
@@ -798,8 +805,6 @@ class ADTimePix : public ADDriver{
         // Some data variables
         epicsEventId startEventId;
         epicsEventId endEventId;
-        
-        std::map<std::string, int> mDetOrientationMap;
 
         /** |SERVAL PixelConfig − on-disk BPC| per detector index (same layout as BPC waveform). */
         epicsMutexId pixelConfigDiffMutex_;

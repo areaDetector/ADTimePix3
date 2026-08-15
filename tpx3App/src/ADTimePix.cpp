@@ -546,6 +546,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixDetectorOrientation) {
+        if (value < 0 || value >= detOrientationCount()) {
+            value = 0;
+            setIntegerParam(ADTimePixDetectorOrientation, value);
+        }
         status = rotateLayout();
     }
 
@@ -791,6 +795,64 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
     else LOG_ARGS("function=%d value=%d", function, value);
     return asynSuccess;
+}
+
+namespace {
+
+constexpr const char* kDetOrientationNames[] = {
+    "UP",
+    "RIGHT",
+    "DOWN",
+    "LEFT",
+    "UP_MIRRORED",
+    "RIGHT_MIRRORED",
+    "DOWN_MIRRORED",
+    "LEFT_MIRRORED",
+};
+constexpr int kDetOrientationCount =
+    static_cast<int>(sizeof(kDetOrientationNames) / sizeof(kDetOrientationNames[0]));
+
+}  // namespace
+
+int ADTimePix::detOrientationCount() {
+    return kDetOrientationCount;
+}
+
+const char* ADTimePix::detOrientationName(int index) {
+    if (index < 0 || index >= kDetOrientationCount) {
+        return kDetOrientationNames[0];
+    }
+    return kDetOrientationNames[index];
+}
+
+int ADTimePix::detOrientationIndexFromName(const std::string& name, int def) {
+    for (int i = 0; i < kDetOrientationCount; ++i) {
+        if (name == kDetOrientationNames[i]) {
+            return i;
+        }
+    }
+    return def;
+}
+
+asynStatus ADTimePix::readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
+                               size_t nElements, size_t *nIn)
+{
+    const int function = pasynUser->reason;
+    *nIn = 0;
+
+    if (function == ADTimePixDetectorOrientation) {
+        for (int i = 0; i < kDetOrientationCount && *nIn < nElements; ++i) {
+            if (strings[*nIn]) {
+                free(strings[*nIn]);
+            }
+            strings[*nIn] = epicsStrDup(detOrientationName(i));
+            values[*nIn] = i;
+            severities[*nIn] = 0;
+            (*nIn)++;
+        }
+        return asynSuccess;
+    }
+    return asynError;
 }
 
 
@@ -1189,15 +1251,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
       detectorFamilyApplied_(false),
       imgCurrentFrame_(512, 512, ImageData::PixelFormat::UINT16, ImageData::DataType::FRAME_DATA)
 {
-
-    mDetOrientationMap["UP"] =      0;
-    mDetOrientationMap["RIGHT"] =   1;
-    mDetOrientationMap["DOWN"] =    2;
-    mDetOrientationMap["LEFT"] =    3;
-    mDetOrientationMap["UP_MIRRORED"] =     4;
-    mDetOrientationMap["RIGHT_MIRRORED"] =  5;
-    mDetOrientationMap["DOWN_MIRRORED"] =   6;
-    mDetOrientationMap["LEFT_MIRRORED"] =   7;
 
     // GraphicsMagick initialization removed - TCP streaming is used instead
     // GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
