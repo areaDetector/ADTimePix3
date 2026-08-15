@@ -610,6 +610,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADNumImages || function == ADTriggerMode) {
+        if (function == ADTriggerMode && (value < 0 || value > 8)) {
+            value = 0;
+            setIntegerParam(ADTriggerMode, value);
+        }
         if(function == ADTriggerMode && mpx3BothCountersTriggerConflict(value)) {
             LOG_ARGS("%s", kMpx3BothCountersTriggerMsg);
             setIntegerParam(ADTriggerMode, 4);
@@ -1489,6 +1493,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixFrameCountString,                  asynParamInt32,     &ADTimePixFrameCount);   
     createParam(ADTimePixDroppedFramesString,               asynParamInt32,     &ADTimePixDroppedFrames);
     createParam(ADTimePixStatusString,                      asynParamOctet,     &ADTimePixStatus);
+    createParam(ADTimePixPipelineStateString,               asynParamInt32,     &ADTimePixPipelineState);
     // Measurement.Config (Stem, TimeOfFlight)
     createParam(ADTimePixStemScanWidthString,              asynParamInt32,     &ADTimePixStemScanWidth);
     createParam(ADTimePixStemScanHeightString,             asynParamInt32,     &ADTimePixStemScanHeight);

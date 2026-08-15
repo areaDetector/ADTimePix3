@@ -38,6 +38,8 @@ record(mbbo, "$(P)$(R)TriggerMode")
    field(SXVL, "6")
    field(SVST, "SwReSt_SwReSp")   # "SOFTWARESTART_SOFTWARESTOP"
    field(SVVL, "7")
+   field(SIST, "Following")       #  FOLLOWING (OpenAPI index 8)
+   field(SIVL, "8")
 }
 
 record(mbbi, "$(P)$(R)TriggerMode_RBV")
@@ -58,6 +60,8 @@ record(mbbi, "$(P)$(R)TriggerMode_RBV")
    field(SXVL, "6")
    field(SVST, "SwReSt_SwReSp")         # "SOFTWARESTART_SOFTWARESTOP"
    field(SVVL, "7")
+   field(SIST, "Following")             #  FOLLOWING
+   field(SIVL, "8")
    field(SCAN, "I/O Intr")
 }
 
