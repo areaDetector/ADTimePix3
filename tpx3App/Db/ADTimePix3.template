@@ -789,6 +789,9 @@ record(mbbi, "$(P)$(R)LogLevel_RBV")
    field(SCAN, "I/O Intr")
 }
 
+# DetOrient mbbo/mbbi: enum choices from driver readEnum() (ADTimePix.cpp
+# kDetOrientationNames[]). Serval Layout.DetectorOrientation; no DB enum fields.
+
 record(mbbo, "$(P)$(R)DetOrient")
 {
    field(PINI, "YES")

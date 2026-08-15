@@ -11,23 +11,25 @@
 include "ADBase.template"
 
 ###############################################################################
-#  Note: The following are records defined in ADBase.template.                #
-#        We are changing some of the fields here to reflect valid values for  #
-#        TimePix3                                                             #
+#  Note: Records below override ADBase.template. Some set DB enum fields;      #
+#        TriggerMode uses driver readEnum() instead (see ADTimePix.cpp).      #
 ###############################################################################
 
 ###############################################################################
-#  These records control the trigger mode.                                    # 
+#  TriggerMode (mbbo/mbbi from ADBase.template)                               #
+#  Enum menu strings from driver readEnum() — ADTimePix.cpp kTriggerModes[].  #
+#  No ZRST/ONST/... here; asyn devAsynInt32 fills choices at runtime.         #
+#  Index 7: menu SwReSt_SwReSp; Serval SOFTWARESTART_SOFTWARESTOP (26-char).  #
 ###############################################################################
 
 record(mbbo, "$(P)$(R)TriggerMode")
 {
-   field(DESC, "Serval TriggerMode (driver readEnum)")
+   field(DESC, "Serval TriggerMode")
 }
 
 record(mbbi, "$(P)$(R)TriggerMode_RBV")
 {
-   field(DESC, "Serval TriggerMode RBV (driver readEnum)")
+   field(DESC, "Serval TriggerMode RBV")
 }
 
 
