@@ -11,4 +11,6 @@ Validated on the Medipix3 emulator and in a **first ASI hardware preview** (July
 | [screenshots/](screenshots/) | Phoebus OPI captures for integration docs |
 | [COORDINATE_MAP.md](../COORDINATE_MAP.md) | Image `(i,j)` / BPC indexing; **top-left Y-origin** vs Phoebus / NDStats profiles |
 
+**Local-only (gitignored):** [drafts/](drafts/) — saved Serval OpenAPI snapshots (`serval-openapi-<version>-build<N>.yaml`), email drafts, debug JSON. How to query live OpenAPI: [integration.md § Serval API reference](integration.md#serval-api-reference-openapi).
+
 Shared driver topics (TCP streaming, NDArray addresses, masks) live in the [documentation index](../README.md).

@@ -190,7 +190,44 @@ Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phas
 | **8089** | Preview[1] | Preview integrated | **On** | often PrvImg | yes |
 | 8451 | — | Preview histogram | off | yes | TBD |
 
-**Serval API docs (Swagger):** `http://localhost:<port>/docs/` where `<port>` matches **`SERVER_URL`** in the IOC (MPX3 emulator **`8081`** in `st_mpx3.cmd`; ASI examples and some email links use **`8080`**). OpenAPI spec: `/openapi.json` on the same host/port. The “Servers” dropdown in Swagger may still list `8080` — use the browser URL port that matches your running Serval instance.
+### Serval API reference (OpenAPI)
+
+**Source of truth:** the OpenAPI spec served by **your running Serval jar** (version-specific). Use it for enums, constraints, and MPX3-only fields (`BothCounters`, `GainMode`, `PixelDepth`, …). The ASI TPX3 PDF manual (§4) is useful background but predates many MPX3 config keys.
+
+| Resource | URL (replace `<port>` with `SERVER_URL`, e.g. **8081** in `st_mpx3.cmd`) |
+|----------|---------------------------------------------------------------------------|
+| Swagger UI | `http://localhost:<port>/docs/` |
+| OpenAPI JSON | `http://localhost:<port>/openapi.json` |
+| OpenAPI YAML | `http://localhost:<port>/openapi.yaml` (browser “Save as…” works) |
+
+The Swagger **Servers** dropdown may still show `8080`; use the browser URL port that matches your running instance.
+
+**Query from the shell** (Serval must be up):
+
+```bash
+PORT=8081   # match SERVER_URL / st_mpx3.cmd
+
+# Full spec (pretty-printed)
+curl -s "http://localhost:${PORT}/openapi.json" | python3 -m json.tool > serval-openapi-4.1.6-experimental-build1760.json
+
+# One schema field (example: PixelDepth on MPX3)
+curl -s "http://localhost:${PORT}/openapi.json" | python3 -c "
+import json, sys
+s = json.load(sys.stdin)['components']['schemas']
+print(json.dumps(s['Mpx3DetectorConfig']['properties']['PixelDepth'], indent=2))
+"
+
+# Live detector / destination (what Serval has now)
+curl -s "http://localhost:${PORT}/detector/config" | python3 -m json.tool
+curl -s "http://localhost:${PORT}/server/destination" | python3 -m json.tool
+curl -s "http://localhost:${PORT}/dashboard" | python3 -m json.tool
+```
+
+In Swagger UI, browse **Schemas → `Mpx3DetectorConfig`**, **`GainMode`**, **`DestinationConfig`**, **`PreviewSpec`**, **`Format`**, **`Mode`**.
+
+**Local snapshots (not committed):** `documentation/medipix3/drafts/` is **gitignored** — appropriate for saved OpenAPI exports, email drafts, and one-off Serval JSON dumps. Prefer a **versioned filename** tied to the jar, not bare `openapi.yaml`, e.g. `serval-openapi-4.1.6-experimental-build1760.yaml` / `.json` (`info.version` from the spec + `SoftwareBuild` from `/dashboard`). Re-fetch from `/openapi.json` when Serval is upgraded; the live endpoint always beats a stale copy. Do **not** commit full OpenAPI files to the main repo (large, version-coupled, redundant with the running server).
+
+**IOC vs Serval:** EPICS may expose a subset (e.g. **`PixelDepth`** mbbo: 12 / 24 only). Serval also accepts **1** and **6** per OpenAPI; fresh emulator defaults may read **`PixelDepth: 1`** until `init_detector_hw_mpx3.cmd` pushes 12 (`dbpf … PixelDepth 0` = mbbo index for 12-bit).
 
 **Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Image[1] defaults to **`file:/media/nvme/img1`** with `IntgSize=-1` / `last` (Preview-8089-like role on Serval); switch path to `tcp://listen@localhost:8087` and `Img1FileFmt=jsonimage` only when a TCP consumer exists.
 
@@ -454,7 +491,7 @@ Each jsonimage line on the wire is: JSON header + binary pixel array. The driver
 | **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low, mbbo 0–3). **`HGM`**: calibrated ~10 keV (Accos recipe, `init_detector_hw_mpx3.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`init_detector_hw_mpx3_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** mbbo → `PUT /detector/config`. |
 | **`Preview period`** | Throttle live preview rate | Serval **`Preview.Period`** (seconds), separate from **`TriggerPeriod`**. Set via **`PrvPeriod`** PV; pushed on **`WriteData`**. Erik’s working UI used **0.5 s** preview period with **0.5 s** trigger period. **`PrvSmplgMode`**: `skipOnFrame` (0) or `skipOnPeriod` (1). |
 | **`BiasVoltage`** | Sensor bias | Erik: **100 V**. Low values (e.g. 12) can prevent useful counts on hardware/emulator. |
-| **`PixelDepth`** | Counter bit depth | Erik: **12** (default). Serval accepts **12** or **24**. **`PixelDepth`** mbbo PV (12 / 24). **24-bit is rejected when `BothCounters=Yes`** (Serval: *"Pixel depth cannot be 24 when both counters are in use"*). |
+| **`PixelDepth`** | Counter bit depth | Erik / IXS default: **12**. OpenAPI: Serval accepts **1, 6, 12, 24**; **24** incompatible with **`BothCounters`** and **CONTINUOUS**. IOC **`PixelDepth`** mbbo exposes **12 / 24** only; driver maps Serval **1 / 6 → 12** on read. Init: `dbpf … PixelDepth 0` (mbbo index), not `"12"`. |
 | **`IDelayConfig`** | Inter-chip delay tuning | Erik Aug 2026: **`[15, 15, 15, 10]`** are standard; manual per-system tuning no longer required. On **`Mpx3DetectorConfig.bob`**. |
 
 ### Erik’s validated dual-threshold recipe (Accos, 2026-06-12)
