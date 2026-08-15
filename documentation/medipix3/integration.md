@@ -97,7 +97,7 @@ Defaults (from `init_detector_mpx3.cmd`):
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
 - preview on TCP **8088** / **8089** (`PrvImgThs` / `PrvImg1Ths` **0,1**, jsonimage)
 - full-rate **Image[]** TCP **8086** configured but **`WriteImg=0`** (opt-in via `init_detector_img_mpx3.cmd`)
-- **`BothCounters=Yes`**, **`TriggerMode=AutoTrgSt_TmrSp` (4)**, **4 triggers**, **0.5 s** period (Erik Accos recipe)
+- **`BothCounters=Yes`**, **`TriggerMode=AUTOTRIGSTART_TIMERSTOP`** (index **4**), **4 triggers**, **0.5 s** period (Erik Accos recipe)
 - `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **10**/**11**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
 
@@ -111,7 +111,7 @@ Screenshots ([screenshots/](screenshots/)):
 
 ![Detector config — GainMode, BothCounters, trigger timing, IDelayConfig](screenshots/Mpx3_detector_config.png)
 
-*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip and trigger PVs pushed to Serval on change. **`GainMode`** Serval enum: `SHGM`, `HGM`, `LGM`, `SLGM` (`mbbo` 0–3).*
+*Figure: `Mpx3DetectorConfig.bob` — MPX3 chip, trigger, and layout PVs pushed to Serval on change. **`GainMode`** Serval enum: `SHGM`, `HGM`, `LGM`, `SLGM` (`mbbo` 0–3). **`DetOrient`** rotates preview and Image[] via Serval layout API.*
 
 **BothCounters — two profiles:** Erik (Aug 2026) recommends **`BothCounters=Off`** for default beamline use; if enabled, use **th1 high (~250)**. The **`init_detector_hw_mpx3.cmd`** / Accos recipe (**`BothCounters=Yes`**, th0+th1 low, IXS band-pass) is an **opt-in** profile for emulator and dual-threshold science — not Erik’s default recommendation.
 
@@ -247,7 +247,7 @@ Validated on Serval **4.1.6-EXPERIMENTAL** (build **1760**) with the MPX3 emulat
 2. **Build / install** after driver or DB changes: `make -C iocs/tpx3IOC install`.
 3. **Start IOC:** `cd iocs/tpx3IOC/iocBoot/iocTimePix && ./st_mpx3.cmd` (or `../../bin/linux-x86_64/tpx3App st_mpx3.cmd`).
 4. **Connect:** IOC console shows `Detector CONNECTED` and dashboard `http_code = 200`; `DetectorFamily_RBV` = **MPX3**.
-5. **Init scripts** (included from `st_mpx3.cmd`): `init_detector_paths_mpx3.cmd` then `init_detector_hw_mpx3.cmd` — pushes BPC/DACS, **`PixelDepth=12-bit`** (mbbo index **2**), **`TriggerMode=AutoTrgSt_TmrSp`** (index **4**), **`BothCounters=Yes`**, destination + **`WriteData=1`**.
+5. **Init scripts** (included from `st_mpx3.cmd`): `init_detector_paths_mpx3.cmd` then `init_detector_hw_mpx3.cmd` — pushes BPC/DACS, **`PixelDepth=12-bit`** (mbbo index **2**), **`TriggerMode=AUTOTRIGSTART_TIMERSTOP`** (index **4**), **`BothCounters=Yes`**, destination + **`WriteData=1`**.
 6. **Acquire:** `caput MPX3-TEST:cam1:Acquire 1` (or Phoebus). Expect `ADStatus=1`, Serval log **`Processed N frames and dropped 0 frames`**, `PipelineState_RBV` → **DA_RECORDING** then **DA_IDLE**.
 7. **Preview:** `PrvImg` / `PrvImg1` TCP workers connect to **8088** / **8089** when measurement starts; **`PrvImg TCP connection closed by peer`** at stop is normal.
 
@@ -263,6 +263,7 @@ Validated on Serval **4.1.6-EXPERIMENTAL** (build **1760**) with the MPX3 emulat
 | `PixelDepth` / `_RBV` | `Config.PixelDepth` | mbbo values **1, 6, 12, 24**; default **12** |
 | `BothCounters` / `_RBV` | `Config.BothCounters` | MPX3 only; sets dual-counter destination |
 | `TriggerMode` / `_RBV` | `Config.TriggerMode` | mbbo index **0–8** → Serval enum string (see below) |
+| `DetOrient` / `_RBV` | `Layout.DetectorOrientation` | mbbo index **0–7**; driver `readEnum()`; `rotateLayout()` on write |
 | `AcquireTime` | `Config.ExposureTime` | Shutter high time [s] |
 | `AcquirePeriod` | `Config.TriggerPeriod` | Trigger period [s] |
 | `NumImages` | `Config.NumberOfFrames` | Finite acquisition frame count |
@@ -297,7 +298,26 @@ Enum choices come from the driver **`readEnum()`** table (`ADTimePix.cpp`); DB r
 | 7 | `SwReSt_SwReSp` | `SOFTWARESTART_SOFTWARESTOP` | Menu shortened; Serval string unchanged |
 | 8 | `FOLLOWING` | `FOLLOWING` | OpenAPI **follower** mode; use when external master trigger drives acquisition (verify on target Serval / hardware) |
 
-Write via **`TriggerMode`** mbbo or **`caput … TriggerMode 4`**. Driver clamps out-of-range indices to **0**.
+Write via **`TriggerMode`** mbbo or **`caput … TriggerMode 4`**. Driver clamps out-of-range indices to **0**. Phoebus combo boxes may **truncate long menu strings** (widget width); the RBV and tooltip show the full `readEnum()` label (e.g. `AUTOTRIGSTART_TIMERSTOP`).
+
+### DetOrient (layout orientation, index 0–7)
+
+Enum choices come from the driver **`readEnum()`** table (`ADTimePix.cpp` `kDetOrientationNames[]`); DB records leave enum fields empty (`ADTimePix3.template`). Menu labels match Serval **`Layout.DetectorOrientation`** strings.
+
+| Index | Phoebus menu / Serval string |
+|------:|------------------------------|
+| 0 | `UP` |
+| 1 | `RIGHT` |
+| 2 | `DOWN` |
+| 3 | `LEFT` |
+| 4 | `UP_MIRRORED` |
+| 5 | `RIGHT_MIRRORED` |
+| 6 | `DOWN_MIRRORED` |
+| 7 | `LEFT_MIRRORED` |
+
+Writing **`DetOrient`** calls **`rotateLayout()`** (`GET /detector/layout/rotate?reset=true` with direction/flip query params). Rotation applies to **preview** and **Image[]** streams on both TPX3 and MPX3. **`DetOrient_RBV`** is refreshed from Serval on connect (`GET /detector`).
+
+**MPX3 caveat:** mask/BPC edit, **`RefreshPixelConfig`**, and Phoebus mask overlay still use the TPX3 chip stride (65536 B per chip). Layout rotation does **not** yet remap mask pixels for MPX3 until the **`mask_io`** 131072-byte-per-chip fix — see [Open work — Mask / BPC](#mask--bpc--mpx3-dual-threshold-layout-identified-driver-compare-still-wrong). The hint on **`Mpx3DetectorConfig.bob`** (Layout group) documents this.
 
 ### Measurement pipeline state
 
@@ -317,7 +337,7 @@ During **`Acquire`**, poll **`PipelineState_RBV`** or **`FrameCount_RBV`**. Lega
 
 | Condition | Conflict | Driver / Serval behaviour |
 |-----------|----------|---------------------------|
-| `BothCounters=Yes` | `TriggerMode=Continuous` (5) | Serval rejects; driver **auto-switches to 4** when BothCounters written, or **blocks acquire** |
+| `BothCounters=Yes` | `TriggerMode=CONTINUOUS` (index **5**) | Serval rejects; driver **auto-switches to 4** when BothCounters written, or **blocks acquire** |
 | `BothCounters=Yes` | `PixelDepth=24` | Driver **blocks** config / acquire (`24-bit` incompatible with dual counter) |
 | `BothCounters=Yes` | Short `AcquirePeriod` | UDP packet drops, horizontal banding in image — use **≥ 0.5 s** for dual-counter emulator tests |
 | Fresh Serval | `PixelDepth=1` before init | Run **`init_detector_hw_mpx3.cmd`** or `dbpf PixelDepth 2` for 12-bit |
@@ -571,7 +591,7 @@ Serval **rejects** `BothCounters=true` with **`TriggerMode: CONTINUOUS`** (`Trig
 Recommended checklist when enabling dual threshold:
 
 1. **DetConfig:** `BothCounters=Yes` (driver sets `PrvImgThs` to `0,1`; run **WriteData** to push destination).
-2. **TriggerMode** not Continuous (4 or 6).
+2. **TriggerMode** not **CONTINUOUS** (index **5**); use **4** or **6**.
 3. **AcquirePeriod** long enough for dual-counter readout — Erik’s Accos reference uses **0.5 s**; shorter periods may log `Dropping frame … missing UDP packet(s) … (2/4)`.
 4. Acquire; check **`PrvImgThresholdID_RBV`**, **Pva1** / **Pva2** on `Mpx3PrvImgMonitor`; band-pass **Pva5** / **Pva6** (addr 9/12) with **`PrvImgThreshDiffClip`** as needed.
 
@@ -595,7 +615,7 @@ Erik confirmed **4 triggers → 8 preview frames** on TCP **8088** (`thresholdID
 
 ```bash
 caput MPX3-TEST:cam1:BothCounters 1
-caput MPX3-TEST:cam1:TriggerMode 4          # AutoTrgSt_TmrSp (AUTOTRIGSTART_TIMERSTOP)
+caput MPX3-TEST:cam1:TriggerMode 4          # AUTOTRIGSTART_TIMERSTOP (index 4)
 caput MPX3-TEST:cam1:ImageMode 1            # finite (Multiple)
 caput MPX3-TEST:cam1:NumImages 4
 caput MPX3-TEST:cam1:AcquirePeriod 0.5
