@@ -190,6 +190,8 @@ Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phas
 | **8089** | Preview[1] | Preview integrated | **On** | often PrvImg | yes |
 | 8451 | — | Preview histogram | off | yes | TBD |
 
+**Serval API docs (Swagger):** `http://localhost:<port>/docs/` where `<port>` matches **`SERVER_URL`** in the IOC (MPX3 emulator **`8081`** in `st_mpx3.cmd`; ASI examples and some email links use **`8080`**). OpenAPI spec: `/openapi.json` on the same host/port. The “Servers” dropdown in Swagger may still list `8080` — use the browser URL port that matches your running Serval instance.
+
 **Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Image[1] defaults to **`file:/media/nvme/img1`** with `IntgSize=-1` / `last` (Preview-8089-like role on Serval); switch path to `tcp://listen@localhost:8087` and `Img1FileFmt=jsonimage` only when a TCP consumer exists.
 
 ## Full-rate Image mode (Phase A)
