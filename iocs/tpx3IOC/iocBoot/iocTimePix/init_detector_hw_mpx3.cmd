@@ -7,7 +7,7 @@ epicsThreadSleep(2)
 # Detector + acquisition (each dbpf may call initAcquisition and PUT /detector/config)
 dbpf("$(PREFIX)cam1:BiasVolt","100")
 dbpf("$(PREFIX)cam1:GainMode","1")          # HGM — calibrated ~10 keV (Accos dual-threshold profile)
-dbpf("$(PREFIX)cam1:PixelDepth","0")   # mbbo index 0 = 12-bit (ZRVL 12); do not dbpf "12"
+dbpf("$(PREFIX)cam1:PixelDepth","2")   # mbbo index 2 = 12-bit (TWVL 12); OpenAPI also allows 1, 6, 24
 dbpf("$(PREFIX)cam1:ImageMode","1")          # Multiple (finite triggers)
 dbpf("$(PREFIX)cam1:TriggerMode","4")       # AutoTrgSt_TmrSp — required with BothCounters (not Continuous)
 dbpf("$(PREFIX)cam1:BothCounters","1")

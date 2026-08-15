@@ -558,7 +558,8 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             value = 0;
             setIntegerParam(ADTimePixGainMode, value);
         }
-        if (function == ADTimePixPixelDepth && value != 12 && value != 24) {
+        if (function == ADTimePixPixelDepth &&
+                value != 1 && value != 6 && value != 12 && value != 24) {
             value = 12;
             setIntegerParam(ADTimePixPixelDepth, value);
         }

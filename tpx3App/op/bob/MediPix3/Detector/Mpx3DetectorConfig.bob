@@ -518,7 +518,7 @@
         <color red="115" green="223" blue="255">
         </color>
       </background_color>
-      <tooltip>Medipix3 counter bit depth (Serval Config): 12 or 24. 24-bit is rejected when BothCounters=Yes.</tooltip>
+      <tooltip>Medipix3 counter bit depth (Serval Config): 1, 6, 12, or 24. IXS default 12-bit. 24-bit is rejected when BothCounters=Yes.</tooltip>
     </widget>
     <widget type="textupdate" version="2.0.0">
       <name>PixelDepthRBV</name>

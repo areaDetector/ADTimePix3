@@ -121,15 +121,13 @@ static int jsonIntOr(const json& j, int def = 0) {
     return def;
 }
 
-/** EPICS mbbo stores 12 or 24; Serval API also allows 1 and 6 (OpenAPI). */
-static int pixelDepthForEpics(int servalDepth, int def = 12) {
-    if (servalDepth == 24) {
-        return 24;
-    }
-    if (servalDepth == 12 || servalDepth == 6 || servalDepth == 1) {
-        return 12;
-    }
-    return def;
+/** Serval OpenAPI: PixelDepth 1, 6, 12, or 24. */
+static bool pixelDepthIsValid(int depth) {
+    return depth == 1 || depth == 6 || depth == 12 || depth == 24;
+}
+
+static int pixelDepthNormalize(int depth, int def = 12) {
+    return pixelDepthIsValid(depth) ? depth : def;
 }
 
 /** Serval PixelDepth may be integer (1, 6, 12, 24) or string ("12", "24"). */
@@ -145,6 +143,10 @@ static int pixelDepthFromJson(const json& j, int def = 12) {
             raw = 24;
         } else if (s == "12") {
             raw = 12;
+        } else if (s == "6") {
+            raw = 6;
+        } else if (s == "1") {
+            raw = 1;
         } else {
             try {
                 raw = std::stoi(s);
@@ -155,7 +157,7 @@ static int pixelDepthFromJson(const json& j, int def = 12) {
     } else {
         return def;
     }
-    return pixelDepthForEpics(raw, def);
+    return pixelDepthNormalize(raw, def);
 }
 
 static double jsonDoubleOr(const json& j, double def = 0.0) {
@@ -2621,7 +2623,7 @@ asynStatus ADTimePix::initAcquisition(){
             config_j["GainMode"] = gainModeToString(intNum);
 
             getIntegerParam(ADTimePixPixelDepth, &intNum);
-            intNum = pixelDepthForEpics(intNum);
+            intNum = pixelDepthNormalize(intNum);
             setIntegerParam(ADTimePixPixelDepth, intNum);
             if (mpx3BothCountersPixelDepthConflict(intNum)) {
                 intNum = 12;
