@@ -283,19 +283,19 @@ Chip-level PVs (`ChargeSumming`, `Colour`, `CounterSelectIn`, `IDelayConfig`, �
 
 ### TriggerMode (mbbo index 0–8)
 
-IOC labels (Phoebus) vs Serval **`TriggerMode`** strings (`TimePix3Base.template`, driver `kTriggerModes[]`):
+Enum choices come from the driver **`readEnum()`** table (`ADTimePix.cpp`); DB records leave enum fields empty (`TimePix3Base.template`). Phoebus menus show **Serval `TriggerMode` strings** for indices 0–6 and 8; index **7** uses menu label **`SwReSt_SwReSp`** because `SOFTWARESTART_SOFTWARESTOP` exceeds the EPICS enum string limit (25 chars). Serval always receives the full string; use **`TriggerModeC_RBV`** for the raw Serval readback.
 
-| Index | Phoebus label | Serval enum | MPX3 notes |
-|------:|---------------|-------------|------------|
-| 0 | PexSt_NexSp | `PEXSTART_NEXSTOP` | External start, next stop |
-| 1 | NexSt_PexSp | `NEXSTART_PEXSTOP` | Next start, previous stop |
-| 2 | PexSt_TmrSp | `PEXSTART_TIMERSTOP` | External start, timer stop |
-| 3 | NexSt_TmrSp | `NEXSTART_TIMERSTOP` | Next start, timer stop |
-| 4 | AutoTrgSt_TmrSp | `AUTOTRIGSTART_TIMERSTOP` | **Default in `init_detector_hw_mpx3.cmd`**; Accos dual-counter recipe |
-| 5 | Continuous | `CONTINUOUS` | **Incompatible with `BothCounters=Yes`** (driver blocks or auto-switches to 4) |
-| 6 | SwReSt_TmrSp | `SOFTWARESTART_TIMERSTOP` | Software start, timer stop |
-| 7 | SwReSt_SwReSp | `SOFTWARESTART_SOFTWARESTOP` | Software start/stop |
-| 8 | Following | `FOLLOWING` | OpenAPI **follower** mode; use when external master trigger drives acquisition (verify on target Serval / hardware) |
+| Index | Phoebus menu (readEnum) | Serval enum | MPX3 notes |
+|------:|-------------------------|-------------|------------|
+| 0 | `PEXSTART_NEXSTOP` | `PEXSTART_NEXSTOP` | External start, next stop |
+| 1 | `NEXSTART_PEXSTOP` | `NEXSTART_PEXSTOP` | Next start, previous stop |
+| 2 | `PEXSTART_TIMERSTOP` | `PEXSTART_TIMERSTOP` | External start, timer stop |
+| 3 | `NEXSTART_TIMERSTOP` | `NEXSTART_TIMERSTOP` | Next start, timer stop |
+| 4 | `AUTOTRIGSTART_TIMERSTOP` | `AUTOTRIGSTART_TIMERSTOP` | **Default in `init_detector_hw_mpx3.cmd`**; Accos dual-counter recipe |
+| 5 | `CONTINUOUS` | `CONTINUOUS` | **Incompatible with `BothCounters=Yes`** (driver blocks or auto-switches to 4) |
+| 6 | `SOFTWARESTART_TIMERSTOP` | `SOFTWARESTART_TIMERSTOP` | Software start, timer stop |
+| 7 | `SwReSt_SwReSp` | `SOFTWARESTART_SOFTWARESTOP` | Menu shortened; Serval string unchanged |
+| 8 | `FOLLOWING` | `FOLLOWING` | OpenAPI **follower** mode; use when external master trigger drives acquisition (verify on target Serval / hardware) |
 
 Write via **`TriggerMode`** mbbo or **`caput … TriggerMode 4`**. Driver clamps out-of-range indices to **0**.
 

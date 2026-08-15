@@ -614,7 +614,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADNumImages || function == ADTriggerMode) {
-        if (function == ADTriggerMode && (value < 0 || value > 8)) {
+        if (function == ADTriggerMode && (value < 0 || value >= triggerModeCount())) {
             value = 0;
             setIntegerParam(ADTriggerMode, value);
         }
@@ -812,6 +812,27 @@ constexpr const char* kDetOrientationNames[] = {
 constexpr int kDetOrientationCount =
     static_cast<int>(sizeof(kDetOrientationNames) / sizeof(kDetOrientationNames[0]));
 
+struct TriggerModeChoice {
+    int index;
+    const char* menuLabel;
+    const char* servalName;
+};
+
+/** Option B: Serval names in mbbo menu where length <= 25; index 7 menu shortened (EPICS enum limit). */
+static const TriggerModeChoice kTriggerModes[] = {
+    {0, "PEXSTART_NEXSTOP", "PEXSTART_NEXSTOP"},
+    {1, "NEXSTART_PEXSTOP", "NEXSTART_PEXSTOP"},
+    {2, "PEXSTART_TIMERSTOP", "PEXSTART_TIMERSTOP"},
+    {3, "NEXSTART_TIMERSTOP", "NEXSTART_TIMERSTOP"},
+    {4, "AUTOTRIGSTART_TIMERSTOP", "AUTOTRIGSTART_TIMERSTOP"},
+    {5, "CONTINUOUS", "CONTINUOUS"},
+    {6, "SOFTWARESTART_TIMERSTOP", "SOFTWARESTART_TIMERSTOP"},
+    {7, "SwReSt_SwReSp", "SOFTWARESTART_SOFTWARESTOP"},
+    {8, "FOLLOWING", "FOLLOWING"},
+};
+static const int kTriggerModeCount =
+    static_cast<int>(sizeof(kTriggerModes) / sizeof(kTriggerModes[0]));
+
 }  // namespace
 
 int ADTimePix::detOrientationCount() {
@@ -834,6 +855,33 @@ int ADTimePix::detOrientationIndexFromName(const std::string& name, int def) {
     return def;
 }
 
+int ADTimePix::triggerModeCount() {
+    return kTriggerModeCount;
+}
+
+const char* ADTimePix::triggerModeMenuLabel(int index) {
+    if (index < 0 || index >= kTriggerModeCount) {
+        return kTriggerModes[0].menuLabel;
+    }
+    return kTriggerModes[index].menuLabel;
+}
+
+const char* ADTimePix::triggerModeServalName(int index) {
+    if (index < 0 || index >= kTriggerModeCount) {
+        return kTriggerModes[0].servalName;
+    }
+    return kTriggerModes[index].servalName;
+}
+
+int ADTimePix::triggerModeIndexFromServal(const std::string& name, int def) {
+    for (int i = 0; i < kTriggerModeCount; ++i) {
+        if (name == kTriggerModes[i].servalName || name == kTriggerModes[i].menuLabel) {
+            return i;
+        }
+    }
+    return def;
+}
+
 asynStatus ADTimePix::readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
                                size_t nElements, size_t *nIn)
 {
@@ -846,6 +894,18 @@ asynStatus ADTimePix::readEnum(asynUser *pasynUser, char *strings[], int values[
                 free(strings[*nIn]);
             }
             strings[*nIn] = epicsStrDup(detOrientationName(i));
+            values[*nIn] = i;
+            severities[*nIn] = 0;
+            (*nIn)++;
+        }
+        return asynSuccess;
+    }
+    if (function == ADTriggerMode) {
+        for (int i = 0; i < kTriggerModeCount && *nIn < nElements; ++i) {
+            if (strings[*nIn]) {
+                free(strings[*nIn]);
+            }
+            strings[*nIn] = epicsStrDup(triggerModeMenuLabel(i));
             values[*nIn] = i;
             severities[*nIn] = 0;
             (*nIn)++;

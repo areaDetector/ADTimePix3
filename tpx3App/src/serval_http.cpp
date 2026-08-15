@@ -130,35 +130,6 @@ static int pixelDepthNormalize(int depth, int def = 12) {
     return pixelDepthIsValid(depth) ? depth : def;
 }
 
-static const char* kTriggerModes[] = {
-    "PEXSTART_NEXSTOP",
-    "NEXSTART_PEXSTOP",
-    "PEXSTART_TIMERSTOP",
-    "NEXSTART_TIMERSTOP",
-    "AUTOTRIGSTART_TIMERSTOP",
-    "CONTINUOUS",
-    "SOFTWARESTART_TIMERSTOP",
-    "SOFTWARESTART_SOFTWARESTOP",
-    "FOLLOWING",
-};
-static const int kTriggerModeCount = static_cast<int>(sizeof(kTriggerModes) / sizeof(kTriggerModes[0]));
-
-static int triggerModeFromString(const string& mode, int def = 0) {
-    for (int i = 0; i < kTriggerModeCount; ++i) {
-        if (mode == kTriggerModes[i]) {
-            return i;
-        }
-    }
-    return def;
-}
-
-static const char* triggerModeToString(int index) {
-    if (index < 0 || index >= kTriggerModeCount) {
-        return kTriggerModes[0];
-    }
-    return kTriggerModes[index];
-}
-
 /** Serval PixelDepth may be integer (1, 6, 12, 24) or string ("12", "24"). */
 static int pixelDepthFromJson(const json& j, int def = 12) {
     int raw = def;
@@ -1452,7 +1423,7 @@ asynStatus ADTimePix::getDetector(){
         if (cfg.contains("TriggerMode")) {
             const string triggerModeStr = jsonStringOr(cfg["TriggerMode"]);
             setStringParam(ADTimePixTriggerMode, triggerModeStr.c_str());
-            setIntegerParam(ADTriggerMode, triggerModeFromString(triggerModeStr));
+            setIntegerParam(ADTriggerMode, triggerModeIndexFromServal(triggerModeStr));
         }
         setDoubleParam(ADTimePixExposureTime,            jsonDoubleOr(cfg["ExposureTime"]));
         setDoubleParam(ADAcquireTime,                    jsonDoubleOr(cfg["ExposureTime"]));
@@ -2525,7 +2496,7 @@ asynStatus ADTimePix::initAcquisition(){
         //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
         getIntegerParam(ADTriggerMode, &intNum);
-        if (intNum < 0 || intNum >= kTriggerModeCount) {
+        if (intNum < 0 || intNum >= triggerModeCount()) {
             intNum = 0;
             setIntegerParam(ADTriggerMode, intNum);
         }
@@ -2536,7 +2507,7 @@ asynStatus ADTimePix::initAcquisition(){
             setIntegerParam(ADTimePixHttpCode, 400);
             return asynError;
         }
-        config_j["TriggerMode"] = triggerModeToString(intNum);
+        config_j["TriggerMode"] = triggerModeServalName(intNum);
 
     //    printf("triggerMode=%s\n",triggerMode.dump().c_str());
     //    printf("triggerMode[intNum]=%s, triggMode_num=%d\n",triggerMode[intNum].dump().c_str(), intNum);

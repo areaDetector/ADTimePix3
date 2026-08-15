@@ -798,6 +798,12 @@ class ADTimePix : public ADDriver{
         static const char* detOrientationName(int index);
         static int detOrientationIndexFromName(const std::string& name, int def = 0);
 
+        /** Serval TriggerMode (index 0..8). readEnum menu labels; index 7 menu shortened (26-char EPICS limit). */
+        static int triggerModeCount();
+        static const char* triggerModeMenuLabel(int index);
+        static const char* triggerModeServalName(int index);
+        static int triggerModeIndexFromServal(const std::string& name, int def = 0);
+
         #define ADTIMEPIX_LAST_PARAM ADTimePixMaskedPelsExportStatus  // Last parameter in the list
 
     private:
