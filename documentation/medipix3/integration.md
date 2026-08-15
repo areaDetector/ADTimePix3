@@ -119,6 +119,8 @@ Screenshots ([screenshots/](screenshots/)):
 
 ## Emulator workflow
 
+See **[Operator reference § Fresh-start checklist](#fresh-start-checklist)** for the full validated sequence. Short form:
+
 1. Start Serval with a Medipix3 emulator profile (see ADMediPix3 `configs/serval/`).
 2. Build this module: `make -j` from the module root.
 3. Start IOC: `../../bin/linux-x86_64/tpx3App st_mpx3.cmd` from `iocBoot/iocTimePix`.
@@ -227,9 +229,102 @@ In Swagger UI, browse **Schemas → `Mpx3DetectorConfig`**, **`GainMode`**, **`D
 
 **Local snapshots (not committed):** `documentation/medipix3/drafts/` is **gitignored** — appropriate for saved OpenAPI exports, email drafts, and one-off Serval JSON dumps. Prefer a **versioned filename** tied to the jar, not bare `openapi.yaml`, e.g. `serval-openapi-4.1.6-experimental-build1760.yaml` / `.json` (`info.version` from the spec + `SoftwareBuild` from `/dashboard`). Re-fetch from `/openapi.json` when Serval is upgraded; the live endpoint always beats a stale copy. Do **not** commit full OpenAPI files to the main repo (large, version-coupled, redundant with the running server).
 
-**IOC vs Serval:** **`PixelDepth`** mbbo matches OpenAPI (**1 / 6 / 12 / 24** via ZRVL…THVL). Default **12-bit** (`VAL=2`). Fresh emulator may read **`PixelDepth: 1`** until `init_detector_hw_mpx3.cmd` runs (`dbpf … PixelDepth 2` = mbbo index for 12-bit). Use mbbo **index** or **`caput … 12`** (ONVL/TWVL value), not `"12"` as enum index.
+**IOC vs Serval:** **`PixelDepth`** mbbo matches OpenAPI (**1 / 6 / 12 / 24** via ZRVL…THVL). Default **12-bit** (`VAL=2`). Fresh emulator may read **`PixelDepth: 1`** until `init_detector_hw_mpx3.cmd` runs (`dbpf … PixelDepth 2` = mbbo index for 12-bit). Use mbbo **index** or **`caput … 12`** (ONVL/TWVL value), not `"12"` as enum index. **`TriggerMode`** mbbo index **0–8** matches OpenAPI (including **`FOLLOWING`** at index **8**). **`PipelineState_RBV`** mbbi mirrors **`Measurement.Info.Status`**.
 
 **Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Image[1] defaults to **`file:/media/nvme/img1`** with `IntgSize=-1` / `last` (Preview-8089-like role on Serval); switch path to `tcp://listen@localhost:8087` and `Img1FileFmt=jsonimage` only when a TCP consumer exists.
+
+**Fetch script:** [`scripts/fetch-serval-openapi.sh`](scripts/fetch-serval-openapi.sh) saves a versioned OpenAPI snapshot under `drafts/` (same naming convention as above).
+
+## Operator reference (MPX3)
+
+Quick lookup for beamline operators and IOC maintainers. Default PV prefix **`MPX3-TEST:cam1:`** (from `st_mpx3.cmd`).
+
+### Fresh-start checklist
+
+Validated on Serval **4.1.6-EXPERIMENTAL** (build **1760**) with the MPX3 emulator:
+
+1. **Start Serval** on the HTTP port in `SERVER_URL` (default **8081**).
+2. **Build / install** after driver or DB changes: `make -C iocs/tpx3IOC install`.
+3. **Start IOC:** `cd iocs/tpx3IOC/iocBoot/iocTimePix && ./st_mpx3.cmd` (or `../../bin/linux-x86_64/tpx3App st_mpx3.cmd`).
+4. **Connect:** IOC console shows `Detector CONNECTED` and dashboard `http_code = 200`; `DetectorFamily_RBV` = **MPX3**.
+5. **Init scripts** (included from `st_mpx3.cmd`): `init_detector_paths_mpx3.cmd` then `init_detector_hw_mpx3.cmd` — pushes BPC/DACS, **`PixelDepth=12-bit`** (mbbo index **2**), **`TriggerMode=AutoTrgSt_TmrSp`** (index **4**), **`BothCounters=Yes`**, destination + **`WriteData=1`**.
+6. **Acquire:** `caput MPX3-TEST:cam1:Acquire 1` (or Phoebus). Expect `ADStatus=1`, Serval log **`Processed N frames and dropped 0 frames`**, `PipelineState_RBV` → **DA_RECORDING** then **DA_IDLE**.
+7. **Preview:** `PrvImg` / `PrvImg1` TCP workers connect to **8088** / **8089** when measurement starts; **`PrvImg TCP connection closed by peer`** at stop is normal.
+
+**Fresh emulator quirk:** Serval may report **`PixelDepth: 1`** before init — the IOC mbbo only labels 1/6/12/24; init **`dbpf … PixelDepth 2`** sets 12-bit. Do not use **`dbpf … PixelDepth 12`** (that is the mbbo *value* field for 12-bit, not the index — use index **2** or **`caput … 12`**).
+
+**If acquire returns 0 frames:** check Serval measurement log, `TriggerMode` vs `BothCounters`, preview TCP ports, and that **`WriteData=1`** pushed destination (see [IOC startup warnings](#ioc-startup-warnings)).
+
+### PV → Serval mapping (detector + measurement)
+
+| EPICS PV (`cam1:`) | Serval path / API | Notes |
+|--------------------|-------------------|--------|
+| `GainMode` / `_RBV` | `PUT/GET /detector/config` → `GainMode` | mbbo: `SHGM`, `HGM`, `LGM`, `SLGM` (0–3) |
+| `PixelDepth` / `_RBV` | `Config.PixelDepth` | mbbo values **1, 6, 12, 24**; default **12** |
+| `BothCounters` / `_RBV` | `Config.BothCounters` | MPX3 only; sets dual-counter destination |
+| `TriggerMode` / `_RBV` | `Config.TriggerMode` | mbbo index **0–8** → Serval enum string (see below) |
+| `AcquireTime` | `Config.ExposureTime` | Shutter high time [s] |
+| `AcquirePeriod` | `Config.TriggerPeriod` | Trigger period [s] |
+| `NumImages` | `Config.NumberOfFrames` | Finite acquisition frame count |
+| `ImageMode` | `Config.AcquisitionMode` | Single / Multiple / Continuous |
+| `BiasVolt` | `Config.BiasVoltage` | Sensor bias [V] |
+| `PrvPeriod` | `Destination.Preview.Period` | Preview throttle [s]; pushed on `WriteData` |
+| `PrvImgThs`, `PrvImg1Ths`, `ImgThs` | `…Thresholds[]` | Comma-separated counter indices (e.g. `0,1`) |
+| `WriteData` | `PUT /server/destination` + config | Push destination + detector config to Serval |
+| `WriteBPCFile`, `WriteDACSFile` | File upload endpoints | Paths on **Serval host** |
+| `Acquire` | `GET /measurement/start`, `/stop` | areaDetector acquire |
+| `FrameCount_RBV` | `GET /measurement` → `Info.FrameCount` | Serval frame count |
+| `DroppedFrames_RBV` | `Info.DroppedFrames` | |
+| `Status_RBV` | `Info.Status` | Raw PipelineState string (e.g. `DA_IDLE`) |
+| `PipelineState_RBV` | `Info.Status` | mbbi: **0**=starting, **1**=recording, **2**=stopping, **3**=idle, **-1**=unknown |
+| `ElapsedTime_RBV`, `TimeLeft_RBV` | `Info.ElapsedTime`, `TimeLeft` | During measurement |
+
+Chip-level PVs (`ChargeSumming`, `Colour`, `CounterSelectIn`, `IDelayConfig`, …) map to per-chip config on `Mpx3DetectorConfig.bob`; see OpenAPI **`Mpx3ChipConfig`** / chip endpoints.
+
+### TriggerMode (mbbo index 0–8)
+
+IOC labels (Phoebus) vs Serval **`TriggerMode`** strings (`TimePix3Base.template`, driver `kTriggerModes[]`):
+
+| Index | Phoebus label | Serval enum | MPX3 notes |
+|------:|---------------|-------------|------------|
+| 0 | PexSt_NexSp | `PEXSTART_NEXSTOP` | External start, next stop |
+| 1 | NexSt_PexSp | `NEXSTART_PEXSTOP` | Next start, previous stop |
+| 2 | PexSt_TmrSp | `PEXSTART_TIMERSTOP` | External start, timer stop |
+| 3 | NexSt_TmrSp | `NEXSTART_TIMERSTOP` | Next start, timer stop |
+| 4 | AutoTrgSt_TmrSp | `AUTOTRIGSTART_TIMERSTOP` | **Default in `init_detector_hw_mpx3.cmd`**; Accos dual-counter recipe |
+| 5 | Continuous | `CONTINUOUS` | **Incompatible with `BothCounters=Yes`** (driver blocks or auto-switches to 4) |
+| 6 | SwReSt_TmrSp | `SOFTWARESTART_TIMERSTOP` | Software start, timer stop |
+| 7 | SwReSt_SwReSp | `SOFTWARESTART_SOFTWARESTOP` | Software start/stop |
+| 8 | Following | `FOLLOWING` | OpenAPI **follower** mode; use when external master trigger drives acquisition (verify on target Serval / hardware) |
+
+Write via **`TriggerMode`** mbbo or **`caput … TriggerMode 4`**. Driver clamps out-of-range indices to **0**.
+
+### Measurement pipeline state
+
+Serval **`Measurement.Info.Status`** (`PipelineState` in OpenAPI):
+
+| `PipelineState_RBV` | `Status_RBV` string | Meaning |
+|--------------------:|---------------------|---------|
+| 0 | `DA_STARTING` | Measurement starting |
+| 1 | `DA_RECORDING` | Active acquisition |
+| 2 | `DA_STOPPING` | Stop in progress |
+| 3 | `DA_IDLE` | Idle (no measurement) |
+| -1 | *(empty or unknown)* | No measurement / null status |
+
+During **`Acquire`**, poll **`PipelineState_RBV`** or **`FrameCount_RBV`**. Legacy alias **`DA_STOPPED`** is treated as idle (index 3) in the driver.
+
+### Configuration incompatibilities
+
+| Condition | Conflict | Driver / Serval behaviour |
+|-----------|----------|---------------------------|
+| `BothCounters=Yes` | `TriggerMode=Continuous` (5) | Serval rejects; driver **auto-switches to 4** when BothCounters written, or **blocks acquire** |
+| `BothCounters=Yes` | `PixelDepth=24` | Driver **blocks** config / acquire (`24-bit` incompatible with dual counter) |
+| `BothCounters=Yes` | Short `AcquirePeriod` | UDP packet drops, horizontal banding in image — use **≥ 0.5 s** for dual-counter emulator tests |
+| Fresh Serval | `PixelDepth=1` before init | Run **`init_detector_hw_mpx3.cmd`** or `dbpf PixelDepth 2` for 12-bit |
+| `WritePrvImg1=1` | No IOC reader on **8089** | Serval **`Preview buffer full`** — keep integrated preview enabled only when IOC connects |
+| High-rate `Image[]` | PVA on Pva7/Pva8 | Disable PVA callbacks; use **HDFImgT0/T1** for archive |
+
+See also [BothCounters operational notes](#bothcounters-operational-notes-2026-06) and [Erik’s dual-threshold recipe](#eriks-validated-dual-threshold-recipe-accos-2026-06-12).
 
 ## Full-rate Image mode (Phase A)
 
