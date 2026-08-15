@@ -10,7 +10,7 @@ epicsThreadSleep(2)
 dbpf("$(PREFIX)cam1:BiasVolt","100")
 dbpf("$(PREFIX)cam1:Polarity","0")          # Positive (Si 300 um — see delivery sheet)
 dbpf("$(PREFIX)cam1:GainMode","3")          # SLGM — super-low gain (uncalibrated frame / equalization tests)
-dbpf("$(PREFIX)cam1:PixelDepth","12")
+dbpf("$(PREFIX)cam1:PixelDepth","0")   # mbbo index 0 = 12-bit
 dbpf("$(PREFIX)cam1:ChargeSumming","0")
 dbpf("$(PREFIX)cam1:Colour","0")
 dbpf("$(PREFIX)cam1:BothCounters","0")

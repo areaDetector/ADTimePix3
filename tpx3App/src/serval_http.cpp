@@ -121,22 +121,41 @@ static int jsonIntOr(const json& j, int def = 0) {
     return def;
 }
 
-/** Serval PixelDepth may be integer or string ("12", "24"). */
-static int pixelDepthFromJson(const json& j, int def = 12) {
-    if (j.is_number_integer()) return j.get<int>();
-    if (j.is_number()) return static_cast<int>(j.get<double>());
-    if (j.is_string()) {
-        const string s = j.get<string>();
-        if (s == "24") return 24;
-        if (s == "12") return 12;
-        try {
-            const int v = std::stoi(s);
-            return (v == 24) ? 24 : 12;
-        } catch (...) {
-            return def;
-        }
+/** EPICS mbbo stores 12 or 24; Serval API also allows 1 and 6 (OpenAPI). */
+static int pixelDepthForEpics(int servalDepth, int def = 12) {
+    if (servalDepth == 24) {
+        return 24;
+    }
+    if (servalDepth == 12 || servalDepth == 6 || servalDepth == 1) {
+        return 12;
     }
     return def;
+}
+
+/** Serval PixelDepth may be integer (1, 6, 12, 24) or string ("12", "24"). */
+static int pixelDepthFromJson(const json& j, int def = 12) {
+    int raw = def;
+    if (j.is_number_integer()) {
+        raw = j.get<int>();
+    } else if (j.is_number()) {
+        raw = static_cast<int>(j.get<double>());
+    } else if (j.is_string()) {
+        const string s = j.get<string>();
+        if (s == "24") {
+            raw = 24;
+        } else if (s == "12") {
+            raw = 12;
+        } else {
+            try {
+                raw = std::stoi(s);
+            } catch (...) {
+                return def;
+            }
+        }
+    } else {
+        return def;
+    }
+    return pixelDepthForEpics(raw, def);
 }
 
 static double jsonDoubleOr(const json& j, double def = 0.0) {
@@ -2602,6 +2621,8 @@ asynStatus ADTimePix::initAcquisition(){
             config_j["GainMode"] = gainModeToString(intNum);
 
             getIntegerParam(ADTimePixPixelDepth, &intNum);
+            intNum = pixelDepthForEpics(intNum);
+            setIntegerParam(ADTimePixPixelDepth, intNum);
             if (mpx3BothCountersPixelDepthConflict(intNum)) {
                 intNum = 12;
                 setIntegerParam(ADTimePixPixelDepth, intNum);

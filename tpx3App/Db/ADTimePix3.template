@@ -256,6 +256,7 @@ record(mbbo, "$(P)$(R)PixelDepth"){
   field(ZRVL, "12")
   field(ONST, "24-bit")
   field(ONVL, "24")
+  field(VAL, "0")
   info(autosaveFields, "VAL")
 }
 record(mbbi, "$(P)$(R)PixelDepth_RBV"){
