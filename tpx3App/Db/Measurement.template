@@ -60,6 +60,23 @@ record(stringin, "$(P)$(R)Status_RBV"){
   field(DTYP, "asynOctetRead")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MSMT_STATUS")
   field(SCAN, "I/O Intr")
+  field(DESC, "Serval PipelineState string")
+}
+record(mbbi, "$(P)$(R)PipelineState_RBV"){
+  field(DTYP, "asynInt32")
+  field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MSMT_PIPELINE_STATE")
+  field(SCAN, "I/O Intr")
+  field(DESC, "Serval PipelineState enum")
+  field(ZRST, "DA_STARTING")
+  field(ZRVL, "0")
+  field(ONST, "DA_RECORDING")
+  field(ONVL, "1")
+  field(TWST, "DA_STOPPING")
+  field(TWVL, "2")
+  field(THST, "DA_IDLE")
+  field(THVL, "3")
+  field(FTHS, "Unknown")
+  field(FTVL, "-1")
 }
 
 ##################################################################
@@ -159,14 +176,3 @@ record(ai, "$(P)$(R)TofMax_RBV"){
   field(PREC, "6")
   field(DESC, "ToF max RBV")
 }
-
-#record(mbbi, "$(P)$(R)Status_RBV")
-#{
-#   field(DTYP, "asynInt32")
-#   field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MSMT_STATUS") 
-#   field(ZRST, "DA_IDLE") 
-#   field(ZRVL, "0")
-#   field(ONST, "DA_RECORDING") 
-#   field(ONVL, "1")
-#   field(SCAN, "I/O Intr")
-#}

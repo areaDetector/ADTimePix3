@@ -346,6 +346,7 @@
 #define ADTimePixFrameCountString            "TPX3_FRAME_COUNT"       // (asynInt32,         w)      FrameCount
 #define ADTimePixDroppedFramesString         "TPX3_DROPPED_FRAMES"    // (asynInt32,         w)      DroppedFrames
 #define ADTimePixStatusString                "TPX3_MSMT_STATUS"       // (asynOctet,         w)      Status
+#define ADTimePixPipelineStateString         "TPX3_MSMT_PIPELINE_STATE" // (asynInt32,       w)      PipelineState index
 
     // Measurement.Config (SERVAL 4.1.x): Stem (4D-STEM), TimeOfFlight
 #define ADTimePixStemScanWidthString         "TPX3_STEM_SCAN_WIDTH"        // (asynInt32,    r/w)   Stem.Scan.Width
@@ -726,6 +727,7 @@ class ADTimePix : public ADDriver{
         int ADTimePixFrameCount;     
         int ADTimePixDroppedFrames;  
         int ADTimePixStatus;
+        int ADTimePixPipelineState;
 
             // Measurement.Config (Stem, TimeOfFlight)
         int ADTimePixStemScanWidth;
@@ -1055,6 +1057,8 @@ class ADTimePix : public ADDriver{
         void updateDetectorHealthFromJson(const json& detector_j);
         /** Map Measurement.Info TDC rate fields by JSON keys (not SDK version string). */
         void updateTdcRatesFromMeasurementInfo(const json& info);
+        /** Map Measurement.Info Status (PipelineState) to string + mbbi index PVs. */
+        void updateMeasurementStatusFromJson(const json& statusVal);
         /** GET /detector/chips/<i>/PixelConfig for each chip: JSON string -> base64 decode; compare slice to BPC file if available. */
         asynStatus refreshPixelConfigFromServal();
         asynStatus fileWriter();

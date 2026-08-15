@@ -50,6 +50,34 @@ void ADTimePix::updateTdcRatesFromMeasurementInfo(const json& info) {
     }
 }
 
+namespace {
+
+int pipelineStateIndex(const std::string& status) {
+    if (status == "DA_STARTING") return 0;
+    if (status == "DA_RECORDING") return 1;
+    if (status == "DA_STOPPING") return 2;
+    if (status == "DA_IDLE" || status == "DA_STOPPED") return 3;
+    return -1;
+}
+
+}  // namespace
+
+void ADTimePix::updateMeasurementStatusFromJson(const json& statusVal) {
+    if (statusVal.is_null()) {
+        setStringParam(ADTimePixStatus, "");
+        setIntegerParam(ADTimePixPipelineState, -1);
+        return;
+    }
+    if (statusVal.is_string()) {
+        const std::string status = statusVal.get<std::string>();
+        setStringParam(ADTimePixStatus, status.c_str());
+        setIntegerParam(ADTimePixPipelineState, pipelineStateIndex(status));
+        return;
+    }
+    setStringParam(ADTimePixStatus, statusVal.dump().c_str());
+    setIntegerParam(ADTimePixPipelineState, -1);
+}
+
 
 namespace {
 
@@ -731,8 +759,7 @@ void ADTimePix::timePixCallback(){
             setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
         }
         if (measurement_j["Info"].contains("Status")) {
-            // Status might be null, so use dump() which handles null safely
-            setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
+            updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
         }
     }   
     callParamCallbacks();
@@ -786,10 +813,8 @@ void ADTimePix::timePixCallback(){
                     setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
                 }
                 if (measurement_j["Info"].contains("Status")) {
-                    // Status might be null, so use dump() which handles null safely
-                    setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
-                    // Check if status is "DA_IDLE" (only if it's a string)
-                    if (measurement_j["Info"]["Status"].is_string() && 
+                    updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
+                    if (measurement_j["Info"]["Status"].is_string() &&
                         measurement_j["Info"]["Status"].get<std::string>() == "DA_IDLE") {
                 isIdle = true;
                     }
@@ -997,7 +1022,7 @@ asynStatus ADTimePix::acquireStop(){
             setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
         }
         if (measurement_j["Info"].contains("Status")) {
-            setStringParam(ADTimePixStatus, measurement_j["Info"]["Status"].dump().c_str());
+            updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
         }
     }
     callParamCallbacks();
