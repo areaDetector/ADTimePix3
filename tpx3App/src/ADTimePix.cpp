@@ -833,6 +833,22 @@ static const TriggerModeChoice kTriggerModes[] = {
 static const int kTriggerModeCount =
     static_cast<int>(sizeof(kTriggerModes) / sizeof(kTriggerModes[0]));
 
+struct PipelineStateChoice {
+    int index;
+    const char* label;
+};
+
+/** Serval Measurement.Info.Status (PipelineState). Index -1 = unknown / no measurement. */
+static const PipelineStateChoice kPipelineStates[] = {
+    {0, "DA_STARTING"},
+    {1, "DA_RECORDING"},
+    {2, "DA_STOPPING"},
+    {3, "DA_IDLE"},
+    {-1, "Unknown"},
+};
+static const int kPipelineStateCount =
+    static_cast<int>(sizeof(kPipelineStates) / sizeof(kPipelineStates[0]));
+
 }  // namespace
 
 int ADTimePix::detOrientationCount() {
@@ -907,6 +923,18 @@ asynStatus ADTimePix::readEnum(asynUser *pasynUser, char *strings[], int values[
             }
             strings[*nIn] = epicsStrDup(triggerModeMenuLabel(i));
             values[*nIn] = i;
+            severities[*nIn] = 0;
+            (*nIn)++;
+        }
+        return asynSuccess;
+    }
+    if (function == ADTimePixPipelineState) {
+        for (int i = 0; i < kPipelineStateCount && *nIn < nElements; ++i) {
+            if (strings[*nIn]) {
+                free(strings[*nIn]);
+            }
+            strings[*nIn] = epicsStrDup(kPipelineStates[i].label);
+            values[*nIn] = kPipelineStates[i].index;
             severities[*nIn] = 0;
             (*nIn)++;
         }
@@ -1849,6 +1877,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setIntegerParam(ADTimePixPrvImgIntegrationSize, 0);
     setIntegerParam(ADTimePixPrvImgLogHeaders, 3);
     setIntegerParam(ADTimePixPrvImgThreshDiffClip, 1);
+    setIntegerParam(ADTimePixPipelineState, -1);
+    setStringParam(ADTimePixStatus, "");
 
 //    callParamCallbacks();   // Apply to EPICS, at end of file
 

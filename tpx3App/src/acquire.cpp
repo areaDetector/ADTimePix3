@@ -60,6 +60,16 @@ int pipelineStateIndex(const std::string& status) {
     return -1;
 }
 
+const json* measurementStatusJson(const json& meas) {
+    if (meas.contains("Info") && meas["Info"].is_object() && meas["Info"].contains("Status")) {
+        return &meas["Info"]["Status"];
+    }
+    if (meas.contains("Status")) {
+        return &meas["Status"];
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 void ADTimePix::updateMeasurementStatusFromJson(const json& statusVal) {
@@ -76,6 +86,19 @@ void ADTimePix::updateMeasurementStatusFromJson(const json& statusVal) {
     }
     setStringParam(ADTimePixStatus, statusVal.dump().c_str());
     setIntegerParam(ADTimePixPipelineState, -1);
+}
+
+void ADTimePix::updateMeasurementFromDashboard(const json& dashboard_j) {
+    if (!dashboard_j.is_object() || !dashboard_j.contains("Measurement") ||
+        dashboard_j["Measurement"].is_null()) {
+        // Dashboard clears Measurement when idle; do not overwrite last status (e.g. DA_IDLE after stop).
+        return;
+    }
+    const json& meas = dashboard_j["Measurement"];
+    if (const json* status = measurementStatusJson(meas)) {
+        updateMeasurementStatusFromJson(*status);
+    }
+    // No Status in dashboard snapshot; keep last PipelineState (e.g. DA_IDLE after stop).
 }
 
 
@@ -761,7 +784,9 @@ void ADTimePix::timePixCallback(){
         if (measurement_j["Info"].contains("Status")) {
             updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
         }
-    }   
+    } else if (measurement_j.contains("Status")) {
+        updateMeasurementStatusFromJson(measurement_j["Status"]);
+    }
     callParamCallbacks();
 
     while(this->acquiring){
@@ -818,6 +843,12 @@ void ADTimePix::timePixCallback(){
                         measurement_j["Info"]["Status"].get<std::string>() == "DA_IDLE") {
                 isIdle = true;
                     }
+                }
+            } else if (measurement_j.contains("Status")) {
+                updateMeasurementStatusFromJson(measurement_j["Status"]);
+                if (measurement_j["Status"].is_string() &&
+                    measurement_j["Status"].get<std::string>() == "DA_IDLE") {
+                    isIdle = true;
                 }
             }
             callParamCallbacks();
@@ -1024,6 +1055,10 @@ asynStatus ADTimePix::acquireStop(){
         if (measurement_j["Info"].contains("Status")) {
             updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
         }
+    } else if (measurement_j.contains("Status")) {
+        updateMeasurementStatusFromJson(measurement_j["Status"]);
+    } else {
+        updateMeasurementStatusFromJson("DA_IDLE");
     }
     callParamCallbacks();
 

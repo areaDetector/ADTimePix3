@@ -17,3 +17,6 @@
 
 < init_detector_paths.cmd
 < init_detector_hw.cmd
+
+# Driver connects before iocInit; Measurement mbbi defaults to 0 until first sync.
+dbpf("$(PREFIX)cam1:RefreshConnection","1")

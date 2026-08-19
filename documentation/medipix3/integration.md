@@ -276,8 +276,8 @@ Validated on Serval **4.1.6-EXPERIMENTAL** (build **1760**) with the MPX3 emulat
 | `Acquire` | `GET /measurement/start`, `/stop` | areaDetector acquire |
 | `FrameCount_RBV` | `GET /measurement` → `Info.FrameCount` | Serval frame count |
 | `DroppedFrames_RBV` | `Info.DroppedFrames` | |
-| `Status_RBV` | `Info.Status` | Raw PipelineState string (e.g. `DA_IDLE`) |
-| `PipelineState_RBV` | `Info.Status` | mbbi: **0**=starting, **1**=recording, **2**=stopping, **3**=idle, **-1**=unknown |
+| `Status_RBV` | `Info.Status` or dashboard `Measurement.Status` | Raw PipelineState string (e.g. `DA_IDLE`) |
+| `PipelineState_RBV` | same | mbbi via driver **`readEnum()`**: **0**=starting, **1**=recording, **2**=stopping, **3**=idle, **-1**=unknown |
 | `ElapsedTime_RBV`, `TimeLeft_RBV` | `Info.ElapsedTime`, `TimeLeft` | During measurement |
 
 Chip-level PVs (`ChargeSumming`, `Colour`, `CounterSelectIn`, `IDelayConfig`, …) map to per-chip config on `Mpx3DetectorConfig.bob`; see OpenAPI **`Mpx3ChipConfig`** / chip endpoints.
@@ -321,7 +321,9 @@ Writing **`DetOrient`** calls **`rotateLayout()`** (`GET /detector/layout/rotate
 
 ### Measurement pipeline state
 
-Serval **`Measurement.Info.Status`** (`PipelineState` in OpenAPI):
+Serval **`Measurement.Info.Status`** (`PipelineState` in OpenAPI). **`GET /dashboard`** uses a flat **`Measurement.Status`** (no `Info` wrapper). Enum labels from driver **`readEnum()`** (`Measurement.template` has no DB enum fields; index **-1** = Unknown at IOC start before sync). Raw string on **`Status_RBV`**.
+
+Dashboard polls and **`RefreshConnection`** update PipelineState when **`Measurement.Status`** is present; a null or status-less dashboard snapshot does **not** clear a prior **DA_IDLE** after stop.
 
 | `PipelineState_RBV` | `Status_RBV` string | Meaning |
 |--------------------:|---------------------|---------|

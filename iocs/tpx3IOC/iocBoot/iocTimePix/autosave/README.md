@@ -2,14 +2,14 @@
 
 Timepix3 (`st.cmd` / `st_base.cmd`, `PREFIX=TPX3-TEST:`) and Medipix3 (`st_mpx3.cmd`, `PREFIX=MPX3-TEST:`) share this IOC boot folder but use **separate** autosave subdirectories:
 
-| Profile   | Startup script | Save path          | Override cmd        |
-|-----------|----------------|--------------------|---------------------|
-| Timepix3  | `st.cmd`       | `./autosave/tpx3/` | `autosave_tpx3.cmd` |
-| Medipix3  | `st_mpx3.cmd`  | `./autosave/mpx3/` | `autosave_mpx3.cmd` |
+| Profile   | Startup script | Save path          | Override cmd        | Monitor set              |
+|-----------|----------------|--------------------|---------------------|--------------------------|
+| Timepix3  | `st.cmd`       | `./autosave/tpx3/` | `autosave_tpx3.cmd` | `auto_settings_tpx3.req` |
+| Medipix3  | `st_mpx3.cmd`  | `./autosave/mpx3/` | `autosave_mpx3.cmd` | `auto_settings_mpx3.req` |
 
-Autosave `.sav` files store **full PV names** (for example `MPX3-TEST:cam1:BinX`), not `$(PREFIX)` macros. If both profiles restore from the same file, `iocInit` logs thousands of `dbFindRecord ... failed` lines for the wrong prefix.
+`auto_settings_mpx3.req` adds `imageTh1:` and `Pva2:` (dual-threshold preview plugins loaded only in `st_mpx3.cmd`). Timepix3 uses `auto_settings_tpx3.req` without those PVs so `create_monitor_set` does not log connect failures.
 
-The shared `auto_settings.req` monitor set is fine for both profiles; it expands `P=$(PREFIX)` when `create_monitor_set` runs after startup.
+Legacy `auto_settings.req` matches the Timepix3 profile; prefer the profile-specific files above.
 
 EPICS save_restore does **not** create directories. Runtime `.sav` files and profile subdirs are gitignored.
 

@@ -108,4 +108,4 @@ iocInit()
 #asynSetTraceIOMask("FileTIFF1", 0, 0x0)
 
 # save things every thirty seconds
-create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
+create_monitor_set("auto_settings_tpx3.req", 30, "P=$(PREFIX)")

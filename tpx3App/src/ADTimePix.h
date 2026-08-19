@@ -1070,6 +1070,8 @@ class ADTimePix : public ADDriver{
         void updateTdcRatesFromMeasurementInfo(const json& info);
         /** Map Measurement.Info Status (PipelineState) to string + mbbi index PVs. */
         void updateMeasurementStatusFromJson(const json& statusVal);
+        /** Refresh PipelineState/Status from GET /dashboard Measurement block. */
+        void updateMeasurementFromDashboard(const json& dashboard_j);
         /** GET /detector/chips/<i>/PixelConfig for each chip: JSON string -> base64 decode; compare slice to BPC file if available. */
         asynStatus refreshPixelConfigFromServal();
         asynStatus fileWriter();

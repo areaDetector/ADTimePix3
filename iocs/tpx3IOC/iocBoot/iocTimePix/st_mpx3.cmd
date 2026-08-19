@@ -139,7 +139,7 @@ iocInit()
 
 < init_detector_mpx3.cmd
 
-create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
+create_monitor_set("auto_settings_mpx3.req", 30, "P=$(PREFIX)")
 
 # IXS T0-T1 band-pass plugins (uncomment plugin block in st_mpx3.cmd first):
 # < init_ixs_thresh_diff.cmd

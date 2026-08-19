@@ -62,21 +62,13 @@ record(stringin, "$(P)$(R)Status_RBV"){
   field(SCAN, "I/O Intr")
   field(DESC, "Serval PipelineState string")
 }
+# PipelineState_RBV mbbi: enum from driver readEnum() — ADTimePix.cpp kPipelineStates[].
+# Includes -1 (Unknown). No ZRST/ONST/... here.
 record(mbbi, "$(P)$(R)PipelineState_RBV"){
   field(DTYP, "asynInt32")
   field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MSMT_PIPELINE_STATE")
   field(SCAN, "I/O Intr")
   field(DESC, "Serval PipelineState enum")
-  field(ZRST, "DA_STARTING")
-  field(ZRVL, "0")
-  field(ONST, "DA_RECORDING")
-  field(ONVL, "1")
-  field(TWST, "DA_STOPPING")
-  field(TWVL, "2")
-  field(THST, "DA_IDLE")
-  field(THVL, "3")
-  field(FTHS, "Unknown")
-  field(FTVL, "-1")
 }
 
 ##################################################################

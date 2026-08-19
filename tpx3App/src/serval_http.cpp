@@ -334,6 +334,7 @@ asynStatus ADTimePix::initialServerCheckConnection(){
         if (r.status_code != 200) {
             logHttpFailure("initialServerCheckConnection Dashboard", "GET", dashboard, (long)r.status_code, r.text);
             setIntegerParam(ADTimePixDetConnected, 0);
+            updateMeasurementStatusFromJson(json(nullptr));
             connected = false;
         } else {
             try {
@@ -357,15 +358,18 @@ asynStatus ADTimePix::initialServerCheckConnection(){
                     setIntegerParam(ADTimePixDetConnected, 0);
                     connected = false;
                 }
+                updateMeasurementFromDashboard(dashboard_j);
             } catch (const std::exception& e) {
                 ERR_ARGS("Dashboard JSON parse failed: %s", e.what());
                 setIntegerParam(ADTimePixDetConnected, 0);
+                updateMeasurementStatusFromJson(json(nullptr));
                 connected = false;
             }
         }
     } else {
         setIntegerParam(ADTimePixServalConnected,0);
         setIntegerParam(ADTimePixDetConnected,0);
+        updateMeasurementStatusFromJson(json(nullptr));
     }
 
     int servalConn = 0, detConn = 0;
@@ -413,14 +417,17 @@ asynStatus ADTimePix::checkConnection(){
                 setIntegerParam(ADTimePixDetConnected, 0);
                 setStringParam(ADTimePixDetType, "null");
             }
+            updateMeasurementFromDashboard(dashboard_j);
         } catch (...) {
             setIntegerParam(ADTimePixDetConnected, 0);
             setStringParam(ADTimePixDetType, "null");
+            updateMeasurementStatusFromJson(json(nullptr));
         }
     } else {
         setIntegerParam(ADTimePixServalConnected, 0);
         setIntegerParam(ADTimePixDetConnected, 0);
         setStringParam(ADTimePixDetType, "null");
+        updateMeasurementStatusFromJson(json(nullptr));
     }
 
     updateStatusFromConnection(servalOk, detOk);
@@ -520,14 +527,17 @@ asynStatus ADTimePix::getDashboard(){
                         setIntegerParam(ADTimePixLLimReached, dl.get<int>());
                 }
             }
+            updateMeasurementFromDashboard(dashboard_j);
         } catch (...) {
             setIntegerParam(ADTimePixDetConnected, 0);
             setStringParam(ADTimePixDetType, "null");
+            updateMeasurementStatusFromJson(json(nullptr));
         }
     } else { // Serval not running
         setIntegerParam(ADTimePixServalConnected, 0);
         setIntegerParam(ADTimePixDetConnected, 0);
         setStringParam(ADTimePixDetType, "null");
+        updateMeasurementStatusFromJson(json(nullptr));
     }
     int servalConn = 0, detConn = 0;
     getIntegerParam(ADTimePixServalConnected, &servalConn);
