@@ -16,7 +16,7 @@
 - EPICS records and PV layout (no rename for compatibility)
 - C++ identifiers (`ADTimePix`, `ADTimePix3ServalHttp`, …)
 
-Sites should keep existing startup scripts and support-module paths. Use **`st_mpx3.cmd`** only for Medipix3; **`st_base.cmd`** / **`st.cmd`** for TimePix3.
+Sites should keep existing startup scripts and support-module paths. Use **`st_mpx3.cmd`** only for Medipix3; **`profiles/tpx3/st.cmd`** / **`st.cmd`** for TimePix3.
 
 ## Planned migration
 

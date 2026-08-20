@@ -1011,7 +1011,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>ScriptHint</name>
-      <text>Open HDF Config for path/Capture edits, or use init_detector_hdf5_img_mpx3.cmd · _arm.cmd. Img Monitor = debug PVA only.</text>
+      <text>Open HDF Config for path/Capture edits, or use profiles/mpx3/init/hdf5_img.cmd · hdf5_img_arm.cmd. Img Monitor = debug PVA only.</text>
       <x>10</x>
       <y>105</y>
       <width>980</width>

@@ -1,7 +1,7 @@
 # Arm HDF5 Stream Capture after plugins have latched dimensions (≥1 Image frame).
-# Run after init_detector_hdf5_img_mpx3.cmd and one Acquire that delivered Img frames.
+# Run after profiles/mpx3/init/hdf5_img.cmd and one Acquire that delivered Img frames.
 #
-#   < init_detector_hdf5_img_mpx3_arm.cmd
+#   < profiles/mpx3/init/hdf5_img_arm.cmd
 #   dbpf("$(PREFIX)cam1:Acquire","1")
 #
 # If Capture_RBV is already Done from a failed attempt, this re-arms Stream capture.

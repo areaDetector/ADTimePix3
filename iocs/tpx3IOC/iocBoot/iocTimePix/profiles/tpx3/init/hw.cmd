@@ -2,14 +2,13 @@
 # detector is not connected — IOC should stay up; fix hardware, then re-run this file
 # or dbpf $(PREFIX)cam1:ApplyConfig 1 after RefreshConnection.
 #
-# Beamline: merge your extra dbpf blocks (mask, second WriteData, DetOrient, Vth_fine,
-# PeriphClk80, AlarmDisable, etc.) into this file or a site-specific init_detector_hw_site.cmd.
+# Beamline: merge extra dbpf blocks into this file or profiles/tpx3/init/hw_site.cmd.
 
 epicsThreadSleep(2)
 dbpf("$(PREFIX)cam1:WriteData","1")   # fileWriter() + getServer(); push file-output channel config to SERVAL (not the same as BPC/DACS)
 
 # BPC / DACS "calibration" PVs: driver uploadBPC() / uploadDACS() -- HTTP GET to SERVAL
-#   /config/load?format=pixelconfig|dacs&file=<BPCFilePath><BPCFileName> (paths set in init_detector_paths.cmd).
+#   /config/load?format=pixelconfig|dacs&file=<BPCFilePath><BPCFileName> (paths in init/paths.cmd).
 # SERVAL must be up; file paths must be readable on the *SERVAL host* (URL is resolved there). If uploads fail,
 # check cam1:HttpCode, cam1:WriteFileMessage, and that RefreshConnection / detector readiness match your site.
 epicsThreadSleep(2)
@@ -26,7 +25,7 @@ dbpf("$(PREFIX)Stats5:EnableCallbacks","1")   # STATS5 plugin
 dbpf("$(PREFIX)cam1:NumImages","1000000000")  # Pseudo-unlimited; use 0 for true unlimited on hardware
 
 # Enable NDStats row/column profiles for Phoebus (ADCore NDStatsProfiles.template).
-# Requires < $(ADCORE)/iocBoot/stats_profiles.cmd before iocInit (see st_base.cmd).
+# Requires stats_profiles.cmd before iocInit (see profiles/tpx3/st.cmd).
 dbpf("$(PREFIX)$(STATS_PROF_R)StatsProfInit_.PROC","1")
 
 #dbpf("$(PREFIX)cam1:Health.SCAN","I/O Intr")   # Do not scan

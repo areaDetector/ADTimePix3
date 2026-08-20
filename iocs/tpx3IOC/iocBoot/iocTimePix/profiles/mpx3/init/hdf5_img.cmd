@@ -1,14 +1,14 @@
 # Phase C: configure HDF5 for full-rate Image[] demux (TCP 8086).
-# Requires plugins in st_mpx3.cmd: HDFImgT0 (addr 1), HDFImgT1 (addr 13).
+# Requires plugins in profiles/mpx3/st.cmd (plugins_mpx3.cmd): HDFImgT0 (addr 1), HDFImgT1 (addr 13).
 #
 # NDFile Stream Capture needs ≥1 NDArray for dimensions before Capture=1.
 # Sequence:
 #   mkdir -p /tmp/mpx3_hdf
-#   < init_detector_img_mpx3.cmd
-#   < init_detector_hdf5_img_mpx3.cmd     # this file (does NOT arm Capture)
+#   < profiles/mpx3/init/img.cmd
+#   < profiles/mpx3/init/hdf5_img.cmd     # this file (does NOT arm Capture)
 #   dbpf("$(PREFIX)cam1:Acquire","1")     # latch dimensions on HDF plugins
 #   # wait until idle / frames arrive, then:
-#   < init_detector_hdf5_img_mpx3_arm.cmd
+#   < profiles/mpx3/init/hdf5_img_arm.cmd
 #   dbpf("$(PREFIX)cam1:Acquire","1")     # stream writes while Capture=1
 #
 # Do not drive Phoebus from Pva7/Pva8 at high rate — this script disables them.

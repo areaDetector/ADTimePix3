@@ -30,3 +30,6 @@ epicsEnvSet("MASK_BPC_NELEMENTS", "262144")
 epicsEnvSet("NDTYPE",                   "Int16")
 epicsEnvSet("NDFTVL",                   "SHORT")
 epicsEnvSet("CBUFFS",                   "500")
+
+epicsEnvSet("SERVER_URL", "http://localhost:8081")
+epicsEnvSet("PREFIX", "MPX3-TEST:")

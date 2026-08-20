@@ -2,9 +2,9 @@
 # but the physical detector is off — does not call fileWriter/sendConfiguration.
 #
 # After this file, either:
-#   - Source init_detector_hw.cmd to push to SERVAL (WriteData, etc.), or
+#   - Source profiles/tpx3/init/hw.cmd to push to SERVAL (WriteData, etc.), or
 #   - Wait until DetConnected_RBV=1, then: dbpf $(PREFIX)cam1:RefreshConnection 1
-#     and < init_detector_hw.cmd
+#     and < profiles/tpx3/init/hw.cmd
 
 dbpf("$(PREFIX)cam1:RawFilePath","tcp://listen@localhost:8085 ")    # tcp://listen@localhost:8085 for stream; file:/media/nvme/raw for file
 dbpf("$(PREFIX)cam1:RawFileTemplate","raw%MdHms_")
@@ -64,7 +64,7 @@ dbpf("$(PREFIX)cam1:PrvHstOffset","0.0")         # Offset in sec
 dbpf("$(PREFIX)cam1:PrvHstStpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 
-# Calibration file locations (PVs only; upload happens in init_detector_hw.cmd)
+# Calibration file locations (PVs only; upload happens in profiles/tpx3/init/hw.cmd)
 # One Chip calibration (uncomment this block and comment out "Four chip" below)
 # Paths must end with / — driver concatenates path + filename with no separator.
 #dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/oneChip/")

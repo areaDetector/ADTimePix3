@@ -147,7 +147,7 @@
       <color red="115" green="223" blue="255">
       </color>
     </background_color>
-    <tooltip>Same as init_detector_hdf5_img_mpx3.cmd (/tmp/mpx3_hdf/). Does not arm Capture.</tooltip>
+    <tooltip>Same as profiles/mpx3/init/hdf5_img.cmd (/tmp/mpx3_hdf/). Does not arm Capture.</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
     <name>ArmCaptureBtn</name>
@@ -172,7 +172,7 @@
       <color red="255" green="200" blue="100">
       </color>
     </background_color>
-    <tooltip>After dims latched (one Acquire with Enable on). Same as init_detector_hdf5_img_mpx3_arm.cmd</tooltip>
+    <tooltip>After dims latched (one Acquire with Enable on). Same as profiles/mpx3/init/hdf5_img_arm.cmd</tooltip>
   </widget>
   <widget type="group" version="3.0.0">
     <name>HdfT0</name>
@@ -505,7 +505,7 @@
     </widget>
     <widget type="label" version="2.0.0">
       <name>T0Hint</name>
-      <text>Scripts still valid: init_detector_hdf5_img_mpx3.cmd · _arm.cmd</text>
+      <text>Scripts still valid: profiles/mpx3/init/hdf5_img.cmd · _arm.cmd</text>
       <x>10</x>
       <y>330</y>
       <width>520</width>

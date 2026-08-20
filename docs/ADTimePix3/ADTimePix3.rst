@@ -35,7 +35,7 @@ How to run
 
   #. run serval
 
-  #. Change the IP address in st.cmd or st_base.cmd
+  #. Change the IP address in st.cmd or profiles/tpx3/st.cmd
 
   #. Run ./st.cmd
 

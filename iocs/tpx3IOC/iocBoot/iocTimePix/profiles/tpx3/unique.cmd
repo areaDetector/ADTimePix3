@@ -32,7 +32,11 @@ epicsEnvSet("HIST_SIZE",                "4096")
 epicsEnvSet("XSIZE",                    "512")
 epicsEnvSet("YSIZE",                    "512")
 epicsEnvSet("NELMT",                    "262144")
-# --- Mask BPC waveform size (st_base.cmd → MaskBPC.template, macro NELEMENTS) ---
+# Serval URL and PV prefix (override per site/beamline).
+epicsEnvSet("SERVER_URL", "http://localhost:8081")
+epicsEnvSet("PREFIX", "TPX3-TEST:")
+
+# --- Mask BPC waveform size (MaskBPC.template NELEMENTS) ---
 # Must be >= detector PixCount (mask upload / compare / PixelConfigDiff). Too small: DB load fails, PVs invalid.
 #
 #   Chips   Typical mosaic   Image (px)   PixCount = NELEMENTS

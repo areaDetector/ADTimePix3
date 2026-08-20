@@ -6,7 +6,7 @@ When moving development to the **support2** tree with **ADCore 3.14.0**, use thi
 
 - **ADTimePix3:** `/epics/support2/areaDetector/ADTimePix3`
 - **ADCore:** `/epics/support2/areaDetector/ADCore` (R3-14 / 3.14.0 or newer)
-- **IOC startup:** `st.cmd` (which runs `st_base.cmd`)
+- **IOC startup:** `st.cmd` (which runs `profiles/tpx3/st.cmd`)
 
 ## What does NOT need to be moved
 
@@ -26,7 +26,7 @@ When moving development to the **support2** tree with **ADCore 3.14.0**, use thi
 
 - Do all **new development** in **support2** (driver, DB, screens, docs, IOC scripts).
 - **Driver and app:** `tpx3App/src/`, `tpx3App/Db/`, `tpx3App/op/`, etc., in support2.
-- **IOC scripts:** `iocs/tpx3IOC/iocBoot/iocTimePix/` (e.g. `st.cmd`, `st_base.cmd`, `init_detector.cmd`) in support2.
+- **IOC scripts:** `iocs/tpx3IOC/iocBoot/iocTimePix/` (e.g. `st.cmd`, `profiles/tpx3/st.cmd`, `profiles/tpx3/init/detector.cmd`) in support2.
 - **Documentation:** `README.md`, `RELEASE.md`, `documentation/*.md` in support2.
 - **Eight-chip / dual SPIDR:** See [documentation/8chip-migration.md](8chip-migration.md) (IOC `load_chips.cmd`, `MASK_BPC_NELEMENTS` in `unique.cmd`, driver health/boards, mask indexing). Ensure `unique.cmd` defines `MASK_BPC_NELEMENTS` so `MaskBPC.template` loads.
 
@@ -37,7 +37,7 @@ If you need to backport a fix to the **support** tree later, do it by cherry-pic
 Both support and support2 ADTimePix3 already contain:
 
 - **Connection management:** `checkConnection()`, `RefreshConnection` PV, connection poll thread, reconnect behavior (`fileWriter()` + `initAcquisition()` + `getServer()`).
-- **Detector init:** `init_detector.cmd`, `ApplyConfig` PV, EPICS PVs as source of truth.
+- **Detector init:** `profiles/tpx3/init/detector.cmd`, `ApplyConfig` PV, EPICS PVs as source of truth.
 - **Destructor order:** Callback thread and connection poll stopped first; no `disconnect(pasynUserSelf)` in destructor.
 - **Docs:** Same `documentation/` set, including `SIGSEGV_ON_EXIT.md` (noting ADCore 3.14.0+).
 
@@ -52,7 +52,7 @@ So you do **not** need to “move” these from support to support2; they are al
 ## Quick checklist
 
 - [ ] support2 ADTimePix3 builds with support2 ADCore 3.14.0 (no ADCore patches applied).
-- [ ] `st.cmd` (and thus `st_base.cmd`) runs and exits cleanly (no SIGSEGV on `exit`).
+- [ ] `st.cmd` (and thus `profiles/tpx3/st.cmd`) runs and exits cleanly (no SIGSEGV on `exit`).
 - [ ] `unique.cmd` sets **`MASK_BPC_NELEMENTS`** (65536 / 262144 / 524288) so `MaskBPC.template` loads; mask PVs connect.
 - [ ] RELEASE (and RELEASE.local if any) in support2 point to the intended support2 modules.
 - [ ] All new changes are made in support2; support tree is only for legacy or backport if needed.

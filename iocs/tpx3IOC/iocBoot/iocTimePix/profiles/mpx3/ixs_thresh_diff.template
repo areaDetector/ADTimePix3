@@ -1,6 +1,6 @@
 # IXS / dual-threshold band-pass: T0 - T1 (between-threshold counts).
 # Used with NDPluginProcess (background = high-threshold image, input = low-threshold).
-# See init_ixs_thresh_diff.cmd and documentation/medipix3/integration.md.
+# See profiles/mpx3/init/ixs_thresh_diff.cmd and documentation/medipix3/integration.md.
 #
 # Serval delivery order per trigger: thresholdID=1 (T1) then thresholdID=0 (T0).
 # Run SaveTh1BgSeq / SaveIntTh1BgSeq when the matching T1 / integrated-T1 array is current

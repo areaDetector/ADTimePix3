@@ -4,7 +4,7 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
 
 ## Implemented
 
-- **IOC:** `load_chips.cmd` loads `Chips.template` for `CHIP0`…`CHIP7` (asyn `ADDR` 0–7). Included from `st_base.cmd`.
+- **IOC:** `load_chips.cmd` loads `Chips.template` for `CHIP0`…`CHIP7` (asyn `ADDR` 0–7). Included from `profiles/tpx3/st.cmd`.
 - **Rails:** `OperatingVoltage.template` instances `Pwr0`…`Pwr5` at asyn `ADDR` 0–5. `ADDR` 0–2 are the three `VDD`/`AVDD` readings from Serval `Health[0]`; `ADDR` 3–5 are from `Health[1]` when present (second SPIDR). When only one board exists, `Pwr3`–`Pwr5` read back zero.
 - **Driver (`updateDetectorHealthFromJson` / `getDetector`; `Health` JSON array vs object):**
   - Merges all `Health[].ChipTemperatures` into one JSON array for `ChipTemps_RBV` (flat list, e.g. eight entries for two boards).
@@ -15,9 +15,9 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
 
 ## Mask BPC database (`MASK_BPC_NELEMENTS`)
 
-`st_base.cmd` loads `MaskBPC.template` with `NELEMENTS=$(MASK_BPC_NELEMENTS)`. That macro **must** be defined in **`unique.cmd`** before the database load (after `< envPaths` and `< unique.cmd`). If it is missing, iocsh reports `macLib: macro MASK_BPC_NELEMENTS is undefined` and mask-related PVs never connect.
+`profiles/tpx3/st.cmd` loads `MaskBPC.template` with `NELEMENTS=$(MASK_BPC_NELEMENTS)`. That macro **must** be defined in **`profiles/tpx3/unique.cmd`** before the database load (after `< envPaths` and `< profiles/tpx3/unique.cmd`). If it is missing, iocsh reports `macLib: macro MASK_BPC_NELEMENTS is undefined` and mask-related PVs never connect.
 
-`unique.cmd` documents three standard sizes (pick **one** active `epicsEnvSet`):
+`profiles/tpx3/unique.cmd` documents three standard sizes (pick **one** active `epicsEnvSet`):
 
 | Chips | Typical mosaic | Image (px) | `MASK_BPC_NELEMENTS` |
 |-------|----------------|------------|----------------------|
@@ -25,7 +25,7 @@ This document tracks IOC and driver changes for detectors with up to eight TimeP
 | 4 | 2×2 | 512×512 | 262144 |
 | 8 | 2×4 | 1024×512 | 524288 |
 
-`envPaths` does **not** set this macro; it only notes that `unique.cmd` must define it.
+`envPaths` does **not** set this macro; it only notes that `profiles/tpx3/unique.cmd` must define it.
 
 ## Verify on hardware
 

@@ -1,6 +1,6 @@
 # Erik ASI first hardware checkout (June 2026) — equalization, single threshold.
 # See documentation/medipix3/integration.md § "ASI hardware checkout".
-# Not for dual-counter / IXS band-pass testing (use init_detector_hw_mpx3.cmd instead).
+# Not for dual-counter / IXS band-pass testing (use profiles/mpx3/init/hw.cmd instead).
 #
 # Threshold DAC ~50-90: set via Accos equalization or chip DAC / .dacs before acquire.
 # GainMode SLGM (super-low): Erik Aug 2026 — frame tests without calibration (noise-hit pattern).

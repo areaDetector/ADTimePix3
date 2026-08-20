@@ -31,14 +31,14 @@ EPICS PVs (prefix `cam1:`):
 
 Medipix3 work is **additive**: one driver binary serves both families. After `GET /detector`, the driver sets `detectorFamily_` and branches MPX3-only logic; it does **not** replace the Timepix3 IOC profile or calibration paths.
 
-**For normal TPX3 use** (`st.cmd` / `st_base.cmd`, TPX3 hardware, default PVs), behaviour should match pre-integration operation. Use **`st_mpx3.cmd` only with MPX3** — that profile enables dual threshold, integrated preview plugins, and `vendor/mpx3/` calibration by design.
+**For normal TPX3 use** (`./st.cmd`, TPX3 hardware, default PVs), behaviour should match pre-integration operation. Use **`./st_mpx3.cmd` only with MPX3** — that profile enables dual threshold, integrated preview plugins, and `vendor/mpx3/` calibration by design.
 
 ### What stays separate
 
 | Layer | Timepix3 (TPX3) | Medipix3 (MPX3) |
 |--------|-----------------|-----------------|
-| IOC startup | `st.cmd`, `init_detector_*.cmd` | `st_mpx3.cmd`, `init_detector_mpx3.cmd` |
-| Calibration | `vendor/tpx3-*` (via `init_detector_paths.cmd`) | `vendor/mpx3/` |
+| IOC startup | `st.cmd` → `profiles/tpx3/`, `profiles/tpx3/init/` | `st_mpx3.cmd` → `profiles/mpx3/` |
+| Calibration | `vendor/tpx3-*` (via `profiles/tpx3/init/paths.cmd`) | `vendor/mpx3/` |
 | Phoebus | `TimePix3.bob`; legacy `op/opi/*.opi` (CSS) | `MediPix3/*.bob` |
 | NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva8; addrs **0**, **1**, **8**–**13** |
 
@@ -88,18 +88,18 @@ cd iocs/tpx3IOC/iocBoot/iocTimePix
 
 (`st_mpx3.cmd` has a `tpx3App` shebang; you can also run `./st_mpx3.cmd` if executable.) **libcpr** is built into the module (`tpx3Support/cpr` → `lib/linux-x86_64/libcpr.so`); `tpx3App` RUNPATH resolves it — no separate `LD_LIBRARY_PATH` to `cprSrc` is needed.
 
-Profile contents: `unique_mpx3.cmd`, `init_detector_mpx3.cmd`, and MPX3 ND/PVA wiring in `st_mpx3.cmd`.
+Profile contents: `profiles/mpx3/unique.cmd`, `profiles/mpx3/init/detector.cmd`, and MPX3 ND/PVA wiring in `st_mpx3.cmd`.
 
-Defaults (from `init_detector_mpx3.cmd`):
+Defaults (from `profiles/mpx3/init/detector.cmd`):
 
 - PV prefix `MPX3-TEST:`
 - asyn port `MPX3`
 - 512×512 mask size (`MASK_BPC_NELEMENTS=262144`)
 - preview on TCP **8088** / **8089** (`PrvImgThs` / `PrvImg1Ths` **0,1**, jsonimage)
-- full-rate **Image[]** TCP **8086** configured but **`WriteImg=0`** (opt-in via `init_detector_img_mpx3.cmd`)
+- full-rate **Image[]** TCP **8086** configured but **`WriteImg=0`** (opt-in via `profiles/mpx3/init/img.cmd`)
 - **`BothCounters=Yes`**, **`TriggerMode=AUTOTRIGSTART_TIMERSTOP`** (index **4**), **4 triggers**, **0.5 s** period (Erik Accos recipe)
 - `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **10**/**11**, PVA **Pva3**/**Pva4**
-- BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `init_detector_hw_mpx3.cmd`)
+- BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `profiles/mpx3/init/hw.cmd`)
 
 **Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: destination writer **`Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`: Img[0] 8086 + Img[1] file/8087 + HDF status strip); **`Acquire/Mpx3HdfImgConfig.bob`** (HDFImgT0/T1 path/Capture); **`Acquire/Mpx3ImgMonitor.bob`** (Pva7/Pva8 — low rate only); live preview images in `Acquire/Mpx3PrvImgMonitor.bob`; detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` / `ImgThs` / `Img1Ths` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
 
@@ -113,9 +113,9 @@ Screenshots ([screenshots/](screenshots/)):
 
 *Figure: `Mpx3DetectorConfig.bob` — MPX3 chip, trigger, and layout PVs pushed to Serval on change. **`GainMode`** Serval enum: `SHGM`, `HGM`, `LGM`, `SLGM` (`mbbo` 0–3). **`DetOrient`** rotates preview and Image[] via Serval layout API.*
 
-**BothCounters — two profiles:** Erik (Aug 2026) recommends **`BothCounters=Off`** for default beamline use; if enabled, use **th1 high (~250)**. The **`init_detector_hw_mpx3.cmd`** / Accos recipe (**`BothCounters=Yes`**, th0+th1 low, IXS band-pass) is an **opt-in** profile for emulator and dual-threshold science — not Erik’s default recommendation.
+**BothCounters — two profiles:** Erik (Aug 2026) recommends **`BothCounters=Off`** for default beamline use; if enabled, use **th1 high (~250)**. The **`profiles/mpx3/init/hw.cmd`** / Accos recipe (**`BothCounters=Yes`**, th0+th1 low, IXS band-pass) is an **opt-in** profile for emulator and dual-threshold science — not Erik’s default recommendation.
 
-**Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via **`$(ADCORE)/iocBoot/stats_profiles.cmd`** (`NDStatsProfiles.template`) after `commonPlugins.cmd`; `init_detector_hw_mpx3.cmd` processes `StatsProfInit_` after `iocInit`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention (`$(P)$(R)Cal:…`).
+**Image / profile Y-origin:** NDArray and `NDStats` profiles use **top-left, Y down** (see [COORDINATE_MAP.md](../COORDINATE_MAP.md)). Row/column profiles for the MPX3 IOC are loaded via **`$(ADCORE)/iocBoot/stats_profiles.cmd`** (`NDStatsProfiles.template`) after `commonPlugins.cmd`; `profiles/mpx3/init/hw.cmd` processes `StatsProfInit_` after `iocInit`. Facility ADet image+profile `.bob` screens (`/epics/GUI/SNS/bob`) are adjusted so plot axes match that convention (`$(P)$(R)Cal:…`).
 
 ## Emulator workflow
 
@@ -137,21 +137,21 @@ Default MPX3 BPC/DACS ship under `vendor/mpx3/` (not `vendor/tpx3-demo.*`):
 | `eq-01.bpc` | Pixel config (524288 bytes for 8-chip layout) |
 | `eq-01.dacs` | Threshold[0..7] and chip DACs per Medipix3 format |
 
-IOC paths (via `init_detector_paths_mpx3.cmd`):
+IOC paths (via `profiles/mpx3/init/paths.cmd`):
 
 - `BPCFilePath` = `$(ADTIMEPIX)/vendor/mpx3/`
 - `DACSFilePath` = `$(ADTIMEPIX)/vendor/mpx3/`
 
-Upload on startup via `WriteBPCFile=1` and `WriteDACSFile=1` in `init_detector_hw_mpx3.cmd`. SERVAL must resolve these paths on **its** host. For a different calibration set, change `BPCFileName` / `DACSFileName` or point paths at a site-specific directory.
+Upload on startup via `WriteBPCFile=1` and `WriteDACSFile=1` in `profiles/mpx3/init/hw.cmd`. SERVAL must resolve these paths on **its** host. For a different calibration set, change `BPCFileName` / `DACSFileName` or point paths at a site-specific directory.
 
 ## ASI hardware checkout (Erik, June 2026)
 
-Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** (email, June 2026). This is **not** the same profile as the emulator / Accos **dual-counter** recipe in `init_detector_hw_mpx3.cmd` — use one or the other depending on the test goal.
+Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** (email, June 2026). This is **not** the same profile as the emulator / Accos **dual-counter** recipe in `profiles/mpx3/init/hw.cmd` — use one or the other depending on the test goal.
 
 | Goal | IOC script | Key settings |
 |------|------------|--------------|
-| Equalization / first hardware checkout | `init_detector_hw_mpx3_equalize.cmd` | Single threshold, 12-bit, 20 frames, super-low gain |
-| Dual-counter live view / IXS band-pass (emulator or post-cal) | `init_detector_hw_mpx3.cmd` | `BothCounters=1`, thresholds 0+1, 4 triggers @ 0.5 s |
+| Equalization / first hardware checkout | `profiles/mpx3/init/hw_equalize.cmd` | Single threshold, 12-bit, 20 frames, super-low gain |
+| Dual-counter live view / IXS band-pass (emulator or post-cal) | `profiles/mpx3/init/hw.cmd` | `BothCounters=1`, thresholds 0+1, 4 triggers @ 0.5 s |
 
 ### Erik’s equalization checklist
 
@@ -172,13 +172,13 @@ Erik’s guidance for **first physical Medipix3 bring-up** and **equalization** 
 | Use case | Serval path | MPX3 IOC default |
 |----------|-------------|------------------|
 | Beamline live view | Preview (frame + integrated) + count histogram | `WritePrvImg=1` (8088), `WritePrvImg1=1` (8089) |
-| Data saving at full rate | `Image[]` | TCP **8086**, `WriteImg=0` until needed — `< init_detector_img_mpx3.cmd` |
+| Data saving at full rate | `Image[]` | TCP **8086**, `WriteImg=0` until needed — `< profiles/mpx3/init/img.cmd` |
 
 Medipix3 has **no Timepix3-style raw `.tpx3` stream** and sends **full image arrays** (no zero-suppression / pixel-hit stream). Highest practical rates (fast PC + SSD): **~2000 Hz** (12-bit continuous); **~750 Hz** (24-bit or dual 12-bit counter). Sequential shutter down: **~5 ms** safe, **~2 ms** minimum; **0.5 ms** (12-bit) / **1.3 ms** (24-bit) in other modes.
 
 ## Family TCP port map (TPX3 / MPX3 / TPX4)
 
-Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phase A adopts Image **8086** now. TPX3 Raw primary remains **8085** in legacy `init_detector_paths.cmd` until a dedicated migration (target Raw[0]=**8084**).
+Convention: port = **8084 + slot**. Documented for the unified driver; MPX3 Phase A adopts Image **8086** now. TPX3 Raw primary remains **8085** in legacy `profiles/tpx3/init/paths.cmd` until a dedicated migration (target Raw[0]=**8084**).
 
 | Port | Slot | Role | MPX3 default | TPX3 today | TPX4 (future) |
 |-----:|------|------|--------------|------------|---------------|
@@ -229,7 +229,7 @@ In Swagger UI, browse **Schemas → `Mpx3DetectorConfig`**, **`GainMode`**, **`D
 
 **Local snapshots (not committed):** `documentation/medipix3/drafts/` is **gitignored** — appropriate for saved OpenAPI exports, email drafts, and one-off Serval JSON dumps. Prefer a **versioned filename** tied to the jar, not bare `openapi.yaml`, e.g. `serval-openapi-4.1.6-experimental-build1760.yaml` / `.json` (`info.version` from the spec + `SoftwareBuild` from `/dashboard`). Re-fetch from `/openapi.json` when Serval is upgraded; the live endpoint always beats a stale copy. Do **not** commit full OpenAPI files to the main repo (large, version-coupled, redundant with the running server).
 
-**IOC vs Serval:** **`PixelDepth`** mbbo matches OpenAPI (**1 / 6 / 12 / 24** via ZRVL…THVL). Default **12-bit** (`VAL=2`). Fresh emulator may read **`PixelDepth: 1`** until `init_detector_hw_mpx3.cmd` runs (`dbpf … PixelDepth 2` = mbbo index for 12-bit). Use mbbo **index** or **`caput … 12`** (ONVL/TWVL value), not `"12"` as enum index. **`TriggerMode`** mbbo index **0–8** matches OpenAPI (including **`FOLLOWING`** at index **8**). **`PipelineState_RBV`** mbbi mirrors **`Measurement.Info.Status`**.
+**IOC vs Serval:** **`PixelDepth`** mbbo matches OpenAPI (**1 / 6 / 12 / 24** via ZRVL…THVL). Default **12-bit** (`VAL=2`). Fresh emulator may read **`PixelDepth: 1`** until `profiles/mpx3/init/hw.cmd` runs (`dbpf … PixelDepth 2` = mbbo index for 12-bit). Use mbbo **index** or **`caput … 12`** (ONVL/TWVL value), not `"12"` as enum index. **`TriggerMode`** mbbo index **0–8** matches OpenAPI (including **`FOLLOWING`** at index **8**). **`PipelineState_RBV`** mbbi mirrors **`Measurement.Info.Status`**.
 
 **Dual threshold (BothCounters):** T0 and T1 share **one** TCP socket (e.g. Preview 8088 or Image 8086), demuxed by jsonimage **`thresholdID`**. Ports 8086/8087 are Image channel 0 vs 1 (frame vs optional companion), **not** T0 vs T1. Image[1] defaults to **`file:/media/nvme/img1`** with `IntgSize=-1` / `last` (Preview-8089-like role on Serval); switch path to `tcp://listen@localhost:8087` and `Img1FileFmt=jsonimage` only when a TCP consumer exists.
 
@@ -247,7 +247,7 @@ Validated on Serval **4.1.6-EXPERIMENTAL** (build **1760**) with the MPX3 emulat
 2. **Build / install** after driver or DB changes: `make -C iocs/tpx3IOC install`.
 3. **Start IOC:** `cd iocs/tpx3IOC/iocBoot/iocTimePix && ./st_mpx3.cmd` (or `../../bin/linux-x86_64/tpx3App st_mpx3.cmd`).
 4. **Connect:** IOC console shows `Detector CONNECTED` and dashboard `http_code = 200`; `DetectorFamily_RBV` = **MPX3**.
-5. **Init scripts** (included from `st_mpx3.cmd`): `init_detector_paths_mpx3.cmd` then `init_detector_hw_mpx3.cmd` — pushes BPC/DACS, **`PixelDepth=12-bit`** (mbbo index **2**), **`TriggerMode=AUTOTRIGSTART_TIMERSTOP`** (index **4**), **`BothCounters=Yes`**, destination + **`WriteData=1`**.
+5. **Init scripts** (included from `st_mpx3.cmd`): `profiles/mpx3/init/paths.cmd` then `profiles/mpx3/init/hw.cmd` — pushes BPC/DACS, **`PixelDepth=12-bit`** (mbbo index **2**), **`TriggerMode=AUTOTRIGSTART_TIMERSTOP`** (index **4**), **`BothCounters=Yes`**, destination + **`WriteData=1`**.
 6. **Acquire:** `caput MPX3-TEST:cam1:Acquire 1` (or Phoebus). Expect `ADStatus=1`, Serval log **`Processed N frames and dropped 0 frames`**, `PipelineState_RBV` → **DA_RECORDING** then **DA_IDLE**.
 7. **Preview:** `PrvImg` / `PrvImg1` TCP workers connect to **8088** / **8089** when measurement starts; **`PrvImg TCP connection closed by peer`** at stop is normal.
 
@@ -292,7 +292,7 @@ Enum choices come from the driver **`readEnum()`** table (`ADTimePix.cpp`); DB r
 | 1 | `NEXSTART_PEXSTOP` | `NEXSTART_PEXSTOP` | Next start, previous stop |
 | 2 | `PEXSTART_TIMERSTOP` | `PEXSTART_TIMERSTOP` | External start, timer stop |
 | 3 | `NEXSTART_TIMERSTOP` | `NEXSTART_TIMERSTOP` | Next start, timer stop |
-| 4 | `AUTOTRIGSTART_TIMERSTOP` | `AUTOTRIGSTART_TIMERSTOP` | **Default in `init_detector_hw_mpx3.cmd`**; Accos dual-counter recipe |
+| 4 | `AUTOTRIGSTART_TIMERSTOP` | `AUTOTRIGSTART_TIMERSTOP` | **Default in `profiles/mpx3/init/hw.cmd`**; Accos dual-counter recipe |
 | 5 | `CONTINUOUS` | `CONTINUOUS` | **Incompatible with `BothCounters=Yes`** (driver blocks or auto-switches to 4) |
 | 6 | `SOFTWARESTART_TIMERSTOP` | `SOFTWARESTART_TIMERSTOP` | Software start, timer stop |
 | 7 | `SwReSt_SwReSp` | `SOFTWARESTART_SOFTWARESTOP` | Menu shortened; Serval string unchanged |
@@ -342,7 +342,7 @@ During **`Acquire`**, poll **`PipelineState_RBV`** or **`FrameCount_RBV`**. Lega
 | `BothCounters=Yes` | `TriggerMode=CONTINUOUS` (index **5**) | Serval rejects; driver **auto-switches to 4** when BothCounters written, or **blocks acquire** |
 | `BothCounters=Yes` | `PixelDepth=24` | Driver **blocks** config / acquire (`24-bit` incompatible with dual counter) |
 | `BothCounters=Yes` | Short `AcquirePeriod` | UDP packet drops, horizontal banding in image — use **≥ 0.5 s** for dual-counter emulator tests |
-| Fresh Serval | `PixelDepth=1` before init | Run **`init_detector_hw_mpx3.cmd`** or `dbpf PixelDepth 2` for 12-bit |
+| Fresh Serval | `PixelDepth=1` before init | Run **`profiles/mpx3/init/hw.cmd`** or `dbpf PixelDepth 2` for 12-bit |
 | `WritePrvImg1=1` | No IOC reader on **8089** | Serval **`Preview buffer full`** — keep integrated preview enabled only when IOC connects |
 | High-rate `Image[]` | PVA on Pva7/Pva8 | Disable PVA callbacks; use **HDFImgT0/T1** for archive |
 
@@ -383,11 +383,11 @@ Serval requires the same **Mode** on all output channels (manual limitation).
 
 ### Enable / disable
 
-Paths are set in `init_detector_paths_mpx3.cmd` with `WriteImg=0`. To turn full-rate Image on:
+Paths are set in `profiles/mpx3/init/paths.cmd` with `WriteImg=0`. To turn full-rate Image on:
 
 ```bash
 # iocsh:
-< init_detector_img_mpx3.cmd
+< profiles/mpx3/init/img.cmd
 # then acquire — imgWorker connects when WriteImg=1, tcp path, ImgAccumulationEnable=1
 ```
 
@@ -411,18 +411,18 @@ Plugins in `st_mpx3.cmd` (fixed address at configure):
 mkdir -p /tmp/mpx3_hdf
 
 # iocsh (restart IOC after rebuild so HDF plugins load):
-< init_detector_img_mpx3.cmd
-< init_detector_hdf5_img_mpx3.cmd
+< profiles/mpx3/init/img.cmd
+< profiles/mpx3/init/hdf5_img.cmd
 dbpf("$(PREFIX)cam1:Acquire","1")              # latch dimensions (Capture not armed yet)
 # wait until DA_IDLE / ImgFrameNumber advances, then:
-< init_detector_hdf5_img_mpx3_arm.cmd          # Capture=1 (needs ≥1 array first)
+< profiles/mpx3/init/hdf5_img_arm.cmd          # Capture=1 (needs ≥1 array first)
 dbpf("$(PREFIX)cam1:Acquire","1")              # Stream writes up to NumCapture
 ```
 
 If you arm Capture before any Image NDArray, NDFile logs:  
 `ERROR, must collect an array to get dimensions first` — acquire once, then arm.
 
-If HDF5 logs `H5Fcreate(): invalid file name` / empty path after colon: **`FileTemplate` was empty** (common after autosave). Re-run `init_detector_hdf5_img_mpx3.cmd` (sets `%s%s_%3.3d.h5` and path with trailing `/`), confirm:
+If HDF5 logs `H5Fcreate(): invalid file name` / empty path after colon: **`FileTemplate` was empty** (common after autosave). Re-run `profiles/mpx3/init/hdf5_img.cmd` (sets `%s%s_%3.3d.h5` and path with trailing `/`), confirm:
 
 ```bash
 caget -S MPX3-TEST:HDFImgT0:FileTemplate_RBV MPX3-TEST:HDFImgT0:FilePath_RBV
@@ -438,7 +438,7 @@ caget MPX3-TEST:HDFImgT1:NumCaptured_RBV
 ls $(MPX3_HDF_PATH=/tmp/mpx3_hdf)
 ```
 
-**Soak ladder:** start with current Accos timing (0.5 s, 4 frames) → raise `NumImages` / shorten `AcquirePeriod` on emulator → hardware toward ~750 Hz (24-bit / dual) or ~2000 Hz (12-bit). Raise `FileHDFImgT*: queue` in `st_mpx3.cmd` if dropped frames. Keep **Pva7/Pva8** disabled at high rate (`init_detector_hdf5_img_mpx3.cmd` does this).
+**Soak ladder:** start with current Accos timing (0.5 s, 4 frames) → raise `NumImages` / shorten `AcquirePeriod` on emulator → hardware toward ~750 Hz (24-bit / dual) or ~2000 Hz (12-bit). Raise `FileHDFImgT*: queue` in `st_mpx3.cmd` if dropped frames. Keep **Pva7/Pva8** disabled at high rate (`profiles/mpx3/init/hdf5_img.cmd` does this).
 
 **Deferred:** Image[1] **`img1Worker`** (IOC TCP consumer for 8087). Config/UI for Image[1] is available (file or TCP path, `WriteImg1`); Serval file writes work without a worker. Do not enable TCP 8087 without a reader.
 
@@ -450,7 +450,7 @@ ls $(MPX3_HDF_PATH=/tmp/mpx3_hdf)
 | **B** | ~~Img `thresholdID` demux~~ **done** — T0→addr **1** (Pva7), T1→addr **13** (Pva8); `ImgThresholdID_RBV`; accumulate T0 only |
 | **C** | ~~HDF5 plugins + soak recipe~~ **done** (scaffolding); run soak on emulator/hardware as rates allow |
 
-**Verify Phase B after rebuild/restart:** enable Image (`< init_detector_img_mpx3.cmd`), acquire, then:
+**Verify Phase B after rebuild/restart:** enable Image (`< profiles/mpx3/init/img.cmd`), acquire, then:
 
 ```bash
 caget MPX3-TEST:cam1:ImgThresholdID_RBV MPX3-TEST:cam1:ImgFrameNumber_RBV
@@ -460,18 +460,18 @@ caget MPX3-TEST:cam1:ImgThresholdID_RBV MPX3-TEST:cam1:ImgFrameNumber_RBV
 
 ### Optional equalization startup
 
-Paths still come from `init_detector_paths_mpx3.cmd`. For first hardware checkout, **replace** the hardware push in `init_detector_mpx3.cmd` temporarily:
+Paths still come from `profiles/mpx3/init/paths.cmd`. For first hardware checkout, **replace** the hardware push in `profiles/mpx3/init/detector.cmd` temporarily:
 
 ```bash
-# iocsh after iocInit, or edit init_detector_mpx3.cmd for one session:
-< init_detector_paths_mpx3.cmd
-< init_detector_hw_mpx3_equalize.cmd
+# iocsh after iocInit, or edit profiles/mpx3/init/detector.cmd for one session:
+< profiles/mpx3/init/paths.cmd
+< profiles/mpx3/init/hw_equalize.cmd
 ```
 
 After equalization, restore the dual-counter profile:
 
 ```bash
-< init_detector_hw_mpx3.cmd
+< profiles/mpx3/init/hw.cmd
 ```
 
 ### Known follow-ups on hardware
@@ -482,11 +482,11 @@ After equalization, restore the dual-counter profile:
 
 | Topic | Erik (ASI) | EPICS impact |
 |-------|------------|--------------|
-| **`GainMode`** | **`SHGM`, `HGM`, `LGM`, `SLGM`** (super-high → super-low). **`HGM`** calibrated ~10 keV; **`SLGM`** uncalibrated frame tests / equalization. | `init_detector_hw_mpx3_equalize.cmd` uses **`SLGM`** (3); dual-counter profile uses **`HGM`** (1). **`GainMode`** mbbo PV (0–3). |
-| **Equalization** | June checklist **still correct**. | `init_detector_hw_mpx3_equalize.cmd` unchanged except `SLGM`. |
+| **`GainMode`** | **`SHGM`, `HGM`, `LGM`, `SLGM`** (super-high → super-low). **`HGM`** calibrated ~10 keV; **`SLGM`** uncalibrated frame tests / equalization. | `profiles/mpx3/init/hw_equalize.cmd` uses **`SLGM`** (3); dual-counter profile uses **`HGM`** (1). **`GainMode`** mbbo PV (0–3). |
+| **Equalization** | June checklist **still correct**. | `profiles/mpx3/init/hw_equalize.cmd` unchanged except `SLGM`. |
 | **`ChargeSumming`** | Default **off**. When on: th0 = arbitrated image, th1 = charge-summed (separate calibration). | Keep `ChargeSumming=0` in default profiles. |
 | **`Colour`** | Default **off** (spectral). 4 images (8 with BothCounters); thresholds 0,2,4,6 (+ odd with BothCounters); special sensor. | Keep `Colour=0` unless ASI enables spectral hardware. |
-| **`BothCounters`** | **Not recommended by default.** If used: set to 1 with **th1 high (~250)**. | **`init_detector_hw_mpx3.cmd`** (Accos / IXS dual-threshold) is a **separate opt-in profile**, not Erik’s default. |
+| **`BothCounters`** | **Not recommended by default.** If used: set to 1 with **th1 high (~250)**. | **`profiles/mpx3/init/hw.cmd`** (Accos / IXS dual-threshold) is a **separate opt-in profile**, not Erik’s default. |
 | **`IDelayConfig`** | Standard values; manual per-system tuning **no longer required**. | `[15,15,15,10]` in IOC defaults remains fine. |
 
 Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). BPC/mask layout and destination reference docs — **still open** (Email 2).
@@ -539,7 +539,7 @@ Serval `GET http://localhost:8081/` shows `Server.Destination`:
 |-------------|--------------|--------------|
 | `Preview.ImageChannels[0]` (`PrvImg`) | Yes — `prvImgWorker` TCP client, NDArray/PVA | `WritePrvImg=1`, TCP 8088 |
 | `Preview.ImageChannels[1]` (`PrvImg1`) | Yes — `prvImg1Worker` TCP client | `WritePrvImg1=1`, TCP 8089 |
-| `Image[]` (full-rate) | `imgWorker` when TCP + accumulation | TCP **8086**, `WriteImg=0` (opt-in `init_detector_img_mpx3.cmd`) |
+| `Image[]` (full-rate) | `imgWorker` when TCP + accumulation | TCP **8086**, `WriteImg=0` (opt-in `profiles/mpx3/init/img.cmd`) |
 
 The reference `serval_mpx3.json` and the **Serval manual** (destination example, §4 / pp. 18–19) configure **two preview TCP streams**: current frame and an image **integrated from the start of the measurement**. The MPX3 IOC profile (`st_mpx3.cmd`) enables **both** channels: `WritePrvImg=1` on TCP **8088** (`prvImgWorker`) and `WritePrvImg1=1` on TCP **8089** (`prvImg1Worker`). Each stream must have an IOC TCP client during acquire — if Serval pushes to 8089 with no reader, Serval logs **`Preview buffer full`** and repeat acquire can fail.
 
@@ -552,7 +552,7 @@ curl -s http://localhost:8081/ | python3 -m json.tool | grep -A6 ImageChannels
 caget MPX3-TEST:cam1:WritePrvImg MPX3-TEST:cam1:WritePrvImg1
 ```
 
-Both should read **1** after `init_detector_paths_mpx3.cmd` and `WriteData=1`.
+Both should read **1** after `profiles/mpx3/init/paths.cmd` and `WriteData=1`.
 
 **If you disable integrated preview:** set `WritePrvImg1=0`, run `WriteData=1`, and restart acquire so Serval stops binding 8089. Leaving 8089 enabled in Serval destination without an IOC reader will fill the preview queue.
 
@@ -564,7 +564,7 @@ On first boot (before `WriteData=1`), Serval may log many:
 
 `Failed HTTP request GET /server/destination … Destination is not set.`
 
-This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a readback from Serval before `init_detector_hw_mpx3.cmd` pushes the destination. Harmless; it stops after `WriteData=1`.
+This is expected: init `dbpf` on `WriteRaw` / `WritePrvImg` / … PVs triggers a readback from Serval before `profiles/mpx3/init/hw.cmd` pushes the destination. Harmless; it stops after `WriteData=1`.
 
 ## How Medipix3 preview images differ from Timepix3
 
@@ -605,7 +605,7 @@ Each jsonimage line on the wire is: JSON header + binary pixel array. The driver
 
 | Field | Role | Notes |
 |-------|------|-------|
-| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low, mbbo 0–3). **`HGM`**: calibrated ~10 keV (Accos recipe, `init_detector_hw_mpx3.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`init_detector_hw_mpx3_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** mbbo → `PUT /detector/config`. |
+| **`GainMode`** | Pre-amplifier gain on the Medipix3 chip | Serval **`Config.GainMode`** string. Erik Aug 2026 enum: **`SHGM`**, **`HGM`**, **`LGM`**, **`SLGM`** (super-high → super-low, mbbo 0–3). **`HGM`**: calibrated ~10 keV (Accos recipe, `profiles/mpx3/init/hw.cmd`). **`SLGM`**: uncalibrated frame / equalization tests (`profiles/mpx3/init/hw_equalize.cmd`). Driver family default on connect: **`SHGM`** (emulator) / **`HGM`** (MPX3 applyFamilyDefaults). Written via **`GainMode`** mbbo → `PUT /detector/config`. |
 | **`Preview period`** | Throttle live preview rate | Serval **`Preview.Period`** (seconds), separate from **`TriggerPeriod`**. Set via **`PrvPeriod`** PV; pushed on **`WriteData`**. Erik’s working UI used **0.5 s** preview period with **0.5 s** trigger period. **`PrvSmplgMode`**: `skipOnFrame` (0) or `skipOnPeriod` (1). |
 | **`BiasVoltage`** | Sensor bias | Erik: **100 V**. Low values (e.g. 12) can prevent useful counts on hardware/emulator. |
 | **`PixelDepth`** | Counter bit depth | Erik / IXS default: **12**. OpenAPI: **1, 6, 12, 24**; **24** incompatible with **`BothCounters`** and **CONTINUOUS**. IOC mbbo exposes all four; driver passes values through to Serval. Init: `dbpf … PixelDepth 2` (12-bit index), or `caput … 12`. |

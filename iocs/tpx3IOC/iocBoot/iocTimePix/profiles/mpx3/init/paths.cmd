@@ -12,7 +12,7 @@ dbpf("$(PREFIX)cam1:Raw1FileTemplate","raw%MdHms_")
 dbpf("$(PREFIX)cam1:WriteRaw1","0")
 
 # Image[0] full-rate TCP (family port 8086). Opt-in: WriteImg=0 until archive/analysis needed.
-# Enable with: < init_detector_img_mpx3.cmd   (WriteImg=1, ImgAccumulationEnable=1, WriteData=1)
+# Enable with: < profiles/mpx3/init/img.cmd   (WriteImg=1, ImgAccumulationEnable=1, WriteData=1)
 dbpf("$(PREFIX)cam1:ImgFilePath","tcp://listen@localhost:8086")
 dbpf("$(PREFIX)cam1:ImgFileTemplate","f%MdHms_")
 dbpf("$(PREFIX)cam1:ImgFileFmt","3")    # jsonimage (must match Preview Mode/Format scheme for TCP)

@@ -157,7 +157,7 @@ Using one plugin avoids ambiguity from multiple plugin instances pre-bound to di
   - `2` = Img running sum
   - `3` = Img sum-of-last-N
 - `ImgFramesToSum = 10`
-- For strict single-plugin tests, addr2/addr3 helper plugin instances in `st_base.cmd` were commented out.
+- For strict single-plugin tests, addr2/addr3 helper plugin instances in `profiles/tpx3/st.cmd` were commented out.
 
 ### HDF5 result (single `HDF1`, runtime address changes)
 

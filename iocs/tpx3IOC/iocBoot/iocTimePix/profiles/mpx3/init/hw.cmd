@@ -1,5 +1,5 @@
 # Push Medipix3 calibration and Erik-validated dual-threshold acquisition defaults to SERVAL.
-# BPC/DACS paths: init_detector_paths_mpx3.cmd ($(ADTIMEPIX)/vendor/mpx3/).
+# BPC/DACS paths: profiles/mpx3/init/paths.cmd ($(ADTIMEPIX)/vendor/mpx3/).
 # Recipe: documentation/medipix3/integration.md (BothCounters, AutoTrgSt_TmrSp, 4 triggers @ 0.5 s).
 
 epicsThreadSleep(2)
@@ -20,7 +20,7 @@ dbpf("$(PREFIX)cam1:WriteBPCFile","1")
 epicsThreadSleep(2)
 dbpf("$(PREFIX)cam1:WriteDACSFile","1")
 
-# Push destination (PrvImgThs 0,1 from init_detector_paths_mpx3.cmd) after detector config
+# Push destination (PrvImgThs 0,1 from profiles/mpx3/init/paths.cmd) after detector config
 epicsThreadSleep(2)
 dbpf("$(PREFIX)cam1:WriteData","1")
 
@@ -33,5 +33,5 @@ dbpf("$(PREFIX)Pva6:EnableCallbacks","1")
 dbpf("$(PREFIX)Stats5:EnableCallbacks","1")
 
 # Enable NDStats row/column profiles for Phoebus (ADCore NDStatsProfiles.template).
-# Requires < $(ADCORE)/iocBoot/stats_profiles.cmd before iocInit (see st_mpx3.cmd).
+# Requires stats_profiles.cmd before iocInit (see profiles/mpx3/st.cmd).
 dbpf("$(PREFIX)$(STATS_PROF_R)StatsProfInit_.PROC","1")
