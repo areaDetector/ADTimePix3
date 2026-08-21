@@ -26,7 +26,7 @@ On a **4-chip MPX3 quad** with **`BothCounters`**, Serval **`GET /detector/chips
 
 Each slice is **1 byte per pixel** (256×256). The two slices are **independent** (byte values differ between th0 and th1 on most pixels). Conceptually **two config bytes per image pixel per chip**, stored as **concatenated slices** `[th0 block][th1 block]`, not as interleaved byte pairs.
 
-**Byte semantics (important):** On **`vendor/tpx3-demo.bpc`**, Accos bad pixels are **byte value 31** (`0b00011111`), not “any bit-0 set” — see below. On **`vendor/mpx3/eq-01.bpc`**, ~25% of bytes per slice have bit 0 set (values 1, 3, 5, 7) in **clustered** patterns consistent with **equalization/trim encoding**, not ~10 scattered dead pixels per chip. **Do not assume MPX3 bit 0 = disable counting** until ASI documents the bit map (Email 2). The driver’s legacy **`BPCn`** / bit-0 export must not be used as an MPX3 bad-pixel list.
+**Byte semantics (important):** On **`vendor/tpx3/2x2/tpx3-demo.bpc`**, Accos bad pixels are **byte value 31** (`0b00011111`), not “any bit-0 set” — see below. On **`vendor/mpx3/eq-01.bpc`**, ~25% of bytes per slice have bit 0 set (values 1, 3, 5, 7) in **clustered** patterns consistent with **equalization/trim encoding**, not ~10 scattered dead pixels per chip. **Do not assume MPX3 bit 0 = disable counting** until ASI documents the bit map (Email 2). The driver’s legacy **`BPCn`** / bit-0 export must not be used as an MPX3 bad-pixel list.
 
 **Mask code:** Timepix3 paths in `mask_io.cpp` assume one slice; Medipix3 needs **`DetectorFamily::MPX3`** / `bpcThresholdSlices == 2` (see `detector_family.h`) for chip stride, `RefreshPixelConfig`, and threshold-aware `pelIndex`.
 
@@ -36,7 +36,7 @@ Each slice is **1 byte per pixel** (256×256). The two slices are **independent*
 
 ## Timepix3 Accos bad pixels vs operator mask (Aug 2026)
 
-On **`vendor/tpx3-demo.bpc`** (4-chip quad, 66 bad pixels total):
+On **`vendor/tpx3/2x2/tpx3-demo.bpc`** (4-chip quad, 66 bad pixels total):
 
 - Every Accos bad pixel has **byte value 31** (`0b00011111`, bits 0–4 set). **Bit 0 alone is not the Accos disable pattern** — e.g. 6073 pixels at value 30 (`0b11110`) are not masked.
 - The IOC **`BPCn`** / “read from bpc” path counts **bit 0**; on this file that matches 31 (bit 0 ⟺ 31), but **edited** files (`mask.bpc`) can have bit 0 without 31 from operator **`|= bit0`** mask writes.

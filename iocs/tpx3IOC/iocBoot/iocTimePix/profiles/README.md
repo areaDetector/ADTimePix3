@@ -22,6 +22,8 @@ iocBoot/iocTimePix/
     tpx3/  mpx3/  tpx4/
 ```
 
+Calibration files: `vendor/tpx3/`, `vendor/mpx3/`, `vendor/tpx4/` (see `vendor/README.md`).
+
 ## Profile contract
 
 Each `profiles/<family>/st.cmd` follows the same sequence:

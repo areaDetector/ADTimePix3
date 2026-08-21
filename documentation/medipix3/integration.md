@@ -38,7 +38,7 @@ Medipix3 work is **additive**: one driver binary serves both families. After `GE
 | Layer | Timepix3 (TPX3) | Medipix3 (MPX3) |
 |--------|-----------------|-----------------|
 | IOC startup | `st.cmd` → `profiles/tpx3/`, `profiles/tpx3/init/` | `st_mpx3.cmd` → `profiles/mpx3/` |
-| Calibration | `vendor/tpx3-*` (via `profiles/tpx3/init/paths.cmd`) | `vendor/mpx3/` |
+| Calibration | `vendor/tpx3/` (via `profiles/tpx3/init/paths.cmd`) | `vendor/mpx3/` |
 | Phoebus | `TimePix3.bob`; legacy `op/opi/*.opi` (CSS) | `MediPix3/*.bob` |
 | NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva8; addrs **0**, **1**, **8**–**13** |
 
@@ -130,7 +130,7 @@ See **[Operator reference § Fresh-start checklist](#fresh-start-checklist)** fo
 
 ## Calibration files (`vendor/mpx3/`)
 
-Default MPX3 BPC/DACS ship under `vendor/mpx3/` (not `vendor/tpx3-demo.*`):
+Default MPX3 BPC/DACS ship under `vendor/mpx3/` (not `vendor/tpx3/2x2/tpx3-demo.*`):
 
 | File | Role |
 |------|------|

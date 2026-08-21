@@ -86,7 +86,7 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 R1-6-2 (April 29, 2026)
 --------
 
-* **IOC boot -- deployment-independent calibration paths**: `iocs/tpx3IOC/iocBoot/iocTimePix/init_detector.cmd` sets `BPCFilePath` and `DACSFilePath` using `$(ADTIMEPIX)/vendor/` (with `tpx3-demo.bpc` / `tpx3-demo.dacs`) instead of hard-coded site paths, so the same script works when the module is installed under different trees.
+* **IOC boot -- deployment-independent calibration paths**: `profiles/tpx3/init/paths.cmd` sets `BPCFilePath` and `DACSFilePath` using `$(ADTIMEPIX)/vendor/tpx3/2x2/` (with `tpx3-demo.bpc` / `tpx3-demo.dacs`) instead of hard-coded site paths, so the same script works when the module is installed under different trees.
 
 * **Robustness -- HTTP error bodies vs JSON**: When SERVAL returns a non-success HTTP status (e.g. **409 Conflict**) or a body that is not JSON (plain text/HTML), the driver previously called `nlohmann::json::parse` on that body in several paths (**`writeDac`**, **`getHealth`**, **`initialServerCheckConnection`** dashboard handling, **`timePixCallback`** `/measurement` polling). That could throw an uncaught **`json::parse_error`** and **abort the IOC** (`SIGABRT`). The driver now checks HTTP status where appropriate, parses JSON only for successful responses, and catches parse exceptions so the IOC logs an error and continues. Operators should still fix SERVAL/detector connectivity; behavior is unchanged when responses are valid JSON.
 

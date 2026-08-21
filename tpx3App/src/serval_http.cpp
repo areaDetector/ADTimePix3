@@ -1686,7 +1686,7 @@ asynStatus ADTimePix::uploadDACS(){
     FLOW("Initializing Chips/DACS detector information");
     std::string dacs_file, filePath, fileName;
 
-//    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.dacs");
+//    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(".../vendor/tpx3/2x2/tpx3-demo.dacs");
     getStringParam(ADTimePixDACSFilePath, filePath);
     getStringParam(ADTimePixDACSFileName, fileName);
     dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(filePath) + std::string(fileName);
@@ -2431,8 +2431,8 @@ asynStatus ADTimePix::initCamera(){
     std::string config, bpc_file, dacs_file;
 
     config = this->serverURL + std::string("/detector/config");
-    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.bpc");
-    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/src/RHEL8/support/areaDetector/ADTimePix/vendor/tpx3-demo.dacs");
+    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/support2/areaDetector/ADTimePix3/vendor/tpx3/2x2/tpx3-demo.bpc");
+    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/support2/areaDetector/ADTimePix3/vendor/tpx3/2x2/tpx3-demo.dacs");
 
     printf("\n\ninitCamera0: http_code = \n");
     cpr::Response r = ADTimePix3ServalHttp::getAuthOnly(bpc_file);

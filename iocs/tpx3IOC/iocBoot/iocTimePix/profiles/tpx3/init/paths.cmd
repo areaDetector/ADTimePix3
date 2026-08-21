@@ -65,14 +65,14 @@ dbpf("$(PREFIX)cam1:PrvHstStpOnDskLim","0")   # false
 dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 
 # Calibration file locations (PVs only; upload happens in profiles/tpx3/init/hw.cmd)
-# One Chip calibration (uncomment this block and comment out "Four chip" below)
+# One chip (256×256). Uncomment this block and comment out "Four chip" below.
 # Paths must end with / — driver concatenates path + filename with no separator.
-#dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/oneChip/")
+#dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/tpx3/1x1/")
 #dbpf("$(PREFIX)cam1:BPCFileName","eq.bpc")       # load BPC calibration
-#dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/oneChip/")
+#dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/tpx3/1x1/")
 #dbpf("$(PREFIX)cam1:DACSFileName","eq.dacs")     # load DACS calibration
-# Four chip calibration
-dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/")
+# Four chip (512×512) — default demo calibration
+dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/tpx3/2x2/")
 dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")     # load BPC calibration
-dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/")
+dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/tpx3/2x2/")
 dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo.dacs")     # load DACS calibration
