@@ -20,10 +20,36 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest release is **R1-7-0** (driver **1.7.0**, unified TPX3 + MPX3); tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-0** (August 11, 2026, driver **1.7.0**). **R1-7-1** (driver **1.7.1**, August 2026) is documented below and in progress on `master`. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
-R1-7-0 (August 2026)
+R1-7-1 (August 2026)
+--------
+
+Driver / user-visible version **1.7.1** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+Patch release after **R1-7-0**: driver fixes, IOC boot layout, and calibration/template path cleanup. **No Serval API change**; rebuild driver and update IOC startup paths if you use custom scripts.
+
+* **PipelineState / dashboard sync (TPX3 + MPX3)**:
+  * **`PipelineState_RBV`**: enum labels via driver **`readEnum()`**; removed invalid **`FTHS`/`FTVL`** from `Measurement.template`.
+  * Parse **`Measurement.Status`** from GET **`/dashboard`** (flat JSON) and GET **`/measurement`** (`Info.Status`); do not overwrite idle state with **Unknown** when dashboard **`Measurement`** is null after stop.
+  * Default **`PipelineState`** to **Unknown** (-1) at driver init; **`RefreshConnection`** at end of profile **`init/detector.cmd`** scripts.
+* **Autosave (profile-specific)**:
+  * Split **`auto_settings.req`** into TPX3 and MPX3 lists so TPX3 startup does not monitor MPX3-only plugin PVs.
+  * **`create_monitor_set`**: use **`set_requestfile_path("profiles/<family>")`** + basename **`auto_settings.req`** so **`.sav`** files land in **`./autosave/<family>/`** (not nested **`profiles/…`** paths).
+* **IOC boot — profile layout (Option C)**:
+  * **`profiles/tpx3/`**, **`profiles/mpx3/`**, shared **`common/st_core.cmd`**; thin launchers **`st.cmd`** / **`st_mpx3.cmd`**.
+  * Legacy **`init_detector*.cmd`** remain as shims; MPX3 plugins in **`profiles/mpx3/plugins_mpx3.cmd`**.
+  * Fix missing quote on **`FileHDFImgT1`** in **`plugins_mpx3.cmd`**.
+* **File-plugin XML templates**:
+  * **`templates/hdf5/`** (NDFileHDF5 `hdf5_layout`: **`hdf5_minimal.xml`**, **`hdf5_prvhst_histogram.xml`**) and **`templates/nexus/`** (NDFileNexus **`plugin_template.xml`**).
+  * NDFileNexus templates isolated for possible ADCore deprecation in favour of NeXus-metadata HDF5 layouts.
+* **Vendor calibration layout**:
+  * **`vendor/tpx3/1x1/`** (was **`oneChip/`**), **`vendor/tpx3/2x2/`** (demo **`tpx3-demo.*`**), **`vendor/mpx3/`** unchanged, **`vendor/tpx4/`** placeholder.
+  * **`profiles/tpx3/init/paths.cmd`** updated; runtime **`mask.bpc`** and **`*_masked_pels.json`** still written under active **`BPCFilePath`**.
+
+
+R1-7-0 (August 11, 2026)
 --------
 
 Driver / user-visible version **1.7.0** (see `ADTIMEPIX_*` in `ADTimePix.h`).

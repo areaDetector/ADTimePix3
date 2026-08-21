@@ -10,7 +10,7 @@ Notes
 -----
 
 * **ADServal**: unified EPICS areaDetector driver for ASI pixel detectors on Serval (TimePix3, Medipix3; TimePix4 planned). Shipped from module/repository **ADTimePix3**. See ``documentation/NAMING.md``.
-* Latest release: **R1-7-0** (driver **1.7.0**, August 2026). See ``RELEASE.md`` in the repository for full release notes.
+* Latest release: **R1-7-1** (driver **1.7.1**, August 2026). See ``RELEASE.md`` in the repository for full release notes.
 * Depends on the CPR version **1.14.2** (bundled under ``tpx3Support``).
 * Build baseline for bundled CPR is **C++17** (``-std=c++17`` in ``tpx3Support`` and ``tpx3App/src`` Makefiles).
 * Depends on the json version v3.11.2 (bundled under ``tpx3Support``).
