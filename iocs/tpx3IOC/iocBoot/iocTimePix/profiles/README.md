@@ -11,6 +11,9 @@ iocBoot/iocTimePix/
   envPaths, load_chips.cmd
   common/
     st_core.cmd          # driver + cam1 DB + Image1 (all families)
+  templates/
+    hdf5/                # NDFileHDF5 hdf5_layout XML
+    nexus/               # NDFileNexus NXroot templates (legacy; see templates/README.md)
   profiles/
     tpx3/                # Timepix3
     mpx3/                # Medipix3

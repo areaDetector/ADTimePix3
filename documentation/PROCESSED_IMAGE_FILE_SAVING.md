@@ -254,9 +254,9 @@ This message means **`NDWriteFile` ran while the HDF plugin had no NDArray latch
 
 Practical options:
 
-- **Uniform bins:** NDArrays on **4** and **5** include attributes **`PrvHstTimeBin0Ms`**, **`PrvHstTimeBinStepMs`**, **`PrvHstNumBins`**. You can store counts from address **5** and add the axis scalars as extra datasets in the HDF5 layout (`source="ndattribute"`). The repository includes **`iocs/tpx3IOC/iocBoot/iocTimePix/nexus_prvhst_histogram.xml`** as an example (counts + three scalar datasets). Reconstruct \(t_i = \texttt{time\_bin0\_ms} + i \times \texttt{time\_bin\_step\_ms}\).
+- **Uniform bins:** NDArrays on **4** and **5** include attributes **`PrvHstTimeBin0Ms`**, **`PrvHstTimeBinStepMs`**, **`PrvHstNumBins`**. You can store counts from address **5** and add the axis scalars as extra datasets in the HDF5 layout (`source="ndattribute"`). The repository includes **`iocs/tpx3IOC/iocBoot/iocTimePix/templates/hdf5/hdf5_prvhst_histogram.xml`** as an example (counts + three scalar datasets). Reconstruct \(t_i = \texttt{time\_bin0\_ms} + i \times \texttt{time\_bin\_step\_ms}\).
 - **Full `PrvHstHistogramTimeMs` vector:** use a **second** NDFileHDF5 record with **`NDArrayAddress=7`**, or merge two HDF5 files / copy the `/entry/data` group from the second file into the first with **h5py** / **HDF5 tools**.
-- **`nexus_minimal.xml`:** Still valid for storing the **counts** NDArray; rename the dataset or interpretation in XML if you prefer (optional). It does **not** by itself add the time vector; use attributes as above or a second plugin instance.
+- **`hdf5_minimal.xml`** (under `templates/hdf5/`): Still valid for storing the **counts** NDArray; rename the dataset or interpretation in XML if you prefer (optional). It does **not** by itself add the time vector; use attributes as above or a second plugin instance.
 
 ## Summary
 

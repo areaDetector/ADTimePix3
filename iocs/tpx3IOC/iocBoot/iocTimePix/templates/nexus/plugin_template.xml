@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   NDFileNexus (areaDetector) template. This is NOT NDFileHDF5 hdf5_layout XML.
+  File: templates/nexus/plugin_template.xml (was nexus_plugin_template.xml at boot root).
 
   Root must be NXroot. NXentry, NXdata, one dataset with type="pArray".
   EPICS: set TemplateFilePath (directory, trailing slash) + TemplateFileName.

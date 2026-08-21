@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <hdf5_layout>
   <!--
-    Schema-compliant NDFileHDF5 XML with NeXus-style attributes.
+    NDFileHDF5 hdf5_layout: NeXus-style NX_class attributes on groups/datasets.
+    File: templates/hdf5/hdf5_minimal.xml (was nexus_minimal.xml at boot root).
     Note: ADCore schema does not support a root-level "default" attribute.
   -->
 

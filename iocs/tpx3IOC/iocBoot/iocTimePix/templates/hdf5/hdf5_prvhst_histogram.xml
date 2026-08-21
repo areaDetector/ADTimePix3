@@ -2,6 +2,7 @@
 <hdf5_layout>
   <!--
     PrvHst running-sum / sum-of-N NDArray (address 4 or 5) with uniform ToF axis metadata.
+    File: templates/hdf5/hdf5_prvhst_histogram.xml (was nexus_prvhst_histogram.xml).
 
     The counts come from the incoming NDArray (det_default). Bin centers can be reconstructed as:
       t[i] = PrvHstTimeBin0Ms + i * PrvHstTimeBinStepMs
