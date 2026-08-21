@@ -24,6 +24,8 @@ iocBoot/iocTimePix/
 
 Calibration files: `vendor/tpx3/`, `vendor/mpx3/`, `vendor/tpx4/` (see `vendor/README.md`).
 
+Phoebus screens mirror this layout under `tpx3App/op/bob/` (see `tpx3App/op/bob/README.md`).
+
 ## Profile contract
 
 Each `profiles/<family>/st.cmd` follows the same sequence:
