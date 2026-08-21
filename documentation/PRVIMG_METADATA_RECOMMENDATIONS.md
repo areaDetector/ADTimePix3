@@ -15,7 +15,7 @@ This document recorded which metadata from **jsonimage** TCP streaming was worth
 | Pixel format | `FRAME_PIXEL_FORMAT` | `NDDataType` | As before |
 | Frame loss (optional) | — | (none dedicated) | **Not implemented** as a first-class PV; still a possible enhancement |
 
-**Monitoring screen:** `tpx3App/op/bob/Acquire/PrvImgMonitor.bob` exists and is included from `TimePix3Status.bob` (see embedded file reference in that BOB). The earlier “Phase 2: create PrvImgMonitor.bob” plan is **done** at least at the level of a dedicated screen; extend that screen if new PVs are added.
+**Monitoring screen:** `tpx3App/op/bob/profiles/tpx3/Acquire/PrvImgMonitor.bob` exists and is included from `profiles/tpx3/TimePix3Status.bob` (see embedded file reference in that BOB). The earlier “Phase 2: create PrvImgMonitor.bob” plan is **done** at least at the level of a dedicated screen; extend that screen if new PVs are added.
 
 ## Original jsonimage header (reference)
 

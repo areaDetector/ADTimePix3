@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
-  <name>MediPix3LegacyPath</name>
+  <name>MediPix3</name>
   <macros>
     <P>MPX3-TEST:</P>
     <R>cam1:</R>
@@ -11,7 +11,7 @@
   <height>915</height>
   <widget type="embedded" version="2.0.0">
     <name>MediPix3Profile</name>
-    <file>../profiles/mpx3/main.bob</file>
+    <file>profiles/mpx3/main.bob</file>
     <width>715</width>
     <height>915</height>
     <resize>4</resize>

@@ -77,7 +77,7 @@ See **[COORDINATE_MAP.md](COORDINATE_MAP.md)** for `pelIndex` vs `bpc2ImgIndex`,
 ## Related PVs and UI
 
 - **`RefreshPixelConfig`**: `Dashboard.template`; forward-links to **`PixelConfigDiff.PROC`** so the waveform record processes after the driver updates the buffer.
-- **Phoebus**: `tpx3App/op/bob/Mask/PixelConfigMaskPanel.bob` (embedded from `Mask.bob`).
+- **Phoebus**: `tpx3App/op/bob/common/Mask/PixelConfigMaskPanel.bob` (embedded from `Mask.bob`).
 
 ## Release history
 

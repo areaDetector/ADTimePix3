@@ -58,7 +58,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>Linking Container_8</name>
-    <file>Detector/TimePixDetectorHealth.opi</file>
+    <file>../../common/Detector/TimePixDetectorHealth.bob</file>
     <x>2</x>
     <y>35</y>
     <width>350</width>
@@ -75,7 +75,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>Linking Container_10</name>
-    <file>Detector/TimePixDetectorInfo.opi</file>
+    <file>../../common/Detector/TimePixDetectorInfo.opi</file>
     <x>2</x>
     <y>300</y>
     <width>350</width>
@@ -92,7 +92,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>Linking Container_11</name>
-    <file>Detector/TimePixDetectorConfig.opi</file>
+    <file>../../common/Detector/TimePixDetectorConfig.opi</file>
     <x>359</x>
     <y>33</y>
     <width>350</width>
@@ -112,7 +112,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP0</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>725</x>
     <y>30</y>
     <width>200</width>
@@ -146,7 +146,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>725</x>
     <y>570</y>
     <width>200</width>
@@ -180,7 +180,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP1</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>930</x>
     <y>30</y>
     <width>200</width>
@@ -214,7 +214,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP3</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>930</x>
     <y>570</y>
     <width>200</width>
@@ -248,7 +248,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP4</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>1135</x>
     <y>30</y>
     <width>200</width>
@@ -282,7 +282,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP5</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>1340</x>
     <y>30</y>
     <width>200</width>
@@ -316,7 +316,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP6</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>1135</x>
     <y>570</y>
     <width>200</width>
@@ -350,7 +350,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP7</Chip>
     </macros>
-    <file>Detector/TimePixDetectorChip.opi</file>
+    <file>../../common/Detector/TimePixDetectorChip.opi</file>
     <x>1340</x>
     <y>570</y>
     <width>200</width>
@@ -384,7 +384,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
-    <file>Detector/TimePixDetectorLayout.opi</file>
+    <file>../../common/Detector/TimePixDetectorLayout.opi</file>
     <x>360</x>
     <y>525</y>
     <width>350</width>
@@ -404,7 +404,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
-    <file>Measurement/MeasurementInfo.opi</file>
+    <file>../../common/Measurement/MeasurementInfo.opi</file>
     <x>360</x>
     <y>690</y>
     <width>350</width>
@@ -421,7 +421,7 @@ $(pv_value)</tooltip>
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>Linking Container_MeasurementConfig</name>
-    <file>Measurement/MeasurementConfig.bob</file>
+    <file>../../common/Measurement/MeasurementConfig.bob</file>
     <x>360</x>
     <y>955</y>
     <width>360</width>
@@ -441,7 +441,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
-    <file>Measurement/Dashboard.opi</file>
+    <file>../../common/Measurement/Dashboard.opi</file>
     <x>2</x>
     <y>910</y>
     <width>350</width>

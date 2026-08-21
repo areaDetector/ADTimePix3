@@ -17,4 +17,4 @@ Reference in markdown (used in [integration.md](../integration.md)):
 ![Preview monitor](screenshots/Mpx3_preview_monitor.png)
 ```
 
-Bob files live under `tpx3App/op/bob/MediPix3/`.
+Bob files live under `tpx3App/op/bob/profiles/mpx3/` (launcher: `MediPix3.bob`).

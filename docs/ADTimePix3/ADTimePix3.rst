@@ -10,7 +10,7 @@ Notes
 -----
 
 * **ADServal**: unified EPICS areaDetector driver for ASI pixel detectors on Serval (TimePix3, Medipix3; TimePix4 planned). Shipped from module/repository **ADTimePix3**. See ``documentation/NAMING.md``.
-* Latest release: **R1-7-1** (driver **1.7.1**, August 21, 2026). See ``RELEASE.md`` in the repository for full release notes.
+* Latest release: **R1-7-2** (driver **1.7.2**, August 21, 2026). See ``RELEASE.md`` in the repository for full release notes.
 * Depends on the CPR version **1.14.2** (bundled under ``tpx3Support``).
 * Build baseline for bundled CPR is **C++17** (``-std=c++17`` in ``tpx3Support`` and ``tpx3App/src`` Makefiles).
 * Depends on the json version v3.11.2 (bundled under ``tpx3Support``).
@@ -39,7 +39,7 @@ How to run
 
   #. Run ``./st.cmd`` or ``./st_mpx3.cmd``
 
-* Operator screens are under ``tpx3App/op/bob/`` (Phoebus) and ``tpx3App/op/opi/`` (legacy CS-Studio). Main screens: ``TimePix3.bob`` (TPX3), ``MediPix3/MediPix3.bob`` (MPX3). Layout plan: ``tpx3App/op/bob/README.md``.
+* Operator screens are under ``tpx3App/op/bob/`` (Phoebus) and ``tpx3App/op/opi/`` (legacy CS-Studio). Main screens: ``TimePix3.bob`` (TPX3), ``MediPix3.bob`` or ``MediPix3/MediPix3.bob`` (MPX3). Layout: ``tpx3App/op/bob/README.md``.
 
 
 Adjust chip thresholds

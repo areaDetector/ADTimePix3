@@ -1278,7 +1278,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP0</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>40</y>
     <width>250</width>
@@ -1312,7 +1312,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP1</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>140</y>
     <width>250</width>
@@ -1346,7 +1346,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP2</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>240</y>
     <width>250</width>
@@ -1380,7 +1380,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP3</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>340</y>
     <width>250</width>
@@ -1414,7 +1414,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP4</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>440</y>
     <width>250</width>
@@ -1448,7 +1448,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP5</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>530</y>
     <width>250</width>
@@ -1482,7 +1482,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP6</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>620</y>
     <width>250</width>
@@ -1516,7 +1516,7 @@ $(pv_value)</tooltip>
     <macros>
       <Chip>CHIP7</Chip>
     </macros>
-    <file>../Detector/TimePixVthChip.opi</file>
+    <file>../../../common/Detector/TimePixVthChip.bob</file>
     <x>485</x>
     <y>710</y>
     <width>250</width>
@@ -1563,7 +1563,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_file">
         <description>Serval 3_3</description>
-        <file>../Documentation/20231023_TPX3_V3.3.pdf</file>
+        <file>../../../Documentation/20231023_TPX3_V3.3.pdf</file>
       </action>
     </actions>
     <x>755</x>
@@ -1605,7 +1605,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_file">
         <description>Trigger user guide</description>
-        <file>../Documentation/Trigger_mode_user_guide.pdf</file>
+        <file>../../../Documentation/Trigger_mode_user_guide.pdf</file>
       </action>
     </actions>
     <x>755</x>
@@ -1623,7 +1623,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_file">
         <description>TPX3Cam v2.4</description>
-        <file>../Documentation/20211215_TPX3Cam_V2.4.pdf</file>
+        <file>../../../Documentation/20211215_TPX3Cam_V2.4.pdf</file>
       </action>
     </actions>
     <x>755</x>
@@ -1641,7 +1641,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_file">
         <description>TriggerBox v1.3.0</description>
-        <file>../Documentation/TriggerBox_C4_v1.3.0.pdf</file>
+        <file>../../../Documentation/TriggerBox_C4_v1.3.0.pdf</file>
       </action>
     </actions>
     <x>755</x>
@@ -1702,7 +1702,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Serval</description>
-        <file>../tpx3serval.bob</file>
+        <file>../../tpx3serval.bob</file>
         <macros>
           <R>Serval:</R>
         </macros>
@@ -1726,7 +1726,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Emulator</description>
-        <file>../Emulator/emulator.bob</file>
+        <file>../../Emulator/emulator.bob</file>
         <target>tab</target>
       </action>
     </actions>
@@ -1747,7 +1747,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Histogram</description>
-        <file>../tpx3histogram.bob</file>
+        <file>../../tpx3histogram.bob</file>
         <macros>
           <R>Emulator:</R>
         </macros>
@@ -1771,7 +1771,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Diagnostics</description>
-        <file>../tpx3diagnostics.bob</file>
+        <file>../../tpx3diagnostics.bob</file>
         <macros>
           <R>Emulator:</R>
         </macros>
@@ -1795,7 +1795,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Image</description>
-        <file>../tpx3image.bob</file>
+        <file>../../tpx3image.bob</file>
         <macros>
           <R>Emulator:</R>
         </macros>
@@ -1819,7 +1819,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>ADimage</description>
-        <file>../ADtpx3stream.bob</file>
+        <file>../../ADtpx3stream.bob</file>
         <macros>
           <R>Emulator:</R>
         </macros>
@@ -1843,7 +1843,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>ADhistogram</description>
-        <file>../ADtpx3streamHistogram.bob</file>
+        <file>../../ADtpx3streamHistogram.bob</file>
         <macros>
           <R>Emulator:</R>
         </macros>
@@ -1984,7 +1984,7 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Event</description>
-        <file>../Events/tpx3RawStream.bob</file>
+        <file>../../../Events/tpx3RawStream.bob</file>
         <macros>
           <R>raw:</R>
         </macros>

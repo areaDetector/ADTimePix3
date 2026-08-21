@@ -39,7 +39,7 @@ Medipix3 work is **additive**: one driver binary serves both families. After `GE
 |--------|-----------------|-----------------|
 | IOC startup | `st.cmd` → `profiles/tpx3/`, `profiles/tpx3/init/` | `st_mpx3.cmd` → `profiles/mpx3/` |
 | Calibration | `vendor/tpx3/` (via `profiles/tpx3/init/paths.cmd`) | `vendor/mpx3/` |
-| Phoebus | `TimePix3.bob`; legacy `op/opi/*.opi` (CSS) | `MediPix3/*.bob` |
+| Phoebus | `TimePix3.bob` → `profiles/tpx3/`; legacy `op/opi/*.opi` (CSS) | `MediPix3.bob` → `profiles/mpx3/` |
 | NDArray / PVA | Pva1; driver addrs **0**–**3** (typical) | Pva1–Pva8; addrs **0**, **1**, **8**–**13** |
 
 MPX3-only ND plugins (`imageTh1`, `imageInt1`, band-pass on addr 9/12, etc.) are loaded only in **`st_mpx3.cmd`**, not in the default Timepix3 startup.
@@ -101,7 +101,7 @@ Defaults (from `profiles/mpx3/init/detector.cmd`):
 - `PrvImg1` (integrated preview on 8089) — **`prvImg1WorkerThread`**, NDArray addr **10**/**11**, PVA **Pva3**/**Pva4**
 - BPC/DACS: `$(ADTIMEPIX)/vendor/mpx3/eq-01.bpc` and `eq-01.dacs` (uploaded in `profiles/mpx3/init/hw.cmd`)
 
-**Phoebus:** main screen is **`tpx3App/op/bob/MediPix3/MediPix3.bob`** (subdirectory `MediPix3/`, not `op/bob/MediPix3.bob`). Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: destination writer **`Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`: Img[0] 8086 + Img[1] file/8087 + HDF status strip); **`Acquire/Mpx3HdfImgConfig.bob`** (HDFImgT0/T1 path/Capture); **`Acquire/Mpx3ImgMonitor.bob`** (Pva7/Pva8 — low rate only); live preview images in `Acquire/Mpx3PrvImgMonitor.bob`; detector config in `Detector/Mpx3DetectorConfig.bob`. **`Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`** (under `op/bob/Detector`) cross-link for health readbacks. For `PrvImgThs` / `ImgThs` / `Img1Ths` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
+**Phoebus:** main screen is **`tpx3App/op/bob/MediPix3.bob`** (launcher) or legacy path **`MediPix3/MediPix3.bob`** — both embed **`profiles/mpx3/main.bob`**. Defaults **`P=MPX3-TEST:`**, **`R=cam1:`**. Related: **`profiles/mpx3/Acquire/Mpx3ServerFileWriter.bob`** embeds **Preview** (`Mpx3PreviewChannels.bob`, 8088/8089) and **Image[]** (`Mpx3ImageChannels.bob`: Img[0] 8086 + Img[1] file/8087 + HDF status strip); **`Mpx3HdfImgConfig.bob`** (HDFImgT0/T1 path/Capture); **`Mpx3ImgMonitor.bob`** (Pva7/Pva8 — low rate only); live preview in **`Mpx3PrvImgMonitor.bob`**; detector config in **`profiles/mpx3/Detector/Mpx3DetectorConfig.bob`**. Shared health: **`common/Detector/TimePixDetectorHealth.bob`** and **`TimePixDetectorVoltages.bob`**. For `PrvImgThs` / `ImgThs` / `Img1Ths` (CHAR waveform), use the Phoebus text field or IOC `dbpf` — plain `caput` with a quoted string clears the array.
 
 Screenshots ([screenshots/](screenshots/)):
 

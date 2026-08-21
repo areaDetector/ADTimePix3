@@ -37,7 +37,7 @@
     <actions>
       <action type="open_display">
         <description>Detector status</description>
-        <file>../Detector/TimePixDetectorHealth.bob</file>
+        <file>../../common/Detector/TimePixDetectorHealth.bob</file>
         <target>tab</target>
       </action>
     </actions>
@@ -56,7 +56,7 @@
     <actions>
       <action type="open_display">
         <description>Load BPC/DACS</description>
-        <file>../Setup/FileBPCdacs.bob</file>
+        <file>../../common/Setup/FileBPCdacs.bob</file>
         <target>tab</target>
       </action>
     </actions>
@@ -113,7 +113,7 @@
     <actions>
       <action type="open_display">
         <description>Pixel mask</description>
-        <file>../Mask/Mask.bob</file>
+        <file>../../common/Mask/Mask.bob</file>
         <target>tab</target>
       </action>
     </actions>
@@ -190,7 +190,7 @@
     <actions>
       <action type="open_display">
         <description>Medipix3 emulator</description>
-        <file>../Emulator/emulator.bob</file>
+        <file>../../Emulator/emulator.bob</file>
         <target>tab</target>
       </action>
     </actions>

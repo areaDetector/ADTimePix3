@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>MediPix3</name>
+  <macros>
+    <P>MPX3-TEST:</P>
+    <R>cam1:</R>
+    <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
+    <pathADet>/home/controls/common/bob/main</pathADet>
+  </macros>
+  <x>292</x>
+  <y>47</y>
+  <width>715</width>
+  <height>915</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="rectangle" version="2.0.0">
+    <name>TitleBar</name>
+    <y>4</y>
+    <width>715</width>
+    <height>25</height>
+    <line_width>0</line_width>
+    <line_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </line_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>Medipix3 Area Detector — $(P)$(R)</text>
+    <y>5</y>
+    <width>715</width>
+    <height>25</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="14.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADSetupPanel</name>
+    <file>../../common/ADSetup.bob</file>
+    <x>2</x>
+    <y>35</y>
+    <width>350</width>
+    <height>235</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADShutterPanel</name>
+    <file>../../../../../../$(pathADCore)/ADShutter.opi</file>
+    <x>360</x>
+    <y>35</y>
+    <width>350</width>
+    <height>165</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ConnectionStatusPanel</name>
+    <file>../../common/ConnectionStatus.bob</file>
+    <x>360</x>
+    <y>200</y>
+    <width>350</width>
+    <height>65</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADCollectPanel</name>
+    <file>../../common/Acquire/ADCollect.bob</file>
+    <x>360</x>
+    <y>270</y>
+    <width>350</width>
+    <height>330</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADPluginsPanel</name>
+    <file>../../../../ADCore/R3-11/ADPlugins.opi</file>
+    <x>2</x>
+    <y>276</y>
+    <width>350</width>
+    <height>80</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADReadoutPanel</name>
+    <file>../../../../../../$(pathADCore)/ADReadout.opi</file>
+    <x>2</x>
+    <y>361</y>
+    <width>350</width>
+    <height>380</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADBuffersPanel</name>
+    <file>../../../../../../$(pathADCore)/ADBuffers.opi</file>
+    <x>360</x>
+    <y>605</y>
+    <width>350</width>
+    <height>160</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>ADAttrFilePanel</name>
+    <file>../../../../../../$(pathADCore)/ADAttrFile.opi</file>
+    <x>360</x>
+    <y>770</y>
+    <width>350</width>
+    <height>110</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>DetectorHealthPanel</name>
+    <file>../../common/Detector/TimePixDetectorHealth.bob</file>
+    <x>720</x>
+    <y>10</y>
+    <width>300</width>
+    <height>255</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>DetectorInfoPanel</name>
+    <file>../../common/Detector/TimePixDetectorInfo.opi</file>
+    <x>720</x>
+    <y>270</y>
+    <width>350</width>
+    <height>605</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Mpx3StatusPanel</name>
+    <file>Mpx3Status.bob</file>
+    <x>2</x>
+    <y>745</y>
+    <width>350</width>
+    <height>160</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+</display>

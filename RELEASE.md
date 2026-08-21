@@ -20,15 +20,23 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-1** (August 21, 2026, driver **1.7.1**). **R1-7-2** (driver **1.7.2**, planned) will reorganize Phoebus screens by detector family; see below. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-1** (August 21, 2026, driver **1.7.1**). **R1-7-2** (driver **1.7.2**, August 21, 2026) is documented below and in progress on `master`. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
-R1-7-2 (planned)
+R1-7-2 (August 21, 2026)
 --------
 
-Driver / user-visible version **1.7.2** (see `ADTIMEPIX_*` in `ADTimePix.h` when development starts).
+Driver / user-visible version **1.7.2** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
-Planned patch after **R1-7-1**: Phoebus **Display Builder** layout only — **no Serval API or IOC DB change**. Mirror IOC boot **Option C** under **`tpx3App/op/bob/`** (`common/` + **`profiles/tpx3/`** / **`profiles/mpx3/`**), with thin launchers at **`bob/`** root (**`TimePix3.bob`**, **`MediPix3.bob`**) for backward-compatible bookmarks. Current layout and migration plan: **`tpx3App/op/bob/README.md`**. Legacy **`op/opi/`** (CS-Studio) remains out of scope until a separate cleanup.
+Patch after **R1-7-1**: Phoebus **Display Builder** layout only — **no Serval API or IOC DB change**. Reorganize **`tpx3App/op/bob/`** to mirror IOC boot **Option C**:
+
+* **`common/`** — shared panels: **`ADSetup.bob`**, **`ConnectionStatus.bob`**, **`Acquire/ADCollect.bob`**, **`Detector/`**, **`Mask/`**, **`Setup/`**, **`Measurement/`** (macro-driven **`$(P)$(R)`**).
+* **`profiles/tpx3/`** — TPX3 main shell (**`main.bob`**), **`TimePix3Detector.bob`**, **`TimePix3Status.bob`**, TPX3-only acquire panels (**`PrvHstHistogram`**, **`PrvImgMonitor`**, **`DetectorConfig`**, stream utilities).
+* **`profiles/mpx3/`** — MPX3 main shell (**`main.bob`**, was **`MediPix3/MediPix3.bob`**), **`Mpx3Status.bob`**, **`Mpx3*`** acquire/detector panels.
+* **`profiles/tpx4/`** — placeholder README.
+* **Root launchers** — **`TimePix3.bob`**, **`MediPix3.bob`** embed profile mains with default **`P`/`R`** macros; **`MediPix3/MediPix3.bob`** shim keeps legacy bookmark paths.
+* **`Emulator/`** — unchanged (family embed panels).
+* Layout guide: **`tpx3App/op/bob/README.md`**. Legacy **`op/opi/`** (CS-Studio) not moved.
 
 
 R1-7-1 (August 21, 2026)
