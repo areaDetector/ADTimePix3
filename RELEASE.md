@@ -20,10 +20,18 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-0** (August 11, 2026, driver **1.7.0**). **R1-7-1** (driver **1.7.1**, August 2026) is documented below and in progress on `master`. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-1** (August 21, 2026, driver **1.7.1**). **R1-7-2** (driver **1.7.2**, planned) will reorganize Phoebus screens by detector family; see below. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
 
 
-R1-7-1 (August 2026)
+R1-7-2 (planned)
+--------
+
+Driver / user-visible version **1.7.2** (see `ADTIMEPIX_*` in `ADTimePix.h` when development starts).
+
+Planned patch after **R1-7-1**: Phoebus **Display Builder** layout only — **no Serval API or IOC DB change**. Mirror IOC boot **Option C** under **`tpx3App/op/bob/`** (`common/` + **`profiles/tpx3/`** / **`profiles/mpx3/`**), with thin launchers at **`bob/`** root (**`TimePix3.bob`**, **`MediPix3.bob`**) for backward-compatible bookmarks. Current layout and migration plan: **`tpx3App/op/bob/README.md`**. Legacy **`op/opi/`** (CS-Studio) remains out of scope until a separate cleanup.
+
+
+R1-7-1 (August 21, 2026)
 --------
 
 Driver / user-visible version **1.7.1** (see `ADTIMEPIX_*` in `ADTimePix.h`).
@@ -54,7 +62,7 @@ R1-7-0 (August 11, 2026)
 
 Driver / user-visible version **1.7.0** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
-* **Unified TimePix3 + Medipix3 driver**: One driver binary and shared Serval HTTP/TCP stack for ASI pixel detectors on Serval. Runtime family from Serval metadata (`DetectorFamily_RBV`, capability PVs). **TPX3** sites keep existing IOC/OPI (`st_base.cmd`, `TimePix3.bob`); **MPX3** uses a dedicated startup profile and Phoebus screens (below). Prior TPX3-only releases remain valid for TPX3-only deployments (**R1-6-3** and earlier).
+* **Unified TimePix3 + Medipix3 driver**: One driver binary and shared Serval HTTP/TCP stack for ASI pixel detectors on Serval. Runtime family from Serval metadata (`DetectorFamily_RBV`, capability PVs). **TPX3** sites use **`st.cmd`** / **`profiles/tpx3/`** and **`TimePix3.bob`**; **MPX3** uses **`st_mpx3.cmd`** / **`profiles/mpx3/`** and **`MediPix3.bob`** (below). Prior TPX3-only releases remain valid for TPX3-only deployments (**R1-6-3** and earlier). From **R1-7-1**, boot paths moved to **`profiles/<family>/`** (see R1-7-1 release notes).
 * **Medipix3 (MPX3)** — new in this release:
   * IOC profile: `st_mpx3.cmd`, `init_detector_*_mpx3.cmd`, `vendor/mpx3/` BPC/DACS.
   * Dual-threshold preview: demux by `thresholdID` on TCP **8088** / **8089**; BothCounters; T0−T1 band-pass (Pva5/Pva6).

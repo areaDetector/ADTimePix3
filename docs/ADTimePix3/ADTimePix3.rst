@@ -10,14 +10,14 @@ Notes
 -----
 
 * **ADServal**: unified EPICS areaDetector driver for ASI pixel detectors on Serval (TimePix3, Medipix3; TimePix4 planned). Shipped from module/repository **ADTimePix3**. See ``documentation/NAMING.md``.
-* Latest release: **R1-7-1** (driver **1.7.1**, August 2026). See ``RELEASE.md`` in the repository for full release notes.
+* Latest release: **R1-7-1** (driver **1.7.1**, August 21, 2026). See ``RELEASE.md`` in the repository for full release notes.
 * Depends on the CPR version **1.14.2** (bundled under ``tpx3Support``).
 * Build baseline for bundled CPR is **C++17** (``-std=c++17`` in ``tpx3Support`` and ``tpx3App/src`` Makefiles).
 * Depends on the json version v3.11.2 (bundled under ``tpx3Support``).
 * Developed with ADCore R3-11 and ADSupport R1-10 or newer.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * Layout support in driver and OPI is most complete for **1 chip** and **2x2 quad**; **8-chip** (e.g. 2x4 mosaic, two SPIDR boards) has IOC/DB/driver support -- see ``documentation/8chip-migration.md``; validate BPC/mask mapping and screens on your hardware.
-* **Medipix3** (development on branch ``medipix3-integration``): unified driver with runtime detector-family detection and IOC profile ``st_mpx3.cmd`` -- see ``documentation/medipix3/integration.md`` and ``documentation/README.md``.
+* **Medipix3** (R1-7-0+): unified driver with runtime detector-family detection and IOC profile ``st_mpx3.cmd`` -- see ``documentation/medipix3/integration.md`` and ``documentation/README.md``.
 * **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for 4.x. Data replay is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
 * **Detector families**: TimePix3 (default IOC profile), Medipix3 (`st_mpx3.cmd`, R1-7-0+); see ``documentation/medipix3/``.
 * Driver is specific to Serval version, since features differ.
@@ -31,15 +31,15 @@ Before compiling
 How to run
 ----------
 
-* Under ADTimePix3/iocs/tpx3IOC/iocBoot/iocTimePix there is already a ready to use IOC for the TimePix3
+* Under ADTimePix3/iocs/tpx3IOC/iocBoot/iocTimePix there is a ready-to-use IOC for Timepix3 and Medipix3
 
   #. run serval
 
-  #. Change the IP address in st.cmd or profiles/tpx3/st.cmd
+  #. Change the IP address in ``st.cmd`` (TPX3) or ``st_mpx3.cmd`` (MPX3), or edit ``profiles/<family>/unique.cmd``
 
-  #. Run ./st.cmd
+  #. Run ``./st.cmd`` or ``./st_mpx3.cmd``
 
-* Operator screens are under ``tpx3App/op/bob/`` (Phoebus) and ``tpx3App/op/opi/`` (legacy CSS-Boy). The main screen is ``tpx3App/op/bob/TimePix3.bob``.
+* Operator screens are under ``tpx3App/op/bob/`` (Phoebus) and ``tpx3App/op/opi/`` (legacy CS-Studio). Main screens: ``TimePix3.bob`` (TPX3), ``MediPix3/MediPix3.bob`` (MPX3). Layout plan: ``tpx3App/op/bob/README.md``.
 
 
 Adjust chip thresholds
