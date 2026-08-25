@@ -4,13 +4,13 @@
   <macros>
     <P>MPX3-TEST:</P>
     <R>cam1:</R>
-    <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
+    <pathADCore>ADet/R3-14/ADCore/R3-14</pathADCore>
     <pathADet>/home/controls/common/bob/main</pathADet>
   </macros>
   <x>292</x>
   <y>47</y>
   <width>715</width>
-  <height>915</height>
+  <height>1020</height>
   <background_color>
     <color red="187" green="187" blue="187">
     </color>
@@ -107,7 +107,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>ADPluginsPanel</name>
-    <file>../../../../ADCore/R3-11/ADPlugins.opi</file>
+    <file>../../../../ADCore/R3-14/ADPlugins.opi</file>
     <x>2</x>
     <y>276</y>
     <width>350</width>
@@ -202,6 +202,21 @@
     <y>745</y>
     <width>350</width>
     <height>160</height>
+    <resize>4</resize>
+    <transparent>true</transparent>
+    <border_width>1</border_width>
+    <border_color>
+      <color red="0" green="128" blue="255">
+      </color>
+    </border_color>
+  </widget>
+  <widget type="embedded" version="2.0.0">
+    <name>Mpx3AlarmPanel</name>
+    <file>Mpx3Alarm.opi</file>
+    <x>2</x>
+    <y>910</y>
+    <width>350</width>
+    <height>100</height>
     <resize>4</resize>
     <transparent>true</transparent>
     <border_width>1</border_width>

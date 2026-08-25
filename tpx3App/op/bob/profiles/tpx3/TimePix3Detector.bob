@@ -2,7 +2,7 @@
 <display version="2.0.0">
   <name>TimePix3Detector</name>
   <macros>
-    <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
+    <pathADCore>ADet/R3-14/ADCore/R3-14</pathADCore>
   </macros>
   <width>1550</width>
   <height>1400</height>
@@ -133,7 +133,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -167,7 +167,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -201,7 +201,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -235,7 +235,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -269,7 +269,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -303,7 +303,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -337,7 +337,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -371,7 +371,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>

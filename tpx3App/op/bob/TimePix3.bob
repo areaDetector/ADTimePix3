@@ -4,16 +4,16 @@
   <macros>
     <P>TPX3-TEST:</P>
     <R>cam1:</R>
-    <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
+    <pathADCore>ADet/R3-14/ADCore/R3-14</pathADCore>
     <pathADet>/home/controls/common/bob/main</pathADet>
   </macros>
   <width>715</width>
-  <height>900</height>
+  <height>910</height>
   <widget type="embedded" version="2.0.0">
     <name>TimePix3Profile</name>
     <file>profiles/tpx3/main.bob</file>
     <width>715</width>
-    <height>900</height>
+    <height>910</height>
     <resize>4</resize>
     <transparent>true</transparent>
   </widget>

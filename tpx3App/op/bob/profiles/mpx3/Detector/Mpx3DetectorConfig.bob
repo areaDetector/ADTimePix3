@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <display version="2.0.0">
   <name>Mpx3DetectorConfig</name>
-  <width>470</width>
+  <width>650</width>
   <height>1045</height>
   <background_color>
     <color red="187" green="187" blue="187">
@@ -14,7 +14,7 @@
     <text>Medipix3 detector config — $(P)$(R)</text>
     <x>5</x>
     <y>5</y>
-    <width>460</width>
+    <width>640</width>
     <height>22</height>
     <font>
       <font family="Sans" style="BOLD" size="12.0">
@@ -880,5 +880,181 @@
       <color red="64" green="64" blue="64">
       </color>
     </foreground_color>
+  </widget>
+  <widget type="rectangle" version="2.0.0">
+    <name>ManualsHeaderBg</name>
+    <x>480</x>
+    <y>30</y>
+    <width>160</width>
+    <height>21</height>
+    <line_width>0</line_width>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>ManualsHeader</name>
+    <text>Manuals</text>
+    <x>480</x>
+    <y>30</y>
+    <width>160</width>
+    <height>21</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="11.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="rectangle" version="2.0.0">
+    <name>ManualsBox</name>
+    <x>480</x>
+    <y>55</y>
+    <width>160</width>
+    <height>95</height>
+    <line_width>1</line_width>
+    <line_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </line_color>
+    <transparent>true</transparent>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>ManualServalBtn</name>
+    <actions>
+      <action type="open_file">
+        <description>ASI Server / Serval 4.1.3</description>
+        <file>../../../Documentation/20251202_ASIServer_TPX3_manual_V4.1.3.pdf</file>
+      </action>
+    </actions>
+    <text>ASI Server 4.1.3</text>
+    <x>490</x>
+    <y>65</y>
+    <width>140</width>
+    <height>28</height>
+    <background_color>
+      <color red="0" green="240" blue="0">
+      </color>
+    </background_color>
+    <tooltip>ASI / Serval server manual (matches Serval 4.1.x JAR)</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>ManualTriggerBtn</name>
+    <actions>
+      <action type="open_file">
+        <description>Trigger user guide</description>
+        <file>../../../Documentation/Trigger_mode_user_guide.pdf</file>
+      </action>
+    </actions>
+    <text>Trigger user guide</text>
+    <x>490</x>
+    <y>105</y>
+    <width>140</width>
+    <height>28</height>
+    <background_color>
+      <color red="0" green="240" blue="0">
+      </color>
+    </background_color>
+    <tooltip>Shared ASI trigger-mode guide</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="rectangle" version="2.0.0">
+    <name>VendorHeaderBg</name>
+    <x>480</x>
+    <y>165</y>
+    <width>160</width>
+    <height>21</height>
+    <line_width>0</line_width>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>VendorHeader</name>
+    <text>Vendor SW</text>
+    <x>480</x>
+    <y>165</y>
+    <width>160</width>
+    <height>21</height>
+    <font>
+      <font family="Sans" style="REGULAR" size="11.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color red="10" green="0" blue="184">
+      </color>
+    </foreground_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="rectangle" version="2.0.0">
+    <name>VendorBox</name>
+    <x>480</x>
+    <y>190</y>
+    <width>160</width>
+    <height>95</height>
+    <line_width>1</line_width>
+    <line_color>
+      <color red="0" green="0" blue="255">
+      </color>
+    </line_color>
+    <transparent>true</transparent>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>VendorEmulatorBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Emulator</description>
+        <file>../../../Emulator/emulator.bob</file>
+        <macros>
+          <P>EMU-TEST:</P>
+          <R>Emulator:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Emulator</text>
+    <x>490</x>
+    <y>205</y>
+    <width>140</width>
+    <height>28</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>EMU-TEST:Emulator: — not camera P</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>VendorServalBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Serval</description>
+        <file>../../../Serval/tpx3serval.bob</file>
+        <macros>
+          <P>SERVAL-TEST:</P>
+          <R>Serval:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Serval</text>
+    <x>490</x>
+    <y>245</y>
+    <width>140</width>
+    <height>28</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+    <tooltip>SERVAL-TEST:Serval: — not camera P</tooltip>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
 </display>

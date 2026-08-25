@@ -30,11 +30,6 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>PixelConfig vs BPC (8-chip)</name>
-    <macros>
-      <Sys>$(Sys)</Sys>
-      <Dev>$(Dev)</Dev>
-      <Cam>$(Cam)</Cam>
-    </macros>
     <file>PixelConfigMaskPanel.bob</file>
     <x>1430</x>
     <y>5</y>
@@ -52,7 +47,7 @@
   </widget>
   <widget type="image" version="2.0.0">
     <name>Intensity Graph_2</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <pv_name>$(P)$(R)MaskBPC</pv_name>
     <x>720</x>
     <y>5</y>
     <width>700</width>
@@ -100,14 +95,14 @@
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <data_width>512</data_width>
     <data_height>512</data_height>
     <autoscale>false</autoscale>
-    <maximum>4.0</maximum>
+    <maximum>2.0</maximum>
     <rois>
       <roi>
         <name>ROI 0</name>
@@ -117,17 +112,17 @@
         </color>
         <visible>true</visible>
         <interactive>true</interactive>
-        <x_pv>$(Sys)$(Dev)$(Cam)MaskMinX</x_pv>
-        <y_pv>$(Sys)$(Dev)$(Cam)MaskMinY</y_pv>
-        <width_pv>$(Sys)$(Dev)$(Cam)MaskSizeX</width_pv>
-        <height_pv>$(Sys)$(Dev)$(Cam)MaskSizeY</height_pv>
+        <x_pv>$(P)$(R)MaskMinX</x_pv>
+        <y_pv>$(P)$(R)MaskMinY</y_pv>
+        <width_pv>$(P)$(R)MaskSizeX</width_pv>
+        <height_pv>$(P)$(R)MaskSizeY</height_pv>
         <file></file>
       </roi>
     </rois>
   </widget>
   <widget type="image" version="2.0.0">
     <name>MaskBPC_8chip</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <pv_name>$(P)$(R)MaskBPC</pv_name>
     <x>720</x>
     <y>5</y>
     <width>700</width>
@@ -175,14 +170,14 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <data_width>1024</data_width>
     <data_height>512</data_height>
     <autoscale>false</autoscale>
-    <maximum>4.0</maximum>
+    <maximum>2.0</maximum>
     <rois>
       <roi>
         <name>ROI 0</name>
@@ -192,17 +187,17 @@
         </color>
         <visible>true</visible>
         <interactive>true</interactive>
-        <x_pv>$(Sys)$(Dev)$(Cam)MaskMinX</x_pv>
-        <y_pv>$(Sys)$(Dev)$(Cam)MaskMinY</y_pv>
-        <width_pv>$(Sys)$(Dev)$(Cam)MaskSizeX</width_pv>
-        <height_pv>$(Sys)$(Dev)$(Cam)MaskSizeY</height_pv>
+        <x_pv>$(P)$(R)MaskMinX</x_pv>
+        <y_pv>$(P)$(R)MaskMinY</y_pv>
+        <width_pv>$(P)$(R)MaskSizeX</width_pv>
+        <height_pv>$(P)$(R)MaskSizeY</height_pv>
         <file></file>
       </roi>
     </rois>
   </widget>
   <widget type="image" version="2.0.0">
     <name>Intensity Graph_1</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)MaskBPC</pv_name>
+    <pv_name>$(P)$(R)MaskBPC</pv_name>
     <x>5</x>
     <y>624</y>
     <width>361</width>
@@ -250,18 +245,18 @@
         <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <data_width>256</data_width>
     <data_height>256</data_height>
     <autoscale>false</autoscale>
-    <maximum>4.0</maximum>
+    <maximum>2.0</maximum>
   </widget>
   <widget type="image" version="2.0.0">
     <name>Intensity Graph_2</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <pv_name>$(P)$(R)BPC</pv_name>
     <x>720</x>
     <y>750</y>
     <width>700</width>
@@ -309,7 +304,7 @@
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
@@ -320,7 +315,7 @@
   </widget>
   <widget type="image" version="2.0.0">
     <name>BPC_8chip</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <pv_name>$(P)$(R)BPC</pv_name>
     <x>720</x>
     <y>385</y>
     <width>700</width>
@@ -368,7 +363,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
@@ -379,7 +374,7 @@
   </widget>
   <widget type="image" version="2.0.0">
     <name>Intensity Graph_3</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)BPC</pv_name>
+    <pv_name>$(P)$(R)BPC</pv_name>
     <x>378</x>
     <y>624</y>
     <width>361</width>
@@ -427,7 +422,7 @@
         <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
@@ -463,7 +458,7 @@
         <exp bool_exp="pv0==65536">
           <value>false</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -495,7 +490,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -530,7 +525,7 @@
         <exp bool_exp="pv0==65536">
           <value>false</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -562,7 +557,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -597,7 +592,7 @@
         <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -632,7 +627,7 @@
         <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>

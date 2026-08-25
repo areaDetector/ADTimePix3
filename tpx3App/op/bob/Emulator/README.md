@@ -80,9 +80,16 @@ The display uses the following Phoebus Display Builder compatible widgets:
 ## PV Naming Convention
 
 The display uses the standard EPICS PV naming convention with predefined macros:
-- **Prefix**: `$(P)` = `TPX3-TEST:`
+- **Prefix**: `$(P)` = `EMU-TEST:` (dedicated emulator service; not the camera `TPX3-TEST:` / `MPX3-TEST:` prefix)
 - **Record**: `$(R)` = `Emulator:`
-- **Example**: The START PV becomes `TPX3-TEST:Emulator:START`
+- **Example**: The START PV becomes `EMU-TEST:Emulator:START`
+
+Lab default matches `/epics/iocs/emulator/iocBoot/ioctpx3emulator/st.cmd` (`Sys=EMU-TEST:`).
+Beamline override: open with `P=EMU-$(BL):` (e.g. `EMU-BL7:`) and set the IOC `Sys` to the same value.
+**Do not inherit camera `P`** — Phoebus caller macros override display defaults, so every Emulator
+`open_display` action should pass `P`/`R` explicitly.
+
+Sync source of truth: `/epics/iocs/emulator/tpx3emulatorApp/op/bob/` → this directory.
 
 ## Display Features
 

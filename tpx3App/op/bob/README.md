@@ -15,7 +15,8 @@ bob/
     tpx3/                          # main.bob, TimePix3Detector, status toolbar, TPX3 acquire
     mpx3/                          # main.bob, Mpx3Status, Mpx3* acquire/detector panels
     tpx4/                          # placeholder README
-  Emulator/                        # shell + tpx3/mpx3 embed panels
+  Emulator/                        # shell + tpx3/mpx3 embed panels (EMU-TEST:)
+  Serval/                          # shared Serval process IOC panel (SERVAL-TEST:)
 ```
 
 ## Launch
@@ -25,22 +26,27 @@ bob/
 | `TimePix3.bob` | `TPX3-TEST:` | `profiles/tpx3/main.bob` |
 | `MediPix3.bob` | `MPX3-TEST:` | `profiles/mpx3/main.bob` |
 | `MediPix3/MediPix3.bob` | `MPX3-TEST:` | same (legacy path) |
+| `Emulator/emulator.bob` | `EMU-TEST:` | shared TPX3/MPX3 emulator shell |
+| `Serval/tpx3serval.bob` | `SERVAL-TEST:` | shared Serval process IOC |
 
 Set macros **`P`**, **`R`** (`cam1:`), and **`pathADCore`** at launch or edit defaults in the root launcher.
+Mask image / PixelConfig panels use **`$(P)$(R)`** (same as `MaskStatus`); do not pass `Sys`/`Dev`/`Cam`.
+Emulator opens with explicit **`P=EMU-TEST:`** / **`R=Emulator:`** (not camera `P`); override with `EMU-$(BL):` to match a beamline IOC.
+Serval opens with explicit **`P=SERVAL-TEST:`** / **`R=Serval:`**; override with `SERVAL-$(BL):`.
 
 ## Profile contract
 
 1. Root launchers embed **`profiles/<family>/main.bob`** and pass macros.
 2. **`common/`** — panels safe for all families.
 3. **`profiles/<family>/`** — main shell, status toolbar, family-only acquire/detector panels.
-4. Cross-links from a profile use **`../../common/...`** or **`../../Emulator/...`**.
+4. Cross-links from a profile use **`../../common/...`**, **`../../Emulator/...`**, or **`../../Serval/...`**.
 
 ## Family-specific vs shared
 
 | `common/` | `profiles/tpx3/` | `profiles/mpx3/` |
 |-----------|------------------|------------------|
 | ADSetup, ConnectionStatus, ADCollect, Mask, chip health | PrvHstHistogram, PrvImgMonitor, DetectorConfig, stream BOBs | Mpx3Preview/Image/HDF panels, Mpx3DetectorConfig |
-| ServerFileWriter, WriteFiles, ImgAccumulation | TimePix3Status toolbar, TimePix3Detector | Mpx3Status toolbar |
+| ServerFileWriter, WriteFiles, ImgAccumulation | TimePix3Status toolbar (incl. Emulator/Serval), TimePix3Detector, TimePix3Alarm/API | Mpx3Status toolbar, Mpx3Alarm |
 
 Legacy CS-Studio **`.opi`**: **`tpx3App/op/opi/`** (not updated in R1-7-2).
 

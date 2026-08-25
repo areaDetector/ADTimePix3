@@ -1,0 +1,1896 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>tpx3RawStream</name>
+  <macros>
+    <P>$(P=TPX3:)</P>
+    <R>$(R=raw:)</R>
+  </macros>
+  <width>1280</width>
+  <height>1430</height>
+  <widget type="group" version="3.0.0">
+    <name>root</name>
+    <width>1280</width>
+    <height>1430</height>
+    <widget type="label" version="2.0.0">
+      <name>Title</name>
+      <text>TPX3 raw TCP stream (tpx3events)</text>
+      <x>20</x>
+      <y>10</y>
+      <width>1240</width>
+      <height>28</height>
+      <font>
+        <font family="Sans" style="BOLD" size="18.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Hint</name>
+      <text>PV prefix $(P)$(R) — override P/R at open (e.g. P=MYBL: R=raw:); defaults match st.cmd Sys/Dev. Asyn port TPX3_RAW is IOC-only.</text>
+      <x>20</x>
+      <y>38</y>
+      <width>600</width>
+      <height>22</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="11.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="90" green="90" blue="90">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="rectangle" version="2.0.0">
+      <name>LeftPanelFrame</name>
+      <x>2</x>
+      <y>5</y>
+      <width>655</width>
+      <height>1300</height>
+      <line_width>1</line_width>
+      <transparent>true</transparent>
+    </widget>
+    <widget type="rectangle" version="2.0.0">
+      <name>ChipHitsPanelFrame</name>
+      <x>12</x>
+      <y>1003</y>
+      <width>638</width>
+      <height>88</height>
+      <line_width>1</line_width>
+      <transparent>true</transparent>
+    </widget>
+    <widget type="rectangle" version="2.0.0">
+      <name>TimingPanelFrame</name>
+      <x>12</x>
+      <y>1098</y>
+      <width>638</width>
+      <height>200</height>
+      <line_width>1</line_width>
+      <transparent>true</transparent>
+    </widget>
+    <widget type="rectangle" version="2.0.0">
+      <name>ImgPanelFrame</name>
+      <x>665</x>
+      <y>5</y>
+      <width>560</width>
+      <height>708</height>
+      <line_width>1</line_width>
+      <transparent>true</transparent>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgHdr512</name>
+      <text>Hit image (512×512)</text>
+      <x>680</x>
+      <y>11</y>
+      <width>500</width>
+      <height>22</height>
+      <visible>false</visible>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+      <rules>
+        <rule name="visHdr512" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)ImgMapMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgHdr256</name>
+      <text>Hit image (256×256)</text>
+      <x>680</x>
+      <y>11</y>
+      <width>500</width>
+      <height>22</height>
+      <visible>false</visible>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+      <rules>
+        <rule name="visHdr256" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)ImgMapMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgHint</name>
+      <text>Raster follows Map. Sum ToT ≈ jsonimage. ToT band + Chip filter; reset after map/kind/band/chip change.</text>
+      <x>680</x>
+      <y>35</y>
+      <width>500</width>
+      <height>32</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="10.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="90" green="90" blue="90">
+        </color>
+      </foreground_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgEnL</name>
+      <text>Accumulate</text>
+      <x>680</x>
+      <y>75</y>
+      <width>90</width>
+      <height>22</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ImgAccumEnable</name>
+      <pv_name>$(P)$(R)ImgAccumEnable</pv_name>
+      <label>Off / On</label>
+      <x>775</x>
+      <y>71</y>
+      <width>110</width>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>ImgResetBtn</name>
+      <actions>
+        <action type="write_pv">
+          <description>Reset</description>
+          <pv_name>$(P)$(R)ImgReset</pv_name>
+          <value>1</value>
+        </action>
+      </actions>
+      <text>Reset</text>
+      <x>900</x>
+      <y>71</y>
+      <width>70</width>
+      <tooltip>$(actions)</tooltip>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgMapL</name>
+      <text>Map</text>
+      <x>680</x>
+      <y>111</y>
+      <width>40</width>
+      <height>22</height>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>ImgMapMode</name>
+      <pv_name>$(P)$(R)ImgMapMode</pv_name>
+      <x>720</x>
+      <y>107</y>
+      <height>28</height>
+      <items>
+        <item>Quad UP</item>
+        <item>1-chip</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgKindL</name>
+      <text>Kind</text>
+      <x>835</x>
+      <y>111</y>
+      <width>40</width>
+      <height>22</height>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>ImgAccumKind</name>
+      <pv_name>$(P)$(R)ImgAccumKind</pv_name>
+      <x>880</x>
+      <y>107</y>
+      <width>110</width>
+      <height>28</height>
+      <items>
+        <item>Hit count</item>
+        <item>Sum ToT</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgChipL</name>
+      <text>Chip</text>
+      <x>998</x>
+      <y>111</y>
+      <width>40</width>
+      <height>22</height>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>ImgChip</name>
+      <pv_name>$(P)$(R)ImgChip</pv_name>
+      <x>1040</x>
+      <y>107</y>
+      <width>90</width>
+      <height>28</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgTotBandL</name>
+      <text>ToT band</text>
+      <x>680</x>
+      <y>147</y>
+      <width>70</width>
+      <height>22</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ImgTotFilter</name>
+      <pv_name>$(P)$(R)ImgTotFilter</pv_name>
+      <label>Off / On</label>
+      <x>755</x>
+      <y>143</y>
+      <width>110</width>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgTotLoL</name>
+      <text>Lo ns</text>
+      <x>875</x>
+      <y>147</y>
+      <width>45</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ImgTotLo_ns</name>
+      <pv_name>$(P)$(R)ImgTotLo_ns</pv_name>
+      <x>925</x>
+      <y>143</y>
+      <width>70</width>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgTotHiL</name>
+      <text>Hi ns</text>
+      <x>1005</x>
+      <y>147</y>
+      <width>45</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ImgTotHi_ns</name>
+      <pv_name>$(P)$(R)ImgTotHi_ns</pv_name>
+      <x>1055</x>
+      <y>143</y>
+      <width>70</width>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgMinL</name>
+      <text>Min</text>
+      <x>680</x>
+      <y>183</y>
+      <width>35</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgMin</name>
+      <pv_name>$(P)$(R)ImgMin_RBV</pv_name>
+      <x>715</x>
+      <y>179</y>
+      <width>75</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgMaxL</name>
+      <text>Max</text>
+      <x>800</x>
+      <y>183</y>
+      <width>35</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgMax</name>
+      <pv_name>$(P)$(R)ImgMax_RBV</pv_name>
+      <x>835</x>
+      <y>179</y>
+      <width>90</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ImgNzL</name>
+      <text>NonZero</text>
+      <x>935</x>
+      <y>183</y>
+      <width>65</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ImgNonZero</name>
+      <pv_name>$(P)$(R)ImgNonZero_RBV</pv_name>
+      <x>1005</x>
+      <y>179</y>
+      <width>90</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="image" version="2.0.0">
+      <name>ImgHitFramePlot512</name>
+      <pv_name>$(P)$(R)ImgHitFrame</pv_name>
+      <x>694</x>
+      <y>217</y>
+      <width>512</width>
+      <height>512</height>
+      <visible>false</visible>
+      <x_axis>
+        <visible>true</visible>
+        <title>X (Width)</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y (Height)</title>
+        <minimum>0.0</minimum>
+        <maximum>512.0</maximum>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+      </y_axis>
+      <rules>
+        <rule name="vis512" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)ImgMapMode</pv_name>
+        </rule>
+      </rules>
+      <data_width>512</data_width>
+      <data_height>512</data_height>
+      <unsigned>true</unsigned>
+    </widget>
+    <widget type="image" version="2.0.0">
+      <name>ImgHitFramePlot256</name>
+      <pv_name>$(P)$(R)ImgHitFrame</pv_name>
+      <x>694</x>
+      <y>217</y>
+      <width>512</width>
+      <height>512</height>
+      <visible>false</visible>
+      <x_axis>
+        <visible>true</visible>
+        <title>X (Width)</title>
+        <minimum>0.0</minimum>
+        <maximum>256.0</maximum>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+      </x_axis>
+      <y_axis>
+        <visible>true</visible>
+        <title>Y (Height)</title>
+        <minimum>0.0</minimum>
+        <maximum>256.0</maximum>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+      </y_axis>
+      <rules>
+        <rule name="vis256" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)ImgMapMode</pv_name>
+        </rule>
+      </rules>
+      <data_width>256</data_width>
+      <data_height>256</data_height>
+      <unsigned>true</unsigned>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RunL</name>
+      <text>Run</text>
+      <x>20</x>
+      <y>75</y>
+      <width>120</width>
+      <height>22</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>Run</name>
+      <pv_name>$(P)$(R)Run</pv_name>
+      <label>Stop / Start</label>
+      <x>150</x>
+      <y>70</y>
+      <width>140</width>
+      <height>36</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ConnL</name>
+      <text>Connected</text>
+      <x>320</x>
+      <y>75</y>
+      <height>22</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <name>Connected</name>
+      <pv_name>$(P)$(R)Connected_RBV</pv_name>
+      <x>430</x>
+      <y>72</y>
+      <width>28</width>
+      <height>28</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SourceModeL</name>
+      <text>Source</text>
+      <x>480</x>
+      <y>75</y>
+      <width>60</width>
+      <height>22</height>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>SourceMode</name>
+      <pv_name>$(P)$(R)SourceMode</pv_name>
+      <x>545</x>
+      <y>70</y>
+      <width>90</width>
+      <height>28</height>
+      <items>
+        <item>TCP</item>
+        <item>File</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>HostL</name>
+      <text>Host</text>
+      <x>20</x>
+      <y>125</y>
+      <width>120</width>
+      <height>22</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visHostL" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Host</name>
+      <pv_name>$(P)$(R)Host</pv_name>
+      <x>150</x>
+      <y>120</y>
+      <width>200</width>
+      <height>28</height>
+      <visible>false</visible>
+      <format>6</format>
+      <show_units>false</show_units>
+      <rules>
+        <rule name="visHost" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>PortL</name>
+      <text>Port</text>
+      <x>370</x>
+      <y>125</y>
+      <width>50</width>
+      <height>22</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visPortL" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>Port</name>
+      <pv_name>$(P)$(R)Port</pv_name>
+      <x>430</x>
+      <y>120</y>
+      <width>80</width>
+      <height>28</height>
+      <visible>false</visible>
+      <format>1</format>
+      <show_units>false</show_units>
+      <rules>
+        <rule name="visPort" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==0">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>InputFileL</name>
+      <text>Input file</text>
+      <x>20</x>
+      <y>125</y>
+      <width>120</width>
+      <height>22</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visInputFileL" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>InputFile</name>
+      <pv_name>$(P)$(R)InputFile</pv_name>
+      <x>150</x>
+      <y>120</y>
+      <width>450</width>
+      <height>28</height>
+      <visible>false</visible>
+      <format>6</format>
+      <show_units>false</show_units>
+      <rules>
+        <rule name="visInputFile" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="fileselector" version="2.0.0">
+      <name>InputFileSelector</name>
+      <pv_name>$(P)$(R)InputFile</pv_name>
+      <x>610</x>
+      <y>118</y>
+      <height>30</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visInputFileSelector" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>FileRateL</name>
+      <text>MB/s cap (0=max)</text>
+      <x>20</x>
+      <y>165</y>
+      <width>120</width>
+      <height>22</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visFileRateL" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>FilePlaybackRate</name>
+      <pv_name>$(P)$(R)FilePlaybackRate</pv_name>
+      <x>150</x>
+      <y>160</y>
+      <width>80</width>
+      <height>28</height>
+      <visible>false</visible>
+      <format>2</format>
+      <rules>
+        <rule name="visFileRate" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>FileLoopL</name>
+      <text>Loop file</text>
+      <x>260</x>
+      <y>165</y>
+      <width>70</width>
+      <height>22</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visFileLoopL" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="checkbox" version="2.0.0">
+      <name>FileLoop</name>
+      <pv_name>$(P)$(R)FileLoop</pv_name>
+      <x>340</x>
+      <y>160</y>
+      <width>28</width>
+      <height>28</height>
+      <visible>false</visible>
+      <rules>
+        <rule name="visFileLoop" prop_id="visible" out_exp="false">
+          <exp bool_exp="pv0==1">
+            <value>true</value>
+          </exp>
+          <pv_name>$(P)$(R)SourceMode</pv_name>
+        </rule>
+      </rules>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>QueueL</name>
+      <text>Queue size</text>
+      <x>20</x>
+      <y>210</y>
+      <width>120</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>QueueSize</name>
+      <pv_name>$(P)$(R)QueueSize</pv_name>
+      <x>150</x>
+      <y>205</y>
+      <width>120</width>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>WorkersL</name>
+      <text>Decoder workers</text>
+      <x>300</x>
+      <y>210</y>
+      <width>140</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>DecoderWorkers</name>
+      <pv_name>$(P)$(R)DecoderWorkers</pv_name>
+      <x>450</x>
+      <y>205</y>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ReorderL</name>
+      <text>Reorder</text>
+      <x>20</x>
+      <y>250</y>
+      <width>120</width>
+      <height>22</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>Reorder</name>
+      <pv_name>$(P)$(R)Reorder</pv_name>
+      <label>No / Yes</label>
+      <x>150</x>
+      <y>245</y>
+      <width>120</width>
+      <height>32</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RewinL</name>
+      <text>Reorder window</text>
+      <x>300</x>
+      <y>250</y>
+      <width>140</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ReorderWindow</name>
+      <pv_name>$(P)$(R)ReorderWindow</pv_name>
+      <x>450</x>
+      <y>245</y>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>StatsL</name>
+      <text>Stats</text>
+      <x>20</x>
+      <y>300</y>
+      <width>50</width>
+      <height>22</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>StatsFinalOnly</name>
+      <pv_name>$(P)$(R)StatsFinalOnly</pv_name>
+      <label>Final only</label>
+      <x>20</x>
+      <y>325</y>
+      <width>120</width>
+      <height>32</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>StatsDisable</name>
+      <pv_name>$(P)$(R)StatsDisable</pv_name>
+      <label>Disable</label>
+      <x>150</x>
+      <y>325</y>
+      <width>120</width>
+      <height>32</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>StatsInterval</name>
+      <pv_name>$(P)$(R)StatsInterval</pv_name>
+      <x>290</x>
+      <y>325</y>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>StatsTime</name>
+      <pv_name>$(P)$(R)StatsTime</pv_name>
+      <x>410</x>
+      <y>325</y>
+      <width>80</width>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RecentL</name>
+      <text>Recent hit cap / Exit on disconnect</text>
+      <x>20</x>
+      <y>375</y>
+      <width>400</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>RecentHitCap</name>
+      <pv_name>$(P)$(R)RecentHitCap</pv_name>
+      <x>20</x>
+      <y>400</y>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ExitOnDisc</name>
+      <pv_name>$(P)$(R)ExitOnDisconnect</pv_name>
+      <label>Exit on disc.</label>
+      <x>140</x>
+      <y>398</y>
+      <width>160</width>
+      <height>32</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ClusterHdr</name>
+      <text>Cluster placeholders (Phase 2+; HitSinkCalls increments when Cluster enable is On)</text>
+      <x>20</x>
+      <y>450</y>
+      <width>660</width>
+      <height>22</height>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ClEnL</name>
+      <text>Cluster enable</text>
+      <x>20</x>
+      <y>480</y>
+      <width>120</width>
+      <height>22</height>
+    </widget>
+    <widget type="slide_button" version="2.0.0">
+      <name>ClusterEnable</name>
+      <pv_name>$(P)$(R)ClusterEnable</pv_name>
+      <label>Off / On</label>
+      <x>150</x>
+      <y>472</y>
+      <width>120</width>
+      <height>34</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TwL</name>
+      <text>Time win (ns)</text>
+      <x>288</x>
+      <y>480</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ClusterTimeWin</name>
+      <pv_name>$(P)$(R)ClusterTimeWin_ns</pv_name>
+      <x>405</x>
+      <y>475</y>
+      <width>115</width>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RadL</name>
+      <text>Radius (px)</text>
+      <x>20</x>
+      <y>520</y>
+      <width>120</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ClusterRadius</name>
+      <pv_name>$(P)$(R)ClusterRadius_px</pv_name>
+      <x>150</x>
+      <y>515</y>
+      <width>120</width>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>MinHL</name>
+      <text>Min hits</text>
+      <x>300</x>
+      <y>520</y>
+      <width>80</width>
+      <height>22</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <name>ClusterMinHits</name>
+      <pv_name>$(P)$(R)ClusterMinHits</pv_name>
+      <x>390</x>
+      <y>515</y>
+      <height>28</height>
+      <format>1</format>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Readbacks</name>
+      <text>Readbacks</text>
+      <x>20</x>
+      <y>560</y>
+      <width>120</width>
+      <height>22</height>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>THL</name>
+      <text>Total hits</text>
+      <x>20</x>
+      <y>595</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>TotalHits</name>
+      <pv_name>$(P)$(R)TotalHits_RBV</pv_name>
+      <x>135</x>
+      <y>590</y>
+      <width>200</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>HRL</name>
+      <text>Hit rate (Hz)</text>
+      <x>20</x>
+      <y>630</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>HitRate</name>
+      <pv_name>$(P)$(R)HitRate_RBV</pv_name>
+      <x>135</x>
+      <y>625</y>
+      <width>200</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>BytesL</name>
+      <text>Bytes received</text>
+      <x>20</x>
+      <y>665</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>BytesRcvd</name>
+      <pv_name>$(P)$(R)BytesRcvd_RBV</pv_name>
+      <x>135</x>
+      <y>660</y>
+      <width>200</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>HscL</name>
+      <text>HitSink calls</text>
+      <x>20</x>
+      <y>700</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>HitSinkCalls</name>
+      <pv_name>$(P)$(R)HitSinkCalls_RBV</pv_name>
+      <x>135</x>
+      <y>695</y>
+      <width>200</width>
+      <height>28</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>LiveStatsHdr</name>
+      <text>Live statistics (Stats*_RBV — SCAN 1s)</text>
+      <x>20</x>
+      <y>740</y>
+      <width>600</width>
+      <height>22</height>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL1</name>
+      <text>Chunks</text>
+      <x>20</x>
+      <y>770</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsChunks</name>
+      <pv_name>$(P)$(R)StatsChunks_RBV</pv_name>
+      <x>135</x>
+      <y>766</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR1</name>
+      <text>Queue dropped</text>
+      <x>340</x>
+      <y>770</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsQueueDropped</name>
+      <pv_name>$(P)$(R)StatsQueueDropped_RBV</pv_name>
+      <x>460</x>
+      <y>766</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL2</name>
+      <text>TDC events</text>
+      <x>20</x>
+      <y>800</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsTdcEv</name>
+      <pv_name>$(P)$(R)StatsTdcEvents_RBV</pv_name>
+      <x>135</x>
+      <y>796</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR2</name>
+      <text>Decode errors</text>
+      <x>340</x>
+      <y>800</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsDecodeErr</name>
+      <pv_name>$(P)$(R)StatsDecodeErr_RBV</pv_name>
+      <x>460</x>
+      <y>796</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL3</name>
+      <text>Unknown pkts</text>
+      <x>20</x>
+      <y>830</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsUnknown</name>
+      <pv_name>$(P)$(R)StatsUnknown_RBV</pv_name>
+      <x>135</x>
+      <y>826</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR3</name>
+      <text>0x50 pkt gaps</text>
+      <x>340</x>
+      <y>830</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsPacketIdGaps</name>
+      <pv_name>$(P)$(R)StatsPacketIdGaps_RBV</pv_name>
+      <x>460</x>
+      <y>826</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL4</name>
+      <text>Mid-stream</text>
+      <x>20</x>
+      <y>860</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsMidStream</name>
+      <pv_name>$(P)$(R)StatsMidStream_RBV</pv_name>
+      <x>135</x>
+      <y>856</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR4</name>
+      <text>Reordered</text>
+      <x>340</x>
+      <y>860</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsReordered</name>
+      <pv_name>$(P)$(R)StatsReordered_RBV</pv_name>
+      <x>460</x>
+      <y>856</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL5</name>
+      <text>Hit rate inst</text>
+      <x>20</x>
+      <y>890</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsHitInst</name>
+      <pv_name>$(P)$(R)StatsHitRateInst_RBV</pv_name>
+      <x>135</x>
+      <y>886</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR5</name>
+      <text>Reord buf ovf</text>
+      <x>340</x>
+      <y>890</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsReordBufOvf</name>
+      <pv_name>$(P)$(R)StatsReorderBufOvf_RBV</pv_name>
+      <x>460</x>
+      <y>886</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR5b</name>
+      <text>Hit rate cum</text>
+      <x>340</x>
+      <y>920</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsHitCum</name>
+      <pv_name>$(P)$(R)StatsHitRateCum_RBV</pv_name>
+      <x>460</x>
+      <y>916</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL6</name>
+      <text>Chip0 Hz</text>
+      <x>20</x>
+      <y>950</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsCh0</name>
+      <pv_name>$(P)$(R)StatsChip0HitRate_RBV</pv_name>
+      <x>135</x>
+      <y>946</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR6</name>
+      <text>Chip1 Hz</text>
+      <x>340</x>
+      <y>950</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsCh1</name>
+      <pv_name>$(P)$(R)StatsChip1HitRate_RBV</pv_name>
+      <x>460</x>
+      <y>946</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SL7</name>
+      <text>Chip2 Hz</text>
+      <x>20</x>
+      <y>980</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsCh2</name>
+      <pv_name>$(P)$(R)StatsChip2HitRate_RBV</pv_name>
+      <x>135</x>
+      <y>976</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>SR7</name>
+      <text>Chip3 Hz</text>
+      <x>340</x>
+      <y>980</y>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsCh3</name>
+      <pv_name>$(P)$(R)StatsChip3HitRate_RBV</pv_name>
+      <x>460</x>
+      <y>976</y>
+      <width>175</width>
+      <height>26</height>
+      <format>1</format>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>ChipHitsHdr</name>
+      <text>Per-chip hits (sum = Total hits)</text>
+      <x>20</x>
+      <y>1008</y>
+      <width>280</width>
+      <height>22</height>
+      <font>
+        <font family="Sans" style="BOLD" size="11.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Ch0HitsL</name>
+      <text>Chip0</text>
+      <x>24</x>
+      <y>1036</y>
+      <width>42</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsChip0Hits</name>
+      <pv_name>$(P)$(R)StatsChip0Hits_RBV</pv_name>
+      <x>70</x>
+      <y>1032</y>
+      <width>155</width>
+      <height>26</height>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Ch1HitsL</name>
+      <text>Chip1</text>
+      <x>340</x>
+      <y>1036</y>
+      <width>42</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsChip1Hits</name>
+      <pv_name>$(P)$(R)StatsChip1Hits_RBV</pv_name>
+      <x>386</x>
+      <y>1032</y>
+      <width>155</width>
+      <height>26</height>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Ch2HitsL</name>
+      <text>Chip2</text>
+      <x>24</x>
+      <y>1066</y>
+      <width>42</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsChip2Hits</name>
+      <pv_name>$(P)$(R)StatsChip2Hits_RBV</pv_name>
+      <x>70</x>
+      <y>1062</y>
+      <width>155</width>
+      <height>26</height>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Ch3HitsL</name>
+      <text>Chip3</text>
+      <x>340</x>
+      <y>1066</y>
+      <width>42</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsChip3Hits</name>
+      <pv_name>$(P)$(R)StatsChip3Hits_RBV</pv_name>
+      <x>386</x>
+      <y>1062</y>
+      <width>155</width>
+      <height>26</height>
+      <format>1</format>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimingHdr</name>
+      <text>Timing (extended ToA / TDC / last chunk trailer)</text>
+      <x>20</x>
+      <y>1106</y>
+      <width>600</width>
+      <height>22</height>
+      <font>
+        <font family="Sans" style="BOLD" size="12.0">
+        </font>
+      </font>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimL1</name>
+      <text>Hit span (s)</text>
+      <x>20</x>
+      <y>1136</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsHitSpan</name>
+      <pv_name>$(P)$(R)StatsHitSpan_s_RBV</pv_name>
+      <x>135</x>
+      <y>1132</y>
+      <width>175</width>
+      <height>26</height>
+      <format>2</format>
+      <precision>4</precision>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimR1</name>
+      <text>TDC1 span (s)</text>
+      <x>340</x>
+      <y>1136</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsTdc1Span</name>
+      <pv_name>$(P)$(R)StatsTdc1Span_s_RBV</pv_name>
+      <x>460</x>
+      <y>1132</y>
+      <width>175</width>
+      <height>26</height>
+      <format>2</format>
+      <precision>4</precision>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimL2</name>
+      <text>Trailer OK</text>
+      <x>20</x>
+      <y>1166</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ChunkTrailerValid</name>
+      <pv_name>$(P)$(R)ChunkTrailerValid_RBV</pv_name>
+      <x>135</x>
+      <y>1162</y>
+      <width>175</width>
+      <height>26</height>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimR2</name>
+      <text>Chunk span (s)</text>
+      <x>340</x>
+      <y>1166</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ChunkSpan</name>
+      <pv_name>$(P)$(R)ChunkSpan_s_RBV</pv_name>
+      <x>460</x>
+      <y>1162</y>
+      <width>175</width>
+      <height>26</height>
+      <format>2</format>
+      <precision>4</precision>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimL3</name>
+      <text>Trailer err</text>
+      <x>20</x>
+      <y>1196</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ChunkTrailerErr</name>
+      <pv_name>$(P)$(R)ChunkTrailerErr_RBV</pv_name>
+      <x>135</x>
+      <y>1192</y>
+      <width>175</width>
+      <height>26</height>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimR3</name>
+      <text>Trailer ovf</text>
+      <x>340</x>
+      <y>1196</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>ChunkTrailerOvf</name>
+      <pv_name>$(P)$(R)ChunkTrailerOvf_RBV</pv_name>
+      <x>460</x>
+      <y>1192</y>
+      <width>175</width>
+      <height>26</height>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimL4</name>
+      <text>Hit earliest</text>
+      <x>20</x>
+      <y>1226</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsHitEarliest</name>
+      <pv_name>$(P)$(R)StatsHitEarliest_RBV</pv_name>
+      <x>135</x>
+      <y>1222</y>
+      <width>175</width>
+      <height>26</height>
+      <format>2</format>
+      <precision>4</precision>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>TimR4</name>
+      <text>Hit latest</text>
+      <x>340</x>
+      <y>1226</y>
+      <width>110</width>
+      <height>22</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>StatsHitLatest</name>
+      <pv_name>$(P)$(R)StatsHitLatest_RBV</pv_name>
+      <x>460</x>
+      <y>1222</y>
+      <width>175</width>
+      <height>26</height>
+      <format>2</format>
+      <precision>4</precision>
+      <show_units>false</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RBVnote</name>
+      <text>More Stats* / per-chip TDC min-max / chunk min-max ticks in DB — Data Browser. Hit span &gt; 26.84 s ⇒ extension OK.</text>
+      <x>20</x>
+      <y>1256</y>
+      <width>630</width>
+      <height>36</height>
+      <font>
+        <font family="Sans" style="REGULAR" size="10.0">
+        </font>
+      </font>
+      <foreground_color>
+        <color red="90" green="90" blue="90">
+        </color>
+      </foreground_color>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>ChunkHistHdr</name>
+    <text>Chunk size histogram (64 bins × 1024 B; enable before Run)</text>
+    <x>712</x>
+    <y>740</y>
+    <width>570</width>
+    <height>22</height>
+    <font>
+      <font family="Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+  </widget>
+  <widget type="slide_button" version="2.0.0">
+    <name>ChunkHistEnable</name>
+    <pv_name>$(P)$(R)ChunkHistEnable</pv_name>
+    <label>Hist Off / On</label>
+    <x>712</x>
+    <y>764</y>
+    <width>130</width>
+    <height>32</height>
+  </widget>
+  <widget type="slide_button" version="2.0.0">
+    <name>ChunkHistReset</name>
+    <pv_name>$(P)$(R)ChunkHistReset</pv_name>
+    <label>Reset</label>
+    <x>850</x>
+    <y>764</y>
+    <width>90</width>
+    <height>32</height>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>ChMinL</name>
+    <text>Min</text>
+    <x>972</x>
+    <y>768</y>
+    <width>35</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>ChunkHistMin</name>
+    <pv_name>$(P)$(R)ChunkHistMin_RBV</pv_name>
+    <x>1012</x>
+    <y>764</y>
+    <width>75</width>
+    <height>26</height>
+    <format>1</format>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>ChMaxL</name>
+    <text>Max</text>
+    <x>1102</x>
+    <y>768</y>
+    <width>35</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>ChunkHistMax</name>
+    <pv_name>$(P)$(R)ChunkHistMax_RBV</pv_name>
+    <x>1142</x>
+    <y>764</y>
+    <width>80</width>
+    <height>26</height>
+    <format>1</format>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>ChMeanL</name>
+    <text>Mean B</text>
+    <x>972</x>
+    <y>794</y>
+    <width>55</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>ChunkHistMean</name>
+    <pv_name>$(P)$(R)ChunkHistMean_RBV</pv_name>
+    <x>1012</x>
+    <y>790</y>
+    <width>75</width>
+    <height>26</height>
+    <format>1</format>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>ChTotL</name>
+    <text>N</text>
+    <x>1102</x>
+    <y>794</y>
+    <width>20</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>ChunkHistTotal</name>
+    <pv_name>$(P)$(R)ChunkHistTotal_RBV</pv_name>
+    <x>1142</x>
+    <y>790</y>
+    <width>80</width>
+    <height>26</height>
+    <format>1</format>
+  </widget>
+  <widget type="xyplot" version="3.0.0">
+    <name>ChunkHistPlot</name>
+    <x>688</x>
+    <y>850</y>
+    <width>570</width>
+    <height>220</height>
+    <visible>false</visible>
+    <title>TPX3 chunk sizes</title>
+    <rules>
+      <rule name="histVis" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==1">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(R)ChunkHistEnable</pv_name>
+      </rule>
+    </rules>
+    <x_axis>
+      <title>Chunk size (bytes)</title>
+      <autoscale>false</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>65536.0</maximum>
+      <show_grid>true</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
+    <y_axes>
+      <y_axis>
+        <title>Count</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>100.0</maximum>
+        <show_grid>true</show_grid>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+        <on_right>false</on_right>
+        <visible>true</visible>
+        <color>
+          <color red="50" green="110" blue="200">
+          </color>
+        </color>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>chunks</name>
+        <x_pv>$(P)$(R)ChunkHistX</x_pv>
+        <y_pv>$(P)$(R)ChunkHistY</y_pv>
+        <err_pv></err_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="50" green="110" blue="200">
+          </color>
+        </color>
+        <line_width>1</line_width>
+        <line_style>0</line_style>
+        <point_type>0</point_type>
+        <point_size>8</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+  <widget type="rectangle" version="2.0.0">
+    <name>TotHistPanelFrame</name>
+    <x>675</x>
+    <y>1072</y>
+    <width>585</width>
+    <height>335</height>
+    <line_width>1</line_width>
+    <transparent>true</transparent>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotHistHdr</name>
+    <text>ToT histogram (TotHistRange; enable before Run)</text>
+    <x>712</x>
+    <y>1080</y>
+    <width>570</width>
+    <height>22</height>
+    <font>
+      <font family="Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+  </widget>
+  <widget type="slide_button" version="2.0.0">
+    <name>TotHistEnable</name>
+    <pv_name>$(P)$(R)TotHistEnable</pv_name>
+    <label>ToT Off / On</label>
+    <x>712</x>
+    <y>1106</y>
+    <width>130</width>
+    <height>32</height>
+  </widget>
+  <widget type="slide_button" version="2.0.0">
+    <name>TotHistReset</name>
+    <pv_name>$(P)$(R)TotHistReset</pv_name>
+    <label>Reset</label>
+    <x>850</x>
+    <y>1106</y>
+    <width>90</width>
+    <height>32</height>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotRangeL</name>
+    <text>Range</text>
+    <x>952</x>
+    <y>1112</y>
+    <width>50</width>
+    <height>22</height>
+  </widget>
+  <widget type="combo" version="2.0.0">
+    <name>TotHistRange</name>
+    <pv_name>$(P)$(R)TotHistRange</pv_name>
+    <x>1005</x>
+    <y>1108</y>
+    <width>80</width>
+    <height>26</height>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotChipL</name>
+    <text>Chip</text>
+    <x>1100</x>
+    <y>1112</y>
+    <width>40</width>
+    <height>22</height>
+  </widget>
+  <widget type="combo" version="2.0.0">
+    <name>TotHistChip</name>
+    <pv_name>$(P)$(R)TotHistChip</pv_name>
+    <x>1145</x>
+    <y>1108</y>
+    <width>80</width>
+    <height>26</height>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotMinL</name>
+    <text>Min (LSB)</text>
+    <x>712</x>
+    <y>1152</y>
+    <width>70</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>TotHistMin</name>
+    <pv_name>$(P)$(R)TotHistMin_RBV</pv_name>
+    <x>788</x>
+    <y>1148</y>
+    <width>70</width>
+    <height>26</height>
+    <format>1</format>
+    <show_units>false</show_units>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotMaxL</name>
+    <text>Max (LSB)</text>
+    <x>872</x>
+    <y>1152</y>
+    <width>70</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>TotHistMax</name>
+    <pv_name>$(P)$(R)TotHistMax_RBV</pv_name>
+    <x>948</x>
+    <y>1148</y>
+    <width>70</width>
+    <height>26</height>
+    <format>1</format>
+    <show_units>false</show_units>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotMeanL</name>
+    <text>Mean (LSB)</text>
+    <x>1032</x>
+    <y>1152</y>
+    <width>80</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>TotHistMean</name>
+    <pv_name>$(P)$(R)TotHistMean_RBV</pv_name>
+    <x>1118</x>
+    <y>1148</y>
+    <width>75</width>
+    <height>26</height>
+    <format>2</format>
+    <precision>1</precision>
+    <show_units>false</show_units>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotTotL</name>
+    <text>N hits</text>
+    <x>712</x>
+    <y>1182</y>
+    <width>55</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>TotHistTotal</name>
+    <pv_name>$(P)$(R)TotHistTotal_RBV</pv_name>
+    <x>772</x>
+    <y>1178</y>
+    <width>120</width>
+    <height>26</height>
+    <format>1</format>
+    <show_units>false</show_units>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotBinsL</name>
+    <text>Bins</text>
+    <x>908</x>
+    <y>1182</y>
+    <width>40</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>TotHistNumBins</name>
+    <pv_name>$(P)$(R)TotHistNumBins_RBV</pv_name>
+    <x>952</x>
+    <y>1178</y>
+    <width>55</width>
+    <height>26</height>
+    <format>1</format>
+    <show_units>false</show_units>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>TotBinWL</name>
+    <text>BinW (ns)</text>
+    <x>1020</x>
+    <y>1182</y>
+    <width>70</width>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>TotHistBinWidth</name>
+    <pv_name>$(P)$(R)TotHistBinWidth_RBV</pv_name>
+    <x>1095</x>
+    <y>1178</y>
+    <width>55</width>
+    <height>26</height>
+    <format>1</format>
+  </widget>
+  <widget type="xyplot" version="3.0.0">
+    <name>TotHistPlot</name>
+    <x>688</x>
+    <y>1212</y>
+    <width>570</width>
+    <height>188</height>
+    <visible>false</visible>
+    <title>Pixel ToT spectrum</title>
+    <rules>
+      <rule name="totHistVis" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==1">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(R)TotHistEnable</pv_name>
+      </rule>
+    </rules>
+    <x_axis>
+      <title>ToT (ns)</title>
+      <autoscale>false</autoscale>
+      <log_scale>false</log_scale>
+      <minimum>0.0</minimum>
+      <maximum>25575.0</maximum>
+      <show_grid>true</show_grid>
+      <title_font>
+        <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+        </font>
+      </title_font>
+      <scale_font>
+        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+        </font>
+      </scale_font>
+      <visible>true</visible>
+    </x_axis>
+    <y_axes>
+      <y_axis>
+        <title>Count</title>
+        <autoscale>true</autoscale>
+        <log_scale>false</log_scale>
+        <minimum>0.0</minimum>
+        <maximum>1.0</maximum>
+        <show_grid>true</show_grid>
+        <title_font>
+          <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
+          </font>
+        </title_font>
+        <scale_font>
+          <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
+          </font>
+        </scale_font>
+        <on_right>false</on_right>
+        <visible>true</visible>
+        <color>
+          <color red="180" green="80" blue="40">
+          </color>
+        </color>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>ToT counts</name>
+        <x_pv>$(P)$(R)TotHistX</x_pv>
+        <y_pv>$(P)$(R)TotHistY</y_pv>
+        <err_pv></err_pv>
+        <axis>0</axis>
+        <trace_type>1</trace_type>
+        <color>
+          <color red="180" green="80" blue="40">
+          </color>
+        </color>
+        <line_width>1</line_width>
+        <line_style>0</line_style>
+        <point_type>0</point_type>
+        <point_size>8</point_size>
+        <visible>true</visible>
+      </trace>
+    </traces>
+  </widget>
+</display>

@@ -2,6 +2,7 @@
 <display version="2.0.0">
   <name>emulator_mpx3_embed</name>
   <macros>
+    <P>EMU-TEST:</P>
     <R>Emulator:</R>
   </macros>
   <width>1060</width>

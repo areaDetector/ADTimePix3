@@ -156,9 +156,9 @@
       </action>
     </actions>
     <text>Img</text>
-    <x>120</x>
+    <x>45</x>
     <y>110</y>
-    <width>70</width>
+    <width>65</width>
     <height>20</height>
     <background_color>
       <color red="255" green="200" blue="100">
@@ -191,12 +191,39 @@
       <action type="open_display">
         <description>Medipix3 emulator</description>
         <file>../../Emulator/emulator.bob</file>
+        <macros>
+          <P>EMU-TEST:</P>
+          <R>Emulator:</R>
+        </macros>
         <target>tab</target>
       </action>
     </actions>
     <text>Emulator</text>
     <x>120</x>
     <y>85</y>
+    <width>70</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>ServalBtn</name>
+    <actions>
+      <action type="open_display">
+        <description>Serval IOC control</description>
+        <file>../../Serval/tpx3serval.bob</file>
+        <macros>
+          <P>SERVAL-TEST:</P>
+          <R>Serval:</R>
+        </macros>
+        <target>tab</target>
+      </action>
+    </actions>
+    <text>Serval</text>
+    <x>120</x>
+    <y>110</y>
     <width>70</width>
     <height>20</height>
     <background_color>

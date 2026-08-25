@@ -1299,7 +1299,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1333,7 +1333,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1367,7 +1367,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1401,7 +1401,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1435,7 +1435,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1469,7 +1469,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1503,7 +1503,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1537,7 +1537,7 @@ $(pv_value)</tooltip>
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_color>
@@ -1702,8 +1702,9 @@ $(pv_value)</tooltip>
     <actions>
       <action type="open_display">
         <description>Serval</description>
-        <file>../tpx3serval.bob</file>
+        <file>../../../Serval/tpx3serval.bob</file>
         <macros>
+          <P>SERVAL-TEST:</P>
           <R>Serval:</R>
         </macros>
         <target>tab</target>
@@ -1727,6 +1728,10 @@ $(pv_value)</tooltip>
       <action type="open_display">
         <description>Emulator</description>
         <file>../../../Emulator/emulator.bob</file>
+        <macros>
+          <P>EMU-TEST:</P>
+          <R>Emulator:</R>
+        </macros>
         <target>tab</target>
       </action>
     </actions>

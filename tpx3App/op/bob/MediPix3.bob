@@ -4,16 +4,16 @@
   <macros>
     <P>MPX3-TEST:</P>
     <R>cam1:</R>
-    <pathADCore>ADet/R3-11/ADCore/R3-11</pathADCore>
+    <pathADCore>ADet/R3-14/ADCore/R3-14</pathADCore>
     <pathADet>/home/controls/common/bob/main</pathADet>
   </macros>
   <width>715</width>
-  <height>915</height>
+  <height>1020</height>
   <widget type="embedded" version="2.0.0">
     <name>MediPix3Profile</name>
     <file>profiles/mpx3/main.bob</file>
     <width>715</width>
-    <height>915</height>
+    <height>1020</height>
     <resize>4</resize>
     <transparent>true</transparent>
   </widget>

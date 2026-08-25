@@ -45,7 +45,7 @@
   </widget>
   <widget type="bool_button" version="2.0.0">
     <name>RefreshPixelConfigBtn</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)RefreshPixelConfig</pv_name>
+    <pv_name>$(P)$(R)RefreshPixelConfig</pv_name>
     <bit>-1</bit>
     <x>420</x>
     <y>3</y>
@@ -81,7 +81,7 @@
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH0Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP0_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP0_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>70</y>
     <width>72</width>
@@ -92,7 +92,7 @@
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH0Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP0_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP0_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>70</y>
     <width>40</width>
@@ -103,7 +103,7 @@
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH0Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP0_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP0_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>70</y>
     <width>500</width>
@@ -132,13 +132,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH1Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP1_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP1_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>94</y>
     <width>72</width>
@@ -155,13 +155,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH1Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP1_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP1_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>94</y>
     <width>40</width>
@@ -178,13 +178,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH1Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP1_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP1_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>94</y>
     <width>500</width>
@@ -202,7 +202,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -225,13 +225,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH2Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP2_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP2_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>118</y>
     <width>72</width>
@@ -248,13 +248,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH2Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP2_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP2_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>118</y>
     <width>40</width>
@@ -271,13 +271,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH2Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP2_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP2_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>118</y>
     <width>500</width>
@@ -295,7 +295,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -318,13 +318,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH3Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP3_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP3_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>142</y>
     <width>72</width>
@@ -341,13 +341,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH3Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP3_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP3_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>142</y>
     <width>40</width>
@@ -364,13 +364,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH3Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP3_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP3_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>142</y>
     <width>500</width>
@@ -388,7 +388,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -408,13 +408,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH4Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP4_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP4_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>166</y>
     <width>72</width>
@@ -428,13 +428,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH4Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP4_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP4_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>166</y>
     <width>40</width>
@@ -448,13 +448,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH4Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP4_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP4_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>166</y>
     <width>500</width>
@@ -469,7 +469,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -489,13 +489,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH5Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP5_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP5_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>190</y>
     <width>72</width>
@@ -509,13 +509,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH5Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP5_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP5_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>190</y>
     <width>40</width>
@@ -529,13 +529,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH5Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP5_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP5_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>190</y>
     <width>500</width>
@@ -550,7 +550,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -570,13 +570,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH6Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP6_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP6_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>214</y>
     <width>72</width>
@@ -590,13 +590,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH6Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP6_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP6_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>214</y>
     <width>40</width>
@@ -610,13 +610,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH6Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP6_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP6_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>214</y>
     <width>500</width>
@@ -631,7 +631,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -651,13 +651,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH7Len</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP7_PixelConfigLen_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP7_PixelConfigLen_RBV</pv_name>
     <x>60</x>
     <y>238</y>
     <width>72</width>
@@ -671,13 +671,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH7Match</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP7_PixelConfigMatchBPC_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP7_PixelConfigMatchBPC_RBV</pv_name>
     <x>140</x>
     <y>238</y>
     <width>40</width>
@@ -691,13 +691,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>CH7Stat</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)CHIP7_PixelConfigStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)CHIP7_PixelConfigStatus_RBV</pv_name>
     <x>188</x>
     <y>238</y>
     <width>500</width>
@@ -712,7 +712,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
@@ -758,7 +758,7 @@
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>MaskJsonCount</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)MaskedPelsCount_RBV</pv_name>
+    <pv_name>$(P)$(R)MaskedPelsCount_RBV</pv_name>
     <x>58</x>
     <y>308</y>
     <width>64</width>
@@ -781,7 +781,7 @@
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>MaskJsonStatus</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)MaskedPelsExportStatus_RBV</pv_name>
+    <pv_name>$(P)$(R)MaskedPelsExportStatus_RBV</pv_name>
     <x>183</x>
     <y>308</y>
     <width>550</width>
@@ -805,7 +805,7 @@
   </widget>
   <widget type="textupdate" version="2.0.0">
     <name>MaskJsonPath</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)MaskedPelsJson_RBV</pv_name>
+    <pv_name>$(P)$(R)MaskedPelsJson_RBV</pv_name>
     <x>58</x>
     <y>333</y>
     <width>678</width>
@@ -840,13 +840,13 @@
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>PixelConfigDiff512</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)PixelConfigDiff</pv_name>
+    <pv_name>$(P)$(R)PixelConfigDiff</pv_name>
     <x>5</x>
     <y>402</y>
     <width>512</width>
@@ -894,7 +894,7 @@
         <exp bool_exp="pv0==262144">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
@@ -925,13 +925,13 @@
         <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>PixelConfigDiff256</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)PixelConfigDiff</pv_name>
+    <pv_name>$(P)$(R)PixelConfigDiff</pv_name>
     <x>5</x>
     <y>402</y>
     <width>256</width>
@@ -979,7 +979,7 @@
         <exp bool_exp="pv0==65536">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
@@ -1010,13 +1010,13 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="image" version="2.0.0">
     <name>PixelConfigDiff1024</name>
-    <pv_name>$(Sys)$(Dev)$(Cam)PixelConfigDiff</pv_name>
+    <pv_name>$(P)$(R)PixelConfigDiff</pv_name>
     <x>5</x>
     <y>402</y>
     <width>700</width>
@@ -1064,7 +1064,7 @@
         <exp bool_exp="pv0==524288">
           <value>true</value>
         </exp>
-        <pv_name>$(Sys)$(Dev)$(Cam)PixCount_RBV</pv_name>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
