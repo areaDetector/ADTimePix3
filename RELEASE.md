@@ -20,7 +20,15 @@ The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-2** (August 24, 2026, driver **1.7.2**). Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-2** (August 24, 2026, driver **1.7.2**). **R1-7-3** (driver **1.7.3**) is documented below and in progress on `master`. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+
+
+R1-7-3 (in progress)
+--------
+
+Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+* Release notes TBD.
 
 
 R1-7-2 (August 24, 2026)
