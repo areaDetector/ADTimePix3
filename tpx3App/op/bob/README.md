@@ -23,13 +23,13 @@ bob/
 
 | Entry screen | Default prefix | Profile body |
 |--------------|----------------|--------------|
-| `TimePix3.bob` | `TPX3-TEST:` | `profiles/tpx3/main.bob` |
-| `MediPix3.bob` | `MPX3-TEST:` | `profiles/mpx3/main.bob` |
-| `MediPix3/MediPix3.bob` | `MPX3-TEST:` | same (legacy path) |
+| `TimePix3.bob` | *(from launcher)* | `profiles/tpx3/main.bob` |
+| `MediPix3.bob` | *(from launcher)* | `profiles/mpx3/main.bob` |
+| `MediPix3/MediPix3.bob` | *(from launcher)* | same (legacy path) |
 | `Emulator/emulator.bob` | `EMU-TEST:` | shared TPX3/MPX3 emulator shell |
 | `Serval/tpx3serval.bob` | `SERVAL-TEST:` | shared Serval process IOC |
 
-Set macros **`P`**, **`R`** (`cam1:`), and **`pathADCore`** at launch or edit defaults in the root launcher.
+Set macros **`P`**, **`R`** (`cam1:`), and **`pathADCore`** at launch or edit defaults in the root launcher (`TimePix3.bob` / `MediPix3.bob`). Profile `main.bob` files inherit **`P`/`R`** from the launcher; do not hardcode beamline prefixes there.
 Mask image / PixelConfig panels use **`$(P)$(R)`** (same as `MaskStatus`); do not pass `Sys`/`Dev`/`Cam`.
 Emulator opens with explicit **`P=EMU-TEST:`** / **`R=Emulator:`** (not camera `P`); override with `EMU-$(BL):` to match a beamline IOC.
 Serval opens with explicit **`P=SERVAL-TEST:`** / **`R=Serval:`**; override with `SERVAL-$(BL):`.

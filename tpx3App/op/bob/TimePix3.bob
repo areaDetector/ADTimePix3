@@ -2,8 +2,6 @@
 <display version="2.0.0">
   <name>TimePix3</name>
   <macros>
-    <P>TPX3-TEST:</P>
-    <R>cam1:</R>
     <pathADCore>ADet/R3-14/ADCore/R3-14</pathADCore>
     <pathADet>/home/controls/common/bob/main</pathADet>
   </macros>
@@ -11,6 +9,12 @@
   <height>910</height>
   <widget type="embedded" version="2.0.0">
     <name>TimePix3Profile</name>
+    <macros>
+      <P>$(P)</P>
+      <R>$(R)</R>
+      <pathADCore>$(pathADCore)</pathADCore>
+      <pathADet>$(pathADet)</pathADet>
+    </macros>
     <file>profiles/tpx3/main.bob</file>
     <width>715</width>
     <height>910</height>

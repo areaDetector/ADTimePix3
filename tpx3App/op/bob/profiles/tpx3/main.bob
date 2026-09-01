@@ -2,8 +2,6 @@
 <display version="2.0.0">
   <name>TimePix3</name>
   <macros>
-    <P>TPX3-TEST:</P>
-    <R>cam1:</R>
     <pathADCore>ADet/R3-14/ADCore/R3-14</pathADCore>
     <pathADet>/home/controls/common/bob/main</pathADet>
   </macros>
