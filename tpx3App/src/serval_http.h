@@ -15,12 +15,13 @@
 
 namespace ADTimePix3ServalHttp {
 
-cpr::Response get(const std::string& url);
-cpr::Response get(const std::string& url, int timeout_ms);
-cpr::Response getAuthOnly(const std::string& url);
-cpr::Response getJson(const std::string& url, int timeout_ms);
-cpr::Response putJson(const std::string& url, const std::string& body);
-cpr::Response putJson(const std::string& url, const std::string& body, int timeout_ms);
+constexpr int kDefaultTimeoutMs = 10000;
+
+cpr::Response get(const std::string& url, int timeout_ms = kDefaultTimeoutMs);
+cpr::Response getAuthOnly(const std::string& url, int timeout_ms = kDefaultTimeoutMs);
+cpr::Response getJson(const std::string& url, int timeout_ms = kDefaultTimeoutMs);
+cpr::Response putJson(const std::string& url, const std::string& body,
+                      int timeout_ms = kDefaultTimeoutMs);
 
 }  // namespace ADTimePix3ServalHttp
 

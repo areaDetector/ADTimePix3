@@ -728,6 +728,7 @@ void ADTimePix::timePixCallback(){
     // (fresh CurlHolder each time) and reduces TCP connection/socket churn under tight polling.
     cpr::Session session;
     session.SetOption(url);
+    session.SetOption(cpr::Timeout{ADTimePix3ServalHttp::kDefaultTimeoutMs});
     // Pre-size response buffer so repeated large JSON bodies do not reallocate every poll.
     cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};
     session.SetOption(reserveSize);
