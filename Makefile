@@ -4,8 +4,10 @@ include $(TOP)/configure/CONFIG
 DIRS := $(DIRS) configure
 DIRS := $(DIRS) tpx3App
 DIRS := $(DIRS) tpx3Support
+DIRS := $(DIRS) test
 
 tpx3App_DEPEND_DIRS += tpx3Support
+test_DEPEND_DIRS += tpx3App
 ifeq ($(BUILD_IOCS), YES)
 DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocs))
 iocs_DEPEND_DIRS += tpx3App
