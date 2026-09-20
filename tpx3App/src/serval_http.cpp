@@ -9,6 +9,7 @@
 
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "serval_config.h"
 #include "serval_http.h"
 
 #include <algorithm>
@@ -2550,10 +2551,11 @@ asynStatus ADTimePix::initAcquisition(){
         config_j["BiasVoltage"] = intNum;
 
         getIntegerParam(ADTimePixBiasEnable, &intNum);
-        json biasEnabled;
-        biasEnabled[0] = "false";
-        biasEnabled[1] = "true";
-        config_j["BiasEnabled"] = biasEnabled[intNum];
+        if (!ADTimePix3ServalConfig::setBiasEnabled(config_j, intNum)) {
+            setIntegerParam(ADTimePixHttpCode, 400);
+            setStringParam(ADTimePixWriteMsg, "BiasEnabled must be 0 or 1");
+            return asynError;
+        }
 
         getIntegerParam(ADTimePixChainMode, &intNum);
         json chainMode;

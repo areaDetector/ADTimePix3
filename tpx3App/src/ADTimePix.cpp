@@ -39,6 +39,7 @@
 // Area Detector include
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "serval_config.h"
 
 #define delim "/"
 
@@ -435,6 +436,13 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     this->getAddress(pasynUser, &addr);
 
     getIntegerParam(ADAcquire, &acquiring);
+
+    if (function == ADTimePixBiasEnable &&
+        !ADTimePix3ServalConfig::isBiasEnabledValue(value)) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                      "BiasEnabled must be 0 or 1 (received %d)", value);
+        return asynError;
+    }
 
     status = setIntegerParam(addr, function, value);
     // start/stop acquisition

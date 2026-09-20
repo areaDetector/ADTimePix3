@@ -7,6 +7,7 @@
 #include "FakeServalHttpServer.h"
 #include "FakeServalTcpServer.h"
 #include "network_client.h"
+#include "serval_config.h"
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -21,6 +22,8 @@
 
 #include <epicsUnitTest.h>
 #include <testMain.h>
+
+#include <json.hpp>
 
 using adtimepix_test::FakeHttpRequest;
 using adtimepix_test::FakeHttpResponse;
@@ -186,7 +189,7 @@ void testHttpRequestAndResponse()
     response.body = "{malformed";
     FakeServalHttpServer server(response, true);
     const int client = connectLoopback(server.port());
-    const std::string body = "{\"BiasEnabled\":1}";
+    const std::string body = "{\"FixtureValue\":1}";
     const std::string request =
         "PUT /detector/config HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\n" +
         std::string("Content-Length: ") + std::to_string(body.size()) + "\r\n\r\n" + body;
@@ -215,14 +218,49 @@ void testHttpRequestAndResponse()
     close(client);
 }
 
+void testBiasEnabledSerialization()
+{
+    nlohmann::json disabled = nlohmann::json::object();
+    testOk(ADTimePix3ServalConfig::setBiasEnabled(disabled, 0),
+           "production config builder accepts BiasEnabled=0");
+    testOk(disabled.dump() == "{\"BiasEnabled\":false}",
+           "production config builder serializes BiasEnabled=0 as JSON false");
+
+    nlohmann::json enabled = nlohmann::json::object();
+    testOk(ADTimePix3ServalConfig::setBiasEnabled(enabled, 1),
+           "production config builder accepts BiasEnabled=1");
+    testOk(enabled.dump() == "{\"BiasEnabled\":true}",
+           "production config builder serializes BiasEnabled=1 as JSON true");
+
+    nlohmann::json invalid = {{"BiasEnabled", false}};
+    testOk(!ADTimePix3ServalConfig::setBiasEnabled(invalid, 2),
+           "production config builder rejects an invalid BiasEnabled value");
+    testOk(invalid["BiasEnabled"].is_boolean() && !invalid["BiasEnabled"].get<bool>(),
+           "invalid BiasEnabled input leaves the existing configuration unchanged");
+
+    FakeHttpResponse response;
+    FakeServalHttpServer server(response);
+    const int client = connectLoopback(server.port());
+    const std::string body = enabled.dump();
+    const std::string request =
+        "PUT /detector/config HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\n" +
+        std::string("Content-Length: ") + std::to_string(body.size()) + "\r\n\r\n" + body;
+    testOk(client >= 0 && sendAll(client, request),
+           "production-built BiasEnabled request reaches the fake HTTP peer");
+    testOk(server.waitForRequest(kFixtureDeadline) && server.request().body == body,
+           "fake HTTP peer records the exact boolean request body");
+    close(client);
+}
+
 }  // namespace
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(21);
+    testPlan(29);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
     testHttpRequestAndResponse();
+    testBiasEnabledSerialization();
     return testDone();
 }
