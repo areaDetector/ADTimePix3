@@ -39,6 +39,7 @@
 // Area Detector include
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "one_shot_action.h"
 #include "serval_config.h"
 
 #define delim "/"
@@ -540,12 +541,13 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             || function == ADTimePixStemRadiusOuter || function == ADTimePixStemRadiusInner) {
         status = sendMeasurementConfig();
     }
-    else if(function == ADTimePixWriteBPCFile) { 
-        status = uploadBPC();
-    }
-
-    else if(function == ADTimePixWriteDACSFile) { 
-        status = uploadDACS();
+    else if(function == ADTimePixWriteBPCFile || function == ADTimePixWriteDACSFile) {
+        const ADTimePix3Action::OneShotDecision action =
+            ADTimePix3Action::oneShotDecision(value);
+        setIntegerParam(addr, function, action.storedValue);
+        if (action.execute) {
+            status = function == ADTimePixWriteBPCFile ? uploadBPC() : uploadDACS();
+        }
     }
 
     else if(function == ADTimePixWriteData) { 

@@ -18,6 +18,7 @@ INC += ADTimePixLog.h
 INC += bpc_file_io.h
 INC += detector_family.h
 INC += network_client.h
+INC += one_shot_action.h
 INC += serval_http.h
 INC += serval_config.h
 INC += serval_stream_validation.h
