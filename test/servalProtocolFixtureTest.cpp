@@ -329,7 +329,7 @@ void testMeasurementResponseValidation()
            "measurement parser rejects a non-object JSON root");
 }
 
-void testBiasEnabledSerialization()
+void testDetectorConfigBooleanSerialization()
 {
     using ADTimePix3ServalConfig::ParseError;
 
@@ -365,6 +365,18 @@ void testBiasEnabledSerialization()
            "production config builder rejects an invalid BiasEnabled value");
     testOk(invalid["BiasEnabled"].is_boolean() && !invalid["BiasEnabled"].get<bool>(),
            "invalid BiasEnabled input leaves the existing configuration unchanged");
+
+    nlohmann::json clocks = nlohmann::json::object();
+    testOk(ADTimePix3ServalConfig::setBoolean(clocks, "ExternalReferenceClock", 1) &&
+               clocks["ExternalReferenceClock"].is_boolean() &&
+               clocks["ExternalReferenceClock"].get<bool>(),
+           "production config builder serializes ExternalReferenceClock=1 as JSON true");
+    testOk(ADTimePix3ServalConfig::setBoolean(clocks, "PeriphClk80", 0) &&
+               clocks["PeriphClk80"].is_boolean() && !clocks["PeriphClk80"].get<bool>(),
+           "production config builder serializes PeriphClk80=0 as JSON false");
+    testOk(!ADTimePix3ServalConfig::setBoolean(clocks, "PeriphClk80", -1) &&
+               clocks["PeriphClk80"].is_boolean() && !clocks["PeriphClk80"].get<bool>(),
+           "invalid clock boolean input leaves the existing configuration unchanged");
 
     FakeHttpResponse response;
     FakeServalHttpServer server(response);
@@ -536,14 +548,14 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(75);
+    testPlan(78);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
     testHttpRequestAndResponse();
     testProductionHttpClient();
     testMeasurementResponseValidation();
-    testBiasEnabledSerialization();
+    testDetectorConfigBooleanSerialization();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();

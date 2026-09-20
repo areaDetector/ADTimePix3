@@ -30,6 +30,9 @@ const char* parseErrorMessage(ParseError error);
 
 bool isBiasEnabledValue(int value);
 
+/** Set a JSON boolean from an EPICS bo value. Returns false unless value is 0 or 1. */
+bool setBoolean(nlohmann::json& config, const char* field, int value);
+
 /** Set BiasEnabled from its EPICS bo value. Returns false unless value is 0 or 1. */
 bool setBiasEnabled(nlohmann::json& config, int value);
 

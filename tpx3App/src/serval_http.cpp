@@ -2583,16 +2583,20 @@ asynStatus ADTimePix::initAcquisition(){
             config_j["Tdc"][1] = tdc[intNum];
 
             getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
-            json externalClock;
-            externalClock[0] = "false";
-            externalClock[1] = "true";
-            config_j["ExternalReferenceClock"] = externalClock[intNum];
+            if (!ADTimePix3ServalConfig::setBoolean(
+                    config_j, "ExternalReferenceClock", intNum)) {
+                setIntegerParam(ADTimePixHttpCode, 400);
+                setStringParam(ADTimePixWriteMsg,
+                               "ExternalReferenceClock must be 0 or 1");
+                return asynError;
+            }
 
             getIntegerParam(ADTimePixPeriphClk80, &intNum);
-            json peripheralClock80;
-            peripheralClock80[0] = "false";
-            peripheralClock80[1] = "true";
-            config_j["PeriphClk80"] = peripheralClock80[intNum];
+            if (!ADTimePix3ServalConfig::setBoolean(config_j, "PeriphClk80", intNum)) {
+                setIntegerParam(ADTimePixHttpCode, 400);
+                setStringParam(ADTimePixWriteMsg, "PeriphClk80 must be 0 or 1");
+                return asynError;
+            }
         } else {
             stripTpx3DetectorConfigFields(config_j);
             getIntegerParam(ADTimePixBothCounters, &intNum);
