@@ -19,6 +19,9 @@
  */
 class NetworkClient {
 public:
+    /** Maximum time a stream worker waits in one recv() call before rechecking stop state. */
+    static constexpr int kReceivePollTimeoutMs = 250;
+
     NetworkClient();
     ~NetworkClient();
 
@@ -62,6 +65,9 @@ public:
      * @return Number of bytes received, -1 on error, 0 on connection closed
      */
     ssize_t receive(char* buffer, size_t max_size);
+
+    /** True when recv() ended only because the configured receive poll interval elapsed. */
+    static bool isReceiveTimeout(int errorCode);
 
     /**
      * @brief Receive exact amount of data

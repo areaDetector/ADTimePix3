@@ -209,6 +209,24 @@ void testProductionNetworkClient()
            "production receive_exact joins deterministic TCP fragments byte-for-byte");
     testOk(server.waitForChunksSent(3, kFixtureDeadline),
            "production client consumes the complete scripted TCP payload");
+
+    FakeServalTcpServer silentServer({"not released"}, false);
+    NetworkClient silentClient;
+    testOk(silentClient.connect("127.0.0.1", silentServer.port()) &&
+               silentServer.waitForClient(kFixtureDeadline),
+           "production NetworkClient connects to a silent TCP peer");
+    char byte = 0;
+    const auto started = std::chrono::steady_clock::now();
+    errno = 0;
+    const ssize_t silentRead = silentClient.receive(&byte, 1);
+    const int receiveError = errno;
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - started);
+    testOk(silentRead < 0 && NetworkClient::isReceiveTimeout(receiveError) &&
+               elapsed < kFixtureDeadline,
+           "production NetworkClient bounds a receive from a silent peer");
+    testOk(NetworkClient::kReceivePollTimeoutMs == 250,
+           "production stream receive polling uses the documented interval");
 }
 
 void testHttpRequestAndResponse()
@@ -475,7 +493,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(63);
+    testPlan(66);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
