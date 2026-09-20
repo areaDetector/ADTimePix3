@@ -35,6 +35,7 @@ LIB_SRCS += img_accumulation.cpp
 LIB_SRCS += histogram_io.cpp
 LIB_SRCS += network_client.cpp
 LIB_SRCS += serval_config.cpp
+LIB_SRCS += serval_http_client.cpp
 LIB_SRCS += serval_stream_validation.cpp
 LIB_SRCS += serval_stream.cpp
 LIB_SRCS += serval_http.cpp

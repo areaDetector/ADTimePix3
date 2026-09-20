@@ -34,9 +34,6 @@ extern const char* driverName;
 namespace {
 
 constexpr size_t kPixelConfigBytes = 65536;  /* TPX3 per chip; MPX3 uses 2× (see bpcThresholdSlices) */
-const cpr::Authentication kServalAuth{"user", "pass", cpr::AuthMode::BASIC};
-const cpr::Parameters kServalParams{{"anon", "true"}, {"key", "value"}};
-const cpr::Header kJsonHeader{{"Content-Type", "application/json"}};
 
 bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
     static const char kChars[] =
@@ -60,34 +57,6 @@ bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
 }
 
 }  // namespace
-
-namespace ADTimePix3ServalHttp {
-
-cpr::Response get(const std::string& url) {
-    return cpr::Get(cpr::Url{url}, kServalAuth, kServalParams);
-}
-
-cpr::Response get(const std::string& url, int timeout_ms) {
-    return cpr::Get(cpr::Url{url}, kServalAuth, kServalParams, cpr::Timeout{timeout_ms});
-}
-
-cpr::Response getAuthOnly(const std::string& url) {
-    return cpr::Get(cpr::Url{url}, kServalAuth);
-}
-
-cpr::Response getJson(const std::string& url, int timeout_ms) {
-    return cpr::Get(cpr::Url{url}, kJsonHeader, cpr::Timeout{timeout_ms});
-}
-
-cpr::Response putJson(const std::string& url, const std::string& body) {
-    return cpr::Put(cpr::Url{url}, cpr::Body{body}, kJsonHeader);
-}
-
-cpr::Response putJson(const std::string& url, const std::string& body, int timeout_ms) {
-    return cpr::Put(cpr::Url{url}, cpr::Body{body}, kJsonHeader, cpr::Timeout{timeout_ms});
-}
-
-}  // namespace ADTimePix3ServalHttp
 
 static string strip_quotes(string str) {
     if (str.length() > 1)

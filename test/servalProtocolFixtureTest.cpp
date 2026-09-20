@@ -10,6 +10,7 @@
 #include "network_client.h"
 #include "one_shot_action.h"
 #include "serval_config.h"
+#include "serval_http.h"
 #include "serval_stream_validation.h"
 
 #include <arpa/inet.h>
@@ -248,6 +249,42 @@ void testHttpRequestAndResponse()
     close(client);
 }
 
+void testProductionHttpClient()
+{
+    FakeHttpResponse response;
+    response.status = 200;
+    response.reason = "OK";
+    response.headers["Content-Type"] = "application/json";
+    response.body = "{\"ok\":true}";
+
+    FakeServalHttpServer normalServer(response);
+    const std::string body = "{\"BiasEnabled\":true}";
+    const cpr::Response normal = ADTimePix3ServalHttp::putJson(
+        normalServer.baseUrl() + "/detector/config", body, 1000);
+    testOk(normal.status_code == 200 && normal.text == response.body,
+           "production HTTP helper returns the fake Serval response");
+    const FakeHttpRequest recorded = normalServer.request();
+    const auto contentType = recorded.headers.find("content-type");
+    testOk(recorded.method == "PUT" && recorded.target == "/detector/config" &&
+               recorded.body == body && contentType != recorded.headers.end() &&
+               contentType->second == "application/json",
+           "production HTTP helper sends the exact JSON request");
+
+    FakeServalHttpServer heldServer(response, true);
+    const auto started = std::chrono::steady_clock::now();
+    const cpr::Response timedOut = ADTimePix3ServalHttp::getAuthOnly(
+        heldServer.baseUrl() + "/slow", 100);
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - started);
+    testOk(heldServer.waitForRequest(kFixtureDeadline),
+           "fake Serval observes the bounded production HTTP request");
+    testOk(timedOut.error.code == cpr::ErrorCode::OPERATION_TIMEDOUT &&
+               elapsed < kFixtureDeadline,
+           "production HTTP helper returns after its configured timeout");
+    testOk(ADTimePix3ServalHttp::kDefaultTimeoutMs == 10000,
+           "production HTTP helpers use the documented ten-second default timeout");
+}
+
 void testBiasEnabledSerialization()
 {
     nlohmann::json disabled = nlohmann::json::object();
@@ -438,11 +475,12 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(58);
+    testPlan(63);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
     testHttpRequestAndResponse();
+    testProductionHttpClient();
     testBiasEnabledSerialization();
     testStreamHeaderValidation();
     testBpcFileBounds();
