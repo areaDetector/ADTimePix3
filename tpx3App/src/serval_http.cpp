@@ -1129,9 +1129,8 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
 asynStatus ADTimePix::refreshPixelConfigFromServal() {
     FLOW_ARGS("fetch per chip, compare to BPC on disk");
     asynStatus status = asynSuccess;
-    char* bpcBuf = NULL;
-    int bpcSize = 0;
-    readBPCfile(&bpcBuf, &bpcSize);
+    std::vector<std::uint8_t> bpcData;
+    const bool haveBpc = readBPCfile(bpcData) == asynSuccess;
 
     int nChips = 1;
     getIntegerParam(ADTimePixNumberOfChips, &nChips);
@@ -1189,7 +1188,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
             const int decLen = static_cast<int>(decoded.size());
             setIntegerParam(chip, ADTimePixPixelConfigLen, decLen);
 
-            if (!bpcBuf || bpcSize <= 0) {
+            if (!haveBpc) {
                 setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 2);
                 setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
                 setStringParam(chip, ADTimePixPixelConfigStatus, "OK, no BPC file");
@@ -1198,12 +1197,12 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
             }
 
             const size_t offset = static_cast<size_t>(chip) * kPixelConfigBytes;
-            if (offset >= static_cast<size_t>(bpcSize)) {
+            if (offset >= bpcData.size()) {
                 setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
                 setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
                 epicsSnprintf(statusMsg, sizeof(statusMsg),
-                              "BPC too small for chip (need offset %zu, have %d)", offset,
-                              bpcSize);
+                              "BPC too small for chip (need offset %zu, have %zu)", offset,
+                              bpcData.size());
                 setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
                 callParamCallbacks(chip);
                 continue;
@@ -1211,12 +1210,12 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
 
             /* One chip = kPixelConfigBytes in file; do not use (bpcSize - offset) alone or a
              * 4×64KiB file makes chip0 "slice" 262144B and decoded 65536B always "length mismatch". */
-            const size_t bytesFromOffset = static_cast<size_t>(bpcSize) - offset;
+            const size_t bytesFromOffset = bpcData.size() - offset;
             const size_t chipFileLen = std::min(kPixelConfigBytes, bytesFromOffset);
             const size_t ncmp = decoded.size() < chipFileLen ? decoded.size() : chipFileLen;
             epicsInt64 mismatch = 0;
             for (size_t i = 0; i < ncmp; i++) {
-                if (decoded[i] != static_cast<unsigned char>(bpcBuf[offset + i])) mismatch++;
+                if (decoded[i] != bpcData[offset + i]) mismatch++;
             }
             chipDecoded[static_cast<size_t>(chip)] = 1;
             for (size_t i = 0; i < decoded.size() && i < kPixelConfigBytes && offset + i < serValLinear.size(); ++i) {
@@ -1251,7 +1250,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
         }
     }
 
-    if (bpcBuf && bpcSize > 0) {
+    if (haveBpc) {
         epicsMutexLock(pixelConfigDiffMutex_);
         std::fill(pixelConfigDiff_.begin(), pixelConfigDiff_.end(), 0);
         for (int j = 0; j < rowsLay; ++j) {
@@ -1259,7 +1258,8 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                 const size_t imgLin = static_cast<size_t>(j) * static_cast<size_t>(colsLay) + static_cast<size_t>(i);
                 if (imgLin >= pixelConfigDiff_.size()) continue;
                 const int k = pelIndex(i, j);
-                if (k < 0 || k >= bpcSize || static_cast<size_t>(k) >= serValLinear.size()) {
+                if (k < 0 || static_cast<size_t>(k) >= bpcData.size() ||
+                    static_cast<size_t>(k) >= serValLinear.size()) {
                     pixelConfigDiff_[imgLin] = 0;
                     continue;
                 }
@@ -1270,20 +1270,16 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                     continue;
                 }
                 const int a = static_cast<int>(serValLinear[static_cast<size_t>(k)]);
-                const int b = static_cast<int>(static_cast<unsigned char>(bpcBuf[k]));
+                const int b = static_cast<int>(bpcData[static_cast<size_t>(k)]);
                 pixelConfigDiff_[imgLin] = static_cast<epicsInt32>(a > b ? a - b : b - a);
             }
         }
         epicsMutexUnlock(pixelConfigDiffMutex_);
     }
 
-    if (bpcBuf && bpcSize > 0) {
-        exportMaskedPelsJsonFromBpcBuffer(bpcBuf, bpcSize);
-    }
-
-    if (bpcBuf) {
-        free(bpcBuf);
-        bpcBuf = NULL;
+    if (haveBpc) {
+        exportMaskedPelsJsonFromBpcBuffer(
+            reinterpret_cast<const char*>(bpcData.data()), static_cast<int>(bpcData.size()));
     }
     /* Waveform PixelConfigDiff: row-major image (j*cols+i), same convention as maskCircle / mask write; file index via pelIndex. */
     const size_t ncb = pixelConfigDiff_.size();

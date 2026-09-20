@@ -19,6 +19,7 @@
 // Area Detector include
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "bpc_file_io.h"
 
 extern const char* driverName;  // defined in ADTimePix.cpp (same as histogram_io.cpp)
 
@@ -85,13 +86,7 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
     int maskOnOff_val, maskReset_val, maskRectangle_val, maskCircle_val;
     int maskRectangle_MinX, maskRectangle_SizeX, maskRectangle_MinY, maskRectangle_SizeY, maskCircle_Radius;
     int maskBPCfile_val, maskWrite_val;
-    int pathExists=0;
-
-    std::string BPCFilePath, BPCFileName, maskFileName, fullFileName;
-
-    // buffer for reading BPC file (caller must free when done)
-    char *bufBPC = NULL;
-    int bufBPCSize = 0;
+    std::vector<std::uint8_t> bpcData;
 
     // write new mask
     int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
@@ -110,10 +105,6 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
         getIntegerParam(ADTimePixMaskPel,&maskBPCfile_val);
         getIntegerParam(ADTimePixMaskWrite,&maskWrite_val);
 
-        getStringParam(ADTimePixBPCFilePath, BPCFilePath);
-        getStringParam(ADTimePixBPCFileName, BPCFileName);
-        getStringParam(ADTimePixMaskFileName, maskFileName);
-
         if (maskReset_val == 1) {            
             FLOW_ARGS("MaskBPC: reset (waveform nElements=%zu)", nElements);
             maskReset(value, maskOnOff_val);              
@@ -127,84 +118,73 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             maskCircle(value, maskRectangle_MinX, maskRectangle_MinY, maskCircle_Radius, maskOnOff_val);
         }
         else if (maskBPCfile_val == 1) {
-            fullFileName = BPCFilePath + BPCFileName;
-        //    printf("The readInt32Array bpc file read, %ld\n", nElements);
-            pathExists = checkFile(fullFileName);
-            if (pathExists == 2) {  // BPC file exists, read and process it
-        //        printf("mask,BPC file Exists=%d\n",pathExists);
-                readBPCfile(&bufBPC, &bufBPCSize);
-                rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
-                if (bufBPCSize > 0) {
-                    /* Same image <-> file map as mask write / PixelConfigDiff: pelIndex(i,j), not bpc2ImgIndex. */
-                    for (size_t v = 0; v < nElements; ++v) {
-                        value[v] = 0;
-                    }
-                    for (int j = 0; j < COLS; ++j) {
-                        for (int i = 0; i < ROWS; ++i) {
-                            const size_t idx = static_cast<size_t>(j) * static_cast<size_t>(COLS) +
-                                               static_cast<size_t>(i);
-                            if (idx >= nElements) continue;
-                            const int k = pelIndex(i, j);
-                            if (k >= 0 && k < bufBPCSize && (bufBPC[k] & (1 << 0))) {
-                                value[idx] |= 1 << 1;
-                            }
+            if (readBPCfile(bpcData) != asynSuccess) {
+                *nIn = 0;
+                return asynError;
+            }
+            rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
+            if (!bpcData.empty()) {
+                /* Same image <-> file map as mask write / PixelConfigDiff: pelIndex(i,j), not bpc2ImgIndex. */
+                for (size_t v = 0; v < nElements; ++v) {
+                    value[v] = 0;
+                }
+                for (int j = 0; j < COLS; ++j) {
+                    for (int i = 0; i < ROWS; ++i) {
+                        const size_t idx = static_cast<size_t>(j) * static_cast<size_t>(COLS) +
+                                           static_cast<size_t>(i);
+                        if (idx >= nElements) continue;
+                        const int k = pelIndex(i, j);
+                        if (k >= 0 && static_cast<size_t>(k) < bpcData.size() &&
+                            (bpcData[static_cast<size_t>(k)] & (1 << 0))) {
+                            value[idx] |= 1 << 1;
                         }
                     }
                 }
             }
         }
         else if (maskWrite_val == 1) {
-            fullFileName = BPCFilePath + BPCFileName;
-            pathExists = checkFile(fullFileName);
-            if (pathExists == 2) {  // BPC file exists, read it into bufBPC, and apply mask
-
-                readBPCfile(&bufBPC, &bufBPCSize);
-                rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
-                for (int j = 0; j < COLS; ++j) {
-                    for (int i = 0; i < ROWS; ++i) {
-                        if (value[j*COLS + i]  & (1 << 0)) {
-                            bufBPC[pelIndex(i, j)] |= (1 << 0);
-                        }
+            if (readBPCfile(bpcData) != asynSuccess) {
+                *nIn = 0;
+                return asynError;
+            }
+            rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
+            for (int j = 0; j < COLS; ++j) {
+                for (int i = 0; i < ROWS; ++i) {
+                    const size_t imageIndex = static_cast<size_t>(j) *
+                                              static_cast<size_t>(COLS) +
+                                              static_cast<size_t>(i);
+                    const int bpcIndex = pelIndex(i, j);
+                    if (imageIndex < nElements && bpcIndex >= 0 &&
+                        static_cast<size_t>(bpcIndex) < bpcData.size() &&
+                        (value[imageIndex] & (1 << 0))) {
+                        bpcData[static_cast<size_t>(bpcIndex)] |= (1 << 0);
                     }
                 }
-                writeBPCfile(&bufBPC, &bufBPCSize);
             }
-            else {
-                    WARN_ARGS("Mask write: BPC path not ready (pathExists=%d) for \"%s\"", pathExists,
-                              BPCFilePath.c_str());
-                }
+            if (writeBPCfile(bpcData) != asynSuccess) {
+                *nIn = 0;
+                return asynError;
+            }
         }
         else {
             FLOW_ARGS("MaskBPC: no draw op (nElements=%zu)", nElements);
         }
     }
     else if (reason == ADTimePixBPC) {
-        getStringParam(ADTimePixBPCFilePath, BPCFilePath);
-        getStringParam(ADTimePixBPCFileName, BPCFileName);
-        fullFileName = BPCFilePath + BPCFileName;
-
-    //    printf("calib,The readInt32Array bpc file read, %ld\n", nElements);
-        pathExists = checkFile(fullFileName);
-    //    printf("calibration, BPC file Exists=%d\n",pathExists);
-        if (pathExists == 2) {  // BPC file exists, read and process it
-            readBPCfile(&bufBPC, &bufBPCSize);
-    //        printf("bufPBCSize=%d, strLen_bufBPC=%ld\n",bufBPCSize, strlen(bufBPC));
-            if (bufBPCSize > 0) {
-                for(size_t i = 0; i < nElements; i++){
-                    value[i] = bufBPC[i];
-                    if (bufBPC[i] & (1 << 0)) {
-                        value[i] |= 1 << 8;     // masked pel, 31-> 287
-                //        printf("bufBPC[%ld]=%d\n",i,value[i]);
-                    }
+        if (readBPCfile(bpcData) != asynSuccess) {
+            *nIn = 0;
+            return asynError;
+        }
+        if (!bpcData.empty()) {
+            const size_t copied = std::min(nElements, bpcData.size());
+            for (size_t i = 0; i < copied; i++) {
+                value[i] = bpcData[i];
+                if (bpcData[i] & (1 << 0)) {
+                    value[i] |= 1 << 8;     // masked pel, 31-> 287
                 }
             }
+            for (size_t i = copied; i < nElements; ++i) value[i] = 0;
         }
-    }
-
-    // Free BPC buffer if readBPCfile() allocated it (avoids memory leak)
-    if (bufBPC) {
-        free(bufBPC);
-        bufBPC = NULL;
     }
 
     callParamCallbacks();
@@ -344,6 +324,12 @@ asynStatus ADTimePix::checkBPCPath()
  * serverURL + /config/load?format=pixelconfig&file= path + fileName.
  */
 asynStatus ADTimePix::uploadBPC(){
+    std::vector<std::uint8_t> validatedData;
+    if (readBPCfile(validatedData) != asynSuccess) {
+        ERR("uploadBPC: local BPC validation failed; request not sent");
+        return asynError;
+    }
+
     asynStatus status = asynSuccess;
     std::string bpc_file, filePath, fileName;
 
@@ -363,22 +349,33 @@ asynStatus ADTimePix::uploadBPC(){
     return status;
 }
 
-/*
-* buf - bpc file read into char array
-* bufSize - number of bytes / elements / pixels in the bpc file
-*/
-asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {   
+asynStatus ADTimePix::expectedBPCSize(std::size_t& size)
+{
+    int pixelCount = 0;
+    getIntegerParam(ADTimePixPixCount, &pixelCount);
+    if (!ADTimePix3BpcFile::expectedSize(pixelCount,
+                                         detectorCapabilities_.bpcBytesPerPel,
+                                         detectorCapabilities_.bpcThresholdSlices,
+                                         size)) {
+        char message[192];
+        epicsSnprintf(message, sizeof(message),
+                      "Invalid BPC geometry: pixels=%d bytes/pixel=%d slices=%d",
+                      pixelCount, detectorCapabilities_.bpcBytesPerPel,
+                      detectorCapabilities_.bpcThresholdSlices);
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("%s", message);
+        callParamCallbacks();
+        return asynError;
+    }
+    return asynSuccess;
+}
 
-    FILE *sourceFile;
-    long fileSize;
-    char *buffer;
-    int nMaskedPel=0;
-    int nRead=0;
-
-    *bufSize = 0;
+asynStatus ADTimePix::readBPCfile(std::vector<std::uint8_t>& data) {
+    int nMaskedPel = 0;
+    std::size_t expectedSize = 0;
 
     // BPC calibration mask file to read, and write new mask.
-    std::string maskFile, filePath, fileName, fullFileName;
+    std::string filePath, fileName, fullFileName;
 
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixBPCFileName, fileName);
@@ -386,45 +383,28 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
 
 //    printf("ReadBPC: name=%s\n", fullFileName.c_str());
 
-    // Open the source file for reading
-    sourceFile = fopen(fullFileName.c_str(), "rb");
-    if (sourceFile == NULL) {
-        perror("Error opening source file");
-        return asynSuccess;
+    if (expectedBPCSize(expectedSize) != asynSuccess) return asynError;
+    const ADTimePix3BpcFile::Status fileStatus =
+        ADTimePix3BpcFile::readExact(fullFileName, expectedSize, data);
+    if (fileStatus != ADTimePix3BpcFile::Status::Ok) {
+        char message[256];
+        epicsSnprintf(message, sizeof(message), "ReadBPC: %s: %s",
+                      ADTimePix3BpcFile::statusMessage(fileStatus), fullFileName.c_str());
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("%s", message);
+        callParamCallbacks();
+        return asynError;
     }
 
-    // Determine the size of the source file
-    fseek(sourceFile, 0, SEEK_END);  // Move to the end of the file
-    fileSize = ftell(sourceFile);    // Get the current position (file size)
-    rewind(sourceFile);              // Go back to the beginning of the file
-
-    // Allocate memory for the buffer
-    buffer = (char *)malloc(fileSize);
-    if (buffer == NULL) {
-        perror("Error allocating memory");
-        fclose(sourceFile);
-        return asynSuccess;
-    }
-
-    // Read the entire BPC file into the buffer
-    nRead = fread(buffer, 1, fileSize, sourceFile);
-    fclose(sourceFile);
-
-    // pass pointer to buffer;
-    *buf = buffer;
-    *bufSize = fileSize;
-    // printf("\nbufSize=%d, fileSize=%ld, strlen_buf=%ld, strlen_buffer=%ld\n", *bufSize, fileSize, strlen(*buf), strlen(buffer));
-
-    for (int i = 0; i < fileSize; i++) {
+    for (std::uint8_t byte : data) {
         // Check if the bit at position N=0 is set to 1
-        if (buffer[i] & (1 << 0)) {
+        if (byte & (1 << 0)) {
             nMaskedPel += 1;
-        //    printf("Bit i=%d, nMaskedPel=%d, buffer[i]=%d\n", i, nMaskedPel, buffer[i]);
         }
     }
     setIntegerParam(ADTimePixBPCn, nMaskedPel);
-    LOG_ARGS("ReadBPC: file=\"%s\" bytes read=%d bytes with mask bit0 set=%d (used for BPCn)",
-             fullFileName.c_str(), nRead, nMaskedPel);
+    LOG_ARGS("ReadBPC: file=\"%s\" bytes read=%zu bytes with mask bit0 set=%d (used for BPCn)",
+             fullFileName.c_str(), data.size(), nMaskedPel);
 
     callParamCallbacks();
 
@@ -434,13 +414,13 @@ asynStatus ADTimePix::readBPCfile(char **buf, int *bufSize) {
 /*
 * Write bpc file containing mask created.
 */
-asynStatus ADTimePix::writeBPCfile(char **buf, int *bufSize) {
-    int status = asynSuccess;
+asynStatus ADTimePix::writeBPCfile(const std::vector<std::uint8_t>& data) {
+    asynStatus status = asynSuccess;
     int pathExists = 0, maskExists = 0;
-    FILE *destFile;
+    std::size_t expectedSize = 0;
 
     // BPC calibration mask file to write new mask.
-    std::string maskFile, filePath, fileName, fullFileName, bpcFileName;
+    std::string maskFile, filePath, fullFileName, bpcFileName;
 
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixMaskFileName, maskFile);
@@ -470,24 +450,28 @@ asynStatus ADTimePix::writeBPCfile(char **buf, int *bufSize) {
         }
     }
     else {
+        char message[256];
+        epicsSnprintf(message, sizeof(message),
+                      "Mask: BPC file path is not a directory: %s", filePath.c_str());
+        setStringParam(ADTimePixWriteMsg, message);
         ERR_ARGS("Mask: BPCFilePath is not a directory (pathExists=%d), aborting write to \"%s\"",
                  pathExists, filePath.c_str());
-        return asynSuccess;
-    }
-
-    destFile = fopen(fullFileName.c_str(), "wb");
-    if (destFile == NULL) {
-        perror("Error opening destination file");
+        callParamCallbacks();
         return asynError;
     }
 
-    // Write the buffer to the destination file
-    fwrite(*buf, 1, *bufSize, destFile);
-
-    // Clean up
-    fclose(destFile);
-
-//    printf("File copied successfully.\n");
+    if (expectedBPCSize(expectedSize) != asynSuccess) return asynError;
+    const ADTimePix3BpcFile::Status fileStatus =
+        ADTimePix3BpcFile::writeExact(fullFileName, data, expectedSize);
+    if (fileStatus != ADTimePix3BpcFile::Status::Ok) {
+        char message[256];
+        epicsSnprintf(message, sizeof(message), "WriteBPC: %s: %s",
+                      ADTimePix3BpcFile::statusMessage(fileStatus), fullFileName.c_str());
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("%s", message);
+        callParamCallbacks();
+        return asynError;
+    }
 
     // Write mask file to TimePix3 chip
     getStringParam(ADTimePixBPCFileName, bpcFileName);

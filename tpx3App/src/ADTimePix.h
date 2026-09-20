@@ -424,8 +424,9 @@ class ADTimePix : public ADDriver{
         asynStatus maskReset(epicsInt32 *buf, int OnOff);
         asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
         asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
-        asynStatus readBPCfile(char **buf, int *bufSize);
-        asynStatus writeBPCfile(char **buf, int *bufSize);
+        asynStatus expectedBPCSize(std::size_t& size);
+        asynStatus readBPCfile(std::vector<std::uint8_t>& data);
+        asynStatus writeBPCfile(const std::vector<std::uint8_t>& data);
         asynStatus mask2DtoBPC(int *buf, char *bufBPC);
 
         void timePixCallback();
