@@ -11,6 +11,7 @@
 #include "ADTimePixLog.h"
 #include "network_client.h"
 #include "serval_http.h"
+#include "serval_measurement.h"
 
 #include <cstdio>
 #include <cstring>
@@ -748,10 +749,11 @@ void ADTimePix::timePixCallback(){
         callParamCallbacks();
         return;
     }
-    try {
-        measurement_j = json::parse(r.text.c_str());
-    } catch (const std::exception& e) {
-        ERR_ARGS("timePixCallback: measurement JSON parse failed: %s", e.what());
+    ADTimePix3ServalMeasurement::ParseError parseError =
+        ADTimePix3ServalMeasurement::parseResponse(r.text, measurement_j);
+    if (parseError != ADTimePix3ServalMeasurement::ParseError::None) {
+        ERR_ARGS("timePixCallback: invalid measurement response: %s",
+                 ADTimePix3ServalMeasurement::parseErrorMessage(parseError));
         setStringParam(ADStatusMessage, "Invalid measurement JSON; acquisition stopped");
         setIntegerParam(ADStatus, ADStatusIdle);
         this->acquiring = false;
@@ -806,10 +808,10 @@ void ADTimePix::timePixCallback(){
                                r.text);
                 break;
             }
-            try {
-                measurement_j = json::parse(r.text.c_str());
-            } catch (const std::exception& e) {
-                ERR_ARGS("timePixCallback: poll JSON parse failed: %s", e.what());
+            parseError = ADTimePix3ServalMeasurement::parseResponse(r.text, measurement_j);
+            if (parseError != ADTimePix3ServalMeasurement::ParseError::None) {
+                ERR_ARGS("timePixCallback: invalid poll response: %s",
+                         ADTimePix3ServalMeasurement::parseErrorMessage(parseError));
                 this->acquiring = false;
                 break;
             }
@@ -1032,7 +1034,16 @@ asynStatus ADTimePix::acquireStop(){
         return asynError;
     }
 
-    json measurement_j = json::parse(r.text.c_str());
+    json measurement_j;
+    const ADTimePix3ServalMeasurement::ParseError parseError =
+        ADTimePix3ServalMeasurement::parseResponse(r.text, measurement_j);
+    if (parseError != ADTimePix3ServalMeasurement::ParseError::None) {
+        ERR_ARGS("acquireStop: invalid post-stop measurement response: %s",
+                 ADTimePix3ServalMeasurement::parseErrorMessage(parseError));
+        setStringParam(ADStatusMessage, "Acquisition stopped; invalid measurement response");
+        callParamCallbacks();
+        return asynError;
+    }
 
     // Safely extract measurement info with null checks
     if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {

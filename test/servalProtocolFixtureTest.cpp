@@ -11,6 +11,7 @@
 #include "one_shot_action.h"
 #include "serval_config.h"
 #include "serval_http.h"
+#include "serval_measurement.h"
 #include "serval_stream_validation.h"
 
 #include <arpa/inet.h>
@@ -303,6 +304,31 @@ void testProductionHttpClient()
            "production HTTP helpers use the documented ten-second default timeout");
 }
 
+void testMeasurementResponseValidation()
+{
+    using ADTimePix3ServalMeasurement::ParseError;
+
+    nlohmann::json measurement;
+    testOk(ADTimePix3ServalMeasurement::parseResponse(
+               "{\"Info\":{\"Status\":\"DA_RECORDING\",\"FrameCount\":12}}",
+               measurement) == ParseError::None &&
+               measurement["Info"]["FrameCount"].get<int>() == 12,
+           "measurement parser accepts the Serval Info response shape");
+    testOk(ADTimePix3ServalMeasurement::parseResponse(
+               "{\"Status\":\"DA_IDLE\"}", measurement) == ParseError::None &&
+               measurement["Status"].get<std::string>() == "DA_IDLE",
+           "measurement parser accepts the legacy top-level status shape");
+    testOk(ADTimePix3ServalMeasurement::parseResponse("", measurement) ==
+               ParseError::EmptyBody && measurement.is_object() && measurement.empty(),
+           "measurement parser rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalMeasurement::parseResponse("{malformed", measurement) ==
+               ParseError::MalformedJson && measurement.is_object() && measurement.empty(),
+           "measurement parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalMeasurement::parseResponse("[]", measurement) ==
+               ParseError::InvalidRoot && measurement.is_object() && measurement.empty(),
+           "measurement parser rejects a non-object JSON root");
+}
+
 void testBiasEnabledSerialization()
 {
     nlohmann::json disabled = nlohmann::json::object();
@@ -493,12 +519,13 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(66);
+    testPlan(71);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
     testHttpRequestAndResponse();
     testProductionHttpClient();
+    testMeasurementResponseValidation();
     testBiasEnabledSerialization();
     testStreamHeaderValidation();
     testBpcFileBounds();
