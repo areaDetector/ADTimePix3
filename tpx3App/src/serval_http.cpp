@@ -2458,17 +2458,35 @@ asynStatus ADTimePix::initAcquisition(){
 
     if (r.status_code != 200) {
         setIntegerParam(ADTimePixDetConnected,0);
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
+        setStringParam(ADStatusMessage, "Failed to read detector configuration");
+        logHttpFailure("initAcquisition GET /detector/config", "GET", det_config,
+                       (long)r.status_code, r.text);
+        callParamCallbacks();
+        return asynError;
     }
     else {
         setIntegerParam(ADTimePixDetConnected,1);
     //    printf("initAcquisition: %s\n", r.text.c_str());
 
+        json config_j;
+        const ADTimePix3ServalConfig::ParseError parseError =
+            ADTimePix3ServalConfig::parseResponse(r.text, config_j);
+        if (parseError != ADTimePix3ServalConfig::ParseError::None) {
+            const std::string message = std::string("Invalid detector configuration response: ") +
+                ADTimePix3ServalConfig::parseErrorMessage(parseError);
+            ERR_ARGS("initAcquisition: %s", message.c_str());
+            setIntegerParam(ADTimePixHttpCode, r.status_code);
+            setStringParam(ADTimePixWriteMsg, message.c_str());
+            setStringParam(ADStatusMessage, message.c_str());
+            callParamCallbacks();
+            return asynError;
+        }
+
         if (detectorFamily_ == DetectorFamily::Unknown) {
             (void)getDetector();
         }
-
-        json config_j = json::parse(r.text.c_str());
         //printf("det_config=%s\n",config_j.dump(3,' ', true).c_str());
 
         getIntegerParam(ADTriggerMode, &intNum);
