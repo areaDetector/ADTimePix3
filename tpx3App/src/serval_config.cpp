@@ -13,6 +13,23 @@
 
 namespace ADTimePix3ServalConfig {
 
+namespace {
+
+const char* const kTdcValues[] = {"P0123", "N0123", "PN0123", "P0", "N0", "PN0"};
+
+int tdcIndex(const std::string& value)
+{
+    for (int index = 0;
+         index < static_cast<int>(sizeof(kTdcValues) / sizeof(kTdcValues[0])); ++index) {
+        if (value == kTdcValues[index]) {
+            return index;
+        }
+    }
+    return -1;
+}
+
+}  // namespace
+
 ParseError parseResponse(const std::string& body, nlohmann::json& config)
 {
     config = nlohmann::json::object();
@@ -89,13 +106,37 @@ bool setPolarity(nlohmann::json& config, int value)
 
 bool setTdc(nlohmann::json& config, int first, int second)
 {
-    static const char* values[] = {"P0123", "N0123", "PN0123", "P0", "N0", "PN0"};
-    const int count = static_cast<int>(sizeof(values) / sizeof(values[0]));
+    const int count = static_cast<int>(sizeof(kTdcValues) / sizeof(kTdcValues[0]));
     if (first < 0 || first >= count || second < 0 || second >= count) {
         return false;
     }
-    config["Tdc"] = nlohmann::json::array({values[first], values[second]});
+    config["Tdc"] = nlohmann::json::array({kTdcValues[first], kTdcValues[second]});
     return true;
+}
+
+bool parseTdc(const nlohmann::json& value, int& first, int& second)
+{
+    if (!value.is_array() || value.size() != 2 ||
+        !value[0].is_string() || !value[1].is_string()) {
+        return false;
+    }
+
+    const int parsedFirst = tdcIndex(value[0].get<std::string>());
+    const int parsedSecond = tdcIndex(value[1].get<std::string>());
+    if (parsedFirst < 0 || parsedSecond < 0) {
+        return false;
+    }
+
+    first = parsedFirst;
+    second = parsedSecond;
+    return true;
+}
+
+std::string formatTdc(const nlohmann::json& value)
+{
+    int first = 0;
+    int second = 0;
+    return parseTdc(value, first, second) ? value.dump() : std::string();
 }
 
 }  // namespace ADTimePix3ServalConfig

@@ -1409,7 +1409,15 @@ asynStatus ADTimePix::getDetector(){
         setIntegerParam(ADNumImages,                     jsonIntOr(cfg["nTriggers"]));
         setIntegerParam(ADTimePixPeriphClk80,              jsonBoolOr(cfg.value("PeriphClk80", json())) ? 1 : 0);
         setDoubleParam(ADTimePixTriggerDelay,            jsonDoubleOr(cfg.value("TriggerDelay", json())));
-        setStringParam(ADTimePixTdc,                     jsonStringOr(cfg.value("Tdc", json())).c_str());
+        const json tdc = cfg.value("Tdc", json());
+        const std::string tdcText = ADTimePix3ServalConfig::formatTdc(tdc);
+        setStringParam(ADTimePixTdc, tdcText.c_str());
+        int tdc0 = 0;
+        int tdc1 = 0;
+        if (ADTimePix3ServalConfig::parseTdc(tdc, tdc0, tdc1)) {
+            setIntegerParam(ADTimePixTdc0, tdc0);
+            setIntegerParam(ADTimePixTdc1, tdc1);
+        }
         setDoubleParam(ADTimePixGlobalTimestampInterval, jsonDoubleOr(cfg.value("GlobalTimestampInterval", json())));
         setIntegerParam(ADTimePixExternalReferenceClock, jsonBoolOr(cfg.value("ExternalReferenceClock", json())) ? 1 : 0);
         setIntegerParam(ADTimePixLogLevel,               jsonIntOr(cfg["LogLevel"]));

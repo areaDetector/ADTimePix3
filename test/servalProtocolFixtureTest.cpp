@@ -401,6 +401,39 @@ void testDetectorConfigBooleanSerialization()
     testOk(!ADTimePix3ServalConfig::setTdc(enums, 0, -1) && enums["Tdc"] == validTdc,
            "production config builder rejects a negative second Tdc value");
 
+    bool allTdcValuesRoundTrip = true;
+    for (int index = 0; index < 6; ++index) {
+        nlohmann::json roundTrip;
+        int first = -1;
+        int second = -1;
+        allTdcValuesRoundTrip = allTdcValuesRoundTrip &&
+            ADTimePix3ServalConfig::setTdc(roundTrip, index, 5 - index) &&
+            ADTimePix3ServalConfig::parseTdc(roundTrip["Tdc"], first, second) &&
+            first == index && second == 5 - index;
+    }
+    testOk(allTdcValuesRoundTrip,
+           "production Tdc readback round-trips every supported selector value");
+    testOk(ADTimePix3ServalConfig::formatTdc(
+               nlohmann::json::array({"P0", "PN0"})) == "[\"P0\",\"PN0\"]",
+           "aggregate Tdc readback preserves the complete JSON array");
+
+    int first = 3;
+    int second = 5;
+    testOk(!ADTimePix3ServalConfig::parseTdc("P0", first, second) &&
+               first == 3 && second == 5,
+           "Tdc readback rejects a non-array without changing prior values");
+    testOk(!ADTimePix3ServalConfig::parseTdc(nlohmann::json::array({"P0"}), first, second) &&
+               first == 3 && second == 5,
+           "Tdc readback rejects an incomplete array without changing prior values");
+    testOk(!ADTimePix3ServalConfig::parseTdc(
+               nlohmann::json::array({"unsupported", "PN0"}), first, second) &&
+               first == 3 && second == 5,
+           "Tdc readback rejects an unknown selector without changing prior values");
+    testOk(!ADTimePix3ServalConfig::parseTdc(
+               nlohmann::json::array({"P0", 5}), first, second) &&
+               first == 3 && second == 5,
+           "Tdc readback rejects a non-string selector without changing prior values");
+
     FakeHttpResponse response;
     FakeServalHttpServer server(response);
     const int client = connectLoopback(server.port());
@@ -571,7 +604,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(85);
+    testPlan(91);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

@@ -45,6 +45,12 @@ bool setPolarity(nlohmann::json& config, int value);
 /** Set both Serval Tdc strings from their EPICS mbbo values. */
 bool setTdc(nlohmann::json& config, int first, int second);
 
+/** Decode an exact two-entry Serval Tdc array into EPICS mbbo values. */
+bool parseTdc(const nlohmann::json& value, int& first, int& second);
+
+/** Format a valid Serval Tdc array for the aggregate string readback. */
+std::string formatTdc(const nlohmann::json& value);
+
 }  // namespace ADTimePix3ServalConfig
 
 #endif
