@@ -6,6 +6,7 @@
 
 #include "FakeServalHttpServer.h"
 #include "FakeServalTcpServer.h"
+#include "bpc_file_io.h"
 #include "network_client.h"
 #include "serval_config.h"
 #include "serval_stream_validation.h"
@@ -18,6 +19,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <fstream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -34,6 +37,31 @@ using adtimepix_test::FakeServalTcpServer;
 namespace {
 
 const std::chrono::milliseconds kFixtureDeadline(1000);
+
+class TemporaryFile {
+public:
+    TemporaryFile()
+    {
+        char path[] = "/tmp/adtimepix3-bpc-XXXXXX";
+        const int fd = mkstemp(path);
+        if (fd >= 0) close(fd);
+        path_ = path;
+    }
+
+    ~TemporaryFile() { unlink(path_.c_str()); }
+
+    const std::string& path() const { return path_; }
+
+private:
+    std::string path_;
+};
+
+void replaceFileContents(const std::string& path, std::size_t size)
+{
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    const std::vector<char> bytes(size, static_cast<char>(0x5a));
+    output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+}
 
 int connectLoopback(unsigned short port)
 {
@@ -331,16 +359,73 @@ void testStreamHeaderValidation()
            "fragmented overflow header is rejected without reading a payload");
 }
 
+void testBpcFileBounds()
+{
+    using ADTimePix3BpcFile::Status;
+
+    std::size_t size = 0;
+    testOk(ADTimePix3BpcFile::expectedSize(256 * 256, 1, 1, size) &&
+               size == 65536U,
+           "production BPC sizing accepts one TPX3 chip");
+    testOk(ADTimePix3BpcFile::expectedSize(4 * 256 * 256, 1, 1, size) &&
+               size == 262144U,
+           "production BPC sizing accepts a TPX3 quad");
+    testOk(ADTimePix3BpcFile::expectedSize(4 * 256 * 256, 1, 2, size) &&
+               size == 524288U,
+           "production BPC sizing preserves the two-slice MPX3 layout");
+    testOk(!ADTimePix3BpcFile::expectedSize(0, 1, 1, size) && size == 0,
+           "production BPC sizing rejects missing detector geometry");
+    testOk(!ADTimePix3BpcFile::expectedSize(
+               std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
+               std::numeric_limits<int>::max(), size) && size == 0,
+           "production BPC sizing rejects multiplication overflow");
+
+    TemporaryFile file;
+    const std::vector<std::uint8_t> written{0x00, 0x01, 0x1f, 0xff};
+    std::vector<std::uint8_t> read;
+    testOk(ADTimePix3BpcFile::writeExact(file.path(), written, written.size()) == Status::Ok,
+           "bounded BPC writer writes an exact-size file");
+    testOk(ADTimePix3BpcFile::readExact(file.path(), written.size(), read) == Status::Ok &&
+               read == written,
+           "bounded BPC reader round-trips exact binary bytes");
+
+    TemporaryFile missing;
+    unlink(missing.path().c_str());
+    testOk(ADTimePix3BpcFile::readExact(missing.path(), written.size(), read) ==
+               Status::OpenFailed && read.empty(),
+           "bounded BPC reader rejects a missing file");
+
+    replaceFileContents(file.path(), 0);
+    testOk(ADTimePix3BpcFile::readExact(file.path(), written.size(), read) ==
+               Status::SizeMismatch && read.empty(),
+           "bounded BPC reader rejects an empty file");
+    replaceFileContents(file.path(), written.size() - 1);
+    testOk(ADTimePix3BpcFile::readExact(file.path(), written.size(), read) ==
+               Status::SizeMismatch && read.empty(),
+           "bounded BPC reader rejects a truncated file");
+    replaceFileContents(file.path(), written.size() + 1);
+    testOk(ADTimePix3BpcFile::readExact(file.path(), written.size(), read) ==
+               Status::SizeMismatch && read.empty(),
+           "bounded BPC reader rejects an oversized file");
+    testOk(ADTimePix3BpcFile::readExact(file.path(), 0, read) ==
+               Status::InvalidExpectedSize && read.empty(),
+           "bounded BPC reader rejects a zero expected size");
+    testOk(ADTimePix3BpcFile::writeExact(file.path(), written, written.size() + 1) ==
+               Status::InvalidExpectedSize,
+           "bounded BPC writer rejects a buffer-size mismatch");
+}
+
 }  // namespace
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(42);
+    testPlan(55);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
     testHttpRequestAndResponse();
     testBiasEnabledSerialization();
     testStreamHeaderValidation();
+    testBpcFileBounds();
     return testDone();
 }
