@@ -8,6 +8,7 @@
 #include "FakeServalTcpServer.h"
 #include "network_client.h"
 #include "serval_config.h"
+#include "serval_stream_validation.h"
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -252,15 +253,94 @@ void testBiasEnabledSerialization()
     close(client);
 }
 
+void testStreamHeaderValidation()
+{
+    using ADTimePix3Stream::ImageFrameLayout;
+    using ADTimePix3Stream::ImageHeaderError;
+
+    const ADTimePix3Stream::ImageFrameLimits limits =
+        ADTimePix3Stream::detectorImageFrameLimits(1024, 512, 1024 * 512);
+    ImageFrameLayout layout;
+
+    const ADTimePix3Stream::ImageFrameLimits clampedLimits =
+        ADTimePix3Stream::detectorImageFrameLimits(100000, 100000, 1000000000);
+    testOk(clampedLimits.maxDimension == 2048U &&
+               clampedLimits.maxPixels == 8U * 256U * 256U,
+           "production limits clamp untrusted detector metadata to supported geometry");
+
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 512}, {"height", 512}, {"pixelFormat", "uint16"}},
+               limits, layout) == ImageHeaderError::None &&
+               layout.pixelCount == 512U * 512U && layout.payloadBytes == 512U * 512U * 2U,
+           "production validator accepts a bounded uint16 image layout");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 1024}, {"height", 512}, {"pixelFormat", "UINT32"}},
+               limits, layout) == ImageHeaderError::None &&
+               layout.pixelCount == 1024U * 512U && layout.payloadBytes == 1024U * 512U * 4U,
+           "production validator accepts the detector pixel limit without overflow");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 1}, {"height", 1}}, limits, layout) ==
+               ImageHeaderError::None &&
+               layout.pixelFormat == ADTimePix3Stream::PixelFormat::UInt16 &&
+               layout.payloadBytes == 2U,
+           "production validator applies the Serval uint16 default when pixelFormat is absent");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"height", 1}, {"pixelFormat", "uint16"}}, limits, layout) ==
+               ImageHeaderError::MissingField,
+           "production validator requires width and height metadata");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", "512"}, {"height", 512}, {"pixelFormat", "uint16"}},
+               limits, layout) == ImageHeaderError::InvalidFieldType,
+           "production validator rejects non-integer dimensions");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", -1}, {"height", 512}, {"pixelFormat", "uint16"}},
+               limits, layout) == ImageHeaderError::InvalidDimension,
+           "production validator rejects negative dimensions before arithmetic");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 1025}, {"height", 1}, {"pixelFormat", "uint16"}},
+               limits, layout) == ImageHeaderError::InvalidDimension,
+           "production validator rejects dimensions beyond detector geometry");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 1024}, {"height", 1024}, {"pixelFormat", "uint16"}},
+               limits, layout) == ImageHeaderError::PixelLimitExceeded,
+           "production validator rejects oversized total pixel counts");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 512}, {"height", 512}, {"pixelFormat", "uint8"}},
+               limits, layout) == ImageHeaderError::UnsupportedPixelFormat,
+           "production validator rejects unknown pixel formats");
+    const ADTimePix3Stream::ImageFrameLimits byteLimited{1024U, 1024U * 512U, 1024U};
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 512}, {"height", 512}, {"pixelFormat", "uint16"}},
+               byteLimited, layout) == ImageHeaderError::PayloadLimitExceeded,
+           "production validator enforces the configured payload-byte budget");
+
+    const std::string invalidHeader =
+        "{\"width\":2147483647,\"height\":2147483647,\"pixelFormat\":\"uint32\"}\n";
+    FakeServalTcpServer server({invalidHeader.substr(0, 19), invalidHeader.substr(19)});
+    NetworkClient client;
+    testOk(client.connect("127.0.0.1", server.port()) &&
+               server.waitForClient(kFixtureDeadline),
+           "overflow header fixture connects before the deadline");
+    server.releaseAllChunks();
+    std::vector<char> received(invalidHeader.size());
+    const bool receivedHeader = client.receive_exact(received.data(), received.size());
+    const nlohmann::json parsed = nlohmann::json::parse(
+        std::string(received.begin(), received.end() - 1));
+    testOk(receivedHeader && ADTimePix3Stream::validateJsonImageHeader(parsed, limits, layout) ==
+               ImageHeaderError::InvalidDimension,
+           "fragmented overflow header is rejected without reading a payload");
+}
+
 }  // namespace
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(29);
+    testPlan(42);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
     testHttpRequestAndResponse();
     testBiasEnabledSerialization();
+    testStreamHeaderValidation();
     return testDone();
 }
