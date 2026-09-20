@@ -10,9 +10,23 @@
 #ifndef ADTIMEPIX_SERVAL_CONFIG_H
 #define ADTIMEPIX_SERVAL_CONFIG_H
 
+#include <string>
+
 #include <json.hpp>
 
 namespace ADTimePix3ServalConfig {
+
+enum class ParseError {
+    None,
+    EmptyBody,
+    MalformedJson,
+    InvalidRoot
+};
+
+/** Parse a Serval /detector/config response and require a JSON object root. */
+ParseError parseResponse(const std::string& body, nlohmann::json& config);
+
+const char* parseErrorMessage(ParseError error);
 
 bool isBiasEnabledValue(int value);
 

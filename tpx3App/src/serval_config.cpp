@@ -9,7 +9,43 @@
 
 #include "serval_config.h"
 
+#include <utility>
+
 namespace ADTimePix3ServalConfig {
+
+ParseError parseResponse(const std::string& body, nlohmann::json& config)
+{
+    config = nlohmann::json::object();
+    if (body.empty()) {
+        return ParseError::EmptyBody;
+    }
+
+    nlohmann::json parsed = nlohmann::json::parse(body, nullptr, false);
+    if (parsed.is_discarded()) {
+        return ParseError::MalformedJson;
+    }
+    if (!parsed.is_object()) {
+        return ParseError::InvalidRoot;
+    }
+
+    config = std::move(parsed);
+    return ParseError::None;
+}
+
+const char* parseErrorMessage(ParseError error)
+{
+    switch (error) {
+        case ParseError::None:
+            return "valid detector configuration";
+        case ParseError::EmptyBody:
+            return "empty response body";
+        case ParseError::MalformedJson:
+            return "malformed JSON";
+        case ParseError::InvalidRoot:
+            return "detector configuration JSON root is not an object";
+    }
+    return "unknown detector configuration response error";
+}
 
 bool isBiasEnabledValue(int value)
 {

@@ -331,6 +331,23 @@ void testMeasurementResponseValidation()
 
 void testBiasEnabledSerialization()
 {
+    using ADTimePix3ServalConfig::ParseError;
+
+    nlohmann::json parsed;
+    testOk(ADTimePix3ServalConfig::parseResponse(
+               "{\"BiasEnabled\":false,\"TriggerMode\":\"CONTINUOUS\"}", parsed) ==
+               ParseError::None && parsed["BiasEnabled"].is_boolean(),
+           "detector-config parser accepts a JSON object response");
+    testOk(ADTimePix3ServalConfig::parseResponse("", parsed) == ParseError::EmptyBody &&
+               parsed.is_object() && parsed.empty(),
+           "detector-config parser rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalConfig::parseResponse("{malformed", parsed) ==
+               ParseError::MalformedJson && parsed.is_object() && parsed.empty(),
+           "detector-config parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalConfig::parseResponse("[]", parsed) == ParseError::InvalidRoot &&
+               parsed.is_object() && parsed.empty(),
+           "detector-config parser rejects a non-object JSON root");
+
     nlohmann::json disabled = nlohmann::json::object();
     testOk(ADTimePix3ServalConfig::setBiasEnabled(disabled, 0),
            "production config builder accepts BiasEnabled=0");
@@ -519,7 +536,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(71);
+    testPlan(75);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
