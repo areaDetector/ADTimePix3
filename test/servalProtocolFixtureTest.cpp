@@ -347,6 +347,12 @@ void testDetectorConfigBooleanSerialization()
     testOk(ADTimePix3ServalConfig::parseResponse("[]", parsed) == ParseError::InvalidRoot &&
                parsed.is_object() && parsed.empty(),
            "detector-config parser rejects a non-object JSON root");
+    testOk(ADTimePix3ServalConfig::putAccepted(200),
+           "detector-config response accepts HTTP 200");
+    testOk(!ADTimePix3ServalConfig::putAccepted(400) &&
+               !ADTimePix3ServalConfig::putAccepted(500) &&
+               !ADTimePix3ServalConfig::putAccepted(0),
+           "detector-config response rejects client, server, and transport failures");
 
     nlohmann::json disabled = nlohmann::json::object();
     testOk(ADTimePix3ServalConfig::setBiasEnabled(disabled, 0),
@@ -604,7 +610,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(91);
+    testPlan(93);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

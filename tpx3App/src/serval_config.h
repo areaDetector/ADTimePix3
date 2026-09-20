@@ -28,6 +28,9 @@ ParseError parseResponse(const std::string& body, nlohmann::json& config);
 
 const char* parseErrorMessage(ParseError error);
 
+/** Serval accepts a detector-config PUT only when it returns HTTP 200. */
+bool putAccepted(long statusCode);
+
 bool isBiasEnabledValue(int value);
 
 /** Set a JSON boolean from an EPICS bo value. Returns false unless value is 0 or 1. */

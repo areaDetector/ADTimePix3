@@ -64,6 +64,11 @@ const char* parseErrorMessage(ParseError error)
     return "unknown detector configuration response error";
 }
 
+bool putAccepted(long statusCode)
+{
+    return statusCode == 200;
+}
+
 bool isBiasEnabledValue(int value)
 {
     return value == 0 || value == 1;
