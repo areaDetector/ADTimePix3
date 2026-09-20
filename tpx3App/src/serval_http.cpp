@@ -2643,22 +2643,27 @@ asynStatus ADTimePix::initAcquisition(){
 
         setIntegerParam(ADTimePixHttpCode, r.status_code);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
-        if (r.status_code != 200 && detectorFamily_ == DetectorFamily::MPX3) {
+        if (!ADTimePix3ServalConfig::putAccepted(r.status_code)) {
             status = asynError;
-            /* Resync setpoints from Serval so mbbo/mbbi match after a rejected PUT. */
-            cpr::Response rGet = ADTimePix3ServalHttp::get(det_config);
-            if (rGet.status_code == 200) {
-                try {
-                    const json cfg = json::parse(rGet.text);
-                    if (cfg.contains("PixelDepth")) {
-                        setIntegerParam(ADTimePixPixelDepth,
-                                        pixelDepthFromJson(cfg["PixelDepth"]));
+            setStringParam(ADStatusMessage, "Failed to upload detector configuration");
+            logHttpFailure("initAcquisition PUT /detector/config", "PUT", det_config,
+                           (long)r.status_code, r.text);
+            if (detectorFamily_ == DetectorFamily::MPX3) {
+                /* Resync setpoints from Serval so mbbo/mbbi match after a rejected PUT. */
+                cpr::Response rGet = ADTimePix3ServalHttp::get(det_config);
+                if (rGet.status_code == 200) {
+                    try {
+                        const json cfg = json::parse(rGet.text);
+                        if (cfg.contains("PixelDepth")) {
+                            setIntegerParam(ADTimePixPixelDepth,
+                                            pixelDepthFromJson(cfg["PixelDepth"]));
+                        }
+                        if (cfg.contains("GainMode")) {
+                            setIntegerParam(ADTimePixGainMode,
+                                            gainModeFromString(jsonStringOr(cfg["GainMode"])));
+                        }
+                    } catch (const std::exception&) {
                     }
-                    if (cfg.contains("GainMode")) {
-                        setIntegerParam(ADTimePixGainMode,
-                                        gainModeFromString(jsonStringOr(cfg["GainMode"])));
-                    }
-                } catch (const std::exception&) {
                 }
             }
         }
