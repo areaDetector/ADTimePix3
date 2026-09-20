@@ -52,14 +52,19 @@ bool isBiasEnabledValue(int value)
     return value == 0 || value == 1;
 }
 
-bool setBiasEnabled(nlohmann::json& config, int value)
+bool setBoolean(nlohmann::json& config, const char* field, int value)
 {
-    if (!isBiasEnabledValue(value)) {
+    if (value != 0 && value != 1) {
         return false;
     }
 
-    config["BiasEnabled"] = (value != 0);
+    config[field] = (value != 0);
     return true;
+}
+
+bool setBiasEnabled(nlohmann::json& config, int value)
+{
+    return setBoolean(config, "BiasEnabled", value);
 }
 
 }  // namespace ADTimePix3ServalConfig
