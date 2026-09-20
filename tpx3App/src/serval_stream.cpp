@@ -535,9 +535,13 @@ void ADTimePix::runPreviewTcpWorker(
                     lineBuffer.data() + totalRead,
                     MAX_BUFFER_SIZE - totalRead - 1
                 );
+                const int receiveError = (bytes_read < 0) ? errno : 0;
                 epicsMutexUnlock(mutex);
 
                 if (bytes_read <= 0) {
+                    if (bytes_read < 0 && NetworkClient::isReceiveTimeout(receiveError)) {
+                        continue;
+                    }
                     if (bytes_read == 0) {
                         epicsMutexLock(mutex);
                         connected = false;
@@ -550,7 +554,7 @@ void ADTimePix::runPreviewTcpWorker(
                     if (connected) {
                         connected = false;
                         running = false;
-                        LOG_ARGS("%s TCP socket error: %s", logTag, strerror(errno));
+                        LOG_ARGS("%s TCP socket error: %s", logTag, strerror(receiveError));
                     }
                     epicsMutexUnlock(mutex);
                     break;
@@ -771,9 +775,13 @@ void ADTimePix::imgWorkerThread() {
                     imgLineBuffer_.data() + imgTotalRead_,
                     MAX_BUFFER_SIZE - imgTotalRead_ - 1
                 );
+                const int receiveError = (bytes_read < 0) ? errno : 0;
                 epicsMutexUnlock(imgMutex_);
                 
                 if (bytes_read <= 0) {
+                    if (bytes_read < 0 && NetworkClient::isReceiveTimeout(receiveError)) {
+                        continue;
+                    }
                     if (bytes_read == 0) {
                         epicsMutexLock(imgMutex_);
                         imgConnected_ = false;
@@ -786,7 +794,7 @@ void ADTimePix::imgWorkerThread() {
                         if (imgConnected_) {
                             imgConnected_ = false;
                             imgRunning_ = false;
-                            LOG_ARGS("Img TCP socket error: %s", strerror(errno));
+                            LOG_ARGS("Img TCP socket error: %s", strerror(receiveError));
                         }
                         epicsMutexUnlock(imgMutex_);
                         break;

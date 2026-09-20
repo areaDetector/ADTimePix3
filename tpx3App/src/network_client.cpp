@@ -19,6 +19,7 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <sys/time.h>
 
 // NetworkClient class implementation
 NetworkClient::NetworkClient() : socket_fd_(-1), connected_(false) {}
@@ -84,6 +85,17 @@ bool NetworkClient::connect(const std::string& host, int port) {
     int rcvbuf = 64 * 1024;
     if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) < 0) {
         std::cerr << "Failed to set receive buffer size: " << strerror(errno) << std::endl;
+    }
+
+    // Stream workers must periodically recheck their stop flags.  Without a
+    // receive timeout, joining a worker can block forever when a peer remains
+    // connected but sends no more data.
+    struct timeval receive_timeout{};
+    receive_timeout.tv_sec = kReceivePollTimeoutMs / 1000;
+    receive_timeout.tv_usec = (kReceivePollTimeoutMs % 1000) * 1000;
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVTIMEO,
+                   &receive_timeout, sizeof(receive_timeout)) < 0) {
+        std::cerr << "Failed to set receive timeout: " << strerror(errno) << std::endl;
     }
     
     // Set SO_LINGER
@@ -220,16 +232,27 @@ ssize_t NetworkClient::receive(char* buffer, size_t max_size) {
     return bytes_read;
 }
 
+bool NetworkClient::isReceiveTimeout(int errorCode) {
+    return errorCode == EAGAIN || errorCode == EWOULDBLOCK;
+}
+
 bool NetworkClient::receive_exact(char* buffer, size_t size) {
     size_t total_received = 0;
+    int consecutive_timeouts = 0;
+    constexpr int max_consecutive_timeouts = 4;
     
     while (total_received < size) {
         ssize_t bytes = receive(buffer + total_received, size - total_received);
-        
+
+        if (bytes < 0 && isReceiveTimeout(errno) &&
+            ++consecutive_timeouts < max_consecutive_timeouts) {
+            continue;
+        }
         if (bytes <= 0) {
             return false;
         }
-        
+
+        consecutive_timeouts = 0;
         total_received += bytes;
     }
     

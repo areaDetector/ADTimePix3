@@ -921,9 +921,19 @@ asynStatus ADTimePix::acquireStop(){
 
     this->callbackThreadId = NULL;
 
-    // Stop TCP worker threads and disconnect before telling Serval to stop.
-    // Serval TcpSender threads block on full preview buffers when no client reads
-    // (e.g. PrvImg1); closing the IOC side first avoids prolonged waitForClose hangs.
+    // Keep TCP readers alive while Serval finishes and closes its senders.  Closing
+    // the IOC sockets first turns normal final writes into reset-by-peer errors.
+    // HTTP and socket receive timeouts bound this graceful shutdown if Serval stalls.
+    string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
+    cpr::Response r = ADTimePix3ServalHttp::get(stopMeasurementURL);
+    const bool stopSucceeded = (r.status_code == 200);
+    if (stopSucceeded) {
+        // Serval may return just before its sender threads close their sockets.
+        epicsThreadSleep(0.5);
+    }
+
+    // Stop and join all stream workers after Serval has had the opportunity to
+    // flush final data. Receive polling ensures a silent peer cannot block a join.
     if (prvImgMutex_) {
         epicsMutexLock(prvImgMutex_);
         prvImgRunning_ = false;
@@ -999,18 +1009,12 @@ asynStatus ADTimePix::acquireStop(){
     imgDisconnect();
     prvHstDisconnect();
 
-    string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
-    cpr::Response r = ADTimePix3ServalHttp::get(stopMeasurementURL);
-
-    if (r.status_code != 200){
+    if (!stopSucceeded){
         logHttpFailure("acquireStop GET /measurement/stop", "GET", stopMeasurementURL, (long)r.status_code, r.text);
         setStringParam(ADStatusMessage, "Failed to stop acquisition");
         setIntegerParam(ADStatus, ADStatusError);
         return asynError;
     }
-
-    // Allow Serval TcpSender threads to finish closing (may take >300ms when buffers were full)
-    epicsThreadSleep(0.5);
 
     setIntegerParam(ADStatus, ADStatusIdle);
     setStringParam(ADStatusMessage, "Acquisition stopped");

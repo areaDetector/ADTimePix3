@@ -976,12 +976,13 @@ void ADTimePix::prvHstWorkerThread() {
                     break;
                 }
                 
-                                ssize_t bytes_read = client->receive(
+                ssize_t bytes_read = client->receive(
                     buffer_ptr,
                     available_space
                 );
-                
-                                epicsMutexUnlock(prvHstMutex_);
+                const int receiveError = (bytes_read < 0) ? errno : 0;
+
+                epicsMutexUnlock(prvHstMutex_);
                 
                                 if (bytes_read > 0) {
                     static int log_counter = 0;
@@ -989,7 +990,10 @@ void ADTimePix::prvHstWorkerThread() {
                     }
                 }
                 
-                                if (bytes_read <= 0) {
+                if (bytes_read <= 0) {
+                    if (bytes_read < 0 && NetworkClient::isReceiveTimeout(receiveError)) {
+                        continue;
+                    }
                     if (bytes_read == 0) {
                         epicsMutexLock(prvHstMutex_);
                         prvHstConnected_ = false;
@@ -1002,7 +1006,7 @@ void ADTimePix::prvHstWorkerThread() {
                         if (prvHstConnected_) {
                             prvHstConnected_ = false;
                             prvHstRunning_ = false;
-                            printf("PrvHst TCP socket error: %s\n", strerror(errno));
+                            printf("PrvHst TCP socket error: %s\n", strerror(receiveError));
                         }
                         epicsMutexUnlock(prvHstMutex_);
                         break;
