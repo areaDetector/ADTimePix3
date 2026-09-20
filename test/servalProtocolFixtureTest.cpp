@@ -378,6 +378,29 @@ void testDetectorConfigBooleanSerialization()
                clocks["PeriphClk80"].is_boolean() && !clocks["PeriphClk80"].get<bool>(),
            "invalid clock boolean input leaves the existing configuration unchanged");
 
+    nlohmann::json enums = {
+        {"ChainMode", "NONE"}, {"Polarity", "Positive"}, {"Tdc", "malformed"}};
+    testOk(ADTimePix3ServalConfig::setChainMode(enums, 2) &&
+               enums["ChainMode"] == "FOLLOWER",
+           "production config builder maps the highest valid ChainMode value");
+    testOk(!ADTimePix3ServalConfig::setChainMode(enums, 3) &&
+               enums["ChainMode"] == "FOLLOWER",
+           "production config builder rejects an out-of-range ChainMode value");
+    testOk(ADTimePix3ServalConfig::setPolarity(enums, 1) &&
+               enums["Polarity"] == "Negative",
+           "production config builder maps the highest valid Polarity value");
+    testOk(!ADTimePix3ServalConfig::setPolarity(enums, -1) &&
+               enums["Polarity"] == "Negative",
+           "production config builder rejects a negative Polarity value");
+    testOk(ADTimePix3ServalConfig::setTdc(enums, 3, 5) &&
+               enums["Tdc"] == nlohmann::json::array({"P0", "PN0"}),
+           "production config builder replaces malformed Tdc metadata with two strings");
+    const nlohmann::json validTdc = enums["Tdc"];
+    testOk(!ADTimePix3ServalConfig::setTdc(enums, 6, 0) && enums["Tdc"] == validTdc,
+           "production config builder rejects an out-of-range first Tdc value");
+    testOk(!ADTimePix3ServalConfig::setTdc(enums, 0, -1) && enums["Tdc"] == validTdc,
+           "production config builder rejects a negative second Tdc value");
+
     FakeHttpResponse response;
     FakeServalHttpServer server(response);
     const int client = connectLoopback(server.port());
@@ -548,7 +571,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(78);
+    testPlan(85);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

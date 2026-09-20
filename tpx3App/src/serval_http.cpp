@@ -2541,17 +2541,18 @@ asynStatus ADTimePix::initAcquisition(){
         }
 
         getIntegerParam(ADTimePixChainMode, &intNum);
-        json chainMode;
-        chainMode[0] = "NONE";
-        chainMode[1] = "LEADER";
-        chainMode[2] = "FOLLOWER";
-        config_j["ChainMode"] = chainMode[intNum];
+        if (!ADTimePix3ServalConfig::setChainMode(config_j, intNum)) {
+            setIntegerParam(ADTimePixHttpCode, 400);
+            setStringParam(ADTimePixWriteMsg, "ChainMode must be between 0 and 2");
+            return asynError;
+        }
 
         getIntegerParam(ADTimePixPolarity, &intNum);
-        json polarity;
-        polarity[0] = "Positive";
-        polarity[1] = "Negative";
-        config_j["Polarity"] = polarity[intNum];
+        if (!ADTimePix3ServalConfig::setPolarity(config_j, intNum)) {
+            setIntegerParam(ADTimePixHttpCode, 400);
+            setStringParam(ADTimePixWriteMsg, "Polarity must be 0 or 1");
+            return asynError;
+        }
 
         getIntegerParam(ADTimePixTriggerIn, &intNum);
         config_j["TriggerIn"] = intNum;
@@ -2564,23 +2565,15 @@ asynStatus ADTimePix::initAcquisition(){
             getDoubleParam(ADTimePixGlobalTimestampInterval, &doubleNum);
             config_j["GlobalTimestampInterval"] = doubleNum;
 
-            getIntegerParam(ADTimePixTdc0, &intNum);
-            json tdc;
-            tdc[0] = "P0123";
-            tdc[1] = "N0123";
-            tdc[2] = "PN0123";
-            tdc[3] = "P0";
-            tdc[4] = "N0";
-            tdc[5] = "PN0";
-            config_j["Tdc"][0] = tdc[intNum];
-            getIntegerParam(ADTimePixTdc1, &intNum);
-            tdc[0] = "P0123";
-            tdc[1] = "N0123";
-            tdc[2] = "PN0123";
-            tdc[3] = "P0";
-            tdc[4] = "N0";
-            tdc[5] = "PN0";
-            config_j["Tdc"][1] = tdc[intNum];
+            int tdc0 = 0;
+            int tdc1 = 0;
+            getIntegerParam(ADTimePixTdc0, &tdc0);
+            getIntegerParam(ADTimePixTdc1, &tdc1);
+            if (!ADTimePix3ServalConfig::setTdc(config_j, tdc0, tdc1)) {
+                setIntegerParam(ADTimePixHttpCode, 400);
+                setStringParam(ADTimePixWriteMsg, "Tdc values must be between 0 and 5");
+                return asynError;
+            }
 
             getIntegerParam(ADTimePixExternalReferenceClock, &intNum);
             if (!ADTimePix3ServalConfig::setBoolean(
