@@ -408,8 +408,9 @@ asynStatus ADTimePix::writeOctet(asynUser *pasynUser, const char *value,
     } else if (function == ADTimePixTofTdcReference) {
         status = this->sendMeasurementConfig();
     }
-     /* Do callbacks so higher layers see any changes */
-    status = (asynStatus)callParamCallbacks(addr, addr);
+    /* Do callbacks so higher layers see changes without hiding an operation failure. */
+    const asynStatus callbackStatus = (asynStatus)callParamCallbacks(addr, addr);
+    if (status == asynSuccess) status = callbackStatus;
 
     if (status)
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,

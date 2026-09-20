@@ -327,6 +327,27 @@ void testMeasurementResponseValidation()
     testOk(ADTimePix3ServalMeasurement::parseResponse("[]", measurement) ==
                ParseError::InvalidRoot && measurement.is_object() && measurement.empty(),
            "measurement parser rejects a non-object JSON root");
+
+    using ADTimePix3ServalMeasurement::ConfigResponseError;
+    nlohmann::json config;
+    const std::string completeConfig =
+        "{\"Stem\":{},\"Corrections\":{\"Enabled\":true},\"Processing\":{\"Mode\":\"raw\"}}";
+    testOk(ADTimePix3ServalMeasurement::parseConfigResponse(200, completeConfig, config) ==
+               ConfigResponseError::None && config["Corrections"]["Enabled"] == true &&
+               config["Processing"]["Mode"] == "raw",
+           "measurement-config parser preserves unmodified merge sections");
+    testOk(ADTimePix3ServalMeasurement::parseConfigResponse(500, completeConfig, config) ==
+               ConfigResponseError::HttpFailure && config.is_object() && config.empty(),
+           "measurement-config parser rejects a failed GET before merge");
+    testOk(ADTimePix3ServalMeasurement::parseConfigResponse(200, "", config) ==
+               ConfigResponseError::EmptyBody && config.is_object() && config.empty(),
+           "measurement-config parser rejects an empty merge base");
+    testOk(ADTimePix3ServalMeasurement::parseConfigResponse(200, "{malformed", config) ==
+               ConfigResponseError::MalformedJson && config.is_object() && config.empty(),
+           "measurement-config parser rejects malformed JSON before merge");
+    testOk(ADTimePix3ServalMeasurement::parseConfigResponse(200, "[]", config) ==
+               ConfigResponseError::InvalidRoot && config.is_object() && config.empty(),
+           "measurement-config parser rejects a non-object merge base");
 }
 
 void testDetectorConfigBooleanSerialization()
@@ -610,7 +631,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(93);
+    testPlan(98);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

@@ -46,4 +46,44 @@ const char* parseErrorMessage(ParseError error)
     return "unknown measurement response error";
 }
 
+ConfigResponseError parseConfigResponse(long statusCode, const std::string& body,
+                                        nlohmann::json& config)
+{
+    config = nlohmann::json::object();
+    if (statusCode != 200) {
+        return ConfigResponseError::HttpFailure;
+    }
+
+    nlohmann::json parsed;
+    switch (parseResponse(body, parsed)) {
+        case ParseError::None:
+            config = std::move(parsed);
+            return ConfigResponseError::None;
+        case ParseError::EmptyBody:
+            return ConfigResponseError::EmptyBody;
+        case ParseError::MalformedJson:
+            return ConfigResponseError::MalformedJson;
+        case ParseError::InvalidRoot:
+            return ConfigResponseError::InvalidRoot;
+    }
+    return ConfigResponseError::MalformedJson;
+}
+
+const char* configResponseErrorMessage(ConfigResponseError error)
+{
+    switch (error) {
+        case ConfigResponseError::None:
+            return "valid measurement configuration response";
+        case ConfigResponseError::HttpFailure:
+            return "measurement configuration GET failed";
+        case ConfigResponseError::EmptyBody:
+            return "empty measurement configuration response";
+        case ConfigResponseError::MalformedJson:
+            return "malformed measurement configuration JSON";
+        case ConfigResponseError::InvalidRoot:
+            return "measurement configuration JSON root is not an object";
+    }
+    return "unknown measurement configuration response error";
+}
+
 }  // namespace ADTimePix3ServalMeasurement

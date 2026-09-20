@@ -11,6 +11,7 @@
 #include "ADTimePixLog.h"
 #include "serval_config.h"
 #include "serval_http.h"
+#include "serval_measurement.h"
 
 #include <algorithm>
 #include <cctype>
@@ -362,13 +363,15 @@ asynStatus ADTimePix::initialServerCheckConnection(){
  * Used by connection poll and RefreshConnection PV.
  * @return asynSuccess if SERVAL and detector are connected, asynError otherwise
  */
-asynStatus ADTimePix::checkConnection(){
+asynStatus ADTimePix::checkConnection(bool publishHttpStatus){
     bool servalOk = false;
     bool detOk = false;
 
     std::string dashboard = this->serverURL + std::string("/dashboard");
     cpr::Response r = ADTimePix3ServalHttp::get(dashboard, 5000);
-    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    if (publishHttpStatus) {
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+    }
 
     if (r.status_code == 200) {
         servalOk = true;
@@ -418,7 +421,7 @@ void ADTimePix::connectionPollThread() {
             connectionPollSkipOnce_ = 0;
             continue;
         }
-        (void)checkConnection();
+        (void)checkConnection(false);
         int servalNow = 0, detNow = 0;
         getIntegerParam(ADTimePixServalConnected, &servalNow);
         getIntegerParam(ADTimePixDetConnected, &detNow);
@@ -2181,13 +2184,15 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
 asynStatus ADTimePix::getMeasurementConfig() {
     std::string url = this->serverURL + std::string("/measurement/config");
     cpr::Response r = ADTimePix3ServalHttp::getJson(url, 5000);
-    if (r.status_code != 200) {
+    json config_j;
+    const ADTimePix3ServalMeasurement::ConfigResponseError responseError =
+        ADTimePix3ServalMeasurement::parseConfigResponse(r.status_code, r.text, config_j);
+    if (responseError != ADTimePix3ServalMeasurement::ConfigResponseError::None) {
         LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported): %s", url.c_str(), r.status_code,
                  trimHttpBodyForLog(r.text).c_str());
         return asynError;
     }
     try {
-        json config_j = json::parse(r.text.c_str());
         if (config_j.contains("Stem") && config_j["Stem"].is_object()) {
             if (config_j["Stem"].contains("Scan") && config_j["Stem"]["Scan"].is_object()) {
                 if (config_j["Stem"]["Scan"].contains("Width") && config_j["Stem"]["Scan"]["Width"].is_number_integer())
@@ -2236,51 +2241,72 @@ asynStatus ADTimePix::sendMeasurementConfig() {
     std::string url_get = this->serverURL + std::string("/measurement/config");
     cpr::Response r = ADTimePix3ServalHttp::getJson(url_get, 5000);
     json config_j;
-    if (r.status_code == 200) {
-        try {
-            config_j = json::parse(r.text.c_str());
-        } catch (...) {
-            config_j = json::object();
+    const ADTimePix3ServalMeasurement::ConfigResponseError responseError =
+        ADTimePix3ServalMeasurement::parseConfigResponse(r.status_code, r.text, config_j);
+    if (responseError != ADTimePix3ServalMeasurement::ConfigResponseError::None) {
+        const char* message = ADTimePix3ServalMeasurement::configResponseErrorMessage(responseError);
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+        setStringParam(ADTimePixWriteMsg, message);
+        if (responseError == ADTimePix3ServalMeasurement::ConfigResponseError::HttpFailure) {
+            logHttpFailure("sendMeasurementConfig GET /measurement/config", "GET", url_get,
+                           (long)r.status_code, r.text);
+        } else {
+            ERR_ARGS("sendMeasurementConfig GET /measurement/config: %s", message);
         }
-    } else {
-        config_j = json::object();
+        return asynError;
     }
-    int iVal;
-    double dVal;
-    char strVal[256];
-    getIntegerParam(ADTimePixStemScanWidth, &iVal);
-    config_j["Stem"]["Scan"]["Width"] = iVal;
-    getIntegerParam(ADTimePixStemScanHeight, &iVal);
-    config_j["Stem"]["Scan"]["Height"] = iVal;
-    getDoubleParam(ADTimePixStemDwellTime, &dVal);
-    config_j["Stem"]["Scan"]["DwellTime"] = dVal;
-    getIntegerParam(ADTimePixStemRadiusOuter, &iVal);
-    config_j["Stem"]["VirtualDetector"]["RadiusOuter"] = iVal;
-    getIntegerParam(ADTimePixStemRadiusInner, &iVal);
-    config_j["Stem"]["VirtualDetector"]["RadiusInner"] = iVal;
-    getStringParam(ADTimePixTofTdcReference, sizeof(strVal), strVal);
-    std::string refStr(strVal);
-    json refArr = json::array();
-    size_t start = 0;
-    for (;;) {
-        size_t pos = refStr.find(',', start);
-        std::string part = (pos == std::string::npos) ? refStr.substr(start) : refStr.substr(start, pos - start);
-        if (!part.empty()) refArr.push_back(part);
-        if (pos == std::string::npos) break;
-        start = pos + 1;
+
+    try {
+        int iVal;
+        double dVal;
+        char strVal[256];
+        getIntegerParam(ADTimePixStemScanWidth, &iVal);
+        config_j["Stem"]["Scan"]["Width"] = iVal;
+        getIntegerParam(ADTimePixStemScanHeight, &iVal);
+        config_j["Stem"]["Scan"]["Height"] = iVal;
+        getDoubleParam(ADTimePixStemDwellTime, &dVal);
+        config_j["Stem"]["Scan"]["DwellTime"] = dVal;
+        getIntegerParam(ADTimePixStemRadiusOuter, &iVal);
+        config_j["Stem"]["VirtualDetector"]["RadiusOuter"] = iVal;
+        getIntegerParam(ADTimePixStemRadiusInner, &iVal);
+        config_j["Stem"]["VirtualDetector"]["RadiusInner"] = iVal;
+        getStringParam(ADTimePixTofTdcReference, sizeof(strVal), strVal);
+        std::string refStr(strVal);
+        json refArr = json::array();
+        size_t start = 0;
+        for (;;) {
+            size_t pos = refStr.find(',', start);
+            std::string part = (pos == std::string::npos) ? refStr.substr(start) : refStr.substr(start, pos - start);
+            if (!part.empty()) refArr.push_back(part);
+            if (pos == std::string::npos) break;
+            start = pos + 1;
+        }
+        if (refArr.empty()) refArr.push_back("PN0123");
+        config_j["TimeOfFlight"]["TdcReference"] = refArr;
+        getDoubleParam(ADTimePixTofMin, &dVal);
+        config_j["TimeOfFlight"]["Min"] = dVal;
+        getDoubleParam(ADTimePixTofMax, &dVal);
+        config_j["TimeOfFlight"]["Max"] = dVal;
+    } catch (const std::exception& e) {
+        const std::string message = std::string("Invalid measurement configuration structure: ") + e.what();
+        setStringParam(ADTimePixWriteMsg, message.c_str());
+        ERR_ARGS("sendMeasurementConfig: %s", message.c_str());
+        return asynError;
     }
-    if (refArr.empty()) refArr.push_back("PN0123");
-    config_j["TimeOfFlight"]["TdcReference"] = refArr;
-    getDoubleParam(ADTimePixTofMin, &dVal);
-    config_j["TimeOfFlight"]["Min"] = dVal;
-    getDoubleParam(ADTimePixTofMax, &dVal);
-    config_j["TimeOfFlight"]["Max"] = dVal;
+
     cpr::Response put_r = ADTimePix3ServalHttp::putJson(url_get, config_j.dump(), 10000);
     setIntegerParam(ADTimePixHttpCode, put_r.status_code);
     setStringParam(ADTimePixWriteMsg, put_r.text.c_str());
     if (put_r.status_code != 200) {
         logHttpFailure("sendMeasurementConfig PUT /measurement/config", "PUT", url_get, (long)put_r.status_code,
                        put_r.text);
+        const asynStatus refreshStatus = getMeasurementConfig();
+        if (refreshStatus != asynSuccess) {
+            WARN("Failed to restore measurement configuration after rejected PUT");
+        }
+        /* Preserve the rejected operation as the operator-visible result. */
+        setIntegerParam(ADTimePixHttpCode, put_r.status_code);
+        setStringParam(ADTimePixWriteMsg, put_r.text.c_str());
         return asynError;
     }
     return asynSuccess;
