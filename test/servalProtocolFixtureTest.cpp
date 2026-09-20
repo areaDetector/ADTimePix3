@@ -8,6 +8,7 @@
 #include "FakeServalTcpServer.h"
 #include "bpc_file_io.h"
 #include "network_client.h"
+#include "one_shot_action.h"
 #include "serval_config.h"
 #include "serval_stream_validation.h"
 
@@ -415,11 +416,29 @@ void testBpcFileBounds()
            "bounded BPC writer rejects a buffer-size mismatch");
 }
 
+void testOneShotActions()
+{
+    const ADTimePix3Action::OneShotDecision zero =
+        ADTimePix3Action::oneShotDecision(0);
+    testOk(!zero.execute && zero.storedValue == 0,
+           "one-shot action ignores zero and remains reset");
+
+    const ADTimePix3Action::OneShotDecision one =
+        ADTimePix3Action::oneShotDecision(1);
+    testOk(one.execute && one.storedValue == 0,
+           "one-shot action executes one and resets its stored value");
+
+    const ADTimePix3Action::OneShotDecision invalid =
+        ADTimePix3Action::oneShotDecision(2);
+    testOk(!invalid.execute && invalid.storedValue == 0,
+           "one-shot action ignores unsupported values and resets them");
+}
+
 }  // namespace
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(55);
+    testPlan(58);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -427,5 +446,6 @@ MAIN(servalProtocolFixtureTest)
     testBiasEnabledSerialization();
     testStreamHeaderValidation();
     testBpcFileBounds();
+    testOneShotActions();
     return testDone();
 }
