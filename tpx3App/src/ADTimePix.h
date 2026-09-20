@@ -1029,7 +1029,7 @@ class ADTimePix : public ADDriver{
         // NOTE - THIS MAY ALSO NEED TO CHANGE IF SERIAL # NOT USED
         asynStatus initialServerCheckConnection();
         /** Lightweight connection check: updates ServalConnected_RBV, DetConnected_RBV, SDK version, ADStatusMessage. */
-        asynStatus checkConnection();
+        asynStatus checkConnection(bool publishHttpStatus = true);
 
         void printConnectedDeviceInfo();
 
