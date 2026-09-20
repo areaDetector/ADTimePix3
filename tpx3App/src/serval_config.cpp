@@ -67,4 +67,35 @@ bool setBiasEnabled(nlohmann::json& config, int value)
     return setBoolean(config, "BiasEnabled", value);
 }
 
+bool setChainMode(nlohmann::json& config, int value)
+{
+    static const char* values[] = {"NONE", "LEADER", "FOLLOWER"};
+    if (value < 0 || value >= static_cast<int>(sizeof(values) / sizeof(values[0]))) {
+        return false;
+    }
+    config["ChainMode"] = values[value];
+    return true;
+}
+
+bool setPolarity(nlohmann::json& config, int value)
+{
+    static const char* values[] = {"Positive", "Negative"};
+    if (value < 0 || value >= static_cast<int>(sizeof(values) / sizeof(values[0]))) {
+        return false;
+    }
+    config["Polarity"] = values[value];
+    return true;
+}
+
+bool setTdc(nlohmann::json& config, int first, int second)
+{
+    static const char* values[] = {"P0123", "N0123", "PN0123", "P0", "N0", "PN0"};
+    const int count = static_cast<int>(sizeof(values) / sizeof(values[0]));
+    if (first < 0 || first >= count || second < 0 || second >= count) {
+        return false;
+    }
+    config["Tdc"] = nlohmann::json::array({values[first], values[second]});
+    return true;
+}
+
 }  // namespace ADTimePix3ServalConfig

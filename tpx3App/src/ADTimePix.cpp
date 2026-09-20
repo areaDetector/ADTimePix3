@@ -564,7 +564,8 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixBiasVolt || function == ADTimePixBiasEnable || function == ADTimePixTriggerIn || function == ADTimePixTriggerOut || function == ADTimePixLogLevel \
-                || function == ADTimePixExternalReferenceClock || function == ADTimePixChainMode \
+                || function == ADTimePixExternalReferenceClock || function == ADTimePixPeriphClk80 \
+                || function == ADTimePixTdc0 || function == ADTimePixTdc1 || function == ADTimePixChainMode \
                 || function == ADTimePixPolarity || function == ADTimePixGainMode || function == ADTimePixChargeSumming || function == ADTimePixColour \
                 || function == ADTimePixPixelDepth || function == ADTimePixCounterSelectIn || function == ADTimePixCounterSelectOut \
                 || function == ADTimePixIDelay0 || function == ADTimePixIDelay1 || function == ADTimePixIDelay2 || function == ADTimePixIDelay3) {

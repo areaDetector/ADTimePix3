@@ -36,6 +36,15 @@ bool setBoolean(nlohmann::json& config, const char* field, int value);
 /** Set BiasEnabled from its EPICS bo value. Returns false unless value is 0 or 1. */
 bool setBiasEnabled(nlohmann::json& config, int value);
 
+/** Set the Serval ChainMode string from its EPICS mbbo value. */
+bool setChainMode(nlohmann::json& config, int value);
+
+/** Set the Serval Polarity string from its EPICS bo value. */
+bool setPolarity(nlohmann::json& config, int value);
+
+/** Set both Serval Tdc strings from their EPICS mbbo values. */
+bool setTdc(nlohmann::json& config, int first, int second);
+
 }  // namespace ADTimePix3ServalConfig
 
 #endif
