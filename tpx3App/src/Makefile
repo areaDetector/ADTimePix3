@@ -18,6 +18,7 @@ INC += ADTimePixLog.h
 INC += detector_family.h
 INC += network_client.h
 INC += serval_http.h
+INC += serval_config.h
 
 # GraphicsMagick removed - TCP streaming is used instead
 # GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
@@ -29,6 +30,7 @@ LIB_SRCS += mask_io.cpp
 LIB_SRCS += img_accumulation.cpp
 LIB_SRCS += histogram_io.cpp
 LIB_SRCS += network_client.cpp
+LIB_SRCS += serval_config.cpp
 LIB_SRCS += serval_stream.cpp
 LIB_SRCS += serval_http.cpp
 LIB_SRCS += acquire.cpp
