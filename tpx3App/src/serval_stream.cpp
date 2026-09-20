@@ -10,6 +10,7 @@
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
 #include "network_client.h"
+#include "serval_stream_validation.h"
 
 #include <NDAttribute.h>
 #include <algorithm>
@@ -112,9 +113,25 @@ bool ADTimePix::processPreviewJsonimageLine(
     }
 
     try {
-        int width = j["width"];
-        int height = j["height"];
-        std::string pixel_format_str = j.value("pixelFormat", "uint16");
+        int maxSizeX = 0;
+        int maxSizeY = 0;
+        int detectorPixels = 0;
+        getIntegerParam(ADMaxSizeX, &maxSizeX);
+        getIntegerParam(ADMaxSizeY, &maxSizeY);
+        getIntegerParam(ADTimePixPixCount, &detectorPixels);
+        const ADTimePix3Stream::ImageFrameLimits limits =
+            ADTimePix3Stream::detectorImageFrameLimits(maxSizeX, maxSizeY, detectorPixels);
+        ADTimePix3Stream::ImageFrameLayout layout;
+        const ADTimePix3Stream::ImageHeaderError headerError =
+            ADTimePix3Stream::validateJsonImageHeader(j, limits, layout);
+        if (headerError != ADTimePix3Stream::ImageHeaderError::None) {
+            ERR_ARGS("%s rejected jsonimage header: %s", stream.logTag,
+                     ADTimePix3Stream::imageHeaderErrorMessage(headerError));
+            return false;
+        }
+        const int width = layout.width;
+        const int height = layout.height;
+        const std::string pixel_format_str = ADTimePix3Stream::pixelFormatName(layout.pixelFormat);
 
         int frame_number = j.value("frameNumber", 0);
         double time_at_frame = j.value("timeAtFrame", 0.0);
@@ -134,18 +151,11 @@ bool ADTimePix::processPreviewJsonimageLine(
             --stream.jsonHeadersRemaining;
         }
 
-        bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
+        bool is_uint32 = layout.pixelFormat == ADTimePix3Stream::PixelFormat::UInt32;
         NDDataType_t dataType = is_uint32 ? NDUInt32 : NDUInt16;
 
-        size_t pixel_count = width * height;
-        size_t bytes_per_pixel = is_uint32 ? sizeof(uint32_t) : sizeof(uint16_t);
-        size_t binary_needed = pixel_count * bytes_per_pixel;
-
-        if (width <= 0 || height <= 0 || width > 100000 || height > 100000) {
-            ERR_ARGS("%s invalid image dimensions: width=%d, height=%d",
-                     stream.logTag, width, height);
-            return false;
-        }
+        const size_t pixel_count = layout.pixelCount;
+        const size_t binary_needed = layout.payloadBytes;
 
         if (!this->pNDArrayPool) {
             ERR_ARGS("%s NDArray pool is not available", stream.logTag);
@@ -932,10 +942,25 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
     }
     
     try {
-        // Extract header information for jsonimage
-        int width = j["width"];
-        int height = j["height"];
-        std::string pixel_format_str = j.value("pixelFormat", "uint16");
+        int maxSizeX = 0;
+        int maxSizeY = 0;
+        int detectorPixels = 0;
+        getIntegerParam(ADMaxSizeX, &maxSizeX);
+        getIntegerParam(ADMaxSizeY, &maxSizeY);
+        getIntegerParam(ADTimePixPixCount, &detectorPixels);
+        const ADTimePix3Stream::ImageFrameLimits limits =
+            ADTimePix3Stream::detectorImageFrameLimits(maxSizeX, maxSizeY, detectorPixels);
+        ADTimePix3Stream::ImageFrameLayout layout;
+        const ADTimePix3Stream::ImageHeaderError headerError =
+            ADTimePix3Stream::validateJsonImageHeader(j, limits, layout);
+        if (headerError != ADTimePix3Stream::ImageHeaderError::None) {
+            ERR_ARGS("Rejected Img jsonimage header: %s",
+                     ADTimePix3Stream::imageHeaderErrorMessage(headerError));
+            return false;
+        }
+        const int width = layout.width;
+        const int height = layout.height;
+        const std::string pixel_format_str = ADTimePix3Stream::pixelFormatName(layout.pixelFormat);
         
         // Extract additional frame data
         int frame_number = j.value("frameNumber", 0);
@@ -945,19 +970,11 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
             threshold_id, NDARRAY_ADDR_IMG_THRESHOLD0, NDARRAY_ADDR_IMG_THRESHOLD1);
         
         // Determine pixel format
-        bool is_uint32 = (pixel_format_str == "uint32" || pixel_format_str == "UINT32");
+        bool is_uint32 = layout.pixelFormat == ADTimePix3Stream::PixelFormat::UInt32;
         NDDataType_t dataType = is_uint32 ? NDUInt32 : NDUInt16;
-        
-        // Calculate pixel data size
-        size_t pixel_count = width * height;
-        size_t bytes_per_pixel = is_uint32 ? sizeof(uint32_t) : sizeof(uint16_t);
-        size_t binary_needed = pixel_count * bytes_per_pixel;
-        
-        // Validate dimensions
-        if (width <= 0 || height <= 0 || width > 100000 || height > 100000) {
-            ERR_ARGS("Invalid image dimensions: width=%d, height=%d", width, height);
-            return false;
-        }
+
+        const size_t pixel_count = layout.pixelCount;
+        const size_t binary_needed = layout.payloadBytes;
         
         // Create NDArray - check if pool is available
         if (!this->pNDArrayPool) {
