@@ -11,6 +11,7 @@
 #include "ADTimePixLog.h"
 #include "serval_config.h"
 #include "serval_dacs.h"
+#include "serval_dashboard.h"
 #include "serval_detector.h"
 #include "serval_destination.h"
 #include "serval_http.h"
@@ -237,6 +238,38 @@ void ADTimePix::updateServalVersionFromDashboard(const json& dashboard_j) {
     }
 }
 
+void ADTimePix::publishDashboardSnapshot(const json& dashboard_j, bool detectorConnected,
+                                         const std::string& detectorType) {
+    updateServalVersionFromDashboard(dashboard_j);
+    setIntegerParam(ADTimePixServalConnected, 1);
+    setIntegerParam(ADTimePixDetConnected, detectorConnected ? 1 : 0);
+    setStringParam(ADTimePixDetType, detectorConnected ? detectorType.c_str() : "null");
+    if (detectorConnected) setStringParam(ADModel, detectorType.c_str());
+
+    const json& server = dashboard_j["Server"];
+    if (server.contains("DiskSpace") && !server["DiskSpace"].empty()) {
+        const json& disk = server["DiskSpace"][0];
+        if (disk.contains("FreeSpace") && disk["FreeSpace"].is_number_integer())
+            setInteger64Param(ADTimePixFreeSpace, disk["FreeSpace"].get<epicsInt64>());
+        if (disk.contains("WriteSpeed") && disk["WriteSpeed"].is_number())
+            setDoubleParam(ADTimePixWriteSpeed, disk["WriteSpeed"].get<double>());
+        if (disk.contains("LowerLimit") && disk["LowerLimit"].is_number_integer())
+            setInteger64Param(ADTimePixLowerLimit, disk["LowerLimit"].get<epicsInt64>());
+        if (disk.contains("DiskLimitReached") && disk["DiskLimitReached"].is_boolean())
+            setIntegerParam(ADTimePixLLimReached, disk["DiskLimitReached"].get<bool>() ? 1 : 0);
+        else if (disk.contains("DiskLimitReached") && disk["DiskLimitReached"].is_number_integer())
+            setIntegerParam(ADTimePixLLimReached, disk["DiskLimitReached"].get<int>());
+    }
+    updateMeasurementFromDashboard(dashboard_j);
+}
+
+void ADTimePix::publishDashboardFailure(bool servalReachable) {
+    setIntegerParam(ADTimePixServalConnected, servalReachable ? 1 : 0);
+    setIntegerParam(ADTimePixDetConnected, 0);
+    setStringParam(ADTimePixDetType, "null");
+    updateMeasurementStatusFromJson(json(nullptr));
+}
+
 void ADTimePix::updateStatusFromConnection(bool servalOk, bool detOk) {
     if (servalOk && detOk) {
         setStringParam(ADStatusMessage, "OK");
@@ -275,75 +308,32 @@ void ADTimePix::refreshOnReconnect() {
 
 asynStatus ADTimePix::initialServerCheckConnection(){
     bool connected = false;
+    cpr::Response root = ADTimePix3ServalHttp::get(this->serverURL);
+    setIntegerParam(ADTimePixHttpCode, root.status_code);
 
+    if (root.status_code == 200) {
+        const std::string dashboard = this->serverURL + std::string("/dashboard");
+        cpr::Response response = ADTimePix3ServalHttp::get(dashboard);
+        setIntegerParam(ADTimePixHttpCode, response.status_code);
 
-    // Implement connecting to the camera here: check welcome URL
-    // Usually the vendor provides examples of how to do this with the library/SDK
-    // Use GET request and compare if URI status response code is 200.
-    cpr::Response r = ADTimePix3ServalHttp::get(this->serverURL);
-    // printf("Status code: %li\n", r.status_code);
-    // printf("Header:\n");
-    // for (const pair<string, string>& kv : r.header) {
-    //     printf("\t%s:%s\n",kv.first.c_str(),kv.second.c_str());
-    // }
-    // printf("Text: %s\n", r.text.c_str());
-    setIntegerParam(ADTimePixHttpCode, r.status_code);
-
-    if(r.status_code == 200) {
-        connected = true;
-        setIntegerParam(ADTimePixServalConnected,1);
-        printf("\n\nCONNECTED to Welcome URI! (Serval running), http_code = %li\n", r.status_code);
-
-        // Check if detector is connected to serval from dashboard URL
-        // Both serval, and connection to Tpx3 detector must be successful
-        std::string dashboard;
-
-        dashboard = this->serverURL + std::string("/dashboard");
-        printf("ServerURL/dashboard =%s\n", dashboard.c_str());
-        r = ADTimePix3ServalHttp::get(dashboard);
-
-        printf("Status code: %li\n", r.status_code);
-        printf("Text:\n %s\n", r.text.c_str());
-
-        if (r.status_code != 200) {
-            logHttpFailure("initialServerCheckConnection Dashboard", "GET", dashboard, (long)r.status_code, r.text);
-            setIntegerParam(ADTimePixDetConnected, 0);
-            updateMeasurementStatusFromJson(json(nullptr));
-            connected = false;
+        ADTimePix3ServalDashboard::Snapshot snapshot;
+        const auto error = ADTimePix3ServalDashboard::parseResponse(
+            response.status_code, response.text, snapshot);
+        if (error == ADTimePix3ServalDashboard::ResponseError::None) {
+            publishDashboardSnapshot(snapshot.response, snapshot.detectorConnected,
+                                     snapshot.detectorType);
+            connected = snapshot.detectorConnected;
         } else {
-            try {
-                json dashboard_j = json::parse(r.text.c_str());
-
-                updateServalVersionFromDashboard(dashboard_j);
-
-                std::string Detector, DetType;
-                Detector = dashboard_j["Detector"].dump().c_str();
-
-                if (strcmp(Detector.c_str(), "null")) {
-                    DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump()).c_str();
-                    setStringParam(ADTimePixDetType, DetType.c_str());
-                    setStringParam(ADModel, DetType.c_str());
-                    setIntegerParam(ADTimePixDetConnected, 1);
-                    printf("Detector CONNECTED, Detector=%s, %d\n", Detector.c_str(),
-                           strcmp(Detector.c_str(), "null"));
-                } else {
-                    printf("Detector NOT CONNECTED, Detector=%s\n", Detector.c_str());
-                    setStringParam(ADTimePixDetType, "null");
-                    setIntegerParam(ADTimePixDetConnected, 0);
-                    connected = false;
-                }
-                updateMeasurementFromDashboard(dashboard_j);
-            } catch (const std::exception& e) {
-                ERR_ARGS("Dashboard JSON parse failed: %s", e.what());
-                setIntegerParam(ADTimePixDetConnected, 0);
-                updateMeasurementStatusFromJson(json(nullptr));
-                connected = false;
-            }
+            logHttpFailure("initialServerCheckConnection dashboard", "GET", dashboard,
+                           response.status_code, response.text);
+            ERR_ARGS("initialServerCheckConnection: %s",
+                     ADTimePix3ServalDashboard::responseErrorMessage(error));
+            publishDashboardFailure(response.status_code == 200);
         }
     } else {
-        setIntegerParam(ADTimePixServalConnected,0);
-        setIntegerParam(ADTimePixDetConnected,0);
-        updateMeasurementStatusFromJson(json(nullptr));
+        logHttpFailure("initialServerCheckConnection", "GET", this->serverURL,
+                       root.status_code, root.text);
+        publishDashboardFailure(false);
     }
 
     int servalConn = 0, detConn = 0;
@@ -352,11 +342,9 @@ asynStatus ADTimePix::initialServerCheckConnection(){
     updateStatusFromConnection(servalConn != 0, detConn != 0);
 
     callParamCallbacks();
-    if(connected) return asynSuccess;
-    else{
-        ERR_ARGS("ERROR: Failed to connect to server %s",this->serverURL.c_str());
-        return asynError;
-    }
+    if (connected) return asynSuccess;
+    ERR_ARGS("ERROR: Failed to connect to server %s", this->serverURL.c_str());
+    return asynError;
 }
 
 /**
@@ -367,43 +355,27 @@ asynStatus ADTimePix::initialServerCheckConnection(){
  * @return asynSuccess if SERVAL and detector are connected, asynError otherwise
  */
 asynStatus ADTimePix::checkConnection(bool publishHttpStatus){
-    bool servalOk = false;
-    bool detOk = false;
-
-    std::string dashboard = this->serverURL + std::string("/dashboard");
+    const std::string dashboard = this->serverURL + std::string("/dashboard");
     cpr::Response r = ADTimePix3ServalHttp::get(dashboard, 5000);
     if (publishHttpStatus) {
         setIntegerParam(ADTimePixHttpCode, r.status_code);
     }
 
-    if (r.status_code == 200) {
-        servalOk = true;
-        setIntegerParam(ADTimePixServalConnected, 1);
-        try {
-            json dashboard_j = json::parse(r.text.c_str());
-            updateServalVersionFromDashboard(dashboard_j);
-            std::string Detector = dashboard_j["Detector"].dump();
-            if (strcmp(Detector.c_str(), "null") != 0) {
-                detOk = true;
-                setIntegerParam(ADTimePixDetConnected, 1);
-                std::string DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump());
-                setStringParam(ADTimePixDetType, DetType.c_str());
-                setStringParam(ADModel, DetType.c_str());
-            } else {
-                setIntegerParam(ADTimePixDetConnected, 0);
-                setStringParam(ADTimePixDetType, "null");
-            }
-            updateMeasurementFromDashboard(dashboard_j);
-        } catch (...) {
-            setIntegerParam(ADTimePixDetConnected, 0);
-            setStringParam(ADTimePixDetType, "null");
-            updateMeasurementStatusFromJson(json(nullptr));
-        }
+    ADTimePix3ServalDashboard::Snapshot snapshot;
+    const auto error = ADTimePix3ServalDashboard::parseResponse(r.status_code, r.text, snapshot);
+    const bool servalOk = r.status_code == 200;
+    const bool detOk = error == ADTimePix3ServalDashboard::ResponseError::None &&
+                       snapshot.detectorConnected;
+    if (error == ADTimePix3ServalDashboard::ResponseError::None) {
+        publishDashboardSnapshot(snapshot.response, snapshot.detectorConnected,
+                                 snapshot.detectorType);
     } else {
-        setIntegerParam(ADTimePixServalConnected, 0);
-        setIntegerParam(ADTimePixDetConnected, 0);
-        setStringParam(ADTimePixDetType, "null");
-        updateMeasurementStatusFromJson(json(nullptr));
+        publishDashboardFailure(servalOk);
+        if (publishHttpStatus) {
+            logHttpFailure("checkConnection", "GET", dashboard, r.status_code, r.text);
+            ERR_ARGS("checkConnection: %s",
+                     ADTimePix3ServalDashboard::responseErrorMessage(error));
+        }
     }
 
     updateStatusFromConnection(servalOk, detOk);
@@ -443,83 +415,27 @@ void ADTimePix::connectionPollThread() {
  * @return: status
  */
 asynStatus ADTimePix::getDashboard(){
-    asynStatus status = asynSuccess;
     FLOW("Collecting detector information");
-    std::string dashboard;
-
-    // Use the vendor library to collect information about the connected camera here, and set the appropriate PVs
-    // Make sure you check if camera is connected before calling on it for information
-
-    //setStringParam(ADManufacturer,        _____________);
-    //setStringParam(ADSerialNumber,        _____________);
-    //setStringParam(ADFirmwareVersion,     "Server"->"SoftwareVersion" : "2.3.6",);
-    //setStringParam(ADModel,               _____________);
-    /*
-        "Server" : {
-           "SoftwareVersion" : "2.3.6",
-           "DiskSpace" : [ ],
-           "SoftwareTimestamp" : "2022/01/05 11:07",
-           "Notifications" : [ ]
-        },
-        "Measurement" : null,
-        "Detector" : null
-    */
-
-    dashboard = this->serverURL + std::string("/dashboard");
-    // printf("ServerURL/dashboard=%s\n", dashboard.c_str());
+    const std::string dashboard = this->serverURL + std::string("/dashboard");
     cpr::Response r = ADTimePix3ServalHttp::get(dashboard, 5000);
 
-    if(r.status_code == 200) {
-        setIntegerParam(ADTimePixServalConnected, 1);  // SERVAL reachable (dashboard responded)
-        try {
-            json dashboard_j = json::parse(r.text.c_str());
-            updateServalVersionFromDashboard(dashboard_j);
-            // Detector status: consistent with checkConnection()
-            std::string Detector = dashboard_j["Detector"].dump();
-            if (strcmp(Detector.c_str(), "null") != 0) {
-                setIntegerParam(ADTimePixDetConnected, 1);
-                std::string DetType = strip_quotes(dashboard_j["Detector"]["DetectorType"].dump());
-                setStringParam(ADTimePixDetType, DetType.c_str());
-                setStringParam(ADModel, DetType.c_str());
-            } else {
-                setIntegerParam(ADTimePixDetConnected, 0);
-                setStringParam(ADTimePixDetType, "null");
-            }
-            // DiskSpace is an empty array until raw file writing selected, and acquisition starts.
-            // SERVAL may omit or null individual fields (e.g. WriteSpeed) — avoid .get on null (json type_error.302).
-            if (!dashboard_j["Server"]["DiskSpace"].empty()) {
-                const json& ds0 = dashboard_j["Server"]["DiskSpace"][0];
-                if (ds0.contains("FreeSpace") && ds0["FreeSpace"].is_number_integer())
-                    setInteger64Param(ADTimePixFreeSpace, ds0["FreeSpace"].get<long>());
-                if (ds0.contains("WriteSpeed") && ds0["WriteSpeed"].is_number())
-                    setDoubleParam(ADTimePixWriteSpeed, ds0["WriteSpeed"].get<double>());
-                if (ds0.contains("LowerLimit") && ds0["LowerLimit"].is_number_integer())
-                    setInteger64Param(ADTimePixLowerLimit, ds0["LowerLimit"].get<long>());
-                if (ds0.contains("DiskLimitReached") && !ds0["DiskLimitReached"].is_null()) {
-                    const json& dl = ds0["DiskLimitReached"];
-                    if (dl.is_boolean())
-                        setIntegerParam(ADTimePixLLimReached, dl.get<bool>() ? 1 : 0);
-                    else if (dl.is_number_integer())
-                        setIntegerParam(ADTimePixLLimReached, dl.get<int>());
-                }
-            }
-            updateMeasurementFromDashboard(dashboard_j);
-        } catch (...) {
-            setIntegerParam(ADTimePixDetConnected, 0);
-            setStringParam(ADTimePixDetType, "null");
-            updateMeasurementStatusFromJson(json(nullptr));
-        }
-    } else { // Serval not running
-        setIntegerParam(ADTimePixServalConnected, 0);
-        setIntegerParam(ADTimePixDetConnected, 0);
-        setStringParam(ADTimePixDetType, "null");
-        updateMeasurementStatusFromJson(json(nullptr));
+    ADTimePix3ServalDashboard::Snapshot snapshot;
+    const auto error = ADTimePix3ServalDashboard::parseResponse(r.status_code, r.text, snapshot);
+    if (error == ADTimePix3ServalDashboard::ResponseError::None) {
+        publishDashboardSnapshot(snapshot.response, snapshot.detectorConnected,
+                                 snapshot.detectorType);
+    } else {
+        logHttpFailure("getDashboard", "GET", dashboard, r.status_code, r.text);
+        ERR_ARGS("getDashboard: %s", ADTimePix3ServalDashboard::responseErrorMessage(error));
+        publishDashboardFailure(r.status_code == 200);
     }
+
     int servalConn = 0, detConn = 0;
     getIntegerParam(ADTimePixServalConnected, &servalConn);
     getIntegerParam(ADTimePixDetConnected, &detConn);
     updateStatusFromConnection(servalConn != 0, detConn != 0);
-    return status;
+    callParamCallbacks();
+    return error == ADTimePix3ServalDashboard::ResponseError::None ? asynSuccess : asynError;
 }
 
 asynStatus ADTimePix::getHealth(){

@@ -1007,6 +1007,11 @@ class ADTimePix : public ADDriver{
         void connectionPollThread();
         /** Set ADSDKVersion / FW timestamp from GET /dashboard JSON (startup and reconnect). */
         void updateServalVersionFromDashboard(const json& dashboard_j);
+        /** Publish one completely validated GET /dashboard snapshot. */
+        void publishDashboardSnapshot(const json& dashboard_j, bool detectorConnected,
+                                      const std::string& detectorType);
+        /** Publish dashboard connectivity state without partially applying an invalid response. */
+        void publishDashboardFailure(bool servalReachable);
         /** Map SERVAL/detector link to ADStatus (DetectorState) and ADStatusMessage. */
         void updateStatusFromConnection(bool servalOk, bool detOk);
         /** On disconnect->connect: push PV config, refresh detector, optional BPC/DACS upload. */

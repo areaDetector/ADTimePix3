@@ -11,6 +11,7 @@
 #include "one_shot_action.h"
 #include "serval_config.h"
 #include "serval_dacs.h"
+#include "serval_dashboard.h"
 #include "serval_detector.h"
 #include "serval_destination.h"
 #include "serval_http.h"
@@ -644,6 +645,89 @@ void testDestinationResponseValidation()
            "destination parser rejects non-array preview histogram channels");
 }
 
+void testDashboardResponseValidation()
+{
+    using ADTimePix3ServalDashboard::ResponseError;
+    using ADTimePix3ServalDashboard::Snapshot;
+
+    Snapshot snapshot;
+    const std::string connected =
+        "{\"Server\":{\"SoftwareVersion\":\"4.1.6\","
+        "\"SoftwareTimestamp\":\"2026/06/16 10:00\",\"DiskSpace\":[{"
+        "\"FreeSpace\":1234,\"WriteSpeed\":4.5,\"LowerLimit\":100,"
+        "\"DiskLimitReached\":false}]},\"Measurement\":{\"Status\":\"DA_IDLE\"},"
+        "\"Detector\":{\"DetectorType\":\"TPX3\"}}";
+    testOk(ADTimePix3ServalDashboard::parseResponse(200, connected, snapshot) ==
+               ResponseError::None && snapshot.detectorConnected &&
+               snapshot.detectorType == "TPX3" &&
+               snapshot.response["Server"]["DiskSpace"].size() == 1,
+           "dashboard parser accepts a connected detector and complete server metadata");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{},\"Measurement\":null,\"Detector\":null}", snapshot) ==
+               ResponseError::None && !snapshot.detectorConnected && snapshot.detectorType.empty(),
+           "dashboard parser accepts the documented disconnected state");
+    testOk(ADTimePix3ServalDashboard::parseResponse(503, "unavailable", snapshot) ==
+               ResponseError::HttpFailure,
+           "dashboard parser rejects non-200 responses");
+    testOk(ADTimePix3ServalDashboard::parseResponse(200, "", snapshot) ==
+               ResponseError::EmptyBody,
+           "dashboard parser rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalDashboard::parseResponse(200, "{bad", snapshot) ==
+               ResponseError::MalformedJson,
+           "dashboard parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalDashboard::parseResponse(200, "[]", snapshot) ==
+               ResponseError::InvalidRoot,
+           "dashboard parser rejects a non-object root");
+    testOk(ADTimePix3ServalDashboard::parseResponse(200, "{\"Detector\":null}", snapshot) ==
+               ResponseError::MissingServer,
+           "dashboard parser requires the Server object");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":null,\"Detector\":null}", snapshot) ==
+               ResponseError::InvalidServer,
+           "dashboard parser rejects a non-object Server field");
+    testOk(ADTimePix3ServalDashboard::parseResponse(200, "{\"Server\":{}}", snapshot) ==
+               ResponseError::MissingDetector,
+           "dashboard parser requires the Detector field");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{},\"Detector\":[]}", snapshot) ==
+               ResponseError::InvalidDetector,
+           "dashboard parser rejects an invalid Detector container");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{},\"Detector\":{}}", snapshot) ==
+               ResponseError::InvalidDetectorType,
+           "dashboard parser requires a detector type for a connected detector");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{},\"Detector\":null,\"Measurement\":[]}", snapshot) ==
+               ResponseError::InvalidMeasurement,
+           "dashboard parser rejects an invalid Measurement container");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{\"SoftwareVersion\":4},\"Detector\":null}", snapshot) ==
+               ResponseError::InvalidSoftwareVersion,
+           "dashboard parser rejects a non-string software version");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{\"DiskSpace\":{}},\"Detector\":null}", snapshot) ==
+               ResponseError::InvalidDiskSpace,
+           "dashboard parser rejects a non-array DiskSpace field");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{\"DiskSpace\":[null]},\"Detector\":null}", snapshot) ==
+               ResponseError::InvalidDiskEntry,
+           "dashboard parser rejects a non-object DiskSpace entry");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{\"DiskSpace\":[{\"WriteSpeed\":\"fast\"}]},"
+               "\"Detector\":null}", snapshot) == ResponseError::InvalidDiskValue,
+           "dashboard parser rejects invalid disk metric types");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{\"DiskSpace\":[{"
+               "\"FreeSpace\":18446744073709551615}]},\"Detector\":null}", snapshot) ==
+               ResponseError::InvalidDiskValue,
+           "dashboard parser rejects disk sizes beyond the EPICS integer range");
+    testOk(ADTimePix3ServalDashboard::parseResponse(
+               200, "{\"Server\":{\"DiskSpace\":[{"
+               "\"DiskLimitReached\":18446744073709551615}]},\"Detector\":null}", snapshot) ==
+               ResponseError::InvalidDiskValue,
+           "dashboard parser rejects disk-limit values beyond the EPICS integer range");
+}
+
 void testStreamHeaderValidation()
 {
     using ADTimePix3Stream::ImageFrameLayout;
@@ -800,7 +884,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(132);
+    testPlan(150);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -811,6 +895,7 @@ MAIN(servalProtocolFixtureTest)
     testDetectorResponseValidation();
     testDacUpdateValidation();
     testDestinationResponseValidation();
+    testDashboardResponseValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();
