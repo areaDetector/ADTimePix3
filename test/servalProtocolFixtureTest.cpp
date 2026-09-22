@@ -7,6 +7,7 @@
 #include "FakeServalHttpServer.h"
 #include "FakeServalTcpServer.h"
 #include "bpc_file_io.h"
+#include "bpc_mask_semantics.h"
 #include "network_client.h"
 #include "one_shot_action.h"
 #include "serval_config.h"
@@ -1100,6 +1101,32 @@ void testBpcFileBounds()
            "bounded BPC writer rejects a buffer-size mismatch");
 }
 
+void testBpcMaskSemantics()
+{
+    testOk(ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::TPX3),
+           "operator mask writes are supported for TPX3");
+    testOk(!ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::MPX3) &&
+               !ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::Unknown),
+           "operator mask writes remain blocked for undocumented detector families");
+    testOk(ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, 0x1f),
+           "TPX3 full disable byte 0x1f is classified as masked");
+    testOk(!ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, 0x01) &&
+               !ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, 0xff),
+           "TPX3 partial or unrelated bit patterns are not classified as fully disabled");
+    testOk(ADTimePix3BpcMask::countMasked(
+               DetectorFamily::TPX3, {0x1f, 0x01, 0x1f, 0xff}) == 2,
+           "TPX3 masked-pixel count includes only complete Accos disable patterns");
+
+    std::uint8_t byte = 0xaa;
+    testOk(ADTimePix3BpcMask::applyOperatorMask(DetectorFamily::TPX3, byte) &&
+               byte == 0x1f,
+           "TPX3 operator mask replaces the complete calibration byte with 0x1f");
+    byte = 0x55;
+    testOk(!ADTimePix3BpcMask::applyOperatorMask(DetectorFamily::MPX3, byte) &&
+               byte == 0x55,
+           "unsupported MPX3 mask operation leaves the calibration byte unchanged");
+}
+
 void testOneShotActions()
 {
     const ADTimePix3Action::OneShotDecision zero =
@@ -1122,7 +1149,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(198);
+    testPlan(205);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -1138,6 +1165,7 @@ MAIN(servalProtocolFixtureTest)
     testPixelConfigResponseValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
+    testBpcMaskSemantics();
     testOneShotActions();
     return testDone();
 }

@@ -1,6 +1,6 @@
 # Masked pixels: export format, `NDPluginBadPixel`, and streaming
 
-This document describes how to **publish** calibration-derived masked pels (bit 0 in the `.bpc` byte) for three audiences:
+This document describes how to **publish** calibration-derived **Timepix3** masked pels (the complete `.bpc` byte is **31 / `0x1f`**) for three audiences:
 
 1. **ADCore** image correction -- `NDPluginBadPixel` and its expected JSON.
 2. **Downstream analysis** -- dense image coordinates and stable cross-refs.
@@ -54,7 +54,7 @@ When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** wit
     {
       "index": 1,
       "bpc_index": 18291,
-      "value": 1,
+      "value": 31,
       "chip": 0,
       "lx": 115,
       "ly": 71,
@@ -94,7 +94,7 @@ Rationale: **Data acquisition** pipelines often need "what detector + what calib
 - **Filename:** derive from **`BPCFileName`**: replace a trailing **`*.bpc`** (case-insensitive) with **`_masked_pels.json`** (e.g. `Eq_neg_cfg1.bpc` -> `Eq_neg_cfg1_masked_pels.json`). If the name has no **`.bpc`** suffix, **`_masked_pels.json`** is appended to the full basename.
 - **Readback PVs (asyn -> EPICS in `tpx3App/Db/File.template`):**
   - **`TPX3_MASKED_PELS_JSON_RBV`:** full path to the file last written (record `MaskedPelsJson_RBV`).
-  - **`TPX3_MASKED_PELS_COUNT_RBV`:** number of pels with bit 0 set (record `MaskedPelsCount_RBV`).
+  - **`TPX3_MASKED_PELS_COUNT_RBV`:** number of TPX3 pels whose complete byte equals **31 / `0x1f`** (record `MaskedPelsCount_RBV`); **-1** means unavailable for the detected family.
   - **`TPX3_MASKED_PELS_EXPORT_STATUS_RBV`:** short status (record `MaskedPelsExportStatus_RBV`), e.g. `OK: wrote N...`, `Skipped:...`, or `Write failed:...`.
 - Use **`MaskedPelsJson_RBV`** for **`NDPluginBadPixel`** `BAD_PIXEL_FILE_NAME` (or a symlink) when you want the plugin to load the same file.
 - **Phoebus:** **`tpx3App/op/bob/Mask/PixelConfigMaskPanel.bob`** (embedded from **`Mask.bob`**) shows **Count**, **Status**, and **Path** after a refresh. **`Mask.bob`** does not list them again (same embedded panel). No change required to **`MaskStatus.bob`** for this feature.
@@ -115,9 +115,10 @@ The driver action **`TPX3_REFRESH_PIXEL_CONFIG`** (record **`RefreshPixelConfig`
 
 **Caveats (document for operators):**
 
-1. The exported mask is **from the on-disk .bpc** (bit 0 pels), not from the decoded **SERVAL** PixelConfig alone. If SERVAL and file **diverge**, the JSON still describes the **file**; mismatch is visible via existing **`PixelConfigMatchBPC_***` PVs. This matches **`NDPluginBadPixel`** and file-based analysis, but should be explicit in the docstring/release notes.
-2. **Side effects:** Refresh may already trigger network traffic to each chip. Adding a local JSON write is cheap; if a site needs **re-export without SERVAL round-trips**, a **separate** "export mask JSON only" action (or PROC) can be added later.
-3. If **`BPCFilePath`/`BPCFileName`** are empty or the file is missing, the driver should **skip** or **error** the export and set status PVs clearly (same as no-BPC for PixelConfig compare).
+1. The exported mask is **from the on-disk TPX3 .bpc** (bytes exactly equal to **31 / `0x1f`**), not from the decoded **SERVAL** PixelConfig alone. If SERVAL and file **diverge**, the JSON still describes the **file**; mismatch is visible via existing **`PixelConfigMatchBPC_***` PVs. This matches **`NDPluginBadPixel`** and file-based analysis, but should be explicit in the docstring/release notes.
+2. **MPX3 is intentionally unavailable:** its two-slice layout is validated, but its per-pixel disable encoding is not documented. The driver leaves the JSON path empty, reports count **-1**, and publishes an unavailable status instead of interpreting equalization bits as bad pixels. The related `BPC_N_RBV` is also **-1**.
+3. **Side effects:** Refresh may already trigger network traffic to each chip. Adding a local JSON write is cheap; if a site needs **re-export without SERVAL round-trips**, a **separate** "export mask JSON only" action (or PROC) can be added later.
+4. If **`BPCFilePath`/`BPCFileName`** are empty or the file is missing, the driver should **skip** or **error** the export and set status PVs clearly (same as no-BPC for PixelConfig compare).
 
 ### Other integration steps (unchanged in intent)
 

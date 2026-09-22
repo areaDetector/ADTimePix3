@@ -16,10 +16,12 @@
 
 #include <sys/stat.h>
 #include <algorithm>
+#include <climits>
 // Area Detector include
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
 #include "bpc_file_io.h"
+#include "bpc_mask_semantics.h"
 
 extern const char* driverName;  // defined in ADTimePix.cpp (same as histogram_io.cpp)
 
@@ -118,6 +120,16 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             maskCircle(value, maskRectangle_MinX, maskRectangle_MinY, maskCircle_Radius, maskOnOff_val);
         }
         else if (maskBPCfile_val == 1) {
+            if (!ADTimePix3BpcMask::operatorMaskSupported(detectorFamily_)) {
+                std::string message = std::string(detectorFamilyName(detectorFamily_)) +
+                    " mask read unavailable: pixel mask encoding is not documented";
+                setStringParam(ADTimePixWriteMsg, message.c_str());
+                setParamStatus(0, ADTimePixMaskBPC, asynError);
+                callParamCallbacks();
+                *nIn = 0;
+                ERR("MaskBPC: refusing unsupported detector-family mask read");
+                return asynError;
+            }
             if (readBPCfile(bpcData) != asynSuccess) {
                 *nIn = 0;
                 return asynError;
@@ -135,7 +147,8 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                         if (idx >= nElements) continue;
                         const int k = pelIndex(i, j);
                         if (k >= 0 && static_cast<size_t>(k) < bpcData.size() &&
-                            (bpcData[static_cast<size_t>(k)] & (1 << 0))) {
+                            ADTimePix3BpcMask::isMasked(
+                                detectorFamily_, bpcData[static_cast<size_t>(k)])) {
                             value[idx] |= 1 << 1;
                         }
                     }
@@ -143,6 +156,16 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             }
         }
         else if (maskWrite_val == 1) {
+            if (!ADTimePix3BpcMask::operatorMaskSupported(detectorFamily_)) {
+                std::string message = std::string(detectorFamilyName(detectorFamily_)) +
+                    " mask write blocked: pixel mask encoding is not documented";
+                setStringParam(ADTimePixWriteMsg, message.c_str());
+                setParamStatus(0, ADTimePixMaskBPC, asynError);
+                callParamCallbacks();
+                *nIn = 0;
+                ERR("MaskBPC: refusing unsupported detector-family mask write");
+                return asynError;
+            }
             if (readBPCfile(bpcData) != asynSuccess) {
                 *nIn = 0;
                 return asynError;
@@ -157,7 +180,8 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                     if (imageIndex < nElements && bpcIndex >= 0 &&
                         static_cast<size_t>(bpcIndex) < bpcData.size() &&
                         (value[imageIndex] & (1 << 0))) {
-                        bpcData[static_cast<size_t>(bpcIndex)] |= (1 << 0);
+                        ADTimePix3BpcMask::applyOperatorMask(
+                            detectorFamily_, bpcData[static_cast<size_t>(bpcIndex)]);
                     }
                 }
             }
@@ -179,12 +203,16 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             const size_t copied = std::min(nElements, bpcData.size());
             for (size_t i = 0; i < copied; i++) {
                 value[i] = bpcData[i];
-                if (bpcData[i] & (1 << 0)) {
+                if (ADTimePix3BpcMask::isMasked(detectorFamily_, bpcData[i])) {
                     value[i] |= 1 << 8;     // masked pel, 31-> 287
                 }
             }
             for (size_t i = copied; i < nElements; ++i) value[i] = 0;
         }
+    }
+
+    if (reason == ADTimePixMaskBPC) {
+        setParamStatus(0, ADTimePixMaskBPC, asynSuccess);
     }
 
     callParamCallbacks();
@@ -371,7 +399,6 @@ asynStatus ADTimePix::expectedBPCSize(std::size_t& size)
 }
 
 asynStatus ADTimePix::readBPCfile(std::vector<std::uint8_t>& data) {
-    int nMaskedPel = 0;
     std::size_t expectedSize = 0;
 
     // BPC calibration mask file to read, and write new mask.
@@ -396,15 +423,21 @@ asynStatus ADTimePix::readBPCfile(std::vector<std::uint8_t>& data) {
         return asynError;
     }
 
-    for (std::uint8_t byte : data) {
-        // Check if the bit at position N=0 is set to 1
-        if (byte & (1 << 0)) {
-            nMaskedPel += 1;
-        }
-    }
+    const bool maskSupported =
+        ADTimePix3BpcMask::operatorMaskSupported(detectorFamily_);
+    const std::size_t maskedCount =
+        ADTimePix3BpcMask::countMasked(detectorFamily_, data);
+    const int nMaskedPel = !maskSupported ? -1 :
+        (maskedCount > static_cast<std::size_t>(INT_MAX) ?
+         INT_MAX : static_cast<int>(maskedCount));
     setIntegerParam(ADTimePixBPCn, nMaskedPel);
-    LOG_ARGS("ReadBPC: file=\"%s\" bytes read=%zu bytes with mask bit0 set=%d (used for BPCn)",
-             fullFileName.c_str(), data.size(), nMaskedPel);
+    if (maskSupported) {
+        LOG_ARGS("ReadBPC: file=\"%s\" bytes=%zu fully disabled TPX3 pixels=%d",
+                 fullFileName.c_str(), data.size(), nMaskedPel);
+    } else {
+        LOG_ARGS("ReadBPC: file=\"%s\" bytes=%zu; mask count unavailable for family %s",
+                 fullFileName.c_str(), data.size(), detectorFamilyName(detectorFamily_));
+    }
 
     callParamCallbacks();
 
@@ -415,6 +448,14 @@ asynStatus ADTimePix::readBPCfile(std::vector<std::uint8_t>& data) {
 * Write bpc file containing mask created.
 */
 asynStatus ADTimePix::writeBPCfile(const std::vector<std::uint8_t>& data) {
+    if (!ADTimePix3BpcMask::operatorMaskSupported(detectorFamily_)) {
+        std::string message = std::string(detectorFamilyName(detectorFamily_)) +
+            " mask write blocked: pixel mask encoding is not documented";
+        setStringParam(ADTimePixWriteMsg, message.c_str());
+        ERR("WriteBPC: refusing unsupported detector-family mask write");
+        callParamCallbacks();
+        return asynError;
+    }
     asynStatus status = asynSuccess;
     int pathExists = 0, maskExists = 0;
     std::size_t expectedSize = 0;

@@ -26,9 +26,9 @@ On a **4-chip MPX3 quad** with **`BothCounters`**, Serval **`GET /detector/chips
 
 Each slice is **1 byte per pixel** (256×256). The two slices are **independent** (byte values differ between th0 and th1 on most pixels). Conceptually **two config bytes per image pixel per chip**, stored as **concatenated slices** `[th0 block][th1 block]`, not as interleaved byte pairs.
 
-**Byte semantics (important):** On **`vendor/tpx3/2x2/tpx3-demo.bpc`**, Accos bad pixels are **byte value 31** (`0b00011111`), not “any bit-0 set” — see below. On **`vendor/mpx3/eq-01.bpc`**, ~25% of bytes per slice have bit 0 set (values 1, 3, 5, 7) in **clustered** patterns consistent with **equalization/trim encoding**, not ~10 scattered dead pixels per chip. **Do not assume MPX3 bit 0 = disable counting** until ASI documents the bit map (Email 2). The driver’s legacy **`BPCn`** / bit-0 export must not be used as an MPX3 bad-pixel list.
+**Byte semantics (important):** On **`vendor/tpx3/2x2/tpx3-demo.bpc`**, Accos bad pixels are **byte value 31** (`0b00011111`), not “any bit-0 set” — see below. On **`vendor/mpx3/eq-01.bpc`**, ~25% of bytes per slice have bit 0 set (values 1, 3, 5, 7) in **clustered** patterns consistent with **equalization/trim encoding**, not ~10 scattered dead pixels per chip. **Do not assume MPX3 bit 0 = disable counting** until ASI documents the bit map. The driver therefore blocks MPX3 mask read/write/export while continuing to allow complete PixelConfig comparison and calibration upload.
 
-**Mask code:** Timepix3 paths in `mask_io.cpp` assume one slice; Medipix3 needs **`DetectorFamily::MPX3`** / `bpcThresholdSlices == 2` (see `detector_family.h`) for chip stride, `RefreshPixelConfig`, and threshold-aware `pelIndex`.
+**Mask code:** Timepix3 mask paths in `mask_io.cpp` use one slice and exact byte-31 classification. Medipix3 uses **`DetectorFamily::MPX3`** / `bpcThresholdSlices == 2` (see `detector_family.h`) for safe PixelConfig comparison, but mask operations remain blocked because the disable byte semantics are unknown.
 
 **Compare rule (correct for MPX3):** decoded Serval bytes vs file bytes at **`offset = i × 131072`**, length **131072** → **0 mismatches** for all four chips against `eq-01.bpc`.
 
@@ -39,9 +39,9 @@ Each slice is **1 byte per pixel** (256×256). The two slices are **independent*
 On **`vendor/tpx3/2x2/tpx3-demo.bpc`** (4-chip quad, 66 bad pixels total):
 
 - Every Accos bad pixel has **byte value 31** (`0b00011111`, bits 0–4 set). **Bit 0 alone is not the Accos disable pattern** — e.g. 6073 pixels at value 30 (`0b11110`) are not masked.
-- The IOC **`BPCn`** / “read from bpc” path counts **bit 0**; on this file that matches 31 (bit 0 ⟺ 31), but **edited** files (`mask.bpc`) can have bit 0 without 31 from operator **`|= bit0`** mask writes.
-- **Operator mask workflow:** `MaskWrite` reads **`BPCFileName`** (cal), ORs mask bits onto a copy, writes **`mask.bpc`**, uploads to Serval. **Undo** = reload original cal via **`WriteBPCFile`** — not per-pixel unmask in `mask.bpc`.
-- **Planned driver fix:** operator mask ON → write **31** (Accos pattern), not bit 0 only; **`BPCn`** → count **`byte == 31`** on TPX3.
+- The IOC **`BPCn`** / “read from bpc” path counts only bytes exactly equal to **31**. Values that merely have bit 0 set are not classified as masked.
+- **Operator mask workflow:** `MaskWrite` reads **`BPCFileName`** (cal), replaces selected bytes with **31** in a copy, writes **`mask.bpc`**, and uploads it to Serval. **Undo** = reload the original calibration with **`WriteBPCFile`**; there is no per-pixel restoration of the overwritten calibration byte in `mask.bpc`.
+- The value-31 rule matches the observed Accos TPX3 calibration. Confirmation that replacement (rather than setting only bits 0–4 while preserving upper bits) is the authoritative vendor operation remains pending.
 
 ## What “Refresh PixelConfig” does
 
