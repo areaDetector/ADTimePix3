@@ -32,7 +32,7 @@ Each slice is **1 byte per pixel** (256×256). The two slices are **independent*
 
 **Compare rule (correct for MPX3):** decoded Serval bytes vs file bytes at **`offset = i × 131072`**, length **131072** → **0 mismatches** for all four chips against `eq-01.bpc`.
 
-**Driver status:** `refreshPixelConfigFromServal()` in `serval_http.cpp` still uses **`kPixelConfigBytes = 65536`** and offset **`i × 65536`**. That produces CHIP0 “length mismatch (131072 vs 65536)” and ~56k false mismatches on chips 1–3. **Fix pending:** MPX3-aware chip stride and **`PixelConfigDiff`** threshold selection.
+**Driver status:** `refreshPixelConfigFromServal()` uses the detector-family capabilities for the per-chip size and stride. MPX3 compares each full 131072-byte chip block. `PixelConfigDiff` displays the threshold slice selected by `CounterSelectIn` (0 or 1); TPX3 always uses its sole slice.
 
 ## Timepix3 Accos bad pixels vs operator mask (Aug 2026)
 
@@ -47,7 +47,7 @@ On **`vendor/tpx3/2x2/tpx3-demo.bpc`** (4-chip quad, 66 bad pixels total):
 
 1. Reads the on-disk BPC into memory (same read path as other mask/BPC operations).
 2. For each chip `i`, GET `/detector/chips/<i>/PixelConfig`, parse JSON, base64-decode to bytes.
-3. Compares decoded bytes to file bytes at offset **`i × 65536`** for up to **65536** bytes per chip (**Timepix3 / legacy path**). Medipix3 should use **`i × 131072`** and **131072** bytes when dual-threshold (see above).
+3. Compares the exact decoded chip block to the file block at the family-specific offset: **`i × 65536`** for TPX3 or **`i × 131072`** for dual-threshold MPX3.
 4. Updates per-chip status PVs and fills **`PixelConfigDiff`**.
 
 ## Match codes (`PixelConfigMatchBPC_RBV`)
@@ -64,6 +64,7 @@ On **`vendor/tpx3/2x2/tpx3-demo.bpc`** (4-chip quad, 66 bad pixels total):
 
 - **`BPC` PV** (`TPX3_BPC_PEL`): **Linear file order**—index `k` is byte `k` in the `.bpc` file.
 - **`PixelConfigDiff`**: **Image order** = **`j × cols + i`** (same row-major convention as **`maskCircle`** / mask write), sample **`(i, j)`** = **`abs(SERVAL[k] − BPC[k])`** where **`k = pelIndex(i, j)`**. That is the **same** mapping used when a mask is written into the `.bpc` file (`pelIndex` in `mask_io.cpp`). **`DetOrient` / `TPX3_DET_ORIENTATION`** is included in **`pelIndex`**, so rotated layouts match the mask editor.
+- On dual-threshold MPX3, the logical `pelIndex` is translated into the chip block and the threshold slice selected by **`CounterSelectIn`**. The per-chip match and mismatch count still cover both slices.
 - **`MaskBPC` when read from disk** (“read from bpc” / **`MaskPel`**): fills **`value[j*COLS+i]`** from **`bufBPC[pelIndex(i, j)]`**, same as mask **write** and **`PixelConfigDiff`** (no **`bpc2ImgIndex`** on this path).
 
 ## `PixelConfigDiff` values
@@ -78,6 +79,21 @@ See **[COORDINATE_MAP.md](COORDINATE_MAP.md)** for `pelIndex` vs `bpc2ImgIndex`,
 
 - **`RefreshPixelConfig`**: `Dashboard.template`; forward-links to **`PixelConfigDiff.PROC`** so the waveform record processes after the driver updates the buffer.
 - **Phoebus**: `tpx3App/op/bob/common/Mask/PixelConfigMaskPanel.bob` (embedded from `Mask.bob`).
+
+## Live IOC validation
+
+With Channel Access configured for the target IOC, run the repository script:
+
+```sh
+test/validate_pixel_config.sh TPX3-TEST:cam1:
+# or
+test/validate_pixel_config.sh MPX3-TEST:cam1:
+```
+
+It auto-detects detector family and chip count, triggers the refresh, prints
+CHAR-waveform status values as strings, and exits nonzero unless every chip has
+the expected decoded length and matches the configured BPC file. The script
+does not set site-specific `EPICS_CA_*` variables.
 
 ## Release history
 

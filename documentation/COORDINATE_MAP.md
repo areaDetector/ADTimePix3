@@ -21,7 +21,7 @@ Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON
 bpc_index = c * (2 * P) + t * P + p
 ```
 
-**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths were written for **TPX3** (one slice). They map image `(i, j)` into the **first** 64 KiB of each chip block only. **`refreshPixelConfigFromServal()`** uses TPX3 chip stride (`chip × 65536`). MPX3 mask handling must branch on **`DetectorFamily`** / `bpcThresholdSlices` (see `detector_family.h`).
+**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths were written for **TPX3** (one slice). They map image `(i, j)` into the **first** 64 KiB of each chip block only. `refreshPixelConfigFromServal()` translates that logical index to the family-specific chip stride and selected MPX3 threshold slice. MPX3 mask editing still needs equivalent threshold-aware indexing.
 
 Offline tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **global `(i, j)`** convention as **`bpc2ImgIndex`** for masked-pel listings. Mask editing and **`PixelConfigDiff`** use **`pelIndex(i, j)`** instead.
 

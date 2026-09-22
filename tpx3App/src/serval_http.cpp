@@ -17,13 +17,14 @@
 #include "serval_health.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
+#include "serval_pixel_config.h"
 
 #include <algorithm>
 #include <cctype>
-#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -36,33 +37,6 @@ using json = nlohmann::json;
 using std::string;
 
 extern const char* driverName;
-
-namespace {
-
-constexpr size_t kPixelConfigBytes = 65536;  /* TPX3 per chip; MPX3 uses 2× (see bpcThresholdSlices) */
-
-bool decodeBase64(const std::string& in, std::vector<uint8_t>& out) {
-    static const char kChars[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    out.clear();
-    int val = 0;
-    int valb = -8;
-    for (unsigned char c : in) {
-        if (std::isspace(static_cast<unsigned char>(c))) continue;
-        if (c == '=') break;
-        const char* p = std::strchr(kChars, static_cast<char>(c));
-        if (!p) return false;
-        val = (val << 6) + static_cast<int>(p - kChars);
-        valb += 6;
-        if (valb >= 0) {
-            out.push_back(static_cast<uint8_t>((val >> valb) & 0xFF));
-            valb -= 8;
-        }
-    }
-    return true;
-}
-
-}  // namespace
 
 static string strip_quotes(string str) {
     if (str.length() > 1)
@@ -1044,117 +1018,100 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
      * quad orientations (e.g. LEFT), so PixelConfigDiff is filled by (i,j) -> file k = pelIndex(i,j). */
     int rowsLay = 0, colsLay = 0, xChipsLay = 0, yChipsLay = 0, pelWidth = 0;
     rowsCols(&rowsLay, &colsLay, &xChipsLay, &yChipsLay, &pelWidth);
-    (void)pelWidth;
+    const size_t pixelsPerChip = pelWidth > 0 ?
+        static_cast<size_t>(pelWidth) * static_cast<size_t>(pelWidth) : 0;
+    const size_t pixelConfigBytes = ADTimePix3ServalPixelConfig::bytesPerChip(
+        pixelsPerChip, detectorCapabilities_.bpcBytesPerPel,
+        detectorCapabilities_.bpcThresholdSlices);
+    if (pixelConfigBytes == 0 ||
+        static_cast<size_t>(nChips) > std::numeric_limits<size_t>::max() / pixelConfigBytes) {
+        setStringParam(ADTimePixWriteMsg, "Invalid PixelConfig detector geometry");
+        callParamCallbacks();
+        return asynError;
+    }
 
-    std::vector<uint8_t> serValLinear(262144u, 0);
+    std::vector<uint8_t> serValLinear(static_cast<size_t>(nChips) * pixelConfigBytes, 0);
     std::vector<char> chipDecoded(static_cast<size_t>(nChips > 0 ? nChips : 1), 0);
 
     for (int chip = 0; chip < nChips; chip++) {
         char statusMsg[256];
         std::string url = serverURL + "/detector/chips/" + std::to_string(chip) + "/PixelConfig";
         cpr::Response r = ADTimePix3ServalHttp::get(url, 5000);
-
-        if (r.status_code != 200) {
-            epicsSnprintf(statusMsg, sizeof(statusMsg), "HTTP %ld", (long)r.status_code);
+        std::vector<uint8_t> decoded;
+        const ADTimePix3ServalPixelConfig::ResponseError responseError =
+            ADTimePix3ServalPixelConfig::parseResponse(
+                r.status_code, r.text, pixelConfigBytes, decoded);
+        if (responseError != ADTimePix3ServalPixelConfig::ResponseError::None) {
+            status = asynError;
+            if (responseError == ADTimePix3ServalPixelConfig::ResponseError::HttpFailure) {
+                epicsSnprintf(statusMsg, sizeof(statusMsg), "HTTP %ld", (long)r.status_code);
+            } else if (responseError == ADTimePix3ServalPixelConfig::ResponseError::LengthMismatch) {
+                epicsSnprintf(statusMsg, sizeof(statusMsg),
+                              "Length mismatch (expected %zu bytes)", pixelConfigBytes);
+            } else {
+                epicsSnprintf(statusMsg, sizeof(statusMsg), "%s",
+                              ADTimePix3ServalPixelConfig::responseErrorMessage(responseError));
+            }
             setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
-            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC,
+                            responseError == ADTimePix3ServalPixelConfig::ResponseError::LengthMismatch ? 3 : -1);
             setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
             setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
             callParamCallbacks(chip);
-            ERR_ARGS("chip %d PixelConfig GET failed: %s", chip, statusMsg);
+            ERR_ARGS("chip %d PixelConfig failed: %s", chip, statusMsg);
             continue;
         }
 
-        try {
-            json j = json::parse(r.text);
-            if (!j.is_string()) {
-                setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                epicsSnprintf(statusMsg, sizeof(statusMsg), "JSON is not a string");
-                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
-                callParamCallbacks(chip);
-                ERR_ARGS("chip %d PixelConfig: expected JSON string", chip);
-                continue;
-            }
-            std::string b64 = j.get<std::string>();
-            std::vector<uint8_t> decoded;
-            if (!decodeBase64(b64, decoded)) {
-                setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                setStringParam(chip, ADTimePixPixelConfigStatus, "Base64 decode failed");
-                callParamCallbacks(chip);
-                ERR_ARGS("chip %d PixelConfig: base64 decode failed", chip);
-                continue;
-            }
+        const int decLen = static_cast<int>(decoded.size());
+        setIntegerParam(chip, ADTimePixPixelConfigLen, decLen);
 
-            const int decLen = static_cast<int>(decoded.size());
-            setIntegerParam(chip, ADTimePixPixelConfigLen, decLen);
-
-            if (!haveBpc) {
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 2);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                setStringParam(chip, ADTimePixPixelConfigStatus, "OK, no BPC file");
-                callParamCallbacks(chip);
-                continue;
-            }
-
-            const size_t offset = static_cast<size_t>(chip) * kPixelConfigBytes;
-            if (offset >= bpcData.size()) {
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                epicsSnprintf(statusMsg, sizeof(statusMsg),
-                              "BPC too small for chip (need offset %zu, have %zu)", offset,
-                              bpcData.size());
-                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
-                callParamCallbacks(chip);
-                continue;
-            }
-
-            /* One chip = kPixelConfigBytes in file; do not use (bpcSize - offset) alone or a
-             * 4×64KiB file makes chip0 "slice" 262144B and decoded 65536B always "length mismatch". */
-            const size_t bytesFromOffset = bpcData.size() - offset;
-            const size_t chipFileLen = std::min(kPixelConfigBytes, bytesFromOffset);
-            const size_t ncmp = decoded.size() < chipFileLen ? decoded.size() : chipFileLen;
-            epicsInt64 mismatch = 0;
-            for (size_t i = 0; i < ncmp; i++) {
-                if (decoded[i] != bpcData[offset + i]) mismatch++;
-            }
-            chipDecoded[static_cast<size_t>(chip)] = 1;
-            for (size_t i = 0; i < decoded.size() && i < kPixelConfigBytes && offset + i < serValLinear.size(); ++i) {
-                serValLinear[offset + i] = decoded[i];
-            }
-            if (mismatch > 0) {
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 0);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, mismatch);
-                epicsSnprintf(statusMsg, sizeof(statusMsg), "Mismatch %lld bytes",
-                              (long long)mismatch);
-                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
-            } else if (decoded.size() != chipFileLen) {
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                epicsSnprintf(statusMsg, sizeof(statusMsg),
-                              "Length mismatch (decoded %d, chip file %zu)", decLen, chipFileLen);
-                setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
-            } else {
-                setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 1);
-                setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-                setStringParam(chip, ADTimePixPixelConfigStatus, "OK, matches BPC");
-            }
-            callParamCallbacks(chip);
-        } catch (const std::exception& e) {
-            setIntegerParam(chip, ADTimePixPixelConfigLen, 0);
-            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, -1);
+        if (!haveBpc) {
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 2);
             setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
-            epicsSnprintf(statusMsg, sizeof(statusMsg), "Parse error: %.200s", e.what());
+            setStringParam(chip, ADTimePixPixelConfigStatus, "OK, no BPC file");
+            callParamCallbacks(chip);
+            continue;
+        }
+
+        const size_t offset = static_cast<size_t>(chip) * pixelConfigBytes;
+        if (offset > bpcData.size() || pixelConfigBytes > bpcData.size() - offset) {
+            status = asynError;
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 3);
+            setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+            epicsSnprintf(statusMsg, sizeof(statusMsg),
+                          "BPC too small for chip (need %zu bytes at %zu, have %zu)",
+                          pixelConfigBytes, offset, bpcData.size());
             setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
             callParamCallbacks(chip);
-            ERR_ARGS("chip %d PixelConfig: %s", chip, e.what());
+            continue;
         }
+
+        epicsInt64 mismatch = 0;
+        for (size_t i = 0; i < pixelConfigBytes; i++) {
+            if (decoded[i] != bpcData[offset + i]) mismatch++;
+        }
+        chipDecoded[static_cast<size_t>(chip)] = 1;
+        std::copy(decoded.begin(), decoded.end(), serValLinear.begin() + offset);
+        if (mismatch > 0) {
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 0);
+            setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, mismatch);
+            epicsSnprintf(statusMsg, sizeof(statusMsg), "Mismatch %lld bytes",
+                          (long long)mismatch);
+            setStringParam(chip, ADTimePixPixelConfigStatus, statusMsg);
+        } else {
+            setIntegerParam(chip, ADTimePixPixelConfigMatchBPC, 1);
+            setInteger64Param(chip, ADTimePixPixelConfigMismatchBytes, 0);
+            setStringParam(chip, ADTimePixPixelConfigStatus, "OK, matches BPC");
+        }
+        callParamCallbacks(chip);
     }
 
     if (haveBpc) {
+        int selectedSlice = 0;
+        getIntegerParam(ADTimePixCounterSelectIn, &selectedSlice);
+        if (selectedSlice < 0 || selectedSlice >= detectorCapabilities_.bpcThresholdSlices) {
+            selectedSlice = 0;
+        }
         epicsMutexLock(pixelConfigDiffMutex_);
         std::fill(pixelConfigDiff_.begin(), pixelConfigDiff_.end(), 0);
         for (int j = 0; j < rowsLay; ++j) {
@@ -1162,19 +1119,24 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                 const size_t imgLin = static_cast<size_t>(j) * static_cast<size_t>(colsLay) + static_cast<size_t>(i);
                 if (imgLin >= pixelConfigDiff_.size()) continue;
                 const int k = pelIndex(i, j);
-                if (k < 0 || static_cast<size_t>(k) >= bpcData.size() ||
-                    static_cast<size_t>(k) >= serValLinear.size()) {
+                size_t physicalIndex = 0;
+                if (k < 0 || !ADTimePix3ServalPixelConfig::selectedSliceIndex(
+                        static_cast<size_t>(k), pixelsPerChip,
+                        detectorCapabilities_.bpcBytesPerPel,
+                        detectorCapabilities_.bpcThresholdSlices,
+                        selectedSlice, physicalIndex) ||
+                    physicalIndex >= bpcData.size() || physicalIndex >= serValLinear.size()) {
                     pixelConfigDiff_[imgLin] = 0;
                     continue;
                 }
-                const int chipOfK = k / static_cast<int>(kPixelConfigBytes);
+                const int chipOfK = static_cast<int>(static_cast<size_t>(k) / pixelsPerChip);
                 if (chipOfK < 0 || chipOfK >= nChips ||
                     static_cast<size_t>(chipOfK) >= chipDecoded.size() || !chipDecoded[static_cast<size_t>(chipOfK)]) {
                     pixelConfigDiff_[imgLin] = 0;
                     continue;
                 }
-                const int a = static_cast<int>(serValLinear[static_cast<size_t>(k)]);
-                const int b = static_cast<int>(bpcData[static_cast<size_t>(k)]);
+                const int a = static_cast<int>(serValLinear[physicalIndex]);
+                const int b = static_cast<int>(bpcData[physicalIndex]);
                 pixelConfigDiff_[imgLin] = static_cast<epicsInt32>(a > b ? a - b : b - a);
             }
         }
