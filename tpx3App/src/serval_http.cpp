@@ -14,6 +14,7 @@
 #include "serval_dashboard.h"
 #include "serval_detector.h"
 #include "serval_destination.h"
+#include "serval_health.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
 
@@ -439,43 +440,41 @@ asynStatus ADTimePix::getDashboard(){
 }
 
 asynStatus ADTimePix::getHealth(){
-    asynStatus status = asynSuccess;
     FLOW("Checking Health");
-    std::string health;
-
-    health = this->serverURL + std::string("/detector/health");
-    // printf("Health, %s\n", health.c_str());
+    const std::string health = this->serverURL + std::string("/detector/health");
     cpr::Response r = ADTimePix3ServalHttp::get(health, 5000);
 
-    if (r.status_code != 200) {
+    ADTimePix3ServalHealth::Snapshot snapshot;
+    const ADTimePix3ServalHealth::ResponseError responseError =
+        ADTimePix3ServalHealth::parseResponse(r.status_code, r.text, snapshot);
+    if (responseError != ADTimePix3ServalHealth::ResponseError::None) {
         logHttpFailure("getHealth", "GET", health, (long)r.status_code, r.text);
+        ERR_ARGS("getHealth: %s",
+                 ADTimePix3ServalHealth::responseErrorMessage(responseError));
         return asynError;
     }
-    json health_j;
-    try {
-        health_j = json::parse(r.text.c_str());
-    } catch (const std::exception& e) {
-        ERR_ARGS("Health JSON parse failed: %s", e.what());
-        return asynError;
-    }
-    // printf("Text JSON: %s\n", health_j.dump(3,' ', true).c_str());
-    // printf("%lf\n", health_j["ChipTemperatures"].get<double>());
-    // printf("Chip Temperatures %s, %s\n", health_j["ChipTemperatures"].dump().c_str(), health_j["VDD"][1].dump().c_str());
-    
-    auto hjD = [](const json& j, double def) -> double { return j.is_number() ? j.get<double>() : def; };
-    setDoubleParam(ADTimePixLocalTemp, hjD(health_j["LocalTemperature"], 0.0));
-    setDoubleParam(ADTimePixFPGATemp, hjD(health_j["FPGATemperature"], 0.0));
-    setDoubleParam(ADTimePixFan1Speed, hjD(health_j["Fan1Speed"], 0.0));
-    setDoubleParam(ADTimePixFan2Speed, hjD(health_j["Fan2Speed"], 0.0));
-    setDoubleParam(ADTimePixBiasVoltage, hjD(health_j["BiasVoltage"], 0.0));
 
-    setStringParam(ADTimePixChipTemperature, health_j["ChipTemperatures"].dump().c_str());
-    setStringParam(ADTimePixVDD, health_j["VDD"].dump().c_str());
-    setStringParam(ADTimePixAVDD, health_j["AVDD"].dump().c_str());
+    if (snapshot.hasLocalTemperature)
+        setDoubleParam(ADTimePixLocalTemp, snapshot.localTemperature);
+    if (snapshot.hasFpgaTemperature)
+        setDoubleParam(ADTimePixFPGATemp, snapshot.fpgaTemperature);
+    if (snapshot.hasFan1Speed)
+        setDoubleParam(ADTimePixFan1Speed, snapshot.fan1Speed);
+    if (snapshot.hasFan2Speed)
+        setDoubleParam(ADTimePixFan2Speed, snapshot.fan2Speed);
+    if (snapshot.hasBiasVoltage)
+        setDoubleParam(ADTimePixBiasVoltage, snapshot.biasVoltage);
+    if (snapshot.hasHumidity)
+        setIntegerParam(ADTimePixHumidity, snapshot.humidity);
+    if (snapshot.hasChipTemperatures)
+        setStringParam(ADTimePixChipTemperature, snapshot.chipTemperatures.c_str());
+    if (snapshot.hasVdd)
+        setStringParam(ADTimePixVDD, snapshot.vdd.c_str());
+    if (snapshot.hasAvdd)
+        setStringParam(ADTimePixAVDD, snapshot.avdd.c_str());
 
     callParamCallbacks();
-
-    return status;
+    return asynSuccess;
 }
 
 /**
