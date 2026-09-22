@@ -435,9 +435,11 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     int acquiring;
     int status = asynSuccess;
     int addr = 0;
+    int previousValue = 0;
     this->getAddress(pasynUser, &addr);
 
     getIntegerParam(ADAcquire, &acquiring);
+    getIntegerParam(addr, function, &previousValue);
 
     if (function == ADTimePixBiasEnable &&
         !ADTimePix3ServalConfig::isBiasEnabledValue(value)) {
@@ -480,11 +482,11 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixVthresholdFine) {
-        status = writeDac(addr, "Vthreshold_fine", value);
+        status = writeDac(addr, function, "Vthreshold_fine", value, previousValue);
     }
 
     else if(function == ADTimePixVthresholdCoarse) {
-        status = writeDac(addr, "Vthreshold_coarse", value);
+        status = writeDac(addr, function, "Vthreshold_coarse", value, previousValue);
     }
 
     else if (function == ADTimePixWriteRaw || function == ADTimePixWriteRaw1 || function == ADTimePixWriteImg \
@@ -495,7 +497,10 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     else if(function == ADTimePixHealth) { 
         // status = getHealth();
         status = getDashboard();
-        status = getDetector();
+        /* Health is scanned once per second by default.  Refresh detector
+         * state without replacing the result of the last operator-initiated
+         * HTTP operation (for example, a rejected DAC write). */
+        status = getDetector(false);
         (void)getMeasurementConfig();   // Refresh Measurement.Config (Stem, TimeOfFlight) if supported
     //    status = getServer();
     }

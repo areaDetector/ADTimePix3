@@ -10,6 +10,7 @@
 #include "network_client.h"
 #include "one_shot_action.h"
 #include "serval_config.h"
+#include "serval_dacs.h"
 #include "serval_detector.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
@@ -531,6 +532,54 @@ void testDetectorResponseValidation()
            "detector parser rejects unsigned geometry beyond the EPICS integer range");
 }
 
+void testDacUpdateValidation()
+{
+    using ADTimePix3ServalDacs::UpdateError;
+
+    nlohmann::json updated;
+    int current = -1;
+    const std::string complete =
+        "{\"Vthreshold_coarse\":7,\"Vthreshold_fine\":120,\"Ibias_Preamp_ON\":128}";
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               complete, "Vthreshold_fine", 121, updated, current) == UpdateError::None &&
+               current == 120 && updated["Vthreshold_fine"] == 121 &&
+               updated["Vthreshold_coarse"] == 7 && updated["Ibias_Preamp_ON"] == 128,
+           "DAC update preserves the complete atomic object and returns the accepted value");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "{\"Vthreshold_fine\":-1}", "Vthreshold_fine", 0, updated, current) ==
+               UpdateError::None && current == -1 && updated["Vthreshold_fine"] == 0,
+           "DAC validation leaves value-range policy to Serval");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "", "Vthreshold_fine", 1, updated, current) == UpdateError::EmptyBody &&
+               updated.is_object() && updated.empty(),
+           "DAC update rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "{malformed", "Vthreshold_fine", 1, updated, current) ==
+               UpdateError::MalformedJson && updated.is_object() && updated.empty(),
+           "DAC update rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "[]", "Vthreshold_fine", 1, updated, current) == UpdateError::InvalidRoot,
+           "DAC update rejects a non-object JSON root");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "{\"Vthreshold_coarse\":7}", "Vthreshold_fine", 1, updated, current) ==
+               UpdateError::MissingDac,
+           "DAC update rejects a response missing the requested field");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "{\"Vthreshold_fine\":\"120\"}", "Vthreshold_fine", 1,
+               updated, current) == UpdateError::InvalidDacValue,
+           "DAC update rejects a non-integer accepted value");
+    testOk(ADTimePix3ServalDacs::prepareUpdate(
+               "{\"Vthreshold_fine\":18446744073709551615}", "Vthreshold_fine", 1,
+               updated, current) == UpdateError::InvalidDacValue,
+           "DAC update rejects accepted values beyond the EPICS integer range");
+    testOk(ADTimePix3ServalDacs::putAccepted(200),
+           "DAC PUT accepts the documented HTTP 200 response");
+    testOk(!ADTimePix3ServalDacs::putAccepted(400) &&
+               !ADTimePix3ServalDacs::putAccepted(500) &&
+               !ADTimePix3ServalDacs::putAccepted(0),
+           "DAC PUT rejects client, server, and transport failures");
+}
+
 void testStreamHeaderValidation()
 {
     using ADTimePix3Stream::ImageFrameLayout;
@@ -687,7 +736,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(108);
+    testPlan(118);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -696,6 +745,7 @@ MAIN(servalProtocolFixtureTest)
     testMeasurementResponseValidation();
     testDetectorConfigBooleanSerialization();
     testDetectorResponseValidation();
+    testDacUpdateValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();

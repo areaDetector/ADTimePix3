@@ -1046,7 +1046,7 @@ class ADTimePix : public ADDriver{
         asynStatus getDashboard();
         asynStatus getServer();
         asynStatus getHealth();
-        asynStatus getDetector();
+        asynStatus getDetector(bool publishHttpStatus = true);
         asynStatus initCamera();
         asynStatus initAcquisition();
         asynStatus checkBPCPath();
@@ -1063,7 +1063,8 @@ class ADTimePix : public ADDriver{
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
-        asynStatus writeDac(int chip, const std::string &dac, int value);
+        asynStatus writeDac(int chip, int parameter, const std::string &dac,
+                            int value, int previousValue);
         asynStatus fetchDacs(json &data, int chip);
         /** Map GET /detector Health (object or array) to health PVs; no throw on shape mismatch. */
         void updateDetectorHealthFromJson(const json& detector_j);
