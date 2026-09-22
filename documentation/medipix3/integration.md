@@ -489,7 +489,7 @@ After equalization, restore the dual-counter profile:
 | **`BothCounters`** | **Not recommended by default.** If used: set to 1 with **th1 high (~250)**. | **`profiles/mpx3/init/hw.cmd`** (Accos / IXS dual-threshold) is a **separate opt-in profile**, not Erik’s default. |
 | **`IDelayConfig`** | Standard values; manual per-system tuning **no longer required**. | `[15,15,15,10]` in IOC defaults remains fine. |
 
-Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). BPC/mask layout and destination reference docs — **still open** (Email 2).
+Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). The dual-threshold BPC layout is resolved; mask-byte semantics and destination reference documentation remain open. A focused mask-encoding request has been sent to ASI and the response is pending.
 
 ## Open work (TODO)
 
@@ -506,16 +506,24 @@ Preview and dual-threshold paths are validated. PixelConfig comparison uses the 
 - The earlier **`RefreshPixelConfig`** errors (CHIP0 length 131072 vs 65536; ~56k mismatches on chips 1–3) were caused by the old **`chip × 65536`** stride, not a bad `eq-01.bpc` file. The refresh path now uses the family-specific stride.
 - **Byte semantics TBD:** ~25% of MPX3 bytes per slice have bit 0 set (values 1/3/5/7, clustered) — likely **equalization encoding**, not ~10 Accos bad pixels/chip. The driver does not expose these as an MPX3 bad-pixel list and rejects mask operations with an operator-facing error. ASI confirmation of the disable bit map remains pending.
 
+**Validated on the MPX3 emulator with Serval 4.1.6 (September 2026):**
+
+- All four chips returned **131072 decoded bytes** and matched `eq-01.bpc` with zero mismatches.
+- Mask-image read and mask-write attempts were rejected with explicit operator-facing errors.
+- **`BPC_N_RBV`** and **`MaskedPelsCount_RBV`** reported **-1**; masked-pels export reported unavailable.
+- The rejected waveform operation propagated **READ/INVALID** without changing PixelConfig.
+- Acquisition completed with zero reported dropped frames.
+
 **Still open:**
 
 - **Vendor definition:** identify the MPX3 bit field/value that disables counting without corrupting equalization/trim data, including whether each threshold/counter must be changed independently.
 - **After confirmation:** implement threshold-specific MPX3 mask edit/read/export using **`DetectorFamily`**, `bpcThresholdSlices`, and `CounterSelectIn`. `RefreshPixelConfig` already uses the 131072-byte stride and selected diff slice.
-- **`|Δ|` heatmap** one-quadrant pattern — may shrink after compare fix; chip-specific **`Layout.Orientation`** in Serval JSON (e.g. chip 0 `RtLBtT`, chips 2–3 `LtRTtB`) may still need MPX3 **`pelIndex`** validation.
-- **Email 2:** ask ASI for MPX3 pixel-byte bit map (disable vs trim); confirm 131072 layout when `BothCounters=0`.
+- **Vendor request sent:** response pending for the MPX3 pixel-byte bit map (disable vs trim), TPX3 `0x1f` semantics, and the PixelConfig length when `BothCounters=0`.
 
 **Next steps:**
 
-- After ASI confirms disable byte: threshold-specific mask test on emulator.
+- Await ASI confirmation of the disable byte/field and counter behavior.
+- After confirmation, implement and run a threshold-specific mask test on the emulator.
 - Re-run **`RefreshPixelConfig`** on MPX3 hardware against the Accos post-equalization BPC data.
 
 **Code / docs:** `tpx3App/src/serval_http.cpp`, `tpx3App/src/mask_io.cpp`, [PIXELCONFIG_BPC_DIFF.md](../PIXELCONFIG_BPC_DIFF.md).
