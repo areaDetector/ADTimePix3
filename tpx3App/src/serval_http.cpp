@@ -10,6 +10,7 @@
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
 #include "serval_config.h"
+#include "serval_dacs.h"
 #include "serval_detector.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
@@ -656,37 +657,78 @@ asynStatus ADTimePix::rotateLayout(){
  *
  * @return: status
  */
-asynStatus ADTimePix::writeDac(int chip, const std::string& dac, int value) {
-    asynStatus status = asynSuccess;
-
+asynStatus ADTimePix::writeDac(int chip, int parameter, const std::string& dac,
+                               int value, int previousValue) {
     std::string dac_url = this->serverURL + std::string("/detector/chips/") + std::to_string(chip) + std::string("/dacs/");
     cpr::Response r = ADTimePix3ServalHttp::get(dac_url);
 
     if (r.status_code != 200) {
+        setIntegerParam(chip, parameter, previousValue);
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+        setStringParam(ADTimePixWriteMsg,
+                       r.text.empty() ? "Failed to read DAC configuration" : r.text.c_str());
         logHttpFailure(std::string("writeDac GET chip ") + std::to_string(chip), "GET", dac_url,
                        (long)r.status_code, r.text);
+        callParamCallbacks();
         return asynError;
     }
 
     json dacsRead_j;
-    try {
-        dacsRead_j = json::parse(r.text.c_str());
-    } catch (const std::exception& e) {
-        ERR_ARGS("writeDac GET: JSON parse failed: %s", e.what());
+    int acceptedValue = previousValue;
+    const ADTimePix3ServalDacs::UpdateError responseError =
+        ADTimePix3ServalDacs::prepareUpdate(r.text, dac, value, dacsRead_j, acceptedValue);
+    if (responseError != ADTimePix3ServalDacs::UpdateError::None) {
+        const char* message = ADTimePix3ServalDacs::updateErrorMessage(responseError);
+        setIntegerParam(chip, parameter, previousValue);
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("writeDac GET chip %d: %s", chip, message);
+        callParamCallbacks();
         return asynError;
     }
-    dacsRead_j[dac] = value;
-    // printf("dacs=%s\n",dacsRead_j.dump(3,' ', true).c_str());
-    std::string json_data = dacsRead_j.dump(3,' ', true).c_str();
+
+    const std::string json_data = dacsRead_j.dump(3, ' ', true);
 
     r = ADTimePix3ServalHttp::putJson(dac_url, json_data);
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    setStringParam(ADTimePixWriteMsg,
+                   r.text.empty() ? "Uploaded DAC configuration." : r.text.c_str());
 
-    if (r.status_code != 200) {
+    if (!ADTimePix3ServalDacs::putAccepted(r.status_code)) {
+        const long failedStatus = r.status_code;
+        const std::string failedResponse =
+            r.text.empty() ? "Failed to upload DAC configuration" : r.text;
+        setStringParam(ADTimePixWriteMsg, failedResponse.c_str());
         logHttpFailure("writeDac PUT", "PUT", dac_url, (long)r.status_code, r.text);
-        status = asynError;
+
+        /* A rejected atomic PUT should retain the previous Serval value.  Read
+         * it back so both the output and readback records return to the
+         * accepted value; fall back to the validated pre-PUT value if that
+         * recovery request fails. */
+        int restoredValue = acceptedValue;
+        const cpr::Response restore = ADTimePix3ServalHttp::get(dac_url);
+        json unusedUpdate;
+        int refreshedValue = acceptedValue;
+        if (restore.status_code == 200 &&
+            ADTimePix3ServalDacs::prepareUpdate(restore.text, dac, value,
+                                                unusedUpdate, refreshedValue) ==
+                ADTimePix3ServalDacs::UpdateError::None) {
+            restoredValue = refreshedValue;
+        } else {
+            WARN_ARGS("writeDac: failed to refresh %s after rejected PUT; using pre-PUT value",
+                      dac.c_str());
+        }
+        setIntegerParam(chip, parameter, restoredValue);
+
+        /* Preserve the rejected PUT as the operator-visible operation result. */
+        setIntegerParam(ADTimePixHttpCode, failedStatus);
+        setStringParam(ADTimePixWriteMsg, failedResponse.c_str());
+        callParamCallbacks();
+        return asynError;
     }
 
-    return status;
+    callParamCallbacks();
+    return asynSuccess;
 }
 
 namespace {
@@ -1263,11 +1305,13 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     return status;
 }
 
-asynStatus ADTimePix::getDetector(){
+asynStatus ADTimePix::getDetector(bool publishHttpStatus){
     FLOW("Reading Detector Health, info, config, layout, chips");
     const std::string detector = this->serverURL + std::string("/detector");
     cpr::Response r = ADTimePix3ServalHttp::get(detector, 5000);
-    setIntegerParam(ADTimePixHttpCode, r.status_code);
+    if (publishHttpStatus) {
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+    }
 
     if (r.status_code != 200) {
         logHttpFailure("getDetector GET /detector", "GET", detector,
