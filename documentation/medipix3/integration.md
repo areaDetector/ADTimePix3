@@ -317,7 +317,7 @@ Enum choices come from the driver **`readEnum()`** table (`ADTimePix.cpp` `kDetO
 
 Writing **`DetOrient`** calls **`rotateLayout()`** (`GET /detector/layout/rotate?reset=true` with direction/flip query params). Rotation applies to **preview** and **Image[]** streams on both TPX3 and MPX3. **`DetOrient_RBV`** is refreshed from Serval on connect (`GET /detector`).
 
-**MPX3 caveat:** mask/BPC edit, **`RefreshPixelConfig`**, and Phoebus mask overlay still use the TPX3 chip stride (65536 B per chip). Layout rotation does **not** yet remap mask pixels for MPX3 until the **`mask_io`** 131072-byte-per-chip fix — see [Open work — Mask / BPC](#mask--bpc--mpx3-dual-threshold-layout-identified-driver-compare-still-wrong). The hint on **`Mpx3DetectorConfig.bob`** (Layout group) documents this.
+**MPX3 caveat:** `RefreshPixelConfig` now validates and compares the full 131072-byte block per chip, and its diff waveform selects a slice through `CounterSelectIn`. Mask/BPC editing and the Phoebus mask overlay still use TPX3 one-slice indexing. Layout rotation does **not** yet make those edit paths production-ready for MPX3 — see [Open work — Mask / BPC](#mask--bpc--mpx3-dual-threshold-layout-identified-driver-compare-still-wrong).
 
 ### Measurement pipeline state
 
@@ -493,9 +493,9 @@ Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow 
 
 ## Open work (TODO)
 
-### Mask / BPC — MPX3 dual-threshold layout identified; driver compare still wrong
+### Mask / BPC — MPX3 dual-threshold layout identified; mask editing still open
 
-Preview and dual-threshold paths are validated. **Mask edit / `PixelConfigDiff` are not production-ready on Medipix3** until the driver uses the **131072-byte-per-chip** compare path and threshold-aware mask indexing.
+Preview and dual-threshold paths are validated. The PixelConfig comparison now uses the **131072-byte-per-chip** path; MPX3 mask editing remains non-production until its read/write overlay paths gain threshold-aware indexing.
 
 **Resolved (Aug 2026)** — Serval root dump `documentation/medipix3/drafts/serval-mpx3-quad-root-2026-08-14.json` vs `vendor/mpx3/eq-01.bpc`:
 
@@ -503,21 +503,20 @@ Preview and dual-threshold paths are validated. **Mask edit / `PixelConfigDiff` 
 - On-disk **`eq-01.bpc`** is **524288 B = 4 × 131072** (not 8 × 65536).
 - Layout per chip: **`[threshold 0: 64 KiB][threshold 1: 64 KiB]`** — separate config bytes per counter (values often differ between slices).
 - Compare at **`offset = chip × 131072`**, length **131072** → **0 byte mismatches** for chips 0–3.
-- The earlier **`RefreshPixelConfig`** errors (CHIP0 length 131072 vs 65536; ~56k mismatches on chips 1–3) match the driver using **`chip × 65536`** (`kPixelConfigBytes` in `serval_http.cpp`) — **not** a bad `eq-01.bpc` file.
+- The earlier **`RefreshPixelConfig`** errors (CHIP0 length 131072 vs 65536; ~56k mismatches on chips 1–3) were caused by the old **`chip × 65536`** stride, not a bad `eq-01.bpc` file. The refresh path now uses the family-specific stride.
 - **Byte semantics TBD:** ~25% of MPX3 bytes per slice have bit 0 set (values 1/3/5/7, clustered) — likely **equalization encoding**, not ~10 Accos bad pixels/chip. **Do not use `BPCn` / bit-0 export as MPX3 bad-pixel list.** Ask ASI for disable bit map (Email 2).
 
 **Still open:**
 
-- **Family-specific mask I/O:** Timepix3 = **1 byte/pel/chip**; Medipix3 = **2 bytes/pel/chip** (two sequential 64 KiB threshold slices, not interleaved). `mask_io.cpp` / `pelIndex()` / `RefreshPixelConfig` still follow the TPX3 model (first slice only; chip stride 65536). Branch on **`DetectorFamily`** / `bpcThresholdSlices` in `detector_family.h`.
-- **Driver fix:** MPX3 chip stride **131072**; threshold index for mask edit and **`PixelConfigDiff`** (tie to preview **`thresholdID`** or a new PV).
+- **Family-specific mask I/O:** Timepix3 = **1 byte/pel/chip**; Medipix3 = **2 bytes/pel/chip** (two sequential 64 KiB threshold slices, not interleaved). `mask_io.cpp` mask read/write paths still follow the TPX3 model. Branch them on **`DetectorFamily`** / `bpcThresholdSlices` in `detector_family.h`.
+- **Remaining driver fix:** add explicit threshold selection to MPX3 mask edit/read paths; `RefreshPixelConfig` already uses the 131072-byte stride and `CounterSelectIn` for its diff slice.
 - **`|Δ|` heatmap** one-quadrant pattern — may shrink after compare fix; chip-specific **`Layout.Orientation`** in Serval JSON (e.g. chip 0 `RtLBtT`, chips 2–3 `LtRTtB`) may still need MPX3 **`pelIndex`** validation.
 - **Email 2:** ask ASI for MPX3 pixel-byte bit map (disable vs trim); confirm 131072 layout when `BothCounters=0`.
 
 **Next steps:**
 
-- Fix **`refreshPixelConfigFromServal()`** for MPX3 (131072 stride).
 - After ASI confirms disable byte: threshold-specific mask test on emulator.
-- Re-run **`RefreshPixelConfig`** after driver fix; then Accos post-equalization BPC upload on hardware.
+- Re-run **`RefreshPixelConfig`** on MPX3 hardware against the Accos post-equalization BPC data.
 
 **Code / docs:** `tpx3App/src/serval_http.cpp`, `tpx3App/src/mask_io.cpp`, [PIXELCONFIG_BPC_DIFF.md](../PIXELCONFIG_BPC_DIFF.md).
 

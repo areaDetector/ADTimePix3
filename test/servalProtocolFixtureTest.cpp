@@ -17,6 +17,7 @@
 #include "serval_health.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
+#include "serval_pixel_config.h"
 #include "serval_stream_validation.h"
 
 #include <arpa/inet.h>
@@ -909,6 +910,62 @@ void testHealthResponseValidation()
            "health parser rejects an invalid array without returning a partial snapshot");
 }
 
+void testPixelConfigResponseValidation()
+{
+    using ADTimePix3ServalPixelConfig::ResponseError;
+
+    std::vector<std::uint8_t> decoded;
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "\"AQID\"", 3, decoded) == ResponseError::None &&
+               decoded == std::vector<std::uint8_t>({1, 2, 3}),
+           "PixelConfig parser accepts an exact validated base64 payload");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "\"AQID\\n\"", 3, decoded) == ResponseError::None &&
+               decoded == std::vector<std::uint8_t>({1, 2, 3}),
+           "PixelConfig parser accepts base64 whitespace");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               500, "failure", 3, decoded) == ResponseError::HttpFailure && decoded.empty(),
+           "PixelConfig parser rejects a failed HTTP response");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "", 3, decoded) == ResponseError::EmptyBody && decoded.empty(),
+           "PixelConfig parser rejects an empty response body");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "{bad", 3, decoded) == ResponseError::MalformedJson && decoded.empty(),
+           "PixelConfig parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "{}", 3, decoded) == ResponseError::InvalidRoot && decoded.empty(),
+           "PixelConfig parser requires a JSON string root");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "\"AQ?D\"", 3, decoded) == ResponseError::InvalidBase64 && decoded.empty(),
+           "PixelConfig parser rejects an invalid base64 alphabet");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "\"AQ=Z\"", 3, decoded) == ResponseError::InvalidBase64 && decoded.empty(),
+           "PixelConfig parser rejects misplaced base64 padding");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "\"AQID\"", 4, decoded) == ResponseError::LengthMismatch && decoded.empty(),
+           "PixelConfig parser rejects a family-specific length mismatch atomically");
+    testOk(ADTimePix3ServalPixelConfig::parseResponse(
+               200, "\"AQIDBA==\"", 3, decoded) == ResponseError::LengthMismatch && decoded.empty(),
+           "PixelConfig parser rejects an oversized payload before decoding it");
+
+    testOk(ADTimePix3ServalPixelConfig::bytesPerChip(256U * 256U, 1, 1) == 65536U,
+           "PixelConfig geometry selects a 64 KiB TPX3 chip block");
+    testOk(ADTimePix3ServalPixelConfig::bytesPerChip(256U * 256U, 1, 2) == 131072U,
+           "PixelConfig geometry selects a 128 KiB MPX3 dual-slice chip block");
+    testOk(ADTimePix3ServalPixelConfig::bytesPerChip(
+               std::numeric_limits<std::size_t>::max(), 2, 2) == 0,
+           "PixelConfig geometry rejects size overflow");
+
+    std::size_t physicalIndex = 0;
+    testOk(ADTimePix3ServalPixelConfig::selectedSliceIndex(
+               65536U + 5U, 65536U, 1, 2, 1, physicalIndex) &&
+               physicalIndex == 196613U,
+           "PixelConfig indexing selects MPX3 threshold 1 within the correct chip block");
+    testOk(!ADTimePix3ServalPixelConfig::selectedSliceIndex(
+               0, 65536U, 1, 2, 2, physicalIndex) && physicalIndex == 0,
+           "PixelConfig indexing rejects an unavailable threshold slice");
+}
+
 void testStreamHeaderValidation()
 {
     using ADTimePix3Stream::ImageFrameLayout;
@@ -1065,7 +1122,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(183);
+    testPlan(198);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -1078,6 +1135,7 @@ MAIN(servalProtocolFixtureTest)
     testDestinationResponseValidation();
     testDashboardResponseValidation();
     testHealthResponseValidation();
+    testPixelConfigResponseValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();
