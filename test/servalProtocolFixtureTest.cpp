@@ -14,6 +14,7 @@
 #include "serval_dashboard.h"
 #include "serval_detector.h"
 #include "serval_destination.h"
+#include "serval_health.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
 #include "serval_stream_validation.h"
@@ -773,6 +774,76 @@ void testDashboardResponseValidation()
            "dashboard parser rejects disk-limit values beyond the EPICS integer range");
 }
 
+void testHealthResponseValidation()
+{
+    using ADTimePix3ServalHealth::ResponseError;
+    using ADTimePix3ServalHealth::Snapshot;
+
+    Snapshot snapshot;
+    const std::string complete =
+        "[{\"LocalTemperature\":42.5,\"FPGATemperature\":48,"
+        "\"Fan1Speed\":1200,\"Fan2Speed\":1195,\"BiasVoltage\":100,"
+        "\"Humidity\":80,"
+        "\"ChipTemperatures\":[41,42,43,44],\"VDD\":[1.2,1.2,1.2,1.2],"
+        "\"AVDD\":[1.8,1.8,1.8,1.8]}]";
+    testOk(ADTimePix3ServalHealth::parseResponse(200, complete, snapshot) ==
+               ResponseError::None && snapshot.hasLocalTemperature &&
+               snapshot.localTemperature == 42.5 && snapshot.hasFpgaTemperature &&
+               snapshot.fpgaTemperature == 48.0 && snapshot.hasFan1Speed &&
+               snapshot.fan1Speed == 1200.0 && snapshot.hasFan2Speed &&
+               snapshot.fan2Speed == 1195.0 && snapshot.hasBiasVoltage &&
+               snapshot.biasVoltage == 100.0 && snapshot.hasHumidity &&
+               snapshot.humidity == 80 && snapshot.hasChipTemperatures &&
+               snapshot.chipTemperatures == "[41,42,43,44]" && snapshot.hasVdd &&
+               snapshot.vdd == "[1.2,1.2,1.2,1.2]" && snapshot.hasAvdd &&
+               snapshot.avdd == "[1.8,1.8,1.8,1.8]",
+           "health parser accepts one complete validated snapshot");
+    testOk(ADTimePix3ServalHealth::parseResponse(
+               200, "{\"LocalTemperature\":null,\"BiasVoltage\":99}", snapshot) ==
+               ResponseError::None && !snapshot.hasLocalTemperature &&
+               snapshot.hasBiasVoltage && snapshot.biasVoltage == 99.0,
+           "health parser treats null or absent sensors as unavailable");
+    testOk(ADTimePix3ServalHealth::parseResponse(
+               200, "[{\"ChipTemperatures\":[41,42],\"VDD\":[1,2,3]},"
+                    "{\"ChipTemperatures\":[43,44],\"VDD\":[4,5,6]}]", snapshot) ==
+               ResponseError::None && snapshot.chipTemperatures == "[41,42,43,44]" &&
+               snapshot.vdd == "[[1,2,3],[4,5,6]]",
+           "health parser aggregates a multi-block detector response");
+    testOk(ADTimePix3ServalHealth::parseResponse(503, "unavailable", snapshot) ==
+               ResponseError::HttpFailure,
+           "health parser rejects non-200 responses");
+    testOk(ADTimePix3ServalHealth::parseResponse(200, "", snapshot) ==
+               ResponseError::EmptyBody,
+           "health parser rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalHealth::parseResponse(200, "{bad", snapshot) ==
+               ResponseError::MalformedJson,
+           "health parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalHealth::parseResponse(200, "42", snapshot) ==
+               ResponseError::InvalidRoot,
+           "health parser rejects a root that is neither an object nor an array");
+    testOk(ADTimePix3ServalHealth::parseResponse(200, "[]", snapshot) ==
+               ResponseError::EmptyHealthArray,
+           "health parser rejects an empty health array");
+    testOk(ADTimePix3ServalHealth::parseResponse(200, "[null]", snapshot) ==
+               ResponseError::InvalidHealthEntry,
+           "health parser rejects a non-object health array entry");
+    testOk(ADTimePix3ServalHealth::parseResponse(200, "{}", snapshot) ==
+               ResponseError::MissingHealthFields,
+           "health parser requires at least one recognized health field");
+    testOk(ADTimePix3ServalHealth::parseResponse(
+               200, "{\"LocalTemperature\":\"hot\"}", snapshot) ==
+               ResponseError::InvalidMetric && !snapshot.hasLocalTemperature,
+           "health parser rejects an incorrectly typed metric without a snapshot");
+    testOk(ADTimePix3ServalHealth::parseResponse(
+               200, "{\"ChipTemperatures\":{}}", snapshot) ==
+               ResponseError::InvalidArray,
+           "health parser rejects a non-array sensor collection");
+    testOk(ADTimePix3ServalHealth::parseResponse(
+               200, "{\"LocalTemperature\":42,\"VDD\":[1.2,\"bad\"]}", snapshot) ==
+               ResponseError::InvalidArray && !snapshot.hasLocalTemperature,
+           "health parser rejects an invalid array without returning a partial snapshot");
+}
+
 void testStreamHeaderValidation()
 {
     using ADTimePix3Stream::ImageFrameLayout;
@@ -929,7 +1000,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(158);
+    testPlan(171);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -941,6 +1012,7 @@ MAIN(servalProtocolFixtureTest)
     testDacUpdateValidation();
     testDestinationResponseValidation();
     testDashboardResponseValidation();
+    testHealthResponseValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();
