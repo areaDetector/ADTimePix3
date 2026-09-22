@@ -398,6 +398,71 @@ void testMeasurementResponseValidation()
     testOk(ADTimePix3ServalMeasurement::parseConfigResponse(200, "[]", config) ==
                ConfigResponseError::InvalidRoot && config.is_object() && config.empty(),
            "measurement-config parser rejects a non-object merge base");
+
+    using ADTimePix3ServalMeasurement::ConfigReadbackError;
+    using ADTimePix3ServalMeasurement::ConfigSnapshot;
+    ConfigSnapshot configSnapshot;
+    const std::string completeReadback =
+        "{\"Corrections\":{\"Multiply\":null},\"Processing\":{\"Binning\":null},"
+        "\"TimeOfFlight\":{\"TdcReference\":[\"PN0123\",\"PN0123\"],"
+        "\"Min\":0.0,\"Max\":1e99},\"Stem\":{\"Scan\":{\"Width\":1024,"
+        "\"Height\":1024,\"DwellTime\":1e-6},\"VirtualDetector\":{"
+        "\"RadiusOuter\":1024,\"RadiusInner\":0}}}";
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, completeReadback, configSnapshot) == ConfigReadbackError::None &&
+               configSnapshot.hasStemScanWidth && configSnapshot.stemScanWidth == 1024 &&
+               configSnapshot.stemScanHeight == 1024 &&
+               configSnapshot.stemDwellTime == 1e-6 &&
+               configSnapshot.stemRadiusOuter == 1024 &&
+               configSnapshot.stemRadiusInner == 0 &&
+               configSnapshot.tofTdcReference == "PN0123,PN0123" &&
+               configSnapshot.tofMin == 0.0 && configSnapshot.tofMax == 1e99,
+           "measurement-config readback parser extracts one complete atomic snapshot");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":null,\"TimeOfFlight\":{\"Min\":null}}",
+               configSnapshot) == ConfigReadbackError::None &&
+               !configSnapshot.hasStemScanWidth && !configSnapshot.hasTofMin,
+           "measurement-config readback parser treats null optional values as unavailable");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               503, "unavailable", configSnapshot) == ConfigReadbackError::HttpFailure,
+           "measurement-config readback parser rejects a failed GET");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{bad", configSnapshot) == ConfigReadbackError::MalformedJson,
+           "measurement-config readback parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":[]}", configSnapshot) ==
+               ConfigReadbackError::InvalidStem,
+           "measurement-config readback parser rejects an invalid Stem container");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":{\"Scan\":[]}}", configSnapshot) ==
+               ConfigReadbackError::InvalidScan,
+           "measurement-config readback parser rejects an invalid Scan container");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":{\"VirtualDetector\":false}}", configSnapshot) ==
+               ConfigReadbackError::InvalidVirtualDetector,
+           "measurement-config readback parser rejects an invalid virtual-detector container");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"TimeOfFlight\":[]}", configSnapshot) ==
+               ConfigReadbackError::InvalidTimeOfFlight,
+           "measurement-config readback parser rejects an invalid time-of-flight container");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":{\"Scan\":{\"Width\":1.5}}}", configSnapshot) ==
+               ConfigReadbackError::InvalidMetric,
+           "measurement-config readback parser rejects a non-integral integer field");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":{\"Scan\":{\"Width\":18446744073709551615}}}",
+               configSnapshot) == ConfigReadbackError::InvalidMetric,
+           "measurement-config readback parser rejects integers beyond the EPICS range");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"TimeOfFlight\":{\"TdcReference\":{}}}", configSnapshot) ==
+               ConfigReadbackError::InvalidTdcReference,
+           "measurement-config readback parser rejects a non-array TDC reference");
+    testOk(ADTimePix3ServalMeasurement::parseConfigReadback(
+               200, "{\"Stem\":{\"Scan\":{\"Width\":1024}},"
+                    "\"TimeOfFlight\":{\"TdcReference\":[\"PN0123\",4]}}",
+               configSnapshot) == ConfigReadbackError::InvalidTdcReference &&
+               !configSnapshot.hasStemScanWidth,
+           "measurement-config readback parser rejects invalid TDC entries without a partial snapshot");
 }
 
 void testDetectorConfigBooleanSerialization()
@@ -1000,7 +1065,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(171);
+    testPlan(183);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

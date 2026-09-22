@@ -40,6 +40,20 @@ enum class StatusResponseError {
     InvalidMetric
 };
 
+enum class ConfigReadbackError {
+    None,
+    HttpFailure,
+    EmptyBody,
+    MalformedJson,
+    InvalidRoot,
+    InvalidStem,
+    InvalidScan,
+    InvalidVirtualDetector,
+    InvalidTimeOfFlight,
+    InvalidMetric,
+    InvalidTdcReference
+};
+
 struct StatusSnapshot {
     bool hasPixelEventRate = false;
     int pixelEventRate = 0;
@@ -61,6 +75,25 @@ struct StatusSnapshot {
     std::string status;
 };
 
+struct ConfigSnapshot {
+    bool hasStemScanWidth = false;
+    int stemScanWidth = 0;
+    bool hasStemScanHeight = false;
+    int stemScanHeight = 0;
+    bool hasStemDwellTime = false;
+    double stemDwellTime = 0.0;
+    bool hasStemRadiusOuter = false;
+    int stemRadiusOuter = 0;
+    bool hasStemRadiusInner = false;
+    int stemRadiusInner = 0;
+    bool hasTofTdcReference = false;
+    std::string tofTdcReference;
+    bool hasTofMin = false;
+    double tofMin = 0.0;
+    bool hasTofMax = false;
+    double tofMax = 0.0;
+};
+
 /** Parse a Serval /measurement response and require a JSON object root. */
 ParseError parseResponse(const std::string& body, nlohmann::json& measurement);
 
@@ -76,6 +109,12 @@ ConfigResponseError parseConfigResponse(long statusCode, const std::string& body
                                         nlohmann::json& config);
 
 const char* configResponseErrorMessage(ConfigResponseError error);
+
+/** Validate all Measurement.Config fields consumed by EPICS before publication or merge. */
+ConfigReadbackError parseConfigReadback(long statusCode, const std::string& body,
+                                        ConfigSnapshot& snapshot);
+
+const char* configReadbackErrorMessage(ConfigReadbackError error);
 
 }  // namespace ADTimePix3ServalMeasurement
 
