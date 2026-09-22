@@ -10,6 +10,7 @@
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
 #include "serval_config.h"
+#include "serval_detector.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
 
@@ -1263,43 +1264,62 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
 }
 
 asynStatus ADTimePix::getDetector(){
-    asynStatus status = asynSuccess;
     FLOW("Reading Detector Health, info, config, layout, chips");
-    std::string detector;
-
-    detector = this->serverURL + std::string("/detector");
+    const std::string detector = this->serverURL + std::string("/detector");
     cpr::Response r = ADTimePix3ServalHttp::get(detector, 5000);
+    setIntegerParam(ADTimePixHttpCode, r.status_code);
 
     if (r.status_code != 200) {
-        setIntegerParam(ADTimePixDetConnected,0);
+        logHttpFailure("getDetector GET /detector", "GET", detector,
+                       (long)r.status_code, r.text);
+        setIntegerParam(ADTimePixDetConnected, 0);
         setStringParam(ADTimePixWriteMsg, r.text.c_str());
+        setStringParam(ADStatusMessage, "Failed to read detector information");
+        setIntegerParam(ADStatus, ADStatusDisconnected);
+        callParamCallbacks();
+        return asynError;
     }
-    else {
-        setIntegerParam(ADTimePixDetConnected,1);
 
-        try {
-        json detector_j = json::parse(r.text.c_str());
+    ADTimePix3ServalDetector::Snapshot snapshot;
+    const ADTimePix3ServalDetector::ParseError parseError =
+        ADTimePix3ServalDetector::parseResponse(r.text, snapshot);
+    if (parseError != ADTimePix3ServalDetector::ParseError::None) {
+        const std::string message = std::string("Invalid detector response: ") +
+            ADTimePix3ServalDetector::parseErrorMessage(parseError);
+        ERR_ARGS("getDetector: %s", message.c_str());
+        setIntegerParam(ADTimePixDetConnected, 0);
+        setStringParam(ADTimePixWriteMsg, message.c_str());
+        setStringParam(ADStatusMessage, message.c_str());
+        setIntegerParam(ADStatus, ADStatusError);
+        callParamCallbacks();
+        return asynError;
+    }
+
+    try {
+        json detector_j = std::move(snapshot.response);
+        const json& info = detector_j["Info"];
+        const json& cfg = detector_j["Config"];
 
         // Health: branch on JSON shape (array vs object), not Serval version string alone.
         updateDetectorHealthFromJson(detector_j);
 
         // Detector Info
-        setStringParam(ADTimePixIfaceName,   strip_quotes(detector_j["Info"]["IfaceName"].dump().c_str()));
+        setStringParam(ADTimePixIfaceName,   strip_quotes(info.value("IfaceName", json()).dump().c_str()));
         //setStringParam(ADTimePixChipboardID, strip_quotes(detector_j["Info"]["ChipboardID"].dump().c_str()));
-        setStringParam(ADTimePixSW_version,  strip_quotes(detector_j["Info"]["SW_version"].dump().c_str()));
-        setStringParam(ADTimePixFW_version,  strip_quotes(detector_j["Info"]["FW_version"].dump().c_str()));
+        setStringParam(ADTimePixSW_version,  strip_quotes(info.value("SW_version", json()).dump().c_str()));
+        setStringParam(ADTimePixFW_version,  strip_quotes(info.value("FW_version", json()).dump().c_str()));
 
     //    setStringParam(ADSerialNumber,      strip_quotes(detector_j["Info"]["ChipboardID"].dump().c_str()));
-        setStringParam(ADSerialNumber,      strip_quotes(detector_j["Info"]["SW_version"].dump().c_str()));
-        setStringParam(ADFirmwareVersion,   strip_quotes(detector_j["Info"]["FW_version"].dump().c_str()));
+        setStringParam(ADSerialNumber,      strip_quotes(info.value("SW_version", json()).dump().c_str()));
+        setStringParam(ADFirmwareVersion,   strip_quotes(info.value("FW_version", json()).dump().c_str()));
 
-        setIntegerParam(ADTimePixPixCount,      detector_j["Info"]["PixCount"].get<int>());
-        setIntegerParam(ADTimePixRowLen,        detector_j["Info"]["RowLen"].get<int>());
-        setIntegerParam(ADTimePixNumberOfChips, detector_j["Info"]["NumberOfChips"].get<int>());
-        setIntegerParam(ADTimePixNumberOfRows,  detector_j["Info"]["NumberOfRows"].get<int>());
-        setIntegerParam(ADMaxSizeY,     detector_j["Info"]["NumberOfRows"].get<int>());                                             // Sensor Size Y
-        setIntegerParam(ADMaxSizeX,     detector_j["Info"]["PixCount"].get<int>() / detector_j["Info"]["NumberOfRows"].get<int>());  // Sensor Size X
-        setIntegerParam(ADTimePixMpxType,       detector_j["Info"]["MpxType"].get<int>());
+        setIntegerParam(ADTimePixPixCount,      snapshot.pixelCount);
+        setIntegerParam(ADTimePixRowLen,        snapshot.rowLength);
+        setIntegerParam(ADTimePixNumberOfChips, snapshot.numberOfChips);
+        setIntegerParam(ADTimePixNumberOfRows,  snapshot.numberOfRows);
+        setIntegerParam(ADMaxSizeY,             snapshot.numberOfRows);
+        setIntegerParam(ADMaxSizeX,             snapshot.pixelCount / snapshot.numberOfRows);
+        setIntegerParam(ADTimePixMpxType,       snapshot.mpxType);
 
         std::string chipType;
         if (detector_j["Info"].contains("ChipType")) {
@@ -1311,13 +1331,15 @@ asynStatus ADTimePix::getDetector(){
             detector_j["Info"]["Boards"][0].contains("ChipboardId")) {
             chipboardId = strip_quotes(detector_j["Info"]["Boards"][0]["ChipboardId"].dump());
         }
-        updateDetectorFamily(detector_j["Info"]["MpxType"].get<int>(), chipType, chipboardId);
+        updateDetectorFamily(snapshot.mpxType, chipType, chipboardId);
 
         if (detector_j["Info"].contains("Boards") && detector_j["Info"]["Boards"].is_array() &&
             !detector_j["Info"]["Boards"].empty()) {
             const json& B0 = detector_j["Info"]["Boards"][0];
-            setStringParam(ADTimePixBoardsID, strip_quotes(B0["ChipboardId"].dump().c_str()));
-            setStringParam(ADTimePixBoardsIP, strip_quotes(B0["IpAddress"].dump().c_str()));
+            setStringParam(ADTimePixBoardsID,
+                           strip_quotes(B0.value("ChipboardId", json()).dump().c_str()));
+            setStringParam(ADTimePixBoardsIP,
+                           strip_quotes(B0.value("IpAddress", json()).dump().c_str()));
             if (B0.contains("Chips") && B0["Chips"].is_array() && B0["Chips"].size() > 0) {
                 setStringParam(ADTimePixBoardsCh1, chipBoardEntryLabel(B0["Chips"][0]).c_str());
                 setStringParam(ADTimePixBoardsCh2, B0["Chips"].size() > 1 ? chipBoardEntryLabel(B0["Chips"][1]).c_str() : "");
@@ -1331,8 +1353,10 @@ asynStatus ADTimePix::getDetector(){
             }
             if (detector_j["Info"]["Boards"].size() > 1) {
                 const json& B1 = detector_j["Info"]["Boards"][1];
-                setStringParam(ADTimePixBoards2ID, strip_quotes(B1["ChipboardId"].dump().c_str()));
-                setStringParam(ADTimePixBoards2IP, strip_quotes(B1["IpAddress"].dump().c_str()));
+                setStringParam(ADTimePixBoards2ID,
+                               strip_quotes(B1.value("ChipboardId", json()).dump().c_str()));
+                setStringParam(ADTimePixBoards2IP,
+                               strip_quotes(B1.value("IpAddress", json()).dump().c_str()));
                 if (B1.contains("Chips") && B1["Chips"].is_array() && B1["Chips"].size() >= 4) {
                     setStringParam(ADTimePixBoardsCh5, chipBoardEntryLabel(B1["Chips"][0]).c_str());
                     setStringParam(ADTimePixBoardsCh6, chipBoardEntryLabel(B1["Chips"][1]).c_str());
@@ -1367,27 +1391,24 @@ asynStatus ADTimePix::getDetector(){
             setStringParam(ADTimePixBoardsCh8, "");
         }
 
-        const json& info = detector_j["Info"];
-        const json& cfg = detector_j["Config"];
-
-        setIntegerParam(ADTimePixSuppAcqModes,  jsonIntOr(info["SuppAcqModes"]));
-        setDoubleParam(ADTimePixClockReadout,   jsonDoubleOr(info["ClockReadout"]));
-        setIntegerParam(ADTimePixMaxPulseCount, jsonIntOr(info["MaxPulseCount"]));
-        setDoubleParam(ADTimePixMaxPulseHeight, jsonDoubleOr(info["MaxPulseHeight"]));
-        setDoubleParam(ADTimePixMaxPulsePeriod, jsonDoubleOr(info["MaxPulsePeriod"]));
-        setDoubleParam(ADTimePixTimerMaxVal,    jsonDoubleOr(info["TimerMaxVal"]));
-        setDoubleParam(ADTimePixTimerMinVal,    jsonDoubleOr(info["TimerMinVal"]));
-        setDoubleParam(ADTimePixTimerStep,      jsonDoubleOr(info["TimerStep"]));
+        setIntegerParam(ADTimePixSuppAcqModes,  jsonIntOr(info.value("SuppAcqModes", json())));
+        setDoubleParam(ADTimePixClockReadout,   jsonDoubleOr(info.value("ClockReadout", json())));
+        setIntegerParam(ADTimePixMaxPulseCount, jsonIntOr(info.value("MaxPulseCount", json())));
+        setDoubleParam(ADTimePixMaxPulseHeight, jsonDoubleOr(info.value("MaxPulseHeight", json())));
+        setDoubleParam(ADTimePixMaxPulsePeriod, jsonDoubleOr(info.value("MaxPulsePeriod", json())));
+        setDoubleParam(ADTimePixTimerMaxVal,    jsonDoubleOr(info.value("TimerMaxVal", json())));
+        setDoubleParam(ADTimePixTimerMinVal,    jsonDoubleOr(info.value("TimerMinVal", json())));
+        setDoubleParam(ADTimePixTimerStep,      jsonDoubleOr(info.value("TimerStep", json())));
         setDoubleParam(ADTimePixClockTimepix,   jsonDoubleOr(info.value("ClockTimepix", json())));
 
         // Detector Config Readback
-        setIntegerParam(ADTimePixFan1PWM,                jsonIntOr(cfg["Fan1PWM"]));
-        setIntegerParam(ADTimePixFan2PWM,                jsonIntOr(cfg["Fan2PWM"]));
-        setIntegerParam(ADTimePixBiasVolt,               jsonIntOr(cfg["BiasVoltage"]));
-        setIntegerParam(ADTimePixBiasEnable,             jsonBoolOr(cfg["BiasEnabled"]) ? 1 : 0);
+        setIntegerParam(ADTimePixFan1PWM,                jsonIntOr(cfg.value("Fan1PWM", json())));
+        setIntegerParam(ADTimePixFan2PWM,                jsonIntOr(cfg.value("Fan2PWM", json())));
+        setIntegerParam(ADTimePixBiasVolt,               jsonIntOr(cfg.value("BiasVoltage", json())));
+        setIntegerParam(ADTimePixBiasEnable,             jsonBoolOr(cfg.value("BiasEnabled", json())) ? 1 : 0);
     //    setStringParam(ADTimePixChainMode,               strip_quotes(cfg["ChainMode"].dump().c_str()));
-        setIntegerParam(ADTimePixTriggerIn,              jsonIntOr(cfg["TriggerIn"]));
-        setIntegerParam(ADTimePixTriggerOut,             jsonIntOr(cfg["TriggerOut"]));
+        setIntegerParam(ADTimePixTriggerIn,              jsonIntOr(cfg.value("TriggerIn", json())));
+        setIntegerParam(ADTimePixTriggerOut,             jsonIntOr(cfg.value("TriggerOut", json())));
         if (cfg.contains("Polarity")) {
             const std::string pol = jsonStringOr(cfg["Polarity"]);
             setIntegerParam(ADTimePixPolarity, (pol == "Negative") ? 1 : 0);
@@ -1404,12 +1425,12 @@ asynStatus ADTimePix::getDetector(){
             setStringParam(ADTimePixTriggerMode, triggerModeStr.c_str());
             setIntegerParam(ADTriggerMode, triggerModeIndexFromServal(triggerModeStr));
         }
-        setDoubleParam(ADTimePixExposureTime,            jsonDoubleOr(cfg["ExposureTime"]));
-        setDoubleParam(ADAcquireTime,                    jsonDoubleOr(cfg["ExposureTime"]));
-        setDoubleParam(ADTimePixTriggerPeriod,           jsonDoubleOr(cfg["TriggerPeriod"]));
-        setDoubleParam(ADAcquirePeriod,                  jsonDoubleOr(cfg["TriggerPeriod"]));
-        setIntegerParam(ADTimePixnTriggers,              jsonIntOr(cfg["nTriggers"]));
-        setIntegerParam(ADNumImages,                     jsonIntOr(cfg["nTriggers"]));
+        setDoubleParam(ADTimePixExposureTime,            jsonDoubleOr(cfg.value("ExposureTime", json())));
+        setDoubleParam(ADAcquireTime,                    jsonDoubleOr(cfg.value("ExposureTime", json())));
+        setDoubleParam(ADTimePixTriggerPeriod,           jsonDoubleOr(cfg.value("TriggerPeriod", json())));
+        setDoubleParam(ADAcquirePeriod,                  jsonDoubleOr(cfg.value("TriggerPeriod", json())));
+        setIntegerParam(ADTimePixnTriggers,              jsonIntOr(cfg.value("nTriggers", json())));
+        setIntegerParam(ADNumImages,                     jsonIntOr(cfg.value("nTriggers", json())));
         setIntegerParam(ADTimePixPeriphClk80,              jsonBoolOr(cfg.value("PeriphClk80", json())) ? 1 : 0);
         setDoubleParam(ADTimePixTriggerDelay,            jsonDoubleOr(cfg.value("TriggerDelay", json())));
         const json tdc = cfg.value("Tdc", json());
@@ -1423,7 +1444,7 @@ asynStatus ADTimePix::getDetector(){
         }
         setDoubleParam(ADTimePixGlobalTimestampInterval, jsonDoubleOr(cfg.value("GlobalTimestampInterval", json())));
         setIntegerParam(ADTimePixExternalReferenceClock, jsonBoolOr(cfg.value("ExternalReferenceClock", json())) ? 1 : 0);
-        setIntegerParam(ADTimePixLogLevel,               jsonIntOr(cfg["LogLevel"]));
+        setIntegerParam(ADTimePixLogLevel,               jsonIntOr(cfg.value("LogLevel", json())));
         if (cfg.contains("BothCounters")) {
             setIntegerParam(ADTimePixBothCounters, jsonBoolOr(cfg["BothCounters"]) ? 1 : 0);
         }
@@ -1476,8 +1497,7 @@ asynStatus ADTimePix::getDetector(){
         }
         callParamCallbacks();
 
-        int number_chips = detector_j["Info"]["NumberOfChips"].get<int>();
-        for (int chip = 1; chip < number_chips; chip++) {
+        for (int chip = 1; chip < snapshot.numberOfChips; chip++) {
             fetchDacs(detector_j, chip);
             if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
                 detector_j["Layout"].contains("Original") && detector_j["Layout"]["Original"].is_object() &&
@@ -1492,15 +1512,26 @@ asynStatus ADTimePix::getDetector(){
             }
             callParamCallbacks(chip);
         }
-        } catch (const json::exception& e) {
-            ERR_ARGS("getDetector JSON error: %s", e.what());
-            status = asynError;
-        } catch (const std::exception& e) {
-            ERR_ARGS("getDetector error: %s", e.what());
-            status = asynError;
-        }
+        setIntegerParam(ADTimePixDetConnected, 1);
+        callParamCallbacks();
+    } catch (const json::exception& e) {
+        ERR_ARGS("getDetector JSON error: %s", e.what());
+        setIntegerParam(ADTimePixDetConnected, 0);
+        setStringParam(ADTimePixWriteMsg, "Invalid detector response structure");
+        setStringParam(ADStatusMessage, "Invalid detector response structure");
+        setIntegerParam(ADStatus, ADStatusError);
+        callParamCallbacks();
+        return asynError;
+    } catch (const std::exception& e) {
+        ERR_ARGS("getDetector error: %s", e.what());
+        setIntegerParam(ADTimePixDetConnected, 0);
+        setStringParam(ADTimePixWriteMsg, "Failed to publish detector response");
+        setStringParam(ADStatusMessage, "Failed to publish detector response");
+        setIntegerParam(ADStatus, ADStatusError);
+        callParamCallbacks();
+        return asynError;
     }
-    return status;
+    return asynSuccess;
 }
 
 /**

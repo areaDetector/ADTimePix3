@@ -10,6 +10,7 @@
 #include "network_client.h"
 #include "one_shot_action.h"
 #include "serval_config.h"
+#include "serval_detector.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
 #include "serval_stream_validation.h"
@@ -475,6 +476,61 @@ void testDetectorConfigBooleanSerialization()
     close(client);
 }
 
+void testDetectorResponseValidation()
+{
+    using ADTimePix3ServalDetector::ParseError;
+    using ADTimePix3ServalDetector::Snapshot;
+
+    const std::string valid =
+        "{\"Info\":{\"PixCount\":262144,\"RowLen\":512,\"NumberOfChips\":4,"
+        "\"NumberOfRows\":512,\"MpxType\":3},\"Config\":{\"BiasEnabled\":false},"
+        "\"Health\":[]}";
+    Snapshot snapshot;
+    testOk(ADTimePix3ServalDetector::parseResponse(valid, snapshot) == ParseError::None &&
+               snapshot.pixelCount == 262144 && snapshot.rowLength == 512 &&
+               snapshot.numberOfChips == 4 && snapshot.numberOfRows == 512 &&
+               snapshot.mpxType == 3 && snapshot.response["Config"]["BiasEnabled"] == false,
+           "detector parser accepts a complete response and extracts bounded geometry");
+    testOk(ADTimePix3ServalDetector::parseResponse("", snapshot) == ParseError::EmptyBody &&
+               snapshot.response.is_object() && snapshot.response.empty(),
+           "detector parser rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalDetector::parseResponse("{malformed", snapshot) ==
+               ParseError::MalformedJson && snapshot.response.is_object() &&
+               snapshot.response.empty(),
+           "detector parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalDetector::parseResponse("[]", snapshot) ==
+               ParseError::InvalidRoot,
+           "detector parser rejects a non-object JSON root");
+    testOk(ADTimePix3ServalDetector::parseResponse("{\"Config\":{}}", snapshot) ==
+               ParseError::MissingInfo,
+           "detector parser requires the Info object");
+    testOk(ADTimePix3ServalDetector::parseResponse(
+               "{\"Info\":{\"PixCount\":1,\"RowLen\":1,\"NumberOfChips\":1,"
+               "\"NumberOfRows\":1,\"MpxType\":0}}", snapshot) ==
+               ParseError::MissingConfig,
+           "detector parser requires the Config object");
+    testOk(ADTimePix3ServalDetector::parseResponse(
+               "{\"Info\":{\"PixCount\":262144,\"RowLen\":512,\"NumberOfChips\":4,"
+               "\"NumberOfRows\":0,\"MpxType\":3},\"Config\":{}}", snapshot) ==
+               ParseError::InvalidGeometry,
+           "detector parser rejects zero rows before geometry division");
+    testOk(ADTimePix3ServalDetector::parseResponse(
+               "{\"Info\":{\"PixCount\":10,\"RowLen\":5,\"NumberOfChips\":1,"
+               "\"NumberOfRows\":3,\"MpxType\":0},\"Config\":{}}", snapshot) ==
+               ParseError::InvalidGeometry,
+           "detector parser rejects a non-integral rectangular geometry");
+    testOk(ADTimePix3ServalDetector::parseResponse(
+               "{\"Info\":{\"PixCount\":\"262144\",\"RowLen\":512,"
+               "\"NumberOfChips\":4,\"NumberOfRows\":512,\"MpxType\":-1},"
+               "\"Config\":{}}", snapshot) == ParseError::InvalidGeometry,
+           "detector parser rejects wrong field types and negative detector families");
+    testOk(ADTimePix3ServalDetector::parseResponse(
+               "{\"Info\":{\"PixCount\":18446744073709551615,\"RowLen\":512,"
+               "\"NumberOfChips\":4,\"NumberOfRows\":512,\"MpxType\":3},"
+               "\"Config\":{}}", snapshot) == ParseError::InvalidGeometry,
+           "detector parser rejects unsigned geometry beyond the EPICS integer range");
+}
+
 void testStreamHeaderValidation()
 {
     using ADTimePix3Stream::ImageFrameLayout;
@@ -631,7 +687,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(98);
+    testPlan(108);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -639,6 +695,7 @@ MAIN(servalProtocolFixtureTest)
     testProductionHttpClient();
     testMeasurementResponseValidation();
     testDetectorConfigBooleanSerialization();
+    testDetectorResponseValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();
