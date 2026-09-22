@@ -91,6 +91,41 @@ bool finiteDouble(const nlohmann::json& object, const char* field, bool& present
     return std::isfinite(value);
 }
 
+bool optionalConfigInt(const nlohmann::json& object, const char* field,
+                       bool& present, int& value)
+{
+    present = false;
+    if (!object.contains(field) || object[field].is_null()) return true;
+    const nlohmann::json& candidate = object[field];
+    if (candidate.is_number_unsigned()) {
+        const unsigned long long parsed = candidate.get<unsigned long long>();
+        if (parsed > static_cast<unsigned long long>(std::numeric_limits<int>::max()))
+            return false;
+        value = static_cast<int>(parsed);
+    } else if (candidate.is_number_integer()) {
+        const long long parsed = candidate.get<long long>();
+        if (parsed < std::numeric_limits<int>::min() ||
+            parsed > std::numeric_limits<int>::max()) return false;
+        value = static_cast<int>(parsed);
+    } else {
+        return false;
+    }
+    present = true;
+    return true;
+}
+
+bool optionalConfigDouble(const nlohmann::json& object, const char* field,
+                          bool& present, double& value)
+{
+    present = false;
+    if (!object.contains(field) || object[field].is_null()) return true;
+    if (!object[field].is_number()) return false;
+    value = object[field].get<double>();
+    if (!std::isfinite(value)) return false;
+    present = true;
+    return true;
+}
+
 }  // namespace
 
 StatusResponseError parseStatusResponse(const std::string& body, StatusSnapshot& snapshot)
@@ -202,6 +237,94 @@ const char* configResponseErrorMessage(ConfigResponseError error)
             return "measurement configuration JSON root is not an object";
     }
     return "unknown measurement configuration response error";
+}
+
+ConfigReadbackError parseConfigReadback(long statusCode, const std::string& body,
+                                        ConfigSnapshot& snapshot)
+{
+    snapshot = ConfigSnapshot{};
+    nlohmann::json config;
+    switch (parseConfigResponse(statusCode, body, config)) {
+        case ConfigResponseError::HttpFailure: return ConfigReadbackError::HttpFailure;
+        case ConfigResponseError::EmptyBody: return ConfigReadbackError::EmptyBody;
+        case ConfigResponseError::MalformedJson: return ConfigReadbackError::MalformedJson;
+        case ConfigResponseError::InvalidRoot: return ConfigReadbackError::InvalidRoot;
+        case ConfigResponseError::None: break;
+    }
+
+    ConfigSnapshot candidate;
+    if (config.contains("Stem") && !config["Stem"].is_null()) {
+        if (!config["Stem"].is_object()) return ConfigReadbackError::InvalidStem;
+        const nlohmann::json& stem = config["Stem"];
+        if (stem.contains("Scan") && !stem["Scan"].is_null()) {
+            if (!stem["Scan"].is_object()) return ConfigReadbackError::InvalidScan;
+            const nlohmann::json& scan = stem["Scan"];
+            if (!optionalConfigInt(scan, "Width", candidate.hasStemScanWidth,
+                                   candidate.stemScanWidth) ||
+                !optionalConfigInt(scan, "Height", candidate.hasStemScanHeight,
+                                   candidate.stemScanHeight) ||
+                !optionalConfigDouble(scan, "DwellTime", candidate.hasStemDwellTime,
+                                      candidate.stemDwellTime)) {
+                return ConfigReadbackError::InvalidMetric;
+            }
+        }
+        if (stem.contains("VirtualDetector") && !stem["VirtualDetector"].is_null()) {
+            if (!stem["VirtualDetector"].is_object())
+                return ConfigReadbackError::InvalidVirtualDetector;
+            const nlohmann::json& detector = stem["VirtualDetector"];
+            if (!optionalConfigInt(detector, "RadiusOuter", candidate.hasStemRadiusOuter,
+                                   candidate.stemRadiusOuter) ||
+                !optionalConfigInt(detector, "RadiusInner", candidate.hasStemRadiusInner,
+                                   candidate.stemRadiusInner)) {
+                return ConfigReadbackError::InvalidMetric;
+            }
+        }
+    }
+
+    if (config.contains("TimeOfFlight") && !config["TimeOfFlight"].is_null()) {
+        if (!config["TimeOfFlight"].is_object())
+            return ConfigReadbackError::InvalidTimeOfFlight;
+        const nlohmann::json& tof = config["TimeOfFlight"];
+        if (tof.contains("TdcReference") && !tof["TdcReference"].is_null()) {
+            if (!tof["TdcReference"].is_array())
+                return ConfigReadbackError::InvalidTdcReference;
+            std::string references;
+            bool firstReference = true;
+            for (const auto& reference : tof["TdcReference"]) {
+                if (!reference.is_string()) return ConfigReadbackError::InvalidTdcReference;
+                if (!firstReference) references += ',';
+                references += reference.get<std::string>();
+                firstReference = false;
+            }
+            candidate.hasTofTdcReference = true;
+            candidate.tofTdcReference = std::move(references);
+        }
+        if (!optionalConfigDouble(tof, "Min", candidate.hasTofMin, candidate.tofMin) ||
+            !optionalConfigDouble(tof, "Max", candidate.hasTofMax, candidate.tofMax)) {
+            return ConfigReadbackError::InvalidMetric;
+        }
+    }
+
+    snapshot = std::move(candidate);
+    return ConfigReadbackError::None;
+}
+
+const char* configReadbackErrorMessage(ConfigReadbackError error)
+{
+    switch (error) {
+        case ConfigReadbackError::None: return "valid measurement configuration readback";
+        case ConfigReadbackError::HttpFailure: return "measurement configuration GET failed";
+        case ConfigReadbackError::EmptyBody: return "empty measurement configuration response";
+        case ConfigReadbackError::MalformedJson: return "malformed measurement configuration JSON";
+        case ConfigReadbackError::InvalidRoot: return "measurement configuration root is not an object";
+        case ConfigReadbackError::InvalidStem: return "measurement Stem field is not an object";
+        case ConfigReadbackError::InvalidScan: return "measurement Stem.Scan field is not an object";
+        case ConfigReadbackError::InvalidVirtualDetector: return "measurement Stem.VirtualDetector field is not an object";
+        case ConfigReadbackError::InvalidTimeOfFlight: return "measurement TimeOfFlight field is not an object";
+        case ConfigReadbackError::InvalidMetric: return "measurement configuration metric has an invalid value";
+        case ConfigReadbackError::InvalidTdcReference: return "measurement TdcReference field is invalid";
+    }
+    return "unknown measurement configuration readback error";
 }
 
 }  // namespace ADTimePix3ServalMeasurement

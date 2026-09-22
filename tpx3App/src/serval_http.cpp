@@ -2082,51 +2082,34 @@ asynStatus ADTimePix::sendConfiguration(const json& config) {
 asynStatus ADTimePix::getMeasurementConfig() {
     std::string url = this->serverURL + std::string("/measurement/config");
     cpr::Response r = ADTimePix3ServalHttp::getJson(url, 5000);
-    json config_j;
-    const ADTimePix3ServalMeasurement::ConfigResponseError responseError =
-        ADTimePix3ServalMeasurement::parseConfigResponse(r.status_code, r.text, config_j);
-    if (responseError != ADTimePix3ServalMeasurement::ConfigResponseError::None) {
+    ADTimePix3ServalMeasurement::ConfigSnapshot snapshot;
+    const ADTimePix3ServalMeasurement::ConfigReadbackError responseError =
+        ADTimePix3ServalMeasurement::parseConfigReadback(r.status_code, r.text, snapshot);
+    if (responseError != ADTimePix3ServalMeasurement::ConfigReadbackError::None) {
         LOG_ARGS("GET %s failed: %li (Measurement.Config may not be supported): %s", url.c_str(), r.status_code,
                  trimHttpBodyForLog(r.text).c_str());
+        ERR_ARGS("getMeasurementConfig: %s",
+                 ADTimePix3ServalMeasurement::configReadbackErrorMessage(responseError));
         return asynError;
     }
-    try {
-        if (config_j.contains("Stem") && config_j["Stem"].is_object()) {
-            if (config_j["Stem"].contains("Scan") && config_j["Stem"]["Scan"].is_object()) {
-                if (config_j["Stem"]["Scan"].contains("Width") && config_j["Stem"]["Scan"]["Width"].is_number_integer())
-                    setIntegerParam(ADTimePixStemScanWidth, config_j["Stem"]["Scan"]["Width"].get<int>());
-                if (config_j["Stem"]["Scan"].contains("Height") && config_j["Stem"]["Scan"]["Height"].is_number_integer())
-                    setIntegerParam(ADTimePixStemScanHeight, config_j["Stem"]["Scan"]["Height"].get<int>());
-                if (config_j["Stem"]["Scan"].contains("DwellTime") && config_j["Stem"]["Scan"]["DwellTime"].is_number())
-                    setDoubleParam(ADTimePixStemDwellTime, config_j["Stem"]["Scan"]["DwellTime"].get<double>());
-            }
-            if (config_j["Stem"].contains("VirtualDetector") && config_j["Stem"]["VirtualDetector"].is_object()) {
-                if (config_j["Stem"]["VirtualDetector"].contains("RadiusOuter") && config_j["Stem"]["VirtualDetector"]["RadiusOuter"].is_number_integer())
-                    setIntegerParam(ADTimePixStemRadiusOuter, config_j["Stem"]["VirtualDetector"]["RadiusOuter"].get<int>());
-                if (config_j["Stem"]["VirtualDetector"].contains("RadiusInner") && config_j["Stem"]["VirtualDetector"]["RadiusInner"].is_number_integer())
-                    setIntegerParam(ADTimePixStemRadiusInner, config_j["Stem"]["VirtualDetector"]["RadiusInner"].get<int>());
-            }
-        }
-        if (config_j.contains("TimeOfFlight") && config_j["TimeOfFlight"].is_object()) {
-            if (config_j["TimeOfFlight"].contains("TdcReference") && config_j["TimeOfFlight"]["TdcReference"].is_array()) {
-                std::string refs;
-                for (size_t i = 0; i < config_j["TimeOfFlight"]["TdcReference"].size(); ++i) {
-                    if (i > 0) refs += ",";
-                    if (config_j["TimeOfFlight"]["TdcReference"][i].is_string())
-                        refs += config_j["TimeOfFlight"]["TdcReference"][i].get<std::string>();
-                }
-                setStringParam(ADTimePixTofTdcReference, refs.c_str());
-            }
-            if (config_j["TimeOfFlight"].contains("Min") && config_j["TimeOfFlight"]["Min"].is_number())
-                setDoubleParam(ADTimePixTofMin, config_j["TimeOfFlight"]["Min"].get<double>());
-            if (config_j["TimeOfFlight"].contains("Max") && config_j["TimeOfFlight"]["Max"].is_number())
-                setDoubleParam(ADTimePixTofMax, config_j["TimeOfFlight"]["Max"].get<double>());
-        }
-        callParamCallbacks();
-    } catch (const std::exception& e) {
-        ERR_ARGS("getMeasurementConfig parse error: %s", e.what());
-        return asynError;
-    }
+
+    if (snapshot.hasStemScanWidth)
+        setIntegerParam(ADTimePixStemScanWidth, snapshot.stemScanWidth);
+    if (snapshot.hasStemScanHeight)
+        setIntegerParam(ADTimePixStemScanHeight, snapshot.stemScanHeight);
+    if (snapshot.hasStemDwellTime)
+        setDoubleParam(ADTimePixStemDwellTime, snapshot.stemDwellTime);
+    if (snapshot.hasStemRadiusOuter)
+        setIntegerParam(ADTimePixStemRadiusOuter, snapshot.stemRadiusOuter);
+    if (snapshot.hasStemRadiusInner)
+        setIntegerParam(ADTimePixStemRadiusInner, snapshot.stemRadiusInner);
+    if (snapshot.hasTofTdcReference)
+        setStringParam(ADTimePixTofTdcReference, snapshot.tofTdcReference.c_str());
+    if (snapshot.hasTofMin)
+        setDoubleParam(ADTimePixTofMin, snapshot.tofMin);
+    if (snapshot.hasTofMax)
+        setDoubleParam(ADTimePixTofMax, snapshot.tofMax);
+    callParamCallbacks();
     return asynSuccess;
 }
 
@@ -2151,6 +2134,19 @@ asynStatus ADTimePix::sendMeasurementConfig() {
         } else {
             ERR_ARGS("sendMeasurementConfig GET /measurement/config: %s", message);
         }
+        return asynError;
+    }
+
+    ADTimePix3ServalMeasurement::ConfigSnapshot validatedReadback;
+    const ADTimePix3ServalMeasurement::ConfigReadbackError readbackError =
+        ADTimePix3ServalMeasurement::parseConfigReadback(
+            r.status_code, r.text, validatedReadback);
+    if (readbackError != ADTimePix3ServalMeasurement::ConfigReadbackError::None) {
+        const char* message =
+            ADTimePix3ServalMeasurement::configReadbackErrorMessage(readbackError);
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("sendMeasurementConfig GET /measurement/config: %s", message);
         return asynError;
     }
 
