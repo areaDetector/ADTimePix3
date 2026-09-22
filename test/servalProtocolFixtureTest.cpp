@@ -12,6 +12,7 @@
 #include "serval_config.h"
 #include "serval_dacs.h"
 #include "serval_detector.h"
+#include "serval_destination.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
 #include "serval_stream_validation.h"
@@ -580,6 +581,69 @@ void testDacUpdateValidation()
            "DAC PUT rejects client, server, and transport failures");
 }
 
+void testDestinationResponseValidation()
+{
+    using ADTimePix3ServalDestination::ResponseError;
+    using ADTimePix3ServalDestination::Snapshot;
+
+    Snapshot snapshot;
+    const std::string direct =
+        "{\"Raw\":[{},{}],\"Image\":[{}],\"Preview\":{"
+        "\"ImageChannels\":[{},{}],\"HistogramChannels\":[{}]}}";
+    testOk(ADTimePix3ServalDestination::parseResponse(200, direct, snapshot) ==
+               ResponseError::None && snapshot.rawChannels == 2 &&
+               snapshot.imageChannels == 1 && snapshot.previewImageChannels == 2 &&
+               snapshot.previewHistogramChannels == 1,
+           "destination parser accepts the direct Serval response shape");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Destination\":{\"Image\":[{},{}]}}", snapshot) ==
+               ResponseError::None && snapshot.rawChannels == 0 &&
+               snapshot.imageChannels == 2 && snapshot.previewImageChannels == 0,
+           "destination parser accepts the wrapped Serval response shape");
+    testOk(ADTimePix3ServalDestination::parseResponse(200, "{}", snapshot) ==
+               ResponseError::None && snapshot.rawChannels == 0 &&
+               snapshot.imageChannels == 0 && snapshot.previewImageChannels == 0 &&
+               snapshot.previewHistogramChannels == 0,
+           "destination parser accepts an empty configured destination");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               400, "Destination is not set.", snapshot) == ResponseError::NotConfigured,
+           "destination parser classifies Serval's expected unconfigured response");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               503, "Service unavailable", snapshot) == ResponseError::HttpFailure,
+           "destination parser rejects other non-200 responses");
+    testOk(ADTimePix3ServalDestination::parseResponse(200, "", snapshot) ==
+               ResponseError::EmptyBody,
+           "destination parser rejects an empty HTTP-200 body");
+    testOk(ADTimePix3ServalDestination::parseResponse(200, "{malformed", snapshot) ==
+               ResponseError::MalformedJson,
+           "destination parser rejects malformed JSON without throwing");
+    testOk(ADTimePix3ServalDestination::parseResponse(200, "[]", snapshot) ==
+               ResponseError::InvalidRoot,
+           "destination parser rejects a non-object JSON root");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Destination\":[]}", snapshot) ==
+               ResponseError::InvalidDestination,
+           "destination parser rejects a non-object Destination wrapper");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Raw\":{}}", snapshot) == ResponseError::InvalidRawChannels,
+           "destination parser rejects a non-array Raw field");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Image\":null}", snapshot) ==
+               ResponseError::InvalidImageChannels,
+           "destination parser rejects a non-array Image field");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Preview\":[]}", snapshot) == ResponseError::InvalidPreview,
+           "destination parser rejects a non-object Preview field");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Preview\":{\"ImageChannels\":{}}}", snapshot) ==
+               ResponseError::InvalidPreviewImageChannels,
+           "destination parser rejects non-array preview image channels");
+    testOk(ADTimePix3ServalDestination::parseResponse(
+               200, "{\"Preview\":{\"HistogramChannels\":null}}", snapshot) ==
+               ResponseError::InvalidPreviewHistogramChannels,
+           "destination parser rejects non-array preview histogram channels");
+}
+
 void testStreamHeaderValidation()
 {
     using ADTimePix3Stream::ImageFrameLayout;
@@ -736,7 +800,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(118);
+    testPlan(132);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -746,6 +810,7 @@ MAIN(servalProtocolFixtureTest)
     testDetectorConfigBooleanSerialization();
     testDetectorResponseValidation();
     testDacUpdateValidation();
+    testDestinationResponseValidation();
     testStreamHeaderValidation();
     testBpcFileBounds();
     testOneShotActions();

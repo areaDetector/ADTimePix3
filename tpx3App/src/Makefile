@@ -23,6 +23,7 @@ INC += serval_http.h
 INC += serval_config.h
 INC += serval_dacs.h
 INC += serval_detector.h
+INC += serval_destination.h
 INC += serval_measurement.h
 INC += serval_stream_validation.h
 
@@ -40,6 +41,7 @@ LIB_SRCS += network_client.cpp
 LIB_SRCS += serval_config.cpp
 LIB_SRCS += serval_dacs.cpp
 LIB_SRCS += serval_detector.cpp
+LIB_SRCS += serval_destination.cpp
 LIB_SRCS += serval_http_client.cpp
 LIB_SRCS += serval_measurement.cpp
 LIB_SRCS += serval_stream_validation.cpp
