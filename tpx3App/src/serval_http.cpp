@@ -12,6 +12,7 @@
 #include "serval_config.h"
 #include "serval_dacs.h"
 #include "serval_detector.h"
+#include "serval_destination.h"
 #include "serval_http.h"
 #include "serval_measurement.h"
 
@@ -774,33 +775,6 @@ int chipTemperatureFromHealthV3(const json& detector, int chip) {
 /** True when GET /detector returns Health as an array (Serval 4 / multi-board; also some 3.2+). */
 bool detectorHealthIsArray(const json& detector_j) {
     return detector_j.contains("Health") && detector_j["Health"].is_array();
-}
-
-/** Serval 4.x GET /server/destination may wrap channels in a Destination object. */
-const json& destinationBody(const json& parsed) {
-    if (parsed.contains("Destination") && parsed["Destination"].is_object())
-        return parsed["Destination"];
-    return parsed;
-}
-
-size_t jsonArraySizeIfArray(const json& parent, const char* key) {
-    if (!parent.contains(key)) return 0;
-    const json& v = parent.at(key);
-    return v.is_array() ? v.size() : 0;
-}
-
-size_t previewImageChannelCount(const json& dest) {
-    if (!dest.contains("Preview") || !dest.at("Preview").is_object()) return 0;
-    const json& prev = dest.at("Preview");
-    if (!prev.contains("ImageChannels") || !prev.at("ImageChannels").is_array()) return 0;
-    return prev.at("ImageChannels").size();
-}
-
-size_t previewHistogramChannelCount(const json& dest) {
-    if (!dest.contains("Preview") || !dest.at("Preview").is_object()) return 0;
-    const json& prev = dest.at("Preview");
-    if (!prev.contains("HistogramChannels") || !prev.at("HistogramChannels").is_array()) return 0;
-    return prev.at("HistogramChannels").size();
 }
 
 } // namespace
@@ -1584,7 +1558,6 @@ asynStatus ADTimePix::getDetector(bool publishHttpStatus){
  * @return: status
  */
 asynStatus ADTimePix::getServer(){
-    asynStatus status = asynSuccess;
     FLOW("Reading detector streams");
     std::string server;
 
@@ -1615,112 +1588,47 @@ asynStatus ADTimePix::getServer(){
     server = this->serverURL + std::string("/server/destination");
     cpr::Response r = ADTimePix3ServalHttp::get(server, 5000);
 
-    if (r.status_code != 200) {
-        // Before the first WriteData push, Serval has no destination; IOC init dbpf on Write*
-        // channel PVs triggers getServer() and Serval logs this as a known warning.
-        if (r.text.find("Destination is not set") != std::string::npos) {
-            FLOW("Serval destination not configured yet (expected before WriteData)");
-            return asynSuccess;
-        }
+    ADTimePix3ServalDestination::Snapshot snapshot;
+    const ADTimePix3ServalDestination::ResponseError responseError =
+        ADTimePix3ServalDestination::parseResponse(r.status_code, r.text, snapshot);
 
-        setIntegerParam(ADTimePixDetConnected,0);
-        setStringParam(ADTimePixWriteMsg, r.text.c_str());
+    if (responseError == ADTimePix3ServalDestination::ResponseError::NotConfigured) {
+        FLOW("Serval destination not configured yet (expected before WriteData)");
+        snapshot = ADTimePix3ServalDestination::Snapshot{};
+    } else if (responseError != ADTimePix3ServalDestination::ResponseError::None) {
+        const char* message =
+            ADTimePix3ServalDestination::responseErrorMessage(responseError);
+        setIntegerParam(ADTimePixHttpCode, r.status_code);
+        setStringParam(ADTimePixWriteMsg,
+                       responseError == ADTimePix3ServalDestination::ResponseError::HttpFailure &&
+                               !r.text.empty()
+                           ? r.text.c_str()
+                           : message);
+        if (responseError == ADTimePix3ServalDestination::ResponseError::HttpFailure) {
+            logHttpFailure("getServer GET /server/destination", "GET", server,
+                           (long)r.status_code, r.text);
+        } else {
+            ERR_ARGS("getServer: %s", message);
+        }
+        callParamCallbacks();
+        return asynError;
     }
-    else {
-        setIntegerParam(ADTimePixDetConnected,1);
-    //    setStringParam(ADTimePixWriteMsg, r.text.c_str());
 
-        try {
-        const json parsed = json::parse(r.text.c_str());
-        const json& server_j = destinationBody(parsed);
-
-        const size_t rawN = jsonArraySizeIfArray(server_j, "Raw");
-        switch (rawN) {
-            case 0:
-                setIntegerParam(ADTimePixWriteRawRead, 0);
-                setIntegerParam(ADTimePixWriteRaw1Read, 0);
-                break; // No Raw channels
-            case 1:
-                setIntegerParam(ADTimePixWriteRawRead, 1);
-                setIntegerParam(ADTimePixWriteRaw1Read, 0);
-                break; // One Raw channel
-            case 2:
-                setIntegerParam(ADTimePixWriteRawRead, 1);
-                setIntegerParam(ADTimePixWriteRaw1Read, 1);
-                break; // Two Raw channels
-            default:
-                printf("More than two Raw channels\n");
-                setIntegerParam(ADTimePixWriteRawRead, 1);
-                setIntegerParam(ADTimePixWriteRaw1Read, 1);
-                break; // More than two Raw channels
-        }
-
-        const size_t imgN = jsonArraySizeIfArray(server_j, "Image");
-        switch (imgN) {
-            case 0:
-                setIntegerParam(ADTimePixWriteImgRead, 0);
-                setIntegerParam(ADTimePixWriteImg1Read, 0);
-                break; // No Image channels
-            case 1:
-                setIntegerParam(ADTimePixWriteImgRead, 1);
-                setIntegerParam(ADTimePixWriteImg1Read, 0);
-                break; // One Image channel
-            case 2:
-                setIntegerParam(ADTimePixWriteImgRead, 1);
-                setIntegerParam(ADTimePixWriteImg1Read, 1);
-                break; // Two Image channels
-            default:
-                printf("More than two Image channels\n");
-                setIntegerParam(ADTimePixWriteImgRead, 1);
-                setIntegerParam(ADTimePixWriteImg1Read, 1);
-                break; // More than two Image channels
-        }
-
-        const size_t prvImgN = previewImageChannelCount(server_j);
-        switch (prvImgN) {
-            case 0:
-                setIntegerParam(ADTimePixWritePrvImgRead, 0);
-                setIntegerParam(ADTimePixWritePrvImg1Read, 0);
-                break; // No Preview Image channels
-            case 1:
-                setIntegerParam(ADTimePixWritePrvImgRead, 1);
-                setIntegerParam(ADTimePixWritePrvImg1Read, 0);
-                break; // One Preview Image channel
-            case 2:
-                setIntegerParam(ADTimePixWritePrvImgRead, 1);
-                setIntegerParam(ADTimePixWritePrvImg1Read, 1);
-                break; // Two Preview Image channels
-            default:
-                printf("More than two Preview Image channels\n");
-                setIntegerParam(ADTimePixWritePrvImgRead, 1);
-                setIntegerParam(ADTimePixWritePrvImg1Read, 1);
-                break; // More than two Preview Image channels
-        }
-
-        const size_t prvHstN = previewHistogramChannelCount(server_j);
-        switch (prvHstN) {
-            case 0:
-                setIntegerParam(ADTimePixWritePrvHstRead, 0);
-                break; // No Preview Histogram channels
-            case 1:
-                setIntegerParam(ADTimePixWritePrvHstRead, 1);
-                break; // One Preview Histogram channel
-            default:
-                printf("More than one Preview Histogram channels\n");
-                setIntegerParam(ADTimePixWritePrvHstRead, 1);
-                break; // More than one Preview Histogram channels
-        }
-        } catch (const json::exception& e) {
-            ERR_ARGS("getServer JSON error: %s", e.what());
-            status = asynError;
-        } catch (const std::exception& e) {
-            ERR_ARGS("getServer error: %s", e.what());
-            status = asynError;
-        }
-    }
+    /* Publish one validated snapshot so a malformed response cannot partially
+     * change the channel-enable readbacks. */
+    setIntegerParam(ADTimePixWriteRawRead, snapshot.rawChannels >= 1 ? 1 : 0);
+    setIntegerParam(ADTimePixWriteRaw1Read, snapshot.rawChannels >= 2 ? 1 : 0);
+    setIntegerParam(ADTimePixWriteImgRead, snapshot.imageChannels >= 1 ? 1 : 0);
+    setIntegerParam(ADTimePixWriteImg1Read, snapshot.imageChannels >= 2 ? 1 : 0);
+    setIntegerParam(ADTimePixWritePrvImgRead,
+                    snapshot.previewImageChannels >= 1 ? 1 : 0);
+    setIntegerParam(ADTimePixWritePrvImg1Read,
+                    snapshot.previewImageChannels >= 2 ? 1 : 0);
+    setIntegerParam(ADTimePixWritePrvHstRead,
+                    snapshot.previewHistogramChannels >= 1 ? 1 : 0);
     callParamCallbacks();
 
-    return status;
+    return asynSuccess;
 }
 
 /** uploadBPC() implemented in mask_io.cpp with other BPC/mask logic */

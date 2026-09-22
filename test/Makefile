@@ -18,6 +18,7 @@ servalProtocolFixtureTest_SRCS += network_client.cpp
 servalProtocolFixtureTest_SRCS += serval_config.cpp
 servalProtocolFixtureTest_SRCS += serval_dacs.cpp
 servalProtocolFixtureTest_SRCS += serval_detector.cpp
+servalProtocolFixtureTest_SRCS += serval_destination.cpp
 servalProtocolFixtureTest_SRCS += serval_http_client.cpp
 servalProtocolFixtureTest_SRCS += serval_measurement.cpp
 servalProtocolFixtureTest_SRCS += serval_stream_validation.cpp

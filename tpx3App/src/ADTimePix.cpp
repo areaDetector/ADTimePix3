@@ -558,7 +558,9 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixWriteData) { 
         status = fileWriter();
-        status = getServer();    // Read configured channels from Serval
+        if (status == asynSuccess) {
+            status = getServer();    // Read configured channels from Serval
+        }
     }
 
     else if(function == ADTimePixDetectorOrientation) {
