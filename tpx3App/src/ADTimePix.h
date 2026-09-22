@@ -286,7 +286,7 @@
 #define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
 #define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32Array, r)   |SERVAL−BPC| at pelIndex(i,j); row-major j*cols+i (maskCircle convention)
 #define ADTimePixMaskedPelsJsonPathString        "TPX3_MASKED_PELS_JSON_RBV"     // (asynOctet,   r)      Full path to last _masked_pels.json (RefreshPixelConfig)
-#define ADTimePixMaskedPelsCountString           "TPX3_MASKED_PELS_COUNT_RBV"   // (asynInt32,   r)      Count of BPC pels with bit0 set in export
+#define ADTimePixMaskedPelsCountString           "TPX3_MASKED_PELS_COUNT_RBV"   // (asynInt32,   r)      Count of fully disabled TPX3 BPC pels
 #define ADTimePixMaskedPelsExportStatusString   "TPX3_MASKED_PELS_EXPORT_STATUS_RBV" // (asynOctet,   r)  OK / skipped / I/O error message
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base

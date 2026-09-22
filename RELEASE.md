@@ -28,7 +28,11 @@ R1-7-3 (in progress)
 
 Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
-* Release notes TBD.
+* **Family-safe BPC mask semantics**:
+  * TPX3 operator mask writes replace the selected configuration byte with the empirically observed Accos disabled-pixel value **31 / `0x1f`**; mask readback, count, and masked-pels JSON recognize only that exact value rather than any byte with bit 0 set.
+  * Restoring an individual pixel's prior calibration byte is not inferred; reload the original calibration with **`WriteBPCFile`** to undo operator-mask edits.
+  * MPX3 mask read/write and masked-pels JSON export are explicitly unavailable until ASI documents the disable encoding. The driver reports an operator-facing error and **-1** count instead of interpreting equalization bits as bad pixels. MPX3 calibration upload and full 131072-byte-per-chip PixelConfig comparison remain supported.
+  * Added deterministic family, classification, count, and write-policy tests in **`servalProtocolFixtureTest`**. The TPX3 value-31 replacement rule remains subject to vendor confirmation.
 
 
 R1-7-2 (August 24, 2026)

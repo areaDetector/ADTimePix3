@@ -9,6 +9,7 @@
 
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "bpc_mask_semantics.h"
 #include "serval_config.h"
 #include "serval_dacs.h"
 #include "serval_dashboard.h"
@@ -880,6 +881,17 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
         return;
     }
 
+    if (!ADTimePix3BpcMask::operatorMaskSupported(detectorFamily_)) {
+        setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
+        setIntegerParam(0, ADTimePixMaskedPelsCount, -1);
+        std::string message = std::string("Unavailable: ") +
+            detectorFamilyName(detectorFamily_) +
+            " pixel mask encoding is not documented";
+        setStringParam(0, ADTimePixMaskedPelsExportStatus, message.c_str());
+        callParamCallbacks(0);
+        return;
+    }
+
     std::string filePath, fileName;
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixBPCFileName, fileName);
@@ -930,7 +942,7 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
 
     for (int pos = 0; pos < bpcSize; ++pos) {
         const unsigned char byte = static_cast<unsigned char>(bpcBuf[pos]);
-        if ((byte & 1u) == 0) continue;
+        if (!ADTimePix3BpcMask::isMasked(detectorFamily_, byte)) continue;
 
         int chip = 0;
         int lx = 0, ly = 0;

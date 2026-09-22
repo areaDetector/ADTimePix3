@@ -11,7 +11,7 @@ Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON
 | **Timepix3** | **1** byte / pel | `w×w` (65536 at 256×256) | 65536 B |
 | **Medipix3** (dual counter) | **2** bytes / pel — **not** interleaved | `[th0: w×w][th1: w×w]` → **131072 B** | 131072 B |
 
-**Timepix3:** Accos bad pixels in reference cals use **byte 31** (`0b11111`); see [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md). The IOC today toggles **bit 0** on operator mask (planned: write 31).
+**Timepix3:** Accos bad pixels in reference cals use the complete **byte 31** (`0b11111`); see [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md). Operator mask writes now replace the selected byte with **31**, and mask read/count/export recognizes only that exact value. This is aligned with the observed Accos files; vendor confirmation of the byte semantics is still pending.
 
 **Medipix3:** File layout **[th0 slice][th1 slice]** per chip is validated; **which bit(s) or byte value disable counting is TBD** — do not use TPX3 bit-0 rules on MPX3. Low odd bytes (1, 3, 5, 7) in `eq-01.bpc` look like equalization state, not a bad-pixel map.
 
@@ -21,7 +21,7 @@ Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON
 bpc_index = c * (2 * P) + t * P + p
 ```
 
-**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths were written for **TPX3** (one slice). They map image `(i, j)` into the **first** 64 KiB of each chip block only. `refreshPixelConfigFromServal()` translates that logical index to the family-specific chip stride and selected MPX3 threshold slice. MPX3 mask editing still needs equivalent threshold-aware indexing.
+**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths are enabled only for **TPX3** (one slice). `refreshPixelConfigFromServal()` translates that logical index to the family-specific chip stride and selected MPX3 threshold slice for read-only comparison. MPX3 mask read/write/export is explicitly blocked until its disable encoding is documented; layout knowledge alone is insufficient for safe editing.
 
 Offline tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **global `(i, j)`** convention as **`bpc2ImgIndex`** for masked-pel listings. Mask editing and **`PixelConfigDiff`** use **`pelIndex(i, j)`** instead.
 
