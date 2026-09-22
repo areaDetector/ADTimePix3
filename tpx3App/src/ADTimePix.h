@@ -385,6 +385,10 @@
 
 using json = nlohmann::json;
 
+namespace ADTimePix3ServalMeasurement {
+struct StatusSnapshot;
+}
+
 // Constants for TCP streaming
 constexpr size_t MAX_BUFFER_SIZE = 32768;
 
@@ -1073,8 +1077,8 @@ class ADTimePix : public ADDriver{
         asynStatus fetchDacs(json &data, int chip);
         /** Map GET /detector Health (object or array) to health PVs; no throw on shape mismatch. */
         void updateDetectorHealthFromJson(const json& detector_j);
-        /** Map Measurement.Info TDC rate fields by JSON keys (not SDK version string). */
-        void updateTdcRatesFromMeasurementInfo(const json& info);
+        /** Publish one completely validated GET /measurement status snapshot. */
+        void publishMeasurementSnapshot(const ADTimePix3ServalMeasurement::StatusSnapshot& snapshot);
         /** Map Measurement.Info Status (PipelineState) to string + mbbi index PVs. */
         void updateMeasurementStatusFromJson(const json& statusVal);
         /** Refresh PipelineState/Status from GET /dashboard Measurement block. */

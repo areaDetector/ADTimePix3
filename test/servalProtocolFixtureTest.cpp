@@ -332,6 +332,51 @@ void testMeasurementResponseValidation()
                ParseError::InvalidRoot && measurement.is_object() && measurement.empty(),
            "measurement parser rejects a non-object JSON root");
 
+    using ADTimePix3ServalMeasurement::StatusResponseError;
+    using ADTimePix3ServalMeasurement::StatusSnapshot;
+    StatusSnapshot snapshot;
+    const std::string completeStatus =
+        "{\"Info\":{\"PixelEventRate\":120,\"Tdc1EventRate\":10,"
+        "\"Tdc2EventRate\":11,\"StartDateTime\":1758542400000,"
+        "\"ElapsedTime\":1.5,\"TimeLeft\":2.5,\"FrameCount\":12,"
+        "\"DroppedFrames\":0,\"Status\":\"DA_RECORDING\"}}";
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(completeStatus, snapshot) ==
+               StatusResponseError::None && snapshot.hasPixelEventRate &&
+               snapshot.pixelEventRate == 120 && snapshot.tdc1EventRate == 10 &&
+               snapshot.tdc2EventRate == 11 && snapshot.startDateTime == 1758542400000LL &&
+               snapshot.elapsedTime == 1.5 && snapshot.timeLeft == 2.5 &&
+               snapshot.frameCount == 12 && snapshot.droppedFrames == 0 &&
+               snapshot.status == "DA_RECORDING",
+           "measurement status parser extracts one complete validated snapshot");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":{\"TdcEventRate\":9},\"Status\":\"DA_IDLE\"}", snapshot) ==
+               StatusResponseError::None && snapshot.hasTdc1EventRate &&
+               snapshot.tdc1EventRate == 9 && !snapshot.hasTdc2EventRate &&
+               snapshot.status == "DA_IDLE",
+           "measurement status parser supports legacy TDC rate and top-level status");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":null}", snapshot) == StatusResponseError::InvalidInfo,
+           "measurement status parser rejects a non-object Info field");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":{\"Status\":4}}", snapshot) ==
+               StatusResponseError::InvalidStatus,
+           "measurement status parser rejects a non-string status");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":{\"FrameCount\":\"12\"}}", snapshot) ==
+               StatusResponseError::InvalidMetric,
+           "measurement status parser rejects an incorrectly typed metric");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":{\"FrameCount\":18446744073709551615}}", snapshot) ==
+               StatusResponseError::InvalidMetric,
+           "measurement status parser rejects frame counts beyond the EPICS integer range");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":{\"StartDateTime\":18446744073709551615}}", snapshot) ==
+               StatusResponseError::InvalidMetric,
+           "measurement status parser rejects timestamps beyond the EPICS integer range");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{malformed", snapshot) == StatusResponseError::MalformedJson,
+           "measurement status parser rejects malformed JSON without throwing");
+
     using ADTimePix3ServalMeasurement::ConfigResponseError;
     nlohmann::json config;
     const std::string completeConfig =
@@ -884,7 +929,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(150);
+    testPlan(158);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

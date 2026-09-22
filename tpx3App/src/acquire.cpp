@@ -37,18 +37,26 @@ static void timePixCallbackC(void* pPvt) {
 // Acquisition Functions
 // -----------------------------------------------------------------------
 
-void ADTimePix::updateTdcRatesFromMeasurementInfo(const json& info) {
-    if (!info.is_object()) return;
-    if (info.contains("Tdc1EventRate") && info["Tdc1EventRate"].is_number()) {
-        setIntegerParam(ADTimePixTdc1Rate, info["Tdc1EventRate"].get<int>());
-    }
-    if (info.contains("Tdc2EventRate") && info["Tdc2EventRate"].is_number()) {
-        setIntegerParam(ADTimePixTdc2Rate, info["Tdc2EventRate"].get<int>());
-    }
-    // Serval 3.0 / 3.1: single TdcEventRate (when split fields are absent)
-    if (info.contains("TdcEventRate") && info["TdcEventRate"].is_number() && !info.contains("Tdc1EventRate")) {
-        setIntegerParam(ADTimePixTdc1Rate, info["TdcEventRate"].get<int>());
-    }
+void ADTimePix::publishMeasurementSnapshot(
+    const ADTimePix3ServalMeasurement::StatusSnapshot& snapshot) {
+    if (snapshot.hasPixelEventRate)
+        setIntegerParam(ADTimePixPelRate, snapshot.pixelEventRate);
+    if (snapshot.hasTdc1EventRate)
+        setIntegerParam(ADTimePixTdc1Rate, snapshot.tdc1EventRate);
+    if (snapshot.hasTdc2EventRate)
+        setIntegerParam(ADTimePixTdc2Rate, snapshot.tdc2EventRate);
+    if (snapshot.hasStartDateTime)
+        setInteger64Param(ADTimePixStartTime, snapshot.startDateTime);
+    if (snapshot.hasElapsedTime)
+        setDoubleParam(ADTimePixElapsedTime, snapshot.elapsedTime);
+    if (snapshot.hasTimeLeft)
+        setDoubleParam(ADTimePixTimeLeft, snapshot.timeLeft);
+    if (snapshot.hasFrameCount)
+        setIntegerParam(ADTimePixFrameCount, snapshot.frameCount);
+    if (snapshot.hasDroppedFrames)
+        setIntegerParam(ADTimePixDroppedFrames, snapshot.droppedFrames);
+    if (snapshot.hasStatus)
+        updateMeasurementStatusFromJson(snapshot.status);
 }
 
 namespace {
@@ -309,44 +317,24 @@ asynStatus ADTimePix::acquireStart(){
     cpr::Response r = ADTimePix3ServalHttp::get(measurementURL);
     
     if (r.status_code == 200 && !r.text.empty()) {
-        try {
-            json measurement_j;
-            try {
-                measurement_j = json::parse(r.text.c_str());
-            } catch (const json::parse_error& e) {
-                WARN_ARGS("Failed to parse measurement JSON: %s, continuing anyway", e.what());
-                // Continue without checking status
-                measurement_j = json::object();
-            }
-            // Safely check if Info and Status exist and are not null
-            if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
-                if (measurement_j["Info"].contains("Status") && measurement_j["Info"]["Status"].is_string()) {
-                    std::string status = measurement_j["Info"]["Status"].get<std::string>();
-                    if (status != "DA_IDLE" && status != "DA_STOPPED") {
-                        LOG_ARGS("Measurement is running (status: %s), stopping it first", status.c_str());
-                        string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
-                        cpr::Response stop_r = ADTimePix3ServalHttp::get(stopMeasurementURL);
-                        if (stop_r.status_code == 200) {
-                            epicsThreadSleep(0.2);
-                        } else {
-                            logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
-                                           (long)stop_r.status_code, stop_r.text);
-                        }
-                    }
-                } else {
-                    // Status field is missing or null, assume measurement is not running
-                    LOG("Measurement status field is missing or null, assuming not running");
-                }
+        ADTimePix3ServalMeasurement::StatusSnapshot snapshot;
+        const auto responseError =
+            ADTimePix3ServalMeasurement::parseStatusResponse(r.text, snapshot);
+        if (responseError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
+            WARN_ARGS("Failed to validate measurement status: %s, continuing after prior stop",
+                      ADTimePix3ServalMeasurement::statusResponseErrorMessage(responseError));
+        } else if (snapshot.hasStatus && snapshot.status != "DA_IDLE" &&
+                   snapshot.status != "DA_STOPPED") {
+            LOG_ARGS("Measurement is running (status: %s), stopping it first",
+                     snapshot.status.c_str());
+            string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
+            cpr::Response stop_r = ADTimePix3ServalHttp::get(stopMeasurementURL);
+            if (stop_r.status_code == 200) {
+                epicsThreadSleep(0.2);
             } else {
-                // Info field is missing or not an object
-                LOG("Measurement Info field is missing or invalid, assuming not running");
+                logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
+                               (long)stop_r.status_code, stop_r.text);
             }
-        } catch (const json::parse_error& e) {
-            WARN_ARGS("Failed to parse measurement JSON: %s, continuing anyway", e.what());
-        } catch (const json::type_error& e) {
-            WARN_ARGS("JSON type error when checking measurement status: %s, continuing anyway", e.what());
-        } catch (const std::exception& e) {
-            WARN_ARGS("Failed to check measurement status: %s, continuing anyway", e.what());
         }
     }
 
@@ -740,56 +728,31 @@ void ADTimePix::timePixCallback(){
     session.SetOption(parameters);
     cpr::Response r = session.Get();
 
-    json measurement_j = json::object();
     if (r.status_code != 200) {
         logHttpFailure("timePixCallback GET /measurement", "GET", measurement, (long)r.status_code, r.text);
+        this->acquiring = false;
+        (void)acquireStop();
         setStringParam(ADStatusMessage, "Measurement HTTP error; acquisition stopped");
-        setIntegerParam(ADStatus, ADStatusIdle);
-        this->acquiring = false;
+        setIntegerParam(ADStatus, ADStatusError);
         callParamCallbacks();
         return;
     }
-    ADTimePix3ServalMeasurement::ParseError parseError =
-        ADTimePix3ServalMeasurement::parseResponse(r.text, measurement_j);
-    if (parseError != ADTimePix3ServalMeasurement::ParseError::None) {
+    ADTimePix3ServalMeasurement::StatusSnapshot measurementSnapshot;
+    ADTimePix3ServalMeasurement::StatusResponseError statusError =
+        ADTimePix3ServalMeasurement::parseStatusResponse(r.text, measurementSnapshot);
+    if (statusError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
         ERR_ARGS("timePixCallback: invalid measurement response: %s",
-                 ADTimePix3ServalMeasurement::parseErrorMessage(parseError));
-        setStringParam(ADStatusMessage, "Invalid measurement JSON; acquisition stopped");
-        setIntegerParam(ADStatus, ADStatusIdle);
+                 ADTimePix3ServalMeasurement::statusResponseErrorMessage(statusError));
         this->acquiring = false;
+        (void)acquireStop();
+        setStringParam(ADStatusMessage, "Invalid measurement response; acquisition stopped");
+        setIntegerParam(ADStatus, ADStatusError);
         callParamCallbacks();
         return;
     }
 
-    // Safely extract measurement info with null checks
-    if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
-        if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
-            setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
-        }
-
-        updateTdcRatesFromMeasurementInfo(measurement_j["Info"]);
-
-        if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
-            setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
-        }
-        if (measurement_j["Info"].contains("ElapsedTime") && measurement_j["Info"]["ElapsedTime"].is_number()) {
-            setDoubleParam(ADTimePixElapsedTime, measurement_j["Info"]["ElapsedTime"].get<double>());
-        }
-        if (measurement_j["Info"].contains("TimeLeft") && measurement_j["Info"]["TimeLeft"].is_number()) {
-            setDoubleParam(ADTimePixTimeLeft, measurement_j["Info"]["TimeLeft"].get<double>());
-        }
-        if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
-            setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
-        }
-        if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
-            setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
-        }
-        if (measurement_j["Info"].contains("Status")) {
-            updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
-        }
-    } else if (measurement_j.contains("Status")) {
-        updateMeasurementStatusFromJson(measurement_j["Status"]);
-    }
+    publishMeasurementSnapshot(measurementSnapshot);
+    if (measurementSnapshot.hasFrameCount) new_frame_num = measurementSnapshot.frameCount;
     callParamCallbacks();
 
     while(this->acquiring){
@@ -808,52 +771,23 @@ void ADTimePix::timePixCallback(){
                                r.text);
                 break;
             }
-            parseError = ADTimePix3ServalMeasurement::parseResponse(r.text, measurement_j);
-            if (parseError != ADTimePix3ServalMeasurement::ParseError::None) {
+            statusError = ADTimePix3ServalMeasurement::parseStatusResponse(
+                r.text, measurementSnapshot);
+            if (statusError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
                 ERR_ARGS("timePixCallback: invalid poll response: %s",
-                         ADTimePix3ServalMeasurement::parseErrorMessage(parseError));
+                         ADTimePix3ServalMeasurement::statusResponseErrorMessage(statusError));
+                setStringParam(ADStatusMessage, "Invalid measurement JSON; stopping acquisition");
                 this->acquiring = false;
+                isIdle = true;
                 break;
             }
 
-            // Safely extract measurement info with null checks
-            if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
-                if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
-                    setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
-                }
-
-                updateTdcRatesFromMeasurementInfo(measurement_j["Info"]);
-
-                if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
-                    setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
-                }
-                if (measurement_j["Info"].contains("ElapsedTime") && measurement_j["Info"]["ElapsedTime"].is_number()) {
-                    setDoubleParam(ADTimePixElapsedTime, measurement_j["Info"]["ElapsedTime"].get<double>());
-                }
-                if (measurement_j["Info"].contains("TimeLeft") && measurement_j["Info"]["TimeLeft"].is_number()) {
-                    setDoubleParam(ADTimePixTimeLeft, measurement_j["Info"]["TimeLeft"].get<double>());
-                }
-                if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
-                    setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
-            new_frame_num = measurement_j["Info"]["FrameCount"].get<int>();
-                }
-                if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
-                    setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
-                }
-                if (measurement_j["Info"].contains("Status")) {
-                    updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
-                    if (measurement_j["Info"]["Status"].is_string() &&
-                        measurement_j["Info"]["Status"].get<std::string>() == "DA_IDLE") {
-                isIdle = true;
-                    }
-                }
-            } else if (measurement_j.contains("Status")) {
-                updateMeasurementStatusFromJson(measurement_j["Status"]);
-                if (measurement_j["Status"].is_string() &&
-                    measurement_j["Status"].get<std::string>() == "DA_IDLE") {
-                    isIdle = true;
-                }
-            }
+            publishMeasurementSnapshot(measurementSnapshot);
+            if (measurementSnapshot.hasFrameCount)
+                new_frame_num = measurementSnapshot.frameCount;
+            isIdle = measurementSnapshot.hasStatus &&
+                     (measurementSnapshot.status == "DA_IDLE" ||
+                      measurementSnapshot.status == "DA_STOPPED");
             callParamCallbacks();
             
             if (isIdle || this->acquiring == false) {
@@ -1034,46 +968,19 @@ asynStatus ADTimePix::acquireStop(){
         return asynError;
     }
 
-    json measurement_j;
-    const ADTimePix3ServalMeasurement::ParseError parseError =
-        ADTimePix3ServalMeasurement::parseResponse(r.text, measurement_j);
-    if (parseError != ADTimePix3ServalMeasurement::ParseError::None) {
+    ADTimePix3ServalMeasurement::StatusSnapshot measurementSnapshot;
+    const ADTimePix3ServalMeasurement::StatusResponseError statusError =
+        ADTimePix3ServalMeasurement::parseStatusResponse(r.text, measurementSnapshot);
+    if (statusError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
         ERR_ARGS("acquireStop: invalid post-stop measurement response: %s",
-                 ADTimePix3ServalMeasurement::parseErrorMessage(parseError));
+                 ADTimePix3ServalMeasurement::statusResponseErrorMessage(statusError));
         setStringParam(ADStatusMessage, "Acquisition stopped; invalid measurement response");
         callParamCallbacks();
         return asynError;
     }
 
-    // Safely extract measurement info with null checks
-    if (measurement_j.contains("Info") && measurement_j["Info"].is_object()) {
-        if (measurement_j["Info"].contains("PixelEventRate") && measurement_j["Info"]["PixelEventRate"].is_number()) {
-            setIntegerParam(ADTimePixPelRate, measurement_j["Info"]["PixelEventRate"].get<int>());
-        }
-
-        updateTdcRatesFromMeasurementInfo(measurement_j["Info"]);
-
-        if (measurement_j["Info"].contains("StartDateTime") && measurement_j["Info"]["StartDateTime"].is_number()) {
-            setInteger64Param(ADTimePixStartTime, measurement_j["Info"]["StartDateTime"].get<long>());
-        }
-        if (measurement_j["Info"].contains("ElapsedTime") && measurement_j["Info"]["ElapsedTime"].is_number()) {
-            setDoubleParam(ADTimePixElapsedTime, measurement_j["Info"]["ElapsedTime"].get<double>());
-        }
-        if (measurement_j["Info"].contains("TimeLeft") && measurement_j["Info"]["TimeLeft"].is_number()) {
-            setDoubleParam(ADTimePixTimeLeft, measurement_j["Info"]["TimeLeft"].get<double>());
-        }
-        if (measurement_j["Info"].contains("FrameCount") && measurement_j["Info"]["FrameCount"].is_number()) {
-            setIntegerParam(ADTimePixFrameCount, measurement_j["Info"]["FrameCount"].get<int>());
-        }
-        if (measurement_j["Info"].contains("DroppedFrames") && measurement_j["Info"]["DroppedFrames"].is_number()) {
-            setIntegerParam(ADTimePixDroppedFrames, measurement_j["Info"]["DroppedFrames"].get<int>());
-        }
-        if (measurement_j["Info"].contains("Status")) {
-            updateMeasurementStatusFromJson(measurement_j["Info"]["Status"]);
-        }
-    } else if (measurement_j.contains("Status")) {
-        updateMeasurementStatusFromJson(measurement_j["Status"]);
-    } else {
+    publishMeasurementSnapshot(measurementSnapshot);
+    if (!measurementSnapshot.hasStatus) {
         updateMeasurementStatusFromJson("DA_IDLE");
     }
     callParamCallbacks();
