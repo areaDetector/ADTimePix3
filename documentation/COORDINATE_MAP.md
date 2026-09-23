@@ -9,21 +9,21 @@ Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON
 | Family | Bytes per chip pixel (mask/config) | Per-chip block in file | Serval `PixelConfig` |
 |--------|-----------------------------------|------------------------|----------------------|
 | **Timepix3** | **1** byte / pel | `w×w` (65536 at 256×256) | 65536 B |
-| **Medipix3** (dual counter) | **2** bytes / pel — **not** interleaved | `[th0: w×w][th1: w×w]` → **131072 B** | 131072 B |
+| **Medipix3** (dual counter) | **2** bytes / pel — one big-endian 16-bit word | `w×w` packed words → **131072 B** | 131072 B |
 
 **Timepix3:** Accos bad pixels in reference cals use the complete **byte 31** (`0b11111`); see [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md). Operator mask writes now replace the selected byte with **31**, and mask read/count/export recognizes only that exact value. This is aligned with the observed Accos files; vendor confirmation of the byte semantics is still pending.
 
-**Medipix3:** File layout **[th0 slice][th1 slice]** per chip is validated; **which bit(s) or byte value disable counting is TBD** — do not use TPX3 bit-0 rules on MPX3. Low odd bytes (1, 3, 5, 7) in `eq-01.bpc` look like equalization state, not a bad-pixel map.
+**Medipix3:** Each word contains a shared mask bit 0, threshold-0 adjustment bits 1–5, and threshold-1 adjustment bits 6–10. Bits 11–15 and the authoritative write rule remain pending vendor confirmation, so MPX3 operator mask editing stays disabled. Emulator acquisition confirms that setting only bit 0 suppresses the selected pixel in both counters.
 
-**File index for MPX3** (chip `c`, threshold `t`, local pel index `p` within chip, `P = w×w`):
+**File byte offset for MPX3** (chip `c`, local pel index `p` within chip, `P = w×w`):
 
 ```text
-bpc_index = c * (2 * P) + t * P + p
+byte_offset = 2 * (c * P + p)
 ```
 
-**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths are enabled only for **TPX3** (one slice). `refreshPixelConfigFromServal()` translates that logical index to the family-specific chip stride and selected MPX3 threshold slice for read-only comparison. MPX3 mask read/write/export is explicitly blocked until its disable encoding is documented; layout knowledge alone is insufficient for safe editing.
+**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths are enabled only for **TPX3**. For MPX3, `refreshPixelConfigFromServal()` maps each packed BPC word through Serval's per-chip `Layout.Rotated.Chips[]` entry (`Chip`, `X`, `Y`, `Orientation`). MPX3 mask read/write/export remains blocked pending final vendor confirmation of the write rules.
 
-Offline tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **global `(i, j)`** convention as **`bpc2ImgIndex`** for masked-pel listings. Mask editing and **`PixelConfigDiff`** use **`pelIndex(i, j)`** instead.
+Offline TPX3 tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **global `(i, j)`** convention as **`bpc2ImgIndex`** for masked-pel listings. TPX3 mask editing and **`PixelConfigDiff`** use **`pelIndex(i, j)`** instead; MPX3 diff mapping uses Serval layout metadata.
 
 ## Geometry from the IOC
 
@@ -43,7 +43,7 @@ Offline tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **gl
 chip = bpc_index / (w * w)     /* TPX3; use integer division */
 ```
 
-**BPC file layout (Medipix3, dual counter):** chip `c` occupies **`2 * w*w`** bytes: threshold-0 slice then threshold-1 slice. See table above and [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md).
+**BPC file layout (Medipix3, dual counter):** chip `c` occupies **`2 * w*w`** bytes as `w*w` packed big-endian words. See the table above and [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md).
 
 **Intra-chip local coordinates** (masked-pels JSON, streaming):
 
@@ -71,11 +71,12 @@ Phoebus Image widgets can default to a **bottom-left / Y-up** axis labeling that
 
 | Task | Function | Notes |
 |------|----------|-------|
-| Mask write, mask read, **`PixelConfigDiff`** | **`pelIndex(i, j)`** | Image → BPC byte; respects **`TPX3_DET_ORIENTATION`** |
+| TPX3 mask write/read and **`PixelConfigDiff`** | **`pelIndex(i, j)`** | Image → BPC byte; respects **`TPX3_DET_ORIENTATION`** |
+| MPX3 **`PixelConfigDiff`** | Serval per-chip rotated layout | Packed BPC word → assembled-image `(i,j)` from `X`, `Y`, and `Orientation` |
 | Masked-pels JSON **`i`/`j`**, cross-check with **`check_bit.c`** | **`bpc2ImgIndex(k, w)`** | BPC byte → linear image index → `(i,j)` |
 | Which mosaic tile contains image pixel `(i,j)`? | **`findChip(i, j, &xChip, &yChip, &w)`** | `xChip = i / w`, `yChip = j / w` (chip grid only) |
 
-**Important:** `pelIndex` and `bpc2ImgIndex` are **not** guaranteed inverses for every orientation. They match for many layouts (e.g. 1-chip UP, 4-chip UP) but **diverge** for some quad orientations (e.g. **LEFT**). The driver intentionally uses **`pelIndex`** on mask/PixelConfig paths so the mask editor and `.bpc` file stay consistent.
+**Important:** `pelIndex` and `bpc2ImgIndex` are **not** guaranteed inverses for every orientation. They match for many layouts (e.g. 1-chip UP, 4-chip UP) but **diverge** for some quad orientations (e.g. **LEFT**). The driver intentionally uses **`pelIndex`** on TPX3 mask/PixelConfig paths so the mask editor and `.bpc` file stay consistent. MPX3 uses its explicit Serval chip layout instead.
 
 ## Detector orientation (`TPX3_DET_ORIENTATION`)
 
@@ -91,6 +92,63 @@ Phoebus Image widgets can default to a **bottom-left / Y-up** axis labeling that
 | 7 | LEFT_MIRRORED |
 
 Set from Serval `Layout.DetectorOrientation` at connect.
+
+## Family-specific `UP` quad layouts
+
+Chip numbering is not interchangeable between detector families. For a 2×2
+image with global orientation `UP`, the validated tile assignments are:
+
+| Image tile | TPX3 chip | MPX3 chip |
+|------------|-----------|-----------|
+| Top-left | 2 | 1 |
+| Top-right | 1 | 0 |
+| Bottom-left | 3 | 2 |
+| Bottom-right | 0 | 3 |
+
+```text
+TPX3 UP                 MPX3 UP
++---------+---------+  +---------+---------+
+| chip 2  | chip 1  |  | chip 1  | chip 0  |
++---------+---------+  +---------+---------+
+| chip 3  | chip 0  |  | chip 2  | chip 3  |
++---------+---------+  +---------+---------+
+```
+
+Tile assignment alone is insufficient for BPC indexing. Let `(lx,ly)` be the
+local BPC-raster coordinate within a `w×w` chip. The `UP` transforms used by
+the driver are:
+
+| Family | Chips | Serval orientation | Image coordinate within tile |
+|--------|-------|--------------------|------------------------------|
+| TPX3 | 0, 3 | legacy hard-coded quad map | `(lx, w-1-ly)` |
+| TPX3 | 1, 2 | legacy hard-coded quad map | `(w-1-lx, ly)` |
+| MPX3 | 0, 1 | `RtLBtT` | `(lx, ly)` |
+| MPX3 | 2, 3 | `LtRTtB` | `(w-1-lx, w-1-ly)` (180°) |
+
+The TPX3 formulas above are the exact BPC-raster transforms in `pelIndex()` /
+`bpc2ImgIndex()`. They should not be replaced with an informal mechanical
+description such as “chip rotated 180°”: the BPC raster already has its own
+axis convention. MPX3 `PixelConfigDiff` reads the chip number, origin, and
+orientation from Serval's rotated layout instead of assuming the TPX3 map.
+
+### Adding TPX4 or another family
+
+Add the new family here only after recording all of the following from Serval
+and validating them against an acquisition:
+
+1. Mosaic width and height and each chip's explicit `Chip`, `X`, `Y`, and
+   `Orientation` values.
+2. The BPC/PixelConfig element width, byte order, per-chip stride, and local
+   raster order.
+3. At least one asymmetric golden pattern per chip, with expected global image
+   coordinates. A symmetric point or identical single point cannot prove
+   rotation or chip assignment.
+4. Behavior for every supported global `DetectorOrientation`, including
+   whether `Layout.Rotated` changes accordingly.
+
+Until those items exist, TPX4 layout is **not specified**. New family support
+should consume Serval layout metadata where available and fail closed for an
+unknown orientation rather than borrowing TPX3 or MPX3 assumptions.
 
 ## Single-chip (`numChips == 1`)
 
@@ -119,6 +177,8 @@ Chip `c` is derived from `k` as above. Each orientation maps **intra-chip** `(lx
 **UP (0):** chip 0 BPC origin `k=0` maps to image column `i=w`, row `j=2*w-1` (upper-right tile in the 2×2 mosaic for the driver's tile numbering).
 
 **LEFT (3):** chip 0 `k=0` maps to `(i,j) = (2*w-1, 0)` via `bpc2ImgIndex`, but **`pelIndex(2*w-1, 0)` is not 0** — use **`pelIndex`** for mask operations, not `bpc2ImgIndex`, on this path.
+
+These formulas describe the legacy TPX3 mapping. MPX3 `PixelConfigDiff` does not reuse them; see the family-specific table above.
 
 ## Eight-chip mosaic (`numChips == 8`)
 

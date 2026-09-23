@@ -31,7 +31,7 @@
   </widget>
   <widget type="label" version="2.0.0">
     <name>Hint</name>
-    <text>Uses BPCFilePath/BPCFileName. |byte_SERVAL − byte_BPC| heatmap updates after refresh. Refresh also writes *_masked_pels.json (see block below).</text>
+    <text>Uses BPCFilePath/BPCFileName. Packed-pixel |SERVAL − BPC| heatmap updates after refresh. Refresh also writes *_masked_pels.json (see block below).</text>
     <x>5</x>
     <y>28</y>
     <width>650</width>

@@ -13,26 +13,36 @@ They can differ if, for example: the file was edited on disk but not uploaded; *
 
 The driver does **not** guess which side is “correct”; it reports **equality or byte differences**.
 
-## Medipix3 dual-threshold BPC layout (Aug 2026)
+## Medipix3 packed-word BPC layout (September 2026)
 
 On a **4-chip MPX3 quad** with **`BothCounters`**, Serval **`GET /detector/chips/<i>/PixelConfig`** base64-decodes to **131072 bytes** for **each** chip (not 65536). Verified against `vendor/mpx3/eq-01.bpc` (524288 B = **4 × 131072**) and a full Serval root dump (`documentation/medipix3/drafts/serval-mpx3-quad-root-2026-08-14.json`, local/gitignored).
 
 **Per-chip file layout** (chip index `i`, byte offset in `.bpc` = **`i × 131072`**):
 
-| Slice | Byte range within chip block | Role |
-|-------|------------------------------|------|
-| Threshold 0 | `[0 .. 65535]` | Pixel config for counter 0 |
-| Threshold 1 | `[65536 .. 131071]` | Pixel config for counter 1 |
+| Unit | Layout |
+|------|--------|
+| Pixel word | One **big-endian 16-bit word** (`2 bytes`) |
+| Pixel `p` within chip | Bytes `[2p, 2p+1]` |
+| Chip block | `65536 words × 2 bytes = 131072 bytes` |
 
-Each slice is **1 byte per pixel** (256×256). The two slices are **independent** (byte values differ between th0 and th1 on most pixels). Conceptually **two config bytes per image pixel per chip**, stored as **concatenated slices** `[th0 block][th1 block]`, not as interleaved byte pairs.
+The vendor-provided ImageJ decoder defines the packed fields as:
 
-**Byte semantics (important):** On **`vendor/tpx3/2x2/tpx3-demo.bpc`**, Accos bad pixels are **byte value 31** (`0b00011111`), not “any bit-0 set” — see below. On **`vendor/mpx3/eq-01.bpc`**, ~25% of bytes per slice have bit 0 set (values 1, 3, 5, 7) in **clustered** patterns consistent with **equalization/trim encoding**, not ~10 scattered dead pixels per chip. **Do not assume MPX3 bit 0 = disable counting** until ASI documents the bit map. The driver therefore blocks MPX3 mask read/write/export while continuing to allow complete PixelConfig comparison and calibration upload.
+| Bits | Field |
+|------|-------|
+| `0` | Mask shared by threshold/counter 0 and 1 |
+| `1..5` | Threshold-0 adjustment |
+| `6..10` | Threshold-1 adjustment |
+| `11..15` | Meaning pending vendor confirmation; preserve unchanged |
 
-**Mask code:** Timepix3 mask paths in `mask_io.cpp` use one slice and exact byte-31 classification. Medipix3 uses **`DetectorFamily::MPX3`** / `bpcThresholdSlices == 2` (see `detector_family.h`) for safe PixelConfig comparison, but mask operations remain blocked because the disable byte semantics are unknown.
+Interpreting `vendor/mpx3/eq-01.bpc` this way produces coherent 5-bit adjustment distributions, zero set mask bits, and zero values in bits 11–15. The prior byte-slice interpretation produced the misleading appearance that many ordinary calibration values had a mask bit set.
+
+**Emulator validation:** A test copy set only bit 0 in five words per chip (20 pixels total), preserving every other bit. Serval accepted it, returned four matching 131072-byte blocks, and reported exactly five differing byte positions per chip against the original file. Identical acquisitions before and after the load differed at exactly those 20 pixels: every selected pixel changed from nonzero to zero in both threshold images, with no other image differences.
+
+**Mask code:** MPX3 operator mask read/write/export remains blocked while the follow-up vendor confirmation of set/clear and reserved-bit rules is pending. Calibration upload and complete PixelConfig comparison remain supported. Timepix3 behavior is described below.
 
 **Compare rule (correct for MPX3):** decoded Serval bytes vs file bytes at **`offset = i × 131072`**, length **131072** → **0 mismatches** for all four chips against `eq-01.bpc`.
 
-**Driver status:** `refreshPixelConfigFromServal()` uses the detector-family capabilities for the per-chip size and stride. MPX3 compares each full 131072-byte chip block. `PixelConfigDiff` displays the threshold slice selected by `CounterSelectIn` (0 or 1); TPX3 always uses its sole slice.
+**Driver status:** `refreshPixelConfigFromServal()` uses the detector-family capabilities for the per-chip size and stride. MPX3 compares each full 131072-byte chip block and decodes each heatmap sample as one big-endian 16-bit value. `CounterSelectIn` does not select a separate BPC slice because both adjustment fields occupy the same word.
 
 ## Timepix3 Accos bad pixels vs operator mask (Aug 2026)
 
@@ -63,13 +73,15 @@ On **`vendor/tpx3/2x2/tpx3-demo.bpc`** (4-chip quad, 66 bad pixels total):
 ## Waveform indexing: `BPC` vs `MaskBPC` vs `PixelConfigDiff`
 
 - **`BPC` PV** (`TPX3_BPC_PEL`): **Linear file order**—index `k` is byte `k` in the `.bpc` file.
-- **`PixelConfigDiff`**: **Image order** = **`j × cols + i`** (same row-major convention as **`maskCircle`** / mask write), sample **`(i, j)`** = **`abs(SERVAL[k] − BPC[k])`** where **`k = pelIndex(i, j)`**. That is the **same** mapping used when a mask is written into the `.bpc` file (`pelIndex` in `mask_io.cpp`). **`DetOrient` / `TPX3_DET_ORIENTATION`** is included in **`pelIndex`**, so rotated layouts match the mask editor.
-- On dual-threshold MPX3, the logical `pelIndex` is translated into the chip block and the threshold slice selected by **`CounterSelectIn`**. The per-chip match and mismatch count still cover both slices.
-- **`MaskBPC` when read from disk** (“read from bpc” / **`MaskPel`**): fills **`value[j*COLS+i]`** from **`bufBPC[pelIndex(i, j)]`**, same as mask **write** and **`PixelConfigDiff`** (no **`bpc2ImgIndex`** on this path).
+- **`PixelConfigDiff`**: **Image order** = **`j × cols + i`**. TPX3 uses `k = pelIndex(i,j)` and compares one-byte values. MPX3 compares complete big-endian words and places them using Serval's per-chip rotated layout (`Chip`, `X`, `Y`, and `Orientation`) rather than the TPX3 quad map.
+- MPX3 per-chip match and mismatch counts still cover the complete 131072-byte block. `PixelConfigMismatchBytes_RBV` counts differing **bytes**, so changing only word bit 0 produces one byte mismatch per masked pixel.
+- **`MaskBPC` when read from disk** (“read from bpc” / **`MaskPel`**): this TPX3-only path fills **`value[j*COLS+i]`** from **`bufBPC[pelIndex(i, j)]`**, matching TPX3 mask write and diff behavior.
 
 ## `PixelConfigDiff` values
 
-Each element is **`abs(byte_SERVAL − byte_BPC)`** for the same logical pel after mapping. On TPX3, a change from trim code to **31** shows as **31 − old** in that pel.
+Each element is the absolute difference between the packed unsigned pixel values after mapping. The value is 8-bit for TPX3 and big-endian 16-bit for MPX3. An MPX3 bit-0-only mask difference therefore displays as **1**.
+
+For the validated MPX3 `UP` layout, Serval reports chip 1 at top-left and chip 0 at top-right with `RtLBtT`; chip 2 is bottom-left and chip 3 bottom-right with `LtRTtB`. The controlled five-pixel-per-chip BPC therefore appeared at exactly the same 20 coordinates in `PixelConfigDiff` and both saved acquisition arrays.
 
 ## Coordinate map
 

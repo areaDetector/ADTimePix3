@@ -951,20 +951,56 @@ void testPixelConfigResponseValidation()
 
     testOk(ADTimePix3ServalPixelConfig::bytesPerChip(256U * 256U, 1, 1) == 65536U,
            "PixelConfig geometry selects a 64 KiB TPX3 chip block");
-    testOk(ADTimePix3ServalPixelConfig::bytesPerChip(256U * 256U, 1, 2) == 131072U,
-           "PixelConfig geometry selects a 128 KiB MPX3 dual-slice chip block");
+    testOk(ADTimePix3ServalPixelConfig::bytesPerChip(256U * 256U, 2, 1) == 131072U,
+           "PixelConfig geometry selects a 128 KiB MPX3 packed-word chip block");
+    const DetectorCapabilities mpx3Capabilities =
+        capabilitiesForFamily(DetectorFamily::MPX3);
+    testOk(mpx3Capabilities.bpcBytesPerPel == 2 &&
+               mpx3Capabilities.bpcThresholdSlices == 1,
+           "MPX3 capabilities select one packed 16-bit word per pixel");
     testOk(ADTimePix3ServalPixelConfig::bytesPerChip(
                std::numeric_limits<std::size_t>::max(), 2, 2) == 0,
            "PixelConfig geometry rejects size overflow");
 
     std::size_t physicalIndex = 0;
     testOk(ADTimePix3ServalPixelConfig::selectedSliceIndex(
-               65536U + 5U, 65536U, 1, 2, 1, physicalIndex) &&
-               physicalIndex == 196613U,
-           "PixelConfig indexing selects MPX3 threshold 1 within the correct chip block");
+               65536U + 5U, 65536U, 2, 1, 0, physicalIndex) &&
+               physicalIndex == 131082U,
+           "PixelConfig indexing selects an MPX3 word within the correct chip block");
     testOk(!ADTimePix3ServalPixelConfig::selectedSliceIndex(
-               0, 65536U, 1, 2, 2, physicalIndex) && physicalIndex == 0,
-           "PixelConfig indexing rejects an unavailable threshold slice");
+               0, 65536U, 2, 1, 1, physicalIndex) && physicalIndex == 0,
+           "PixelConfig indexing rejects a nonexistent MPX3 threshold slice");
+
+    std::uint32_t packedDifference = 99;
+    const std::vector<std::uint8_t> packedOriginal = {0x04, 0xdc, 0x01, 0x8a};
+    const std::vector<std::uint8_t> packedMasked = {0x04, 0xdd, 0x01, 0x8b};
+    testOk(ADTimePix3ServalPixelConfig::absolutePackedDifference(
+               packedOriginal, packedMasked, 0, 2, packedDifference) &&
+               packedDifference == 1,
+           "PixelConfig diff decodes a big-endian MPX3 mask-bit change");
+    testOk(ADTimePix3ServalPixelConfig::absolutePackedDifference(
+               packedOriginal, packedMasked, 2, 2, packedDifference) &&
+               packedDifference == 1,
+           "PixelConfig diff advances by one complete MPX3 word");
+    testOk(!ADTimePix3ServalPixelConfig::absolutePackedDifference(
+               packedOriginal, packedMasked, 3, 2, packedDifference) &&
+               packedDifference == 0,
+           "PixelConfig diff rejects a truncated packed value");
+
+    int imageX = -1;
+    int imageY = -1;
+    testOk(ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+               32, 32, 256, 256, 0, "RtLBtT", imageX, imageY) &&
+               imageX == 288 && imageY == 32,
+           "MPX3 layout maps a top-row BPC pixel without rotation");
+    testOk(ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+               32, 32, 256, 0, 256, "LtRTtB", imageX, imageY) &&
+               imageX == 223 && imageY == 479,
+           "MPX3 layout maps a bottom-row BPC pixel through a 180-degree rotation");
+    testOk(!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+               32, 32, 256, 0, 0, "unknown", imageX, imageY) &&
+               imageX == 0 && imageY == 0,
+           "MPX3 layout rejects an unknown chip orientation");
 }
 
 void testStreamHeaderValidation()
@@ -1149,7 +1185,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(205);
+    testPlan(212);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

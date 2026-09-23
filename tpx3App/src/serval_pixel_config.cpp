@@ -142,6 +142,58 @@ bool selectedSliceIndex(std::size_t logicalIndex, std::size_t pixelsPerChip,
     return true;
 }
 
+bool absolutePackedDifference(const std::vector<std::uint8_t>& first,
+                              const std::vector<std::uint8_t>& second,
+                              std::size_t byteOffset, int bytesPerPixel,
+                              std::uint32_t& difference)
+{
+    difference = 0;
+    if (bytesPerPixel < 1 || bytesPerPixel > 2) return false;
+    const std::size_t width = static_cast<std::size_t>(bytesPerPixel);
+    if (byteOffset > first.size() || width > first.size() - byteOffset ||
+        byteOffset > second.size() || width > second.size() - byteOffset) {
+        return false;
+    }
+
+    std::uint32_t a = 0;
+    std::uint32_t b = 0;
+    for (std::size_t i = 0; i < width; ++i) {
+        a = (a << 8) | first[byteOffset + i];
+        b = (b << 8) | second[byteOffset + i];
+    }
+    difference = a > b ? a - b : b - a;
+    return true;
+}
+
+bool mpx3LayoutCoordinates(int localX, int localY, int chipWidth,
+                           int originX, int originY,
+                           const std::string& orientation,
+                           int& imageX, int& imageY)
+{
+    imageX = 0;
+    imageY = 0;
+    if (chipWidth <= 0 || localX < 0 || localX >= chipWidth ||
+        localY < 0 || localY >= chipWidth || originX < 0 || originY < 0) {
+        return false;
+    }
+
+    int mappedX = localX;
+    int mappedY = localY;
+    if (orientation == "RtLBtT") {
+        /* MPX3 top-row chips: BPC raster and assembled image coordinates agree. */
+    } else if (orientation == "LtRTtB") {
+        /* MPX3 bottom-row chips are mounted 180 degrees from the BPC raster. */
+        mappedX = chipWidth - 1 - localX;
+        mappedY = chipWidth - 1 - localY;
+    } else {
+        return false;
+    }
+
+    imageX = originX + mappedX;
+    imageY = originY + mappedY;
+    return true;
+}
+
 const char* responseErrorMessage(ResponseError error)
 {
     switch (error) {

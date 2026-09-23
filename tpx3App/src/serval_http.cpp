@@ -1026,8 +1026,8 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     getIntegerParam(ADTimePixNumberOfChips, &nChips);
     if (nChips < 1) nChips = 1;
 
-    /* Image layout must match mask save (pelIndex): bpc2ImgIndex() is not the inverse of pelIndex for all
-     * quad orientations (e.g. LEFT), so PixelConfigDiff is filled by (i,j) -> file k = pelIndex(i,j). */
+    /* TPX3 image layout follows pelIndex(). MPX3 uses Serval's per-chip X/Y and
+     * Orientation because its quad assignment differs from the TPX3 hard-coded map. */
     int rowsLay = 0, colsLay = 0, xChipsLay = 0, yChipsLay = 0, pelWidth = 0;
     rowsCols(&rowsLay, &colsLay, &xChipsLay, &yChipsLay, &pelWidth);
     const size_t pixelsPerChip = pelWidth > 0 ?
@@ -1126,30 +1126,87 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
         }
         epicsMutexLock(pixelConfigDiffMutex_);
         std::fill(pixelConfigDiff_.begin(), pixelConfigDiff_.end(), 0);
-        for (int j = 0; j < rowsLay; ++j) {
-            for (int i = 0; i < colsLay; ++i) {
-                const size_t imgLin = static_cast<size_t>(j) * static_cast<size_t>(colsLay) + static_cast<size_t>(i);
-                if (imgLin >= pixelConfigDiff_.size()) continue;
-                const int k = pelIndex(i, j);
-                size_t physicalIndex = 0;
-                if (k < 0 || !ADTimePix3ServalPixelConfig::selectedSliceIndex(
-                        static_cast<size_t>(k), pixelsPerChip,
-                        detectorCapabilities_.bpcBytesPerPel,
-                        detectorCapabilities_.bpcThresholdSlices,
-                        selectedSlice, physicalIndex) ||
-                    physicalIndex >= bpcData.size() || physicalIndex >= serValLinear.size()) {
-                    pixelConfigDiff_[imgLin] = 0;
-                    continue;
+        const auto storeDifference = [&](size_t imgLin, size_t logicalIndex) {
+            if (imgLin >= pixelConfigDiff_.size()) return;
+            size_t physicalIndex = 0;
+            if (!ADTimePix3ServalPixelConfig::selectedSliceIndex(
+                    logicalIndex, pixelsPerChip,
+                    detectorCapabilities_.bpcBytesPerPel,
+                    detectorCapabilities_.bpcThresholdSlices,
+                    selectedSlice, physicalIndex) ||
+                physicalIndex >= bpcData.size() || physicalIndex >= serValLinear.size()) {
+                return;
+            }
+            const size_t chipOfK = logicalIndex / pixelsPerChip;
+            if (chipOfK >= chipDecoded.size() || !chipDecoded[chipOfK]) return;
+            std::uint32_t difference = 0;
+            if (!ADTimePix3ServalPixelConfig::absolutePackedDifference(
+                    serValLinear, bpcData, physicalIndex,
+                    detectorCapabilities_.bpcBytesPerPel, difference)) {
+                return;
+            }
+            pixelConfigDiff_[imgLin] = static_cast<epicsInt32>(difference);
+        };
+
+        if (detectorFamily_ == DetectorFamily::MPX3) {
+            for (int chip = 0; chip < nChips; ++chip) {
+                std::string layoutText;
+                getStringParam(chip, ADTimePixLayout, layoutText);
+                try {
+                    const json chipLayout = json::parse(layoutText);
+                    if (!chipLayout.is_object() ||
+                        !chipLayout.contains("Chip") || !chipLayout["Chip"].is_number_integer() ||
+                        !chipLayout.contains("X") || !chipLayout["X"].is_number_integer() ||
+                        !chipLayout.contains("Y") || !chipLayout["Y"].is_number_integer() ||
+                        !chipLayout.contains("Orientation") || !chipLayout["Orientation"].is_string() ||
+                        chipLayout["Chip"].get<int>() != chip) {
+                        WARN_ARGS("chip %d MPX3 layout entry is incomplete", chip);
+                        continue;
+                    }
+                    const int originX = chipLayout["X"].get<int>();
+                    const int originY = chipLayout["Y"].get<int>();
+                    const std::string orientation = chipLayout["Orientation"].get<std::string>();
+                    int checkX = 0;
+                    int checkY = 0;
+                    if (!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+                            0, 0, pelWidth, originX, originY,
+                            orientation, checkX, checkY)) {
+                        WARN_ARGS("chip %d MPX3 layout orientation is unsupported: %s",
+                                  chip, orientation.c_str());
+                        continue;
+                    }
+                    for (int localY = 0; localY < pelWidth; ++localY) {
+                        for (int localX = 0; localX < pelWidth; ++localX) {
+                            int imageX = 0;
+                            int imageY = 0;
+                            if (!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+                                    localX, localY, pelWidth, originX, originY,
+                                    orientation, imageX, imageY) ||
+                                imageX < 0 || imageX >= colsLay ||
+                                imageY < 0 || imageY >= rowsLay) {
+                                continue;
+                            }
+                            const size_t local = static_cast<size_t>(localY) *
+                                static_cast<size_t>(pelWidth) + static_cast<size_t>(localX);
+                            const size_t logicalIndex = static_cast<size_t>(chip) * pixelsPerChip + local;
+                            const size_t imgLin = static_cast<size_t>(imageY) *
+                                static_cast<size_t>(colsLay) + static_cast<size_t>(imageX);
+                            storeDifference(imgLin, logicalIndex);
+                        }
+                    }
+                } catch (const json::exception& e) {
+                    WARN_ARGS("chip %d MPX3 layout JSON error: %s", chip, e.what());
                 }
-                const int chipOfK = static_cast<int>(static_cast<size_t>(k) / pixelsPerChip);
-                if (chipOfK < 0 || chipOfK >= nChips ||
-                    static_cast<size_t>(chipOfK) >= chipDecoded.size() || !chipDecoded[static_cast<size_t>(chipOfK)]) {
-                    pixelConfigDiff_[imgLin] = 0;
-                    continue;
+            }
+        } else {
+            for (int j = 0; j < rowsLay; ++j) {
+                for (int i = 0; i < colsLay; ++i) {
+                    const int k = pelIndex(i, j);
+                    if (k < 0) continue;
+                    const size_t imgLin = static_cast<size_t>(j) *
+                        static_cast<size_t>(colsLay) + static_cast<size_t>(i);
+                    storeDifference(imgLin, static_cast<size_t>(k));
                 }
-                const int a = static_cast<int>(serValLinear[physicalIndex]);
-                const int b = static_cast<int>(bpcData[physicalIndex]);
-                pixelConfigDiff_[imgLin] = static_cast<epicsInt32>(a > b ? a - b : b - a);
             }
         }
         epicsMutexUnlock(pixelConfigDiffMutex_);
@@ -1159,7 +1216,8 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
         exportMaskedPelsJsonFromBpcBuffer(
             reinterpret_cast<const char*>(bpcData.data()), static_cast<int>(bpcData.size()));
     }
-    /* Waveform PixelConfigDiff: row-major image (j*cols+i), same convention as maskCircle / mask write; file index via pelIndex. */
+    /* Waveform PixelConfigDiff: row-major image (j*cols+i). TPX3 uses pelIndex;
+     * MPX3 uses Serval's per-chip Layout entries. */
     const size_t ncb = pixelConfigDiff_.size();
     /* asyn waveform interrupt copies data only if auxStatus is asynSuccess (devAsynXXXArray.cpp). */
     setParamStatus(0, ADTimePixPixelConfigDiff, asynSuccess);
@@ -1395,28 +1453,40 @@ asynStatus ADTimePix::getDetector(bool publishHttpStatus){
                 detOrientationIndexFromName(
                     strip_quotes(detector_j["Layout"]["DetectorOrientation"].dump().c_str())));
         }
-        if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
-            detector_j["Layout"].contains("Original") && detector_j["Layout"]["Original"].is_object() &&
-            detector_j["Layout"]["Original"].contains("Chips") &&
-            detector_j["Layout"]["Original"]["Chips"].is_array() &&
-            !detector_j["Layout"]["Original"]["Chips"].empty()) {
-            setStringParam(0, ADTimePixLayout, detector_j["Layout"]["Original"]["Chips"][0].dump().c_str());
+        const json* layoutChips = nullptr;
+        if (detector_j.contains("Layout") && detector_j["Layout"].is_object()) {
+            const json& layout = detector_j["Layout"];
+            /* MPX3 PixelConfigDiff needs the layout used for assembled images.
+             * Preserve the existing Original-layout PV behavior for TPX3. */
+            if (detectorFamily_ == DetectorFamily::MPX3 &&
+                layout.contains("Rotated") && layout["Rotated"].is_object() &&
+                layout["Rotated"].contains("Chips") && layout["Rotated"]["Chips"].is_array()) {
+                layoutChips = &layout["Rotated"]["Chips"];
+            } else if (layout.contains("Original") && layout["Original"].is_object() &&
+                       layout["Original"].contains("Chips") && layout["Original"]["Chips"].is_array()) {
+                layoutChips = &layout["Original"]["Chips"];
+            } else if (layout.contains("Rotated") && layout["Rotated"].is_object() &&
+                       layout["Rotated"].contains("Chips") && layout["Rotated"]["Chips"].is_array()) {
+                layoutChips = &layout["Rotated"]["Chips"];
+            }
         }
+        const auto publishChipLayout = [&](int chip) {
+            if (!layoutChips) return;
+            for (const auto& entry : *layoutChips) {
+                if (entry.is_object() && entry.contains("Chip") &&
+                    entry["Chip"].is_number_integer() &&
+                    entry["Chip"].get<int>() == chip) {
+                    setStringParam(chip, ADTimePixLayout, entry.dump().c_str());
+                    return;
+                }
+            }
+        };
+        publishChipLayout(0);
         callParamCallbacks();
 
         for (int chip = 1; chip < snapshot.numberOfChips; chip++) {
             fetchDacs(detector_j, chip);
-            if (detector_j.contains("Layout") && detector_j["Layout"].is_object() &&
-                detector_j["Layout"].contains("Original") && detector_j["Layout"]["Original"].is_object() &&
-                detector_j["Layout"]["Original"].contains("Chips") &&
-                detector_j["Layout"]["Original"]["Chips"].is_array() &&
-                (size_t)chip < detector_j["Layout"]["Original"]["Chips"].size()) {
-                setStringParam(
-                    chip,
-                    ADTimePixLayout,
-                    detector_j["Layout"]["Original"]["Chips"][chip].dump().c_str()
-                );
-            }
+            publishChipLayout(chip);
             callParamCallbacks(chip);
         }
         setIntegerParam(ADTimePixDetConnected, 1);
