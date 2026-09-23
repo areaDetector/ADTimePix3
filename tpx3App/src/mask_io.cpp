@@ -2,11 +2,11 @@
  * ADTimePix3 - BPC / mask I/O and chip-image coordinate mapping (mask_io)
  *
  * Timepix3: one config byte per chip pixel (65536 B/chip at 256x256).
- * Medipix3 (dual counter): two threshold slices per chip — [th0: 64KiB][th1: 64KiB]
- * (131072 B/chip). MPX3 disable-byte semantics TBD (do not assume TPX3 bit 0).
- * mask_io paths today use pelIndex() as TPX3 (first slice only); MPX3 needs
- * threshold-aware indexing and refreshPixelConfigFromServal() chip stride —
- * see PIXELCONFIG_BPC_DIFF.md. TPX3 Accos bad pixels use byte 31 (0b11111).
+ * Medipix3 (dual counter): one big-endian 16-bit word per pixel (131072 B/chip).
+ * Bit 0 masks both counters; mask editing remains blocked pending confirmation
+ * of the write and reserved-bit rules. MPX3 PixelConfigDiff uses Serval Layout
+ * metadata rather than these TPX3 pelIndex() mappings.
+ * TPX3 Accos bad pixels use byte 31 (0b11111).
  *
  * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
  * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
@@ -136,7 +136,7 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             }
             rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
             if (!bpcData.empty()) {
-                /* Same image <-> file map as mask write / PixelConfigDiff: pelIndex(i,j), not bpc2ImgIndex. */
+                /* TPX3 mask image <-> file map: pelIndex(i,j), not bpc2ImgIndex. */
                 for (size_t v = 0; v < nElements; ++v) {
                     value[v] = 0;
                 }

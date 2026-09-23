@@ -29,17 +29,35 @@ ResponseError parseResponse(long statusCode, const std::string& body,
                             std::size_t expectedBytes,
                             std::vector<std::uint8_t>& decoded);
 
-/** Return the concatenated per-chip byte count, or zero for invalid/overflowing geometry. */
+/** Return the packed per-chip byte count, or zero for invalid/overflowing geometry. */
 std::size_t bytesPerChip(std::size_t pixelsPerChip, int bytesPerPixel,
                          int thresholdSlices);
 
 /**
- * Convert pelIndex()'s one-byte/one-slice logical index to a selected threshold
- * slice in a family-aware BPC/PixelConfig buffer.
+ * Convert pelIndex()'s logical pixel index to the first byte of its packed value
+ * in a selected threshold slice of a family-aware BPC/PixelConfig buffer.
  */
 bool selectedSliceIndex(std::size_t logicalIndex, std::size_t pixelsPerChip,
                         int bytesPerPixel, int thresholdSlices,
                         int selectedSlice, std::size_t& physicalIndex);
+
+/** Compare one 1- or 2-byte unsigned big-endian pixel value at byteOffset. */
+bool absolutePackedDifference(const std::vector<std::uint8_t>& first,
+                              const std::vector<std::uint8_t>& second,
+                              std::size_t byteOffset, int bytesPerPixel,
+                              std::uint32_t& difference);
+
+/**
+ * Map one MPX3 BPC-local pixel through a Serval Layout chip entry.
+ *
+ * The orientation names are the values reported by Serval for the supported
+ * MPX3 quad mountings.  Unknown names fail closed so a diff is not displayed
+ * at a misleading image coordinate.
+ */
+bool mpx3LayoutCoordinates(int localX, int localY, int chipWidth,
+                           int originX, int originY,
+                           const std::string& orientation,
+                           int& imageX, int& imageY);
 
 const char* responseErrorMessage(ResponseError error);
 

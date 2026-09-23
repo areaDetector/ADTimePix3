@@ -50,8 +50,10 @@ DetectorCapabilities capabilitiesForFamily(DetectorFamily family) {
         caps.supportsDualPreview = true;
         caps.supportsImageThresholds = true;
         caps.previewLayerCount = 2;
-        caps.bpcBytesPerPel = 1;
-        caps.bpcThresholdSlices = 2;  /* th0 64KiB || th1 64KiB per chip; see PIXELCONFIG_BPC_DIFF.md */
+        /* One big-endian 16-bit word per pixel: mask bit 0, th0 trim bits 1-5,
+         * th1 trim bits 6-10. See PIXELCONFIG_BPC_DIFF.md. */
+        caps.bpcBytesPerPel = 2;
+        caps.bpcThresholdSlices = 1;
         break;
     case DetectorFamily::TPX3:
         caps.supportsTdc = true;

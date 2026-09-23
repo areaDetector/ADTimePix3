@@ -2,7 +2,7 @@
 
 **ADServal** (unified driver; module **ADTimePix3**) Medipix3 (MPX3) support — merged **R1-7-0**, August 2026. Early planning: [ADMediPix3](https://github.com/kgofron/ADMediPix3). Integration history: [../NAMING.md](../NAMING.md).
 
-Validated on the Medipix3 emulator and in a **first ASI hardware preview** (July 2026, via [ad-timepix3-deploy](https://github.com/kgofron/ad-timepix3-deploy)): real detector connection, dual-threshold previews after lowering chip-0 TH0/TH1 in `.dacs`. The emulator now validates the complete **131072-byte-per-chip** PixelConfig against the dual-threshold BPC with zero mismatches. MPX3 mask read/write/count/export remains intentionally unavailable until ASI documents the per-pixel disable encoding. Physical post-equalization comparison, equalization, and dual-counter IXS band-pass validation are still to follow — see [integration.md](integration.md) § Open work (TODO).
+Validated on the Medipix3 emulator and in a **first ASI hardware preview** (July 2026, via [ad-timepix3-deploy](https://github.com/kgofron/ad-timepix3-deploy)): real detector connection, dual-threshold previews after lowering chip-0 TH0/TH1 in `.dacs`. The emulator validates the complete **131072-byte-per-chip** PixelConfig as big-endian 16-bit pixel words; a controlled bit-0 mask suppressed exactly the selected pixels in both counters. MPX3 mask read/write/count/export remains intentionally unavailable pending final ASI confirmation of write and reserved-bit rules. Physical post-equalization comparison, equalization, and dual-counter IXS band-pass validation are still to follow — see [integration.md](integration.md) § Open work (TODO).
 
 | Document | Description |
 |----------|-------------|

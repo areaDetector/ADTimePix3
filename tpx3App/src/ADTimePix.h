@@ -284,7 +284,7 @@
 #define ADTimePixPixelConfigMatchBPCString       "TPX3_PIXEL_CONFIG_MATCH_BPC"  // (asynInt32,   r)      -1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch
 #define ADTimePixPixelConfigMismatchBytesString  "TPX3_PIXEL_CONFIG_MISMATCH"   // (asynInt64,   r)      Number of differing bytes (if mismatch)
 #define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
-#define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32Array, r)   |SERVAL−BPC| at pelIndex(i,j); row-major j*cols+i (maskCircle convention)
+#define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32Array, r)   packed-value |SERVAL-BPC| in family-specific image layout
 #define ADTimePixMaskedPelsJsonPathString        "TPX3_MASKED_PELS_JSON_RBV"     // (asynOctet,   r)      Full path to last _masked_pels.json (RefreshPixelConfig)
 #define ADTimePixMaskedPelsCountString           "TPX3_MASKED_PELS_COUNT_RBV"   // (asynInt32,   r)      Count of fully disabled TPX3 BPC pels
 #define ADTimePixMaskedPelsExportStatusString   "TPX3_MASKED_PELS_EXPORT_STATUS_RBV" // (asynOctet,   r)  OK / skipped / I/O error message

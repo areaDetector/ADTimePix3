@@ -17,7 +17,7 @@ Merged in **R1-7-0** (August 2026). See **[medipix3/](medipix3/)** and [NAMING.m
 |----------|-------------|
 | [PROCESSED_IMAGE_FILE_SAVING.md](PROCESSED_IMAGE_FILE_SAVING.md) | NDArray addresses, file plugins, WriteProcessedImg/Hst |
 | [TCP_PERFORMANCE_LIMITS.md](TCP_PERFORMANCE_LIMITS.md) | TCP/jsonimage streaming limits |
-| [COORDINATE_MAP.md](COORDINATE_MAP.md) | BPC index ↔ image coordinates |
+| [COORDINATE_MAP.md](COORDINATE_MAP.md) | TPX3/MPX3 chip layouts, BPC index ↔ image coordinates, and requirements for future TPX4 mapping |
 | [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md) | Live PixelConfig vs on-disk BPC |
 | [MASKED_PIXELS_JSON_AND_STREAMING.md](MASKED_PIXELS_JSON_AND_STREAMING.md) | Masked-pels JSON export |
 | [PRVIMG_METADATA_RECOMMENDATIONS.md](PRVIMG_METADATA_RECOMMENDATIONS.md) | PrvImg frame metadata PVs |
