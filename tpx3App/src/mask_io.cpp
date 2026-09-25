@@ -23,6 +23,7 @@
 #include "ADTimePixLog.h"
 #include "bpc_file_io.h"
 #include "bpc_mask_semantics.h"
+#include "mask_geometry.h"
 #include "serval_pixel_config.h"
 
 extern const char* driverName;  // defined in ADTimePix.cpp (same as histogram_io.cpp)
@@ -109,15 +110,33 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
 
         if (maskReset_val == 1) {            
             FLOW_ARGS("MaskBPC: reset (waveform nElements=%zu)", nElements);
-            maskReset(value, maskOnOff_val);              
+            if (maskReset(value, nElements, maskOnOff_val) != asynSuccess) {
+                setParamStatus(0, ADTimePixMaskBPC, asynError);
+                callParamCallbacks();
+                *nIn = 0;
+                return asynError;
+            }
         }
         else if (maskRectangle_val == 1) {
             FLOW_ARGS("MaskBPC: rectangle (waveform nElements=%zu)", nElements);
-            maskRectangle(value, maskRectangle_MinX, maskRectangle_SizeX, maskRectangle_MinY, maskRectangle_SizeY, maskOnOff_val);
+            if (maskRectangle(value, nElements, maskRectangle_MinX, maskRectangle_SizeX,
+                              maskRectangle_MinY, maskRectangle_SizeY,
+                              maskOnOff_val) != asynSuccess) {
+                setParamStatus(0, ADTimePixMaskBPC, asynError);
+                callParamCallbacks();
+                *nIn = 0;
+                return asynError;
+            }
         }
         else if (maskCircle_val == 1) {
             FLOW_ARGS("MaskBPC: circle (waveform nElements=%zu)", nElements);
-            maskCircle(value, maskRectangle_MinX, maskRectangle_MinY, maskCircle_Radius, maskOnOff_val);
+            if (maskCircle(value, nElements, maskRectangle_MinX, maskRectangle_MinY,
+                           maskCircle_Radius, maskOnOff_val) != asynSuccess) {
+                setParamStatus(0, ADTimePixMaskBPC, asynError);
+                callParamCallbacks();
+                *nIn = 0;
+                return asynError;
+            }
         }
         else if (maskBPCfile_val == 1) {
             if (!ADTimePix3BpcMask::operatorMaskSupported(detectorFamily_)) {
@@ -351,59 +370,46 @@ asynStatus ADTimePix::bpcImageByteOffsets(std::vector<std::size_t>& offsets)
     return asynSuccess;
 }
 
-asynStatus ADTimePix::maskReset(epicsInt32 *buf, int OnOff) {
-//    printf("OnOff=%d\n", OnOff);
+asynStatus ADTimePix::maskReset(epicsInt32 *buf, size_t nElements, int OnOff) {
     int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
     rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
 
-//    printf("Reset:rows=%d, cols=%d, xChips=%d, yChips=%d, chipPelWidth=%d\n\n", ROWS, COLS, xCHIPS, yCHIPS, PelWidth);
-    for (int j = 0; j < ROWS; ++j) {
-        for (int i = 0; i < COLS; ++i) {
-            buf[j*ROWS + i] = OnOff;
-        }
+    const auto status = ADTimePix3MaskGeometry::reset(
+        buf, nElements, COLS, ROWS, static_cast<epicsInt32>(OnOff));
+    if (status != ADTimePix3MaskGeometry::Status::Ok) {
+        setStringParam(ADTimePixWriteMsg, ADTimePix3MaskGeometry::statusMessage(status));
+        return asynError;
     }
     return asynSuccess;
 }
 
 // Mask a nXsize x nYsize rectangle, or pint (nXsize=nYsize=1), or line respectivly
-asynStatus ADTimePix::maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff) {
+asynStatus ADTimePix::maskRectangle(epicsInt32 *buf, size_t nElements, int nX,
+                                   int nXsize, int nY, int nYsize, int OnOff) {
     int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
     rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
 
-    for (int j = nY; j < nY+nYsize; ++j) {
-        if ( j < ROWS ) {
-            for (int i = nX; i < nX + nXsize; ++i) {
-                if (i < COLS) {
-                    if (OnOff) {
-                        buf[j*ROWS + i] |= (1 << 0);    // set mask bit to 1
-                    }
-                    else {
-                        buf[j*ROWS + i] &= ~(1 << 0);   // set mask bit 0 0
-                    }
-                }
-            }
-        }
+    const auto status = ADTimePix3MaskGeometry::rectangle(
+        buf, nElements, COLS, ROWS, nX, nXsize, nY, nYsize, OnOff != 0);
+    if (status != ADTimePix3MaskGeometry::Status::Ok) {
+        setStringParam(ADTimePixWriteMsg, ADTimePix3MaskGeometry::statusMessage(status));
+        return asynError;
     }
     return asynSuccess;
 }
 
 // Mask a circle: OnOff=1 set bit to 1; OnOff=0, set bit to 0
 // 0 -> pixel is counting; 1-> pixel is not counting
-asynStatus ADTimePix::maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff) {
+asynStatus ADTimePix::maskCircle(epicsInt32 *buf, size_t nElements, int nX, int nY,
+                                int nRadius, int OnOff) {
     int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
     rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
 
-    for (int j = nY - nRadius; j <= nY+nRadius; ++j) {
-        for (int i = nX - nRadius; i <= nX + nRadius; ++i) {
-            if ((j >= 0) && (j < ROWS) && (i >= 0) && (i < COLS) && (((i - nX)*(i - nX) + (j - nY)*(j - nY)) <= nRadius*nRadius)) {
-                if (OnOff) {
-                    buf[j*ROWS + i] |= (1 << 0);    // set mask bit to 1
-                }
-                else {
-                    buf[j*ROWS + i] &= ~(1 << 0);   // set mask bit 0 0
-                }
-            }
-        }
+    const auto status = ADTimePix3MaskGeometry::circle(
+        buf, nElements, COLS, ROWS, nX, nY, nRadius, OnOff != 0);
+    if (status != ADTimePix3MaskGeometry::Status::Ok) {
+        setStringParam(ADTimePixWriteMsg, ADTimePix3MaskGeometry::statusMessage(status));
+        return asynError;
     }
     return asynSuccess;
 }

@@ -8,6 +8,7 @@
 #include "FakeServalTcpServer.h"
 #include "bpc_file_io.h"
 #include "bpc_mask_semantics.h"
+#include "mask_geometry.h"
 #include "network_client.h"
 #include "one_shot_action.h"
 #include "serval_config.h"
@@ -1207,6 +1208,82 @@ void testBpcMaskSemantics()
            "mask helpers reject truncated words and unsupported detector families");
 }
 
+void testMaskGeometry()
+{
+    using ADTimePix3MaskGeometry::Status;
+
+    std::vector<std::int32_t> resetBuffer(10, 9);
+    const std::vector<std::int32_t> resetExpected{0, 0, 0, 0, 0, 0, 0, 0, 9, 9};
+    testOk(ADTimePix3MaskGeometry::reset(resetBuffer.data(), resetBuffer.size(), 4, 2, 0) ==
+               Status::Ok &&
+               resetBuffer == resetExpected,
+           "rectangular mask reset writes exactly width times height elements and preserves guards");
+
+    std::vector<std::int32_t> rectangleBuffer(8, 0);
+    const std::vector<std::int32_t> rectangleExpected{0, 0, 0, 0, 0, 0, 1, 1};
+    testOk(ADTimePix3MaskGeometry::rectangle(
+               rectangleBuffer.data(), rectangleBuffer.size(), 4, 2,
+               2, 2, 1, 1, true) == Status::Ok &&
+               rectangleBuffer == rectangleExpected,
+           "rectangular mask uses y times width plus x row-major indexing");
+
+    std::fill(rectangleBuffer.begin(), rectangleBuffer.end(), 0);
+    const std::vector<std::int32_t> clippedExpected{1, 1, 0, 0, 0, 0, 0, 0};
+    testOk(ADTimePix3MaskGeometry::rectangle(
+               rectangleBuffer.data(), rectangleBuffer.size(), 4, 2,
+               -1, 3, -1, 2, true) == Status::Ok &&
+               rectangleBuffer == clippedExpected,
+           "rectangular mask clips negative coordinates to the image bounds");
+
+    const std::vector<std::int32_t> beforeEmpty = rectangleBuffer;
+    testOk(ADTimePix3MaskGeometry::rectangle(
+               rectangleBuffer.data(), rectangleBuffer.size(), 4, 2,
+               0, 0, 0, 1, true) == Status::Ok && rectangleBuffer == beforeEmpty,
+           "zero-area rectangular mask is a no-op");
+
+    std::vector<std::int32_t> circleBuffer(15, 0);
+    const std::vector<std::int32_t> circleExpected{
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1,
+        0, 0, 0, 1, 1};
+    testOk(ADTimePix3MaskGeometry::circle(
+               circleBuffer.data(), circleBuffer.size(), 5, 3,
+               4, 2, 1, true) == Status::Ok && circleBuffer == circleExpected,
+           "circular mask clips at rectangular image edges with width-based stride");
+
+    testOk(ADTimePix3MaskGeometry::circle(
+               circleBuffer.data(), circleBuffer.size(), 5, 3,
+               4, 2, 1, false) == Status::Ok &&
+               circleBuffer == std::vector<std::int32_t>(15, 0),
+           "circular unmask clears only bit zero");
+
+    rectangleBuffer.assign(8, 0x2a);
+    testOk(ADTimePix3MaskGeometry::rectangle(
+               rectangleBuffer.data(), rectangleBuffer.size(), 4, 2,
+               1, 1, 1, 1, true) == Status::Ok && rectangleBuffer[5] == 0x2b,
+           "rectangular mask set preserves every non-mask bit");
+    testOk(ADTimePix3MaskGeometry::rectangle(
+               rectangleBuffer.data(), rectangleBuffer.size(), 4, 2,
+               1, 1, 1, 1, false) == Status::Ok && rectangleBuffer[5] == 0x2a,
+           "rectangular mask clear preserves every non-mask bit");
+
+    std::vector<std::int32_t> shortBuffer(7, 3);
+    const std::vector<std::int32_t> shortBefore = shortBuffer;
+    testOk(ADTimePix3MaskGeometry::reset(
+               shortBuffer.data(), shortBuffer.size(), 4, 2, 0) ==
+               Status::BufferTooSmall && shortBuffer == shortBefore,
+           "mask operations reject a waveform smaller than detector geometry");
+
+    testOk(ADTimePix3MaskGeometry::rectangle(
+               rectangleBuffer.data(), rectangleBuffer.size(), 0, 2,
+               0, 1, 0, 1, true) == Status::InvalidArgument,
+           "mask operations reject invalid detector dimensions");
+
+    testOk(ADTimePix3MaskGeometry::circle(
+               nullptr, 8, 4, 2, 0, 0, 1, true) == Status::InvalidArgument,
+           "mask operations reject a null waveform buffer");
+}
+
 void testOneShotActions()
 {
     const ADTimePix3Action::OneShotDecision zero =
@@ -1229,7 +1306,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(221);
+    testPlan(232);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -1246,6 +1323,7 @@ MAIN(servalProtocolFixtureTest)
     testStreamHeaderValidation();
     testBpcFileBounds();
     testBpcMaskSemantics();
+    testMaskGeometry();
     testOneShotActions();
     return testDone();
 }

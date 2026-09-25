@@ -425,9 +425,11 @@ class ADTimePix : public ADDriver{
         virtual asynStatus readInt64Array(asynUser *pasynUser, epicsInt64 *value, size_t nElements, size_t *nIn);
         // Note: readFloat64Array not needed - using doCallbacksFloat64Array() to push data directly (like histogram IOC)
 
-        asynStatus maskReset(epicsInt32 *buf, int OnOff);
-        asynStatus maskRectangle(epicsInt32 *buf, int nX,int nXsize, int nY, int nYsize, int OnOff);
-        asynStatus maskCircle(epicsInt32 *buf, int nX,int nY, int nRadius, int OnOff);
+        asynStatus maskReset(epicsInt32 *buf, size_t nElements, int OnOff);
+        asynStatus maskRectangle(epicsInt32 *buf, size_t nElements, int nX, int nXsize,
+                                 int nY, int nYsize, int OnOff);
+        asynStatus maskCircle(epicsInt32 *buf, size_t nElements, int nX, int nY,
+                              int nRadius, int OnOff);
         asynStatus expectedBPCSize(std::size_t& size);
         asynStatus readBPCfile(std::vector<std::uint8_t>& data);
         asynStatus writeBPCfile(const std::vector<std::uint8_t>& data);
