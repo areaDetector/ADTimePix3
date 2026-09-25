@@ -45,6 +45,11 @@ Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * ASI subsequently confirmed the shared bit-0 set/clear rule, chip-block order **0, 1, 2, 3**, and that the remaining TPX3/MPX3 upper bits are unused. ASI indicated that Serval `PixelConfig` is converted from the BPC rather than read back from detector registers; the comparison is therefore a Serval-stored/configured-value check, not proof of hardware register state.
   * ASI granted redistribution of the supplied `eq-02.bpc` and `detector-chips.json` as example/test configuration. They are included under `test/fixtures/mpx3/eq-02/` with provenance, integrity hashes, and a fixture-specific redistribution notice.
 
+* **Rectangular mask geometry safety**:
+  * `MaskReset`, `MaskRectangle`, and `MaskCircle` now use one checked row-major `y * width + x` implementation for square and rectangular detector images.
+  * Rectangle and circle operations clip at image edges, preserve non-mask bits, and fail instead of writing when the EPICS waveform is smaller than the declared detector geometry.
+  * Hardware-free regression tests cover rectangular stride, clipping, guard elements, bit preservation, and invalid geometry.
+
 
 R1-7-2 (August 24, 2026)
 --------

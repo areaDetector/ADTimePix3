@@ -22,6 +22,10 @@ These fixtures intentionally do not change or correct production protocol
 behavior. Later remediation branches can use them to characterize production
 streaming, timeout, and error-handling paths before making those changes.
 
+The test product also exercises the production rectangular mask-geometry
+helper. It verifies width-based row-major indexing, clipped rectangle/circle
+drawing, non-mask-bit preservation, and rejection of undersized waveforms.
+
 ## Live IOC PixelConfig validation
 
 After configuring Channel Access for the target IOC, validate all detected
