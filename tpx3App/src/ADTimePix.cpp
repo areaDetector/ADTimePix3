@@ -569,6 +569,11 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             setIntegerParam(ADTimePixDetectorOrientation, value);
         }
         status = rotateLayout();
+        if (status == asynSuccess) {
+            /* Rotation changes Layout.Rotated.Chips. Refresh the per-chip
+             * layout strings before mask/diff/export code uses them. */
+            status = getDetector(false);
+        }
     }
 
     else if(function == ADTimePixBiasVolt || function == ADTimePixBiasEnable || function == ADTimePixTriggerIn || function == ADTimePixTriggerOut || function == ADTimePixLogLevel \

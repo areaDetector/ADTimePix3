@@ -134,7 +134,7 @@ Default MPX3 BPC/DACS ship under `vendor/mpx3/` (not `vendor/tpx3/2x2/tpx3-demo.
 
 | File | Role |
 |------|------|
-| `eq-01.bpc` | Pixel config (524288 bytes for 8-chip layout) |
+| `eq-01.bpc` | Pixel config (524288 bytes for a four-chip MPX3 quad) |
 | `eq-01.dacs` | Threshold[0..7] and chip DACs per Medipix3 format |
 
 IOC paths (via `profiles/mpx3/init/paths.cmd`):
@@ -317,7 +317,7 @@ Enum choices come from the driver **`readEnum()`** table (`ADTimePix.cpp` `kDetO
 
 Writing **`DetOrient`** calls **`rotateLayout()`** (`GET /detector/layout/rotate?reset=true` with direction/flip query params). Rotation applies to **preview** and **Image[]** streams on both TPX3 and MPX3. **`DetOrient_RBV`** is refreshed from Serval on connect (`GET /detector`).
 
-**MPX3 caveat:** `RefreshPixelConfig` validates and compares the full 131072-byte block per chip as 65536 big-endian 16-bit pixel words. The driver explicitly blocks MPX3 mask read/write and masked-pels export pending final vendor confirmation of the write and reserved-bit rules. Calibration upload and read-only PixelConfig comparison remain available — see [Open work — Mask / BPC](#mask--bpc--mpx3-packed-word-layout-identified-write-semantics-confirmation-pending).
+**MPX3 BPC:** `RefreshPixelConfig` validates and compares the full 131072-byte block per chip as 65536 big-endian 16-bit pixel words. Mask read/write/count/export uses the ASI-confirmed shared bit-0 rule and preserves every other bit. Image placement uses Serval's explicit per-chip layout and fails closed if that metadata is incomplete — see [Mask / BPC](#mask--bpc--mpx3-packed-word-layout-and-mask-semantics-confirmed).
 
 ### Measurement pipeline state
 
@@ -489,13 +489,13 @@ After equalization, restore the dual-counter profile:
 | **`BothCounters`** | **Not recommended by default.** If used: set to 1 with **th1 high (~250)**. | **`profiles/mpx3/init/hw.cmd`** (Accos / IXS dual-threshold) is a **separate opt-in profile**, not Erik’s default. |
 | **`IDelayConfig`** | Standard values; manual per-system tuning **no longer required**. | `[15,15,15,10]` in IOC defaults remains fine. |
 
-Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). The packed-word BPC layout and emulator behavior are resolved; final mask-write and reserved-bit confirmation and destination reference documentation remain open. A focused confirmation request has been sent to ASI and the response is pending.
+Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). The packed-word BPC layout, shared mask-bit behavior, and emulator behavior are resolved. ASI confirmed that bit 0 masks both counters, clearing it restores normal operation, and mask changes must preserve other fields. The September 25 follow-up below resolves chip order, unused upper bits, `PixelConfig` interpretation, and fixture redistribution. Public manual storage/citation permission remains pending.
 
 ## Open work (TODO)
 
-### Mask / BPC — MPX3 packed-word layout identified; write semantics confirmation pending
+### Mask / BPC — MPX3 packed-word layout and mask semantics confirmed
 
-Preview and dual-threshold paths are validated. PixelConfig comparison uses the **131072-byte-per-chip** path. MPX3 mask editing, mask-image reads, masked counts, and masked-pels JSON export remain explicitly unavailable pending final vendor confirmation.
+Preview and dual-threshold paths are validated. PixelConfig comparison uses the **131072-byte-per-chip** path. MPX3 mask editing, mask-image reads, masked counts, and masked-pels JSON export use the same big-endian packed words and Serval chip layout.
 
 **Resolved (September 2026)** — vendor decoder guidance, `vendor/mpx3/eq-01.bpc`, and Serval emulator validation:
 
@@ -511,22 +511,42 @@ Preview and dual-threshold paths are validated. PixelConfig comparison uses the 
 - All four chips returned **131072 decoded bytes** and matched `eq-01.bpc` with zero mismatches.
 - A test BPC set only word bit 0 in five pixels per chip while preserving every other bit. Serval returned the exact modified blocks; comparison against the original reported **five byte mismatches per chip**.
 - Saved threshold-0 and threshold-1 acquisitions each differed from their original-calibration image at exactly the same **20 selected pixels**. Every selected value changed from nonzero to zero and no other image value changed.
-- `PixelConfigDiff` uses Serval's rotated chip layout. For the validated `UP` quad, chips 1/0 occupy the top row with `RtLBtT`; chips 2/3 occupy the bottom row with `LtRTtB`, matching the saved acquisition coordinates.
+- The controlled 20-pixel file-backed test validated packed words and chip assignment, but its pattern was not sufficient to prove every within-chip axis direction.
+- A later asymmetric L-shaped operator test exposed an `UP` mismatch. First, the implementation had interpreted `RtLBtT` and `LtRTtB` inversely: the direction tokens are literal, so `RtLBtT` reverses both image-local axes and `LtRTtB` is identity. The same correction swaps the mirror axes previously assigned to `LtRBtT` and `RtLTtB`.
+- A second `UP` acquisition localized the remaining error to the tile origin. Serval layout `Y` is bottom-based, while the mask/NDArray coordinate is top-based. The mapping therefore converts `image_tile_y = image_height - chip_width - serval_y` before applying the within-tile orientation. The emitted `mask.bpc` and acquisition geometry predicted this row swap exactly.
+- After rebuilding, the same asymmetric L shape aligned in both threshold-counter acquisitions in all eight global detector orientations. The mirrored cases validate `LtRBtT`, `RtLTtB`, `TtBLtR`, and `BtTRtL`; `RIGHT` and `LEFT` validate the complementary axis-swapped placements of `BtTLtR` and `TtBRtL`. Together with the ordinary transforms used by `UP` and `DOWN`, these cases exercise all eight Serval chip-orientation strings and the tile-origin conversion.
+- During transient operator-mask tests, `MaskedPelsCount_RBV` can remain zero and all four `PixelConfig` blocks can continue to match the unmodified `eq-01.bpc`. This is expected: masked-pels export describes the selected on-disk BPC, while ASI identifies Serval `PixelConfig` as BPC-derived configuration rather than independent active-register readback. Acquisition images are the evidence for the transient mask.
+
+**Pre-confirmation fail-closed baseline:**
+
 - Mask-image read and mask-write attempts were rejected with explicit operator-facing errors.
 - **`BPC_N_RBV`** and **`MaskedPelsCount_RBV`** reported **-1**; masked-pels export reported unavailable.
 - The rejected waveform operation propagated **READ/INVALID** without changing PixelConfig.
 - Acquisition completed with zero reported dropped frames.
 
+**ASI confirmation received September 24, 2026:**
+
+- Set bit 0 to mask a pixel digitally; clear bit 0 for normal operation. The mask is shared by both counters.
+- Bits 1–5 are threshold-0 adjustment, bits 6–10 are threshold-1 adjustment, and bit 11 enables test-pulse injection. Software preserves all non-mask bits.
+- TPX3 likewise uses bit 0 as mask, bits 1–4 as adjustment, and bit 5 as test pulse. Observed value 31 combines a set mask bit with adjustment bits; it is not a required complete-byte replacement.
+- BPC chip blocks are ordered from chip 0 through the last chip.
+
+**ASI follow-up received September 25, 2026:**
+
+- The supplied `detector-chips.json` array and BPC blocks use chip order **0, 1, 2, 3**.
+- Serval `PixelConfig` values are believed to be converted from the BPC rather than read directly from chip registers. Accordingly, the IOC comparison validates the value held/returned by Serval against the selected file; it is not independent hardware-register readback.
+- TPX3 bits 6–7 and MPX3 bits 12–15 are unused and normally kept at zero. The driver still preserves them during mask changes so it never normalizes or destroys an unexpected value.
+- ASI permits redistribution of `eq-02.bpc` and `detector-chips.json` as example/test configuration. They are stored under `test/fixtures/mpx3/eq-02/`, are not default operational calibration, and carry a fixture-specific redistribution notice.
+- Accos startup, Serval API, and detector-operation manuals are available to end users and developers on request. ASI is still considering which manuals, if any, may be stored with the public EPICS interface project. Do not redistribute or publicly cite an unpublished manual until that is confirmed.
+
 **Still open:**
 
-- **Vendor confirmation:** confirm that masking/unmasking sets/clears only bit 0 while preserving every other MPX3 word bit; document bits 11–15 and Serval word/pixel ordering.
-- **After confirmation:** implement shared-bit MPX3 mask edit/read/export using the packed-word helpers. `RefreshPixelConfig` already uses the 131072-byte stride and complete-word diff.
-- **Vendor request sent:** response pending for the MPX3 write/reserved-bit rules, complete TPX3 byte map and `0x1f` semantics, and a public reference specification.
+- Confirm whether ASI documents a guaranteed public interface contract for how Serval derives/caches `PixelConfig`; until then, describe it as Serval-held configuration, not detector-register readback.
+- Obtain titles/revisions and explicit storage or public-citation permission for any ASI manuals to be referenced by the repository.
 
 **Next steps:**
 
-- Await ASI confirmation of the write and reserved-bit behavior.
-- After confirmation, enable the shared-bit MPX3 mask workflow and repeat the existing deterministic emulator test through the operator controls.
+- Repeat the deterministic file-backed MPX3 mask test when specifically validating masked-pixel counts, JSON export, and `PixelConfigDiff`; transient operator masks are instead verified from acquisitions.
 - Re-run **`RefreshPixelConfig`** on MPX3 hardware against the Accos post-equalization BPC data.
 
 **Code / docs:** `tpx3App/src/serval_http.cpp`, `tpx3App/src/mask_io.cpp`, [PIXELCONFIG_BPC_DIFF.md](../PIXELCONFIG_BPC_DIFF.md).

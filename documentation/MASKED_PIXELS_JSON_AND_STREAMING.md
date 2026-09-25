@@ -1,12 +1,12 @@
 # Masked pixels: export format, `NDPluginBadPixel`, and streaming
 
-This document describes how to **publish** calibration-derived **Timepix3** masked pels (the complete `.bpc` byte is **31 / `0x1f`**) for three audiences:
+This document describes how to **publish** calibration-derived TPX3 and MPX3 masked pixels. For both families, **bit 0** of the packed pixel value is the mask; all other bits are calibration or control fields and are preserved.
 
 1. **ADCore** image correction -- `NDPluginBadPixel` and its expected JSON.
 2. **Downstream analysis** -- dense image coordinates and stable cross-refs.
 3. **Event / TCP streaming (future)** -- chip id and local tile coordinates `(lx, ly)` and file position for serialization and debugging.
 
-It builds on the offline tool chain under `maskTpx3/xyChip` -- especially **`check_bit.c`** and **`xyChip.sh`**, which list masked bytes with the same **global image** `(i, j)` convention as `ADTimePix::bpc2ImgIndex` in `mask_io.cpp` (see comments in `check_bit.c`).
+The TPX3-only offline tools under `maskTpx3/xyChip`—especially **`check_bit.c`** and **`xyChip.sh`**—remain useful legacy cross-checks based on `ADTimePix::bpc2ImgIndex`. Driver-generated JSON uses the same family-specific mapping as the mask and diff images: `pelIndex` for TPX3 and Serval layout metadata for MPX3. See [COORDINATE_MAP.md](COORDINATE_MAP.md) for orientations where the legacy TPX3 mappings differ.
 
 ## Why not only the `NDPluginBadPixel` JSON?
 
@@ -27,10 +27,11 @@ Alternatively, maintain **two** files (e.g. `tpx3_mask_full.json` + `bad_pixel_p
 
 | Field | Meaning |
 |-------|--------|
-| **BPC / `Position`** | Linear byte index in the `.bpc` file, chip0 block then chip1, ...; within a chip, row-major with **x (column within tile) fast**, **y (row within tile) slow** -- as in `bpc_position_to_chip_local` in `check_bit.c`. |
+| **`bpc_index`** | Byte offset of the packed pixel in the `.bpc` file. It advances by 1 for TPX3 and 2 for MPX3. Chip blocks are consecutive in chip-number order. |
+| **`bpc_pixel_index`** | Logical packed-pixel index across all chip blocks. Within a chip, **x (column within tile) is fast** and **y (row within tile) is slow**. |
 | **`chip`, `lx`, `ly`** | Chip id in file order; local pixel inside the `chip_pel_width x chip_pel_width` tile. |
-| **`i`, `j` (image)** | **Column, row** in the **global** assembled image, **top-left origin** -- same as printed by `check_bit` and documented as matching **`bpc2ImgIndex`** in `mask_io.cpp`. |
-| **Mask / PixelConfigDiff image PVs** | Row-major `j * cols + i`. TPX3 mask editing/diff maps through **`pelIndex(i, j)`**, which is not always the inverse of `bpc2ImgIndex`; MPX3 diff uses Serval's per-chip rotated layout. See **[COORDINATE_MAP.md](COORDINATE_MAP.md)**, `documentation/PIXELCONFIG_BPC_DIFF.md`, and `mask_io.cpp` comments. |
+| **`i`, `j` (image)** | **Column, row** in the **global** assembled image, **top-left origin**. |
+| **Mask / export / PixelConfigDiff image PVs** | Row-major `j * cols + i`. TPX3 maps through **`pelIndex(i, j)`**; MPX3 uses Serval's per-chip rotated layout. See **[COORDINATE_MAP.md](COORDINATE_MAP.md)**, `documentation/PIXELCONFIG_BPC_DIFF.md`, and `mask_io.cpp` comments. |
 
 When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** with the **same** `(i, j)` as the dense image and `NDArray` dimensions (column `i`, row `j`).
 
@@ -44,6 +45,7 @@ When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** wit
     "num_chips": 4,
     "detector_orientation": 3,
     "chip_pel_width": 256,
+    "bpc_bytes_per_pixel": 1,
     "tool": "ADTimePix RefreshPixelConfig mask export",
     "exported_at_utc": "2026-04-24T12:00:00Z"
   },
@@ -54,6 +56,7 @@ When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** wit
     {
       "index": 1,
       "bpc_index": 18291,
+      "bpc_pixel_index": 18291,
       "value": 31,
       "chip": 0,
       "lx": 115,
@@ -70,6 +73,7 @@ When generating **`"Bad pixels"`** for the plugin, use **`"Pixel": [i, j]`** wit
 ```
 
 - **`index`**: 1-based serial, matching a human `check_bit` run (optional; can also be 0-based if documented).
+- **`bpc_index`** is a byte offset; **`bpc_pixel_index`** is the logical pixel index. They are equal for TPX3, while MPX3 byte offsets are twice the logical index.
 - **`Bad pixels`**: generated from the same rows; correction mode is a **policy** choice (median vs replace) -- not implied by the BPC alone.
 - Optional top-level objects **`detector`** and **`acquisition`** (or a single **`epics_snapshot`**) can follow the **Optional metadata** section below.
 
@@ -94,7 +98,7 @@ Rationale: **Data acquisition** pipelines often need "what detector + what calib
 - **Filename:** derive from **`BPCFileName`**: replace a trailing **`*.bpc`** (case-insensitive) with **`_masked_pels.json`** (e.g. `Eq_neg_cfg1.bpc` -> `Eq_neg_cfg1_masked_pels.json`). If the name has no **`.bpc`** suffix, **`_masked_pels.json`** is appended to the full basename.
 - **Readback PVs (asyn -> EPICS in `tpx3App/Db/File.template`):**
   - **`TPX3_MASKED_PELS_JSON_RBV`:** full path to the file last written (record `MaskedPelsJson_RBV`).
-  - **`TPX3_MASKED_PELS_COUNT_RBV`:** number of TPX3 pels whose complete byte equals **31 / `0x1f`** (record `MaskedPelsCount_RBV`); **-1** means unavailable for the detected family.
+  - **`TPX3_MASKED_PELS_COUNT_RBV`:** number of packed pixels whose mask bit 0 is set (record `MaskedPelsCount_RBV`); **-1** means unavailable because the family or required layout is unsupported.
   - **`TPX3_MASKED_PELS_EXPORT_STATUS_RBV`:** short status (record `MaskedPelsExportStatus_RBV`), e.g. `OK: wrote N...`, `Skipped:...`, or `Write failed:...`.
 - Use **`MaskedPelsJson_RBV`** for **`NDPluginBadPixel`** `BAD_PIXEL_FILE_NAME` (or a symlink) when you want the plugin to load the same file.
 - **Phoebus:** **`tpx3App/op/bob/Mask/PixelConfigMaskPanel.bob`** (embedded from **`Mask.bob`**) shows **Count**, **Status**, and **Path** after a refresh. **`Mask.bob`** does not list them again (same embedded panel). No change required to **`MaskStatus.bob`** for this feature.
@@ -115,8 +119,8 @@ The driver action **`TPX3_REFRESH_PIXEL_CONFIG`** (record **`RefreshPixelConfig`
 
 **Caveats (document for operators):**
 
-1. The exported mask is **from the on-disk TPX3 .bpc** (bytes exactly equal to **31 / `0x1f`**), not from the decoded **SERVAL** PixelConfig alone. If SERVAL and file **diverge**, the JSON still describes the **file**; mismatch is visible via existing **`PixelConfigMatchBPC_***` PVs. This matches **`NDPluginBadPixel`** and file-based analysis, but should be explicit in the docstring/release notes.
-2. **MPX3 is intentionally unavailable:** its two-slice layout is validated, but its per-pixel disable encoding is not documented. The driver leaves the JSON path empty, reports count **-1**, and publishes an unavailable status instead of interpreting equalization bits as bad pixels. The related `BPC_N_RBV` is also **-1**.
+1. The exported mask is **from the on-disk `.bpc`**, not from decoded **SERVAL** PixelConfig alone. If SERVAL and file **diverge**, the JSON still describes the **file**; mismatch is visible via existing **`PixelConfigMatchBPC_***` PVs.
+2. MPX3 export requires complete supported Serval chip-layout entries so its packed words can be placed at assembled-image coordinates. The export fails closed and reports count **-1** if the layout is incomplete or unsupported.
 3. **Side effects:** Refresh may already trigger network traffic to each chip. Adding a local JSON write is cheap; if a site needs **re-export without SERVAL round-trips**, a **separate** "export mask JSON only" action (or PROC) can be added later.
 4. If **`BPCFilePath`/`BPCFileName`** are empty or the file is missing, the driver should **skip** or **error** the export and set status PVs clearly (same as no-BPC for PixelConfig compare).
 

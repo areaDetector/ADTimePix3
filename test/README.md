@@ -39,3 +39,25 @@ status for every chip. TPX3 expects 65536 bytes per chip; dual-threshold MPX3
 expects 131072. It exits nonzero if Channel Access fails or any chip does not
 match the selected BPC file. Network-specific `EPICS_CA_*` values are
 intentionally left to the caller's environment.
+
+## Live Serval layout capture
+
+Capture the complete `Layout` object for all eight detector orientations with:
+
+```sh
+test/capture_mpx3_layouts.sh
+test/capture_tpx3_layouts.sh
+```
+
+The scripts validate detector family and returned JSON, atomically write one
+file per orientation under `.codex/layout-captures/`, and restore the original
+orientation on exit. Optional positional arguments select the PV prefix,
+Serval URL, and output directory. The captures are local evidence and are not
+part of the normal test fixtures.
+
+## ASI MPX3 reference fixture
+
+`fixtures/mpx3/eq-02/` contains corresponding ASI-provided BPC and Serval chip
+configuration examples. ASI permits their redistribution as example/test
+configuration. They are detector-specific reference data, not a default
+calibration; see the fixture README and license metadata.

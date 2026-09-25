@@ -3,10 +3,9 @@
  *
  * Timepix3: one config byte per chip pixel (65536 B/chip at 256x256).
  * Medipix3 (dual counter): one big-endian 16-bit word per pixel (131072 B/chip).
- * Bit 0 masks both counters; mask editing remains blocked pending confirmation
- * of the write and reserved-bit rules. MPX3 PixelConfigDiff uses Serval Layout
- * metadata rather than these TPX3 pelIndex() mappings.
- * TPX3 Accos bad pixels use byte 31 (0b11111).
+ * Bit 0 is the per-pixel mask for both families and is updated without changing
+ * adjustment, test-pulse, or unknown bits. MPX3 image mapping uses Serval Layout
+ * metadata rather than the TPX3 pelIndex() mappings.
  *
  * Copyright (c) 2022 Brookhaven Science Associates, Brookhaven National Laboratory
  * Copyright (c) 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
@@ -17,11 +16,14 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <climits>
+#include <limits>
+#include <stdexcept>
 // Area Detector include
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
 #include "bpc_file_io.h"
 #include "bpc_mask_semantics.h"
+#include "serval_pixel_config.h"
 
 extern const char* driverName;  // defined in ADTimePix.cpp (same as histogram_io.cpp)
 
@@ -91,8 +93,6 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
     std::vector<std::uint8_t> bpcData;
 
     // write new mask
-    int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
- 
 	if(reason == ADTimePixMaskBPC){
         getIntegerParam(ADTimePixMaskReset,&maskReset_val);
         getIntegerParam(ADTimePixMaskOnOffPel,&maskOnOff_val);
@@ -134,23 +134,22 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                 *nIn = 0;
                 return asynError;
             }
-            rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
+            std::vector<std::size_t> imageToBpc;
+            if (bpcImageByteOffsets(imageToBpc) != asynSuccess) {
+                *nIn = 0;
+                return asynError;
+            }
             if (!bpcData.empty()) {
-                /* TPX3 mask image <-> file map: pelIndex(i,j), not bpc2ImgIndex. */
                 for (size_t v = 0; v < nElements; ++v) {
                     value[v] = 0;
                 }
-                for (int j = 0; j < COLS; ++j) {
-                    for (int i = 0; i < ROWS; ++i) {
-                        const size_t idx = static_cast<size_t>(j) * static_cast<size_t>(COLS) +
-                                           static_cast<size_t>(i);
-                        if (idx >= nElements) continue;
-                        const int k = pelIndex(i, j);
-                        if (k >= 0 && static_cast<size_t>(k) < bpcData.size() &&
-                            ADTimePix3BpcMask::isMasked(
-                                detectorFamily_, bpcData[static_cast<size_t>(k)])) {
-                            value[idx] |= 1 << 1;
-                        }
+                const std::size_t mapped = std::min(nElements, imageToBpc.size());
+                for (std::size_t imageIndex = 0; imageIndex < mapped; ++imageIndex) {
+                    const std::size_t byteOffset = imageToBpc[imageIndex];
+                    if (byteOffset != std::numeric_limits<std::size_t>::max() &&
+                        ADTimePix3BpcMask::isMasked(
+                            detectorFamily_, bpcData, byteOffset)) {
+                        value[imageIndex] |= 1 << 1;
                     }
                 }
             }
@@ -170,19 +169,18 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                 *nIn = 0;
                 return asynError;
             }
-            rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
-            for (int j = 0; j < COLS; ++j) {
-                for (int i = 0; i < ROWS; ++i) {
-                    const size_t imageIndex = static_cast<size_t>(j) *
-                                              static_cast<size_t>(COLS) +
-                                              static_cast<size_t>(i);
-                    const int bpcIndex = pelIndex(i, j);
-                    if (imageIndex < nElements && bpcIndex >= 0 &&
-                        static_cast<size_t>(bpcIndex) < bpcData.size() &&
-                        (value[imageIndex] & (1 << 0))) {
-                        ADTimePix3BpcMask::applyOperatorMask(
-                            detectorFamily_, bpcData[static_cast<size_t>(bpcIndex)]);
-                    }
+            std::vector<std::size_t> imageToBpc;
+            if (bpcImageByteOffsets(imageToBpc) != asynSuccess) {
+                *nIn = 0;
+                return asynError;
+            }
+            const std::size_t mapped = std::min(nElements, imageToBpc.size());
+            for (std::size_t imageIndex = 0; imageIndex < mapped; ++imageIndex) {
+                const std::size_t byteOffset = imageToBpc[imageIndex];
+                if (byteOffset != std::numeric_limits<std::size_t>::max() &&
+                    (value[imageIndex] & (1 << 0))) {
+                    ADTimePix3BpcMask::setMasked(
+                        detectorFamily_, bpcData, byteOffset, true);
                 }
             }
             if (writeBPCfile(bpcData) != asynSuccess) {
@@ -200,11 +198,18 @@ asynStatus ADTimePix::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
             return asynError;
         }
         if (!bpcData.empty()) {
-            const size_t copied = std::min(nElements, bpcData.size());
-            for (size_t i = 0; i < copied; i++) {
-                value[i] = bpcData[i];
-                if (ADTimePix3BpcMask::isMasked(detectorFamily_, bpcData[i])) {
-                    value[i] |= 1 << 8;     // masked pel, 31-> 287
+            const std::size_t width = ADTimePix3BpcMask::bytesPerPixel(detectorFamily_);
+            const std::size_t pixels = width == 0 ? 0 : bpcData.size() / width;
+            const std::size_t copied = std::min(nElements, pixels);
+            for (std::size_t pixel = 0; pixel < copied; ++pixel) {
+                const std::size_t byteOffset = pixel * width;
+                std::uint16_t packed = 0;
+                ADTimePix3BpcMask::pixelValue(
+                    detectorFamily_, bpcData, byteOffset, packed);
+                value[pixel] = static_cast<epicsInt32>(packed);
+                if (ADTimePix3BpcMask::isMasked(
+                        detectorFamily_, bpcData, byteOffset)) {
+                    value[pixel] |= width == 1 ? (1 << 8) : (1 << 16);
                 }
             }
             for (size_t i = copied; i < nElements; ++i) value[i] = 0;
@@ -238,6 +243,111 @@ asynStatus ADTimePix::rowsCols(int *rows, int *cols, int *xChips, int *yChips, i
 
 //    printf("rows=%d, cols=%d, xChips=%d, yChips=%d, chipPelWidth=%d\n\n", *rows, *cols, *xChips, *yChips, *chipPelWidth);
 
+    return asynSuccess;
+}
+
+asynStatus ADTimePix::bpcImageByteOffsets(std::vector<std::size_t>& offsets)
+{
+    int rows = 0, cols = 0, xChips = 0, yChips = 0, pelWidth = 0;
+    rowsCols(&rows, &cols, &xChips, &yChips, &pelWidth);
+    (void)xChips;
+    (void)yChips;
+    const std::size_t invalid = std::numeric_limits<std::size_t>::max();
+    if (rows <= 0 || cols <= 0 || pelWidth <= 0 ||
+        static_cast<std::size_t>(rows) >
+            std::numeric_limits<std::size_t>::max() / static_cast<std::size_t>(cols)) {
+        setStringParam(ADTimePixWriteMsg, "Invalid BPC image geometry");
+        callParamCallbacks();
+        return asynError;
+    }
+    offsets.assign(static_cast<std::size_t>(rows) * static_cast<std::size_t>(cols), invalid);
+
+    const std::size_t pixelsPerChip = static_cast<std::size_t>(pelWidth) *
+                                      static_cast<std::size_t>(pelWidth);
+    const auto store = [&](std::size_t imageIndex, std::size_t logicalIndex) -> bool {
+        std::size_t byteOffset = 0;
+        if (imageIndex >= offsets.size() ||
+            !ADTimePix3ServalPixelConfig::selectedSliceIndex(
+                logicalIndex, pixelsPerChip,
+                detectorCapabilities_.bpcBytesPerPel,
+                detectorCapabilities_.bpcThresholdSlices,
+                0, byteOffset) || offsets[imageIndex] != invalid) {
+            return false;
+        }
+        offsets[imageIndex] = byteOffset;
+        return true;
+    };
+
+    if (detectorFamily_ != DetectorFamily::MPX3) {
+        for (int imageY = 0; imageY < rows; ++imageY) {
+            for (int imageX = 0; imageX < cols; ++imageX) {
+                const int logical = pelIndex(imageX, imageY);
+                const std::size_t image = static_cast<std::size_t>(imageY) *
+                    static_cast<std::size_t>(cols) + static_cast<std::size_t>(imageX);
+                if (logical < 0 || !store(image, static_cast<std::size_t>(logical))) {
+                    setStringParam(ADTimePixWriteMsg, "BPC image mapping is incomplete");
+                    callParamCallbacks();
+                    return asynError;
+                }
+            }
+        }
+        return asynSuccess;
+    }
+
+    int nChips = 0;
+    getIntegerParam(ADTimePixNumberOfChips, &nChips);
+    for (int chip = 0; chip < nChips; ++chip) {
+        std::string layoutText;
+        getStringParam(chip, ADTimePixLayout, layoutText);
+        try {
+            const json chipLayout = json::parse(layoutText);
+            if (!chipLayout.is_object() ||
+                !chipLayout.contains("Chip") || !chipLayout["Chip"].is_number_integer() ||
+                !chipLayout.contains("X") || !chipLayout["X"].is_number_integer() ||
+                !chipLayout.contains("Y") || !chipLayout["Y"].is_number_integer() ||
+                !chipLayout.contains("Orientation") || !chipLayout["Orientation"].is_string() ||
+                chipLayout["Chip"].get<int>() != chip) {
+                throw std::runtime_error("incomplete chip layout");
+            }
+            const int originX = chipLayout["X"].get<int>();
+            const int originY = chipLayout["Y"].get<int>();
+            const std::string orientation = chipLayout["Orientation"].get<std::string>();
+            for (int localY = 0; localY < pelWidth; ++localY) {
+                for (int localX = 0; localX < pelWidth; ++localX) {
+                    int imageX = 0;
+                    int imageY = 0;
+                    if (!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+                            localX, localY, pelWidth, originX, originY, rows,
+                            orientation, imageX, imageY) ||
+                        imageX < 0 || imageX >= cols || imageY < 0 || imageY >= rows) {
+                        throw std::runtime_error("unsupported or out-of-range chip layout");
+                    }
+                    const std::size_t local = static_cast<std::size_t>(localY) *
+                        static_cast<std::size_t>(pelWidth) + static_cast<std::size_t>(localX);
+                    const std::size_t logical = static_cast<std::size_t>(chip) *
+                        pixelsPerChip + local;
+                    const std::size_t image = static_cast<std::size_t>(imageY) *
+                        static_cast<std::size_t>(cols) + static_cast<std::size_t>(imageX);
+                    if (!store(image, logical)) {
+                        throw std::runtime_error("duplicate chip layout coordinate");
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            char message[256];
+            epicsSnprintf(message, sizeof(message),
+                          "MPX3 chip %d layout unavailable: %s", chip, e.what());
+            setStringParam(ADTimePixWriteMsg, message);
+            ERR_ARGS("%s", message);
+            callParamCallbacks();
+            return asynError;
+        }
+    }
+    if (std::find(offsets.begin(), offsets.end(), invalid) != offsets.end()) {
+        setStringParam(ADTimePixWriteMsg, "MPX3 chip layout does not cover the full image");
+        callParamCallbacks();
+        return asynError;
+    }
     return asynSuccess;
 }
 
@@ -432,8 +542,9 @@ asynStatus ADTimePix::readBPCfile(std::vector<std::uint8_t>& data) {
          INT_MAX : static_cast<int>(maskedCount));
     setIntegerParam(ADTimePixBPCn, nMaskedPel);
     if (maskSupported) {
-        LOG_ARGS("ReadBPC: file=\"%s\" bytes=%zu fully disabled TPX3 pixels=%d",
-                 fullFileName.c_str(), data.size(), nMaskedPel);
+        LOG_ARGS("ReadBPC: file=\"%s\" bytes=%zu masked %s pixels=%d",
+                 fullFileName.c_str(), data.size(),
+                 detectorFamilyName(detectorFamily_), nMaskedPel);
     } else {
         LOG_ARGS("ReadBPC: file=\"%s\" bytes=%zu; mask count unavailable for family %s",
                  fullFileName.c_str(), data.size(), detectorFamilyName(detectorFamily_));

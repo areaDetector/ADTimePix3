@@ -50,12 +50,14 @@ bool absolutePackedDifference(const std::vector<std::uint8_t>& first,
 /**
  * Map one MPX3 BPC-local pixel through a Serval Layout chip entry.
  *
- * The orientation names are the values reported by Serval for the supported
- * MPX3 quad mountings.  Unknown names fail closed so a diff is not displayed
- * at a misleading image coordinate.
+ * The eight orientation names are the values reported in Serval
+ * Layout.Rotated.Chips for quad detector rotations and reflections. Serval's
+ * tile Y origin is bottom-left; imageHeight converts it to the top-left,
+ * Y-down areaDetector image convention. Unknown names fail closed so a diff
+ * is not displayed at a misleading coordinate.
  */
 bool mpx3LayoutCoordinates(int localX, int localY, int chipWidth,
-                           int originX, int originY,
+                           int originX, int originY, int imageHeight,
                            const std::string& orientation,
                            int& imageX, int& imageY);
 

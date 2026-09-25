@@ -11,9 +11,9 @@ Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON
 | **Timepix3** | **1** byte / pel | `w×w` (65536 at 256×256) | 65536 B |
 | **Medipix3** (dual counter) | **2** bytes / pel — one big-endian 16-bit word | `w×w` packed words → **131072 B** | 131072 B |
 
-**Timepix3:** Accos bad pixels in reference cals use the complete **byte 31** (`0b11111`); see [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md). Operator mask writes now replace the selected byte with **31**, and mask read/count/export recognizes only that exact value. This is aligned with the observed Accos files; vendor confirmation of the byte semantics is still pending.
+**Timepix3:** Bit 0 is the mask, bits 1–4 are adjustment, and bit 5 is test-pulse injection. ASI identifies bits 6–7 as unused and normally zero. Accos bad pixels in the available reference calibration happen to use **byte 31** (`0b11111`) because the mask and all four adjustment bits are set. Operator mask writes set only bit 0, and mask read/count/export tests only bit 0; all other bits, including unused bits, are preserved.
 
-**Medipix3:** Each word contains a shared mask bit 0, threshold-0 adjustment bits 1–5, and threshold-1 adjustment bits 6–10. Bits 11–15 and the authoritative write rule remain pending vendor confirmation, so MPX3 operator mask editing stays disabled. Emulator acquisition confirms that setting only bit 0 suppresses the selected pixel in both counters.
+**Medipix3:** Each word contains a mask bit 0 shared by both counters, threshold-0 adjustment bits 1–5, threshold-1 adjustment bits 6–10, and test-pulse bit 11. ASI confirmed that masking/unmasking sets/clears only bit 0 and identifies bits 12–15 as unused and normally zero. The driver preserves those upper bits instead of forcing them to zero. Emulator acquisition confirms that setting only bit 0 suppresses the selected pixel in both counters.
 
 **File byte offset for MPX3** (chip `c`, local pel index `p` within chip, `P = w×w`):
 
@@ -21,7 +21,7 @@ Related: [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md), [MASKED_PIXELS_JSON
 byte_offset = 2 * (c * P + p)
 ```
 
-**Driver status:** `pelIndex(i, j)` and mask circle/rectangle/write paths are enabled only for **TPX3**. For MPX3, `refreshPixelConfigFromServal()` maps each packed BPC word through Serval's per-chip `Layout.Rotated.Chips[]` entry (`Chip`, `X`, `Y`, `Orientation`). MPX3 mask read/write/export remains blocked pending final vendor confirmation of the write rules.
+**Driver status:** TPX3 mask and diff paths use `pelIndex(i, j)`. MPX3 mask, export, and diff paths map each packed BPC word through Serval's per-chip rotated layout entry (`Chip`, `X`, `Y`, `Orientation`). MPX3 mask operations fail closed if that layout is incomplete or contains an unsupported orientation.
 
 Offline TPX3 tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same **global `(i, j)`** convention as **`bpc2ImgIndex`** for masked-pel listings. TPX3 mask editing and **`PixelConfigDiff`** use **`pelIndex(i, j)`** instead; MPX3 diff mapping uses Serval layout metadata.
 
@@ -45,10 +45,11 @@ chip = bpc_index / (w * w)     /* TPX3; use integer division */
 
 **BPC file layout (Medipix3, dual counter):** chip `c` occupies **`2 * w*w`** bytes as `w*w` packed big-endian words. See the table above and [PIXELCONFIG_BPC_DIFF.md](PIXELCONFIG_BPC_DIFF.md).
 
-**Intra-chip local coordinates** (masked-pels JSON, streaming):
+**Intra-chip local coordinates** (masked-pels JSON, streaming) use a logical pixel index. For TPX3, `logical_pixel = bpc_byte_offset`; for MPX3, `logical_pixel = bpc_byte_offset / 2`:
 
 ```text
-local = bpc_index - chip * w * w
+chip = logical_pixel / (w * w)
+local = logical_pixel - chip * w * w
 lx = local % w
 ly = local / w
 ```
@@ -59,7 +60,7 @@ ly = local / w
 |-------|---------|---------|
 | **Column `i`, row `j`** | Top-left origin; `i` increases right, `j` increases down | Mask PVs, NDArray, Phoebus displays |
 | **Linear image** | `img_linear` from `bpc2ImgIndex` | Decode with mosaic **column stride**: `1`-chip: `w`; `4`-chip: `2*w`; `8`-chip: `xChips*w`. Then `i = img_linear % stride`, `j = img_linear / stride`. Mask PVs still use full `cols` from `rowsCols()` for `j*cols+i`. |
-| **BPC file `k`** | `0 .. numChips*w*w - 1` | `TPX3_BPC_PEL`, disk `.bpc` |
+| **BPC pixel `k`** | `0 .. numChips*w*w - 1`; one byte for TPX3 or one packed word for MPX3 | `TPX3_BPC_PEL`, disk `.bpc` |
 
 ### Y-origin (NDArray vs Phoebus / NDStats profiles)
 
@@ -71,12 +72,12 @@ Phoebus Image widgets can default to a **bottom-left / Y-up** axis labeling that
 
 | Task | Function | Notes |
 |------|----------|-------|
-| TPX3 mask write/read and **`PixelConfigDiff`** | **`pelIndex(i, j)`** | Image → BPC byte; respects **`TPX3_DET_ORIENTATION`** |
-| MPX3 **`PixelConfigDiff`** | Serval per-chip rotated layout | Packed BPC word → assembled-image `(i,j)` from `X`, `Y`, and `Orientation` |
-| Masked-pels JSON **`i`/`j`**, cross-check with **`check_bit.c`** | **`bpc2ImgIndex(k, w)`** | BPC byte → linear image index → `(i,j)` |
+| TPX3 mask write/read, export, and **`PixelConfigDiff`** | **`pelIndex(i, j)`** | Image → BPC byte; respects **`TPX3_DET_ORIENTATION`** |
+| MPX3 mask write/read, export, and **`PixelConfigDiff`** | Serval per-chip rotated layout | Packed BPC word ↔ assembled-image `(i,j)` from `X`, `Y`, and `Orientation` |
+| Legacy TPX3 offline cross-check with **`check_bit.c`** | **`bpc2ImgIndex(k, w)`** | BPC byte → linear image index → `(i,j)` |
 | Which mosaic tile contains image pixel `(i,j)`? | **`findChip(i, j, &xChip, &yChip, &w)`** | `xChip = i / w`, `yChip = j / w` (chip grid only) |
 
-**Important:** `pelIndex` and `bpc2ImgIndex` are **not** guaranteed inverses for every orientation. They match for many layouts (e.g. 1-chip UP, 4-chip UP) but **diverge** for some quad orientations (e.g. **LEFT**). The driver intentionally uses **`pelIndex`** on TPX3 mask/PixelConfig paths so the mask editor and `.bpc` file stay consistent. MPX3 uses its explicit Serval chip layout instead.
+**Important:** `pelIndex` and `bpc2ImgIndex` are **not** guaranteed inverses for every orientation. They match for many layouts (e.g. 1-chip UP, 4-chip UP) but **diverge** for some quad orientations (e.g. **LEFT**). The driver intentionally uses **`pelIndex`** on TPX3 mask/export/PixelConfig paths so those products agree. MPX3 uses its explicit Serval chip layout instead.
 
 ## Detector orientation (`TPX3_DET_ORIENTATION`)
 
@@ -96,23 +97,32 @@ Set from Serval `Layout.DetectorOrientation` at connect.
 ## Family-specific `UP` quad layouts
 
 Chip numbering is not interchangeable between detector families. For a 2×2
-image with global orientation `UP`, the validated tile assignments are:
+image with global orientation `UP`, the tile assignments are shown below.
+The TPX3 map is established, and the corrected MPX3 bottom-origin conversion
+was validated with an asymmetric L-shaped mask in both threshold images.
 
 | Image tile | TPX3 chip | MPX3 chip |
 |------------|-----------|-----------|
-| Top-left | 2 | 1 |
-| Top-right | 1 | 0 |
-| Bottom-left | 3 | 2 |
-| Bottom-right | 0 | 3 |
+| Top-left | 2 | 2 |
+| Top-right | 1 | 3 |
+| Bottom-left | 3 | 1 |
+| Bottom-right | 0 | 0 |
 
 ```text
 TPX3 UP                 MPX3 UP
 +---------+---------+  +---------+---------+
-| chip 2  | chip 1  |  | chip 1  | chip 0  |
+| chip 2  | chip 1  |  | chip 2  | chip 3  |
 +---------+---------+  +---------+---------+
-| chip 3  | chip 0  |  | chip 2  | chip 3  |
+| chip 3  | chip 0  |  | chip 1  | chip 0  |
 +---------+---------+  +---------+---------+
 ```
+
+MPX3 Serval `Layout.*.Chips[].Y` is a **bottom-origin tile coordinate**.
+areaDetector mask and NDArray coordinates use a top-left origin with Y
+increasing downward, so the driver converts each tile origin as
+`image_tile_y = image_height - chip_width - serval_y`. The orientation formula
+below is then applied within that tile. Using `serval_y` directly swaps the
+upper and lower chip rows while leaving X apparently correct.
 
 Tile assignment alone is insufficient for BPC indexing. Let `(lx,ly)` be the
 local BPC-raster coordinate within a `w×w` chip. The `UP` transforms used by
@@ -122,14 +132,50 @@ the driver are:
 |--------|-------|--------------------|------------------------------|
 | TPX3 | 0, 3 | legacy hard-coded quad map | `(lx, w-1-ly)` |
 | TPX3 | 1, 2 | legacy hard-coded quad map | `(w-1-lx, ly)` |
-| MPX3 | 0, 1 | `RtLBtT` | `(lx, ly)` |
-| MPX3 | 2, 3 | `LtRTtB` | `(w-1-lx, w-1-ly)` (180°) |
+| MPX3 | 0, 1 | `RtLBtT` | `(w-1-lx, w-1-ly)` (180°) |
+| MPX3 | 2, 3 | `LtRTtB` | `(lx, ly)` |
 
 The TPX3 formulas above are the exact BPC-raster transforms in `pelIndex()` /
 `bpc2ImgIndex()`. They should not be replaced with an informal mechanical
 description such as “chip rotated 180°”: the BPC raster already has its own
 axis convention. MPX3 `PixelConfigDiff` reads the chip number, origin, and
-orientation from Serval's rotated layout instead of assuming the TPX3 map.
+orientation from Serval's rotated layout instead of assuming the TPX3 map. The
+same mapping is used by MPX3 mask editing and masked-pels export.
+
+### Serval chip-orientation transforms
+
+Captures of all eight `Layout.DetectorOrientation` values show that
+`Layout.Original` remains fixed while `Layout.Rotated.Chips` uses the following
+complete orientation vocabulary. These formulas map a BPC-local `(lx,ly)` to
+an image-local coordinate inside the chip tile:
+
+| Serval chip orientation | Image-local coordinate |
+|-------------------------|------------------------|
+| `RtLBtT` | `(w-1-lx, w-1-ly)` |
+| `LtRTtB` | `(lx, ly)` |
+| `BtTLtR` | `(ly, w-1-lx)` |
+| `TtBRtL` | `(w-1-ly, lx)` |
+| `LtRBtT` | `(lx, w-1-ly)` |
+| `RtLTtB` | `(w-1-lx, ly)` |
+| `TtBLtR` | `(ly, lx)` |
+| `BtTRtL` | `(w-1-ly, w-1-lx)` |
+
+The direction tokens are literal. For example, `RtLBtT` means that increasing
+BPC-local X appears right-to-left and increasing BPC-local Y appears
+bottom-to-top; both image-local axes are therefore reversed. An asymmetric
+live operator-mask test exposed both an earlier inverse interpretation of the
+four non-axis-swapped names and the independent bottom-origin tile-Y
+conversion described above. After correcting both conventions, the asymmetric
+mask aligned with both threshold-counter images for live acquisitions in all
+eight global detector orientations. The mirrored results validate `LtRBtT`,
+`RtLTtB`, `TtBLtR`, and `BtTRtL`, while `RIGHT` and
+`LEFT` validate the complementary axis-swapped placements of `BtTLtR` and
+`TtBRtL`. Together with the ordinary transforms used by `UP` and `DOWN`, these
+cases exercise all eight orientation strings and the tile-origin conversion.
+
+The IOC refreshes the detector snapshot after changing `DetOrient`, ensuring
+subsequent MPX3 mask, diff, and export operations use the new rotated entries.
+Unknown orientation strings continue to fail closed.
 
 ### Adding TPX4 or another family
 
