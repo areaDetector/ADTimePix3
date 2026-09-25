@@ -15,20 +15,34 @@
 
 namespace ADTimePix3BpcMask {
 
-constexpr std::uint8_t kTpx3DisabledPixel = 0x1f;
+constexpr std::uint16_t kMaskBit = 0x0001;
 
-/** True only where the vendor mask-byte definition is known. */
+/** True only where the vendor per-pixel mask-bit definition is known. */
 bool operatorMaskSupported(DetectorFamily family);
 
-/** Classify a calibration byte as a fully disabled pixel. */
-bool isMasked(DetectorFamily family, std::uint8_t byte);
+/** Number of packed BPC bytes per pixel, or zero for an unsupported family. */
+std::size_t bytesPerPixel(DetectorFamily family);
 
-/** Count fully disabled pixels; returns zero for unsupported families. */
+/** Decode one packed pixel value at byteOffset (MPX3 words are big-endian). */
+bool pixelValue(DetectorFamily family,
+                const std::vector<std::uint8_t>& bytes,
+                std::size_t byteOffset,
+                std::uint16_t& value);
+
+/** Classify one packed pixel by its vendor-defined bit-0 mask. */
+bool isMasked(DetectorFamily family,
+              const std::vector<std::uint8_t>& bytes,
+              std::size_t byteOffset);
+
+/** Count masked packed pixels; returns zero for unsupported families. */
 std::size_t countMasked(DetectorFamily family,
                         const std::vector<std::uint8_t>& bytes);
 
-/** Replace one TPX3 calibration byte with the Accos fully-disabled pattern. */
-bool applyOperatorMask(DetectorFamily family, std::uint8_t& byte);
+/** Set or clear only bit 0 of one packed pixel, preserving every other bit. */
+bool setMasked(DetectorFamily family,
+               std::vector<std::uint8_t>& bytes,
+               std::size_t byteOffset,
+               bool masked);
 
 }  // namespace ADTimePix3BpcMask
 

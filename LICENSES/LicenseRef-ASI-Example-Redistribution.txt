@@ -1,0 +1,9 @@
+ASI Example/Test Configuration Redistribution Permission
+
+On September 25, 2026, Erik Maddox of Amsterdam Scientific Instruments
+confirmed that the supplied eq-02.bpc and detector-chips.json files may be
+redistributed as example files and test configuration files.
+
+This permission applies to those two files as distributed under
+test/fixtures/mpx3/eq-02/. They are detector-specific reference data and are
+not licensed or represented as portable operational calibration.

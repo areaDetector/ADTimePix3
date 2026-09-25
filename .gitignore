@@ -25,3 +25,7 @@ documentation/medipix3/drafts/
 
 # json files
 *.json
+!test/fixtures/mpx3/eq-02/detector-chips.json
+
+# EPICS test harness failure marker
+.tests-failed.log

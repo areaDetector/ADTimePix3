@@ -987,18 +987,43 @@ void testPixelConfigResponseValidation()
                packedDifference == 0,
            "PixelConfig diff rejects a truncated packed value");
 
+    struct LayoutTransformCase {
+        const char* orientation;
+        int expectedX;
+        int expectedY;
+    };
+    const LayoutTransformCase layoutCases[] = {
+        {"RtLBtT", 223, 191},
+        {"LtRTtB", 32, 64},
+        {"BtTLtR", 64, 223},
+        {"TtBRtL", 191, 32},
+        {"LtRBtT", 32, 191},
+        {"RtLTtB", 223, 64},
+        {"TtBLtR", 64, 32},
+        {"BtTRtL", 191, 223}
+    };
+    for (const auto& layoutCase : layoutCases) {
+        int imageX = -1;
+        int imageY = -1;
+        const bool mapped = ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+            32, 64, 256, 256, 0, 512,
+            layoutCase.orientation, imageX, imageY);
+        const std::string description = std::string("MPX3 layout maps orientation ") +
+            layoutCase.orientation;
+        testOk(mapped && imageX == 256 + layoutCase.expectedX &&
+                   imageY == 256 + layoutCase.expectedY,
+               "%s", description.c_str());
+    }
+    int topTileX = -1;
+    int topTileY = -1;
+    testOk(ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
+               32, 64, 256, 0, 256, 512, "LtRTtB", topTileX, topTileY) &&
+               topTileX == 32 && topTileY == 64,
+           "MPX3 layout converts Serval bottom-origin tile Y to top-origin image Y");
     int imageX = -1;
     int imageY = -1;
-    testOk(ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
-               32, 32, 256, 256, 0, "RtLBtT", imageX, imageY) &&
-               imageX == 288 && imageY == 32,
-           "MPX3 layout maps a top-row BPC pixel without rotation");
-    testOk(ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
-               32, 32, 256, 0, 256, "LtRTtB", imageX, imageY) &&
-               imageX == 223 && imageY == 479,
-           "MPX3 layout maps a bottom-row BPC pixel through a 180-degree rotation");
     testOk(!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
-               32, 32, 256, 0, 0, "unknown", imageX, imageY) &&
+               32, 32, 256, 0, 0, 512, "unknown", imageX, imageY) &&
                imageX == 0 && imageY == 0,
            "MPX3 layout rejects an unknown chip orientation");
 }
@@ -1092,9 +1117,9 @@ void testBpcFileBounds()
     testOk(ADTimePix3BpcFile::expectedSize(4 * 256 * 256, 1, 1, size) &&
                size == 262144U,
            "production BPC sizing accepts a TPX3 quad");
-    testOk(ADTimePix3BpcFile::expectedSize(4 * 256 * 256, 1, 2, size) &&
+    testOk(ADTimePix3BpcFile::expectedSize(4 * 256 * 256, 2, 1, size) &&
                size == 524288U,
-           "production BPC sizing preserves the two-slice MPX3 layout");
+           "production BPC sizing accepts packed-word MPX3 quad geometry");
     testOk(!ADTimePix3BpcFile::expectedSize(0, 1, 1, size) && size == 0,
            "production BPC sizing rejects missing detector geometry");
     testOk(!ADTimePix3BpcFile::expectedSize(
@@ -1139,28 +1164,47 @@ void testBpcFileBounds()
 
 void testBpcMaskSemantics()
 {
-    testOk(ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::TPX3),
-           "operator mask writes are supported for TPX3");
-    testOk(!ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::MPX3) &&
+    testOk(ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::TPX3) &&
+               ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::MPX3) &&
                !ADTimePix3BpcMask::operatorMaskSupported(DetectorFamily::Unknown),
-           "operator mask writes remain blocked for undocumented detector families");
-    testOk(ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, 0x1f),
-           "TPX3 full disable byte 0x1f is classified as masked");
-    testOk(!ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, 0x01) &&
-               !ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, 0xff),
-           "TPX3 partial or unrelated bit patterns are not classified as fully disabled");
-    testOk(ADTimePix3BpcMask::countMasked(
-               DetectorFamily::TPX3, {0x1f, 0x01, 0x1f, 0xff}) == 2,
-           "TPX3 masked-pixel count includes only complete Accos disable patterns");
+           "operator mask writes are supported only for documented TPX3 and MPX3 families");
+    testOk(ADTimePix3BpcMask::bytesPerPixel(DetectorFamily::TPX3) == 1 &&
+               ADTimePix3BpcMask::bytesPerPixel(DetectorFamily::MPX3) == 2 &&
+               ADTimePix3BpcMask::bytesPerPixel(DetectorFamily::Unknown) == 0,
+           "mask semantics report the family-specific packed pixel width");
 
-    std::uint8_t byte = 0xaa;
-    testOk(ADTimePix3BpcMask::applyOperatorMask(DetectorFamily::TPX3, byte) &&
-               byte == 0x1f,
-           "TPX3 operator mask replaces the complete calibration byte with 0x1f");
-    byte = 0x55;
-    testOk(!ADTimePix3BpcMask::applyOperatorMask(DetectorFamily::MPX3, byte) &&
-               byte == 0x55,
-           "unsupported MPX3 mask operation leaves the calibration byte unchanged");
+    std::vector<std::uint8_t> tpx3{0x1e, 0x01, 0x1f, 0xff};
+    testOk(!ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, tpx3, 0) &&
+               ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, tpx3, 1) &&
+               ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, tpx3, 2) &&
+               ADTimePix3BpcMask::isMasked(DetectorFamily::TPX3, tpx3, 3),
+           "TPX3 classifies bit 0 as the mask independently of adjustment bits");
+    testOk(ADTimePix3BpcMask::countMasked(DetectorFamily::TPX3, tpx3) == 3,
+           "TPX3 masked-pixel count tests bit 0 of each byte");
+    testOk(ADTimePix3BpcMask::setMasked(DetectorFamily::TPX3, tpx3, 0, true) &&
+               tpx3[0] == 0x1f &&
+               ADTimePix3BpcMask::setMasked(DetectorFamily::TPX3, tpx3, 3, false) &&
+               tpx3[3] == 0xfe,
+           "TPX3 set and clear preserve all adjustment, test-pulse, and unknown bits");
+
+    std::vector<std::uint8_t> mpx3{0xa8, 0x54, 0x08, 0x01, 0xf0, 0xfe};
+    std::uint16_t packed = 0;
+    testOk(ADTimePix3BpcMask::pixelValue(DetectorFamily::MPX3, mpx3, 0, packed) &&
+               packed == 0xa854 &&
+               !ADTimePix3BpcMask::isMasked(DetectorFamily::MPX3, mpx3, 0) &&
+               ADTimePix3BpcMask::isMasked(DetectorFamily::MPX3, mpx3, 2),
+           "MPX3 decodes big-endian words and classifies their shared bit-0 mask");
+    testOk(ADTimePix3BpcMask::countMasked(DetectorFamily::MPX3, mpx3) == 1,
+           "MPX3 masked-pixel count advances by complete 16-bit words");
+    testOk(ADTimePix3BpcMask::setMasked(DetectorFamily::MPX3, mpx3, 0, true) &&
+               mpx3[0] == 0xa8 && mpx3[1] == 0x55 &&
+               ADTimePix3BpcMask::setMasked(DetectorFamily::MPX3, mpx3, 2, false) &&
+               mpx3[2] == 0x08 && mpx3[3] == 0x00,
+           "MPX3 set and clear change only the mask bit and preserve all other word bits");
+    testOk(!ADTimePix3BpcMask::pixelValue(DetectorFamily::MPX3, mpx3, mpx3.size() - 1, packed) &&
+               !ADTimePix3BpcMask::setMasked(
+                   DetectorFamily::Unknown, mpx3, 0, true),
+           "mask helpers reject truncated words and unsupported detector families");
 }
 
 void testOneShotActions()
@@ -1185,7 +1229,7 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(212);
+    testPlan(221);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();

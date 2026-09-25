@@ -166,31 +166,59 @@ bool absolutePackedDifference(const std::vector<std::uint8_t>& first,
 }
 
 bool mpx3LayoutCoordinates(int localX, int localY, int chipWidth,
-                           int originX, int originY,
+                           int originX, int originY, int imageHeight,
                            const std::string& orientation,
                            int& imageX, int& imageY)
 {
     imageX = 0;
     imageY = 0;
     if (chipWidth <= 0 || localX < 0 || localX >= chipWidth ||
-        localY < 0 || localY >= chipWidth || originX < 0 || originY < 0) {
+        localY < 0 || localY >= chipWidth || originX < 0 || originY < 0 ||
+        imageHeight < chipWidth || originY > imageHeight - chipWidth) {
         return false;
     }
 
     int mappedX = localX;
     int mappedY = localY;
     if (orientation == "RtLBtT") {
-        /* MPX3 top-row chips: BPC raster and assembled image coordinates agree. */
-    } else if (orientation == "LtRTtB") {
-        /* MPX3 bottom-row chips are mounted 180 degrees from the BPC raster. */
+        /* X runs right-to-left and Y runs bottom-to-top. */
         mappedX = chipWidth - 1 - localX;
         mappedY = chipWidth - 1 - localY;
+    } else if (orientation == "LtRTtB") {
+        /* X runs left-to-right and Y runs top-to-bottom: identity. */
+    } else if (orientation == "BtTLtR") {
+        /* Rotate 90 degrees counter-clockwise in image coordinates. */
+        mappedX = localY;
+        mappedY = chipWidth - 1 - localX;
+    } else if (orientation == "TtBRtL") {
+        /* Rotate 90 degrees clockwise in image coordinates. */
+        mappedX = chipWidth - 1 - localY;
+        mappedY = localX;
+    } else if (orientation == "LtRBtT") {
+        /* X runs left-to-right; Y runs bottom-to-top. */
+        mappedY = chipWidth - 1 - localY;
+    } else if (orientation == "RtLTtB") {
+        /* X runs right-to-left; Y runs top-to-bottom. */
+        mappedX = chipWidth - 1 - localX;
+    } else if (orientation == "TtBLtR") {
+        /* Reflect across the top-left to bottom-right diagonal. */
+        mappedX = localY;
+        mappedY = localX;
+    } else if (orientation == "BtTRtL") {
+        /* Reflect across the top-right to bottom-left diagonal. */
+        mappedX = chipWidth - 1 - localY;
+        mappedY = chipWidth - 1 - localX;
     } else {
         return false;
     }
 
+    /* Serval Layout X/Y tile origins use a bottom-left mosaic origin. The
+     * areaDetector mask and NDArray convention is top-left, Y increasing
+     * downward. Convert the tile origin without changing the orientation's
+     * already-resolved image-local Y direction. */
+    const int imageOriginY = imageHeight - chipWidth - originY;
     imageX = originX + mappedX;
-    imageY = originY + mappedY;
+    imageY = imageOriginY + mappedY;
     return true;
 }
 

@@ -870,10 +870,11 @@ std::string utcIso8601Now()
 }
 }  // namespace
 
-void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSize)
+void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(
+    const std::vector<std::uint8_t>& bpcData)
 {
     const char* okEmpty = "Skipped: no BPC buffer";
-    if (!bpcBuf || bpcSize <= 0) {
+    if (bpcData.empty()) {
         setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
         setIntegerParam(0, ADTimePixMaskedPelsCount, 0);
         setStringParam(0, ADTimePixMaskedPelsExportStatus, okEmpty);
@@ -906,14 +907,24 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
     const std::string outPath = filePath + stripBpcExtForMaskedJson(fileName) + "_masked_pels.json";
     int rows = 0, cols = 0, xChips = 0, yChips = 0, pelW = 0;
     rowsCols(&rows, &cols, &xChips, &yChips, &pelW);
-    (void)rows;
     (void)xChips;
     (void)yChips;
     int nChips = 1;
     getIntegerParam(ADTimePixNumberOfChips, &nChips);
     int detOr = 0;
     getIntegerParam(ADTimePixDetectorOrientation, &detOr);
-    const int chipPelCount = pelW * pelW;
+    const std::size_t chipPelCount = static_cast<std::size_t>(pelW) *
+                                     static_cast<std::size_t>(pelW);
+    const std::size_t pixelBytes = ADTimePix3BpcMask::bytesPerPixel(detectorFamily_);
+    std::vector<std::size_t> imageToBpc;
+    if (bpcImageByteOffsets(imageToBpc) != asynSuccess) {
+        setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
+        setIntegerParam(0, ADTimePixMaskedPelsCount, -1);
+        setStringParam(0, ADTimePixMaskedPelsExportStatus,
+                       "Unavailable: detector BPC layout is incomplete");
+        callParamCallbacks(0);
+        return;
+    }
 
     json root;
     root["format_version"] = 1;
@@ -921,6 +932,7 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
     root["source"]["num_chips"] = nChips;
     root["source"]["detector_orientation"] = detOr;
     root["source"]["chip_pel_width"] = pelW;
+    root["source"]["bpc_bytes_per_pixel"] = pixelBytes;
     root["source"]["tool"] = "ADTimePix RefreshPixelConfig mask export";
     root["source"]["exported_at_utc"] = utcIso8601Now();
 
@@ -938,34 +950,31 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
     json mlist = json::array();
     json badpixels = json::array();
     int counter = 0;
-    int skippedUnmapped = 0;
 
-    for (int pos = 0; pos < bpcSize; ++pos) {
-        const unsigned char byte = static_cast<unsigned char>(bpcBuf[pos]);
-        if (!ADTimePix3BpcMask::isMasked(detectorFamily_, byte)) continue;
+    for (std::size_t imageIndex = 0; imageIndex < imageToBpc.size(); ++imageIndex) {
+        const std::size_t byteOffset = imageToBpc[imageIndex];
+        if (!ADTimePix3BpcMask::isMasked(detectorFamily_, bpcData, byteOffset)) continue;
 
-        int chip = 0;
-        int lx = 0, ly = 0;
-        if (chipPelCount > 0) {
-            chip = pos / chipPelCount;
-            const int local = pos - chip * chipPelCount;
-            lx = local % pelW;
-            ly = local / pelW;
-        }
-
-        const int imgIdx = bpc2ImgIndex(pos, pelW);
-        if (imgIdx < 0 || cols <= 0) {
-            skippedUnmapped++;
+        std::uint16_t packedValue = 0;
+        if (!ADTimePix3BpcMask::pixelValue(
+                detectorFamily_, bpcData, byteOffset, packedValue)) {
             continue;
         }
-        const int ii = imgIdx % cols;
-        const int jj = imgIdx / cols;
+        const std::size_t logicalPixel = pixelBytes == 0 ? 0 : byteOffset / pixelBytes;
+        const int chip = chipPelCount == 0 ? 0 :
+            static_cast<int>(logicalPixel / chipPelCount);
+        const std::size_t local = chipPelCount == 0 ? 0 : logicalPixel % chipPelCount;
+        const int lx = pelW <= 0 ? 0 : static_cast<int>(local % static_cast<std::size_t>(pelW));
+        const int ly = pelW <= 0 ? 0 : static_cast<int>(local / static_cast<std::size_t>(pelW));
+        const int ii = cols <= 0 ? 0 : static_cast<int>(imageIndex % static_cast<std::size_t>(cols));
+        const int jj = cols <= 0 ? 0 : static_cast<int>(imageIndex / static_cast<std::size_t>(cols));
 
         counter++;
         json row;
         row["index"] = counter;
-        row["bpc_index"] = pos;
-        row["value"] = static_cast<int>(byte);
+        row["bpc_index"] = byteOffset;
+        row["bpc_pixel_index"] = logicalPixel;
+        row["value"] = packedValue;
         row["chip"] = chip;
         row["lx"] = lx;
         row["ly"] = ly;
@@ -980,9 +989,6 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
     }
 
     root["counts"]["masked_pels"] = counter;
-    if (skippedUnmapped > 0) {
-        root["counts"]["skipped_unmapped_bpc_index"] = skippedUnmapped;
-    }
     root["masked_pels"] = mlist;
     root["Bad pixels"] = badpixels;
 
@@ -1004,12 +1010,7 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSiz
     setIntegerParam(0, ADTimePixMaskedPelsCount, counter);
     {
         char smsg[160];
-        if (skippedUnmapped > 0) {
-            epicsSnprintf(smsg, sizeof(smsg), "OK: %d masked pels, %d index unmapped", counter,
-                          skippedUnmapped);
-        } else {
-            epicsSnprintf(smsg, sizeof(smsg), "OK: wrote %d masked pels", counter);
-        }
+        epicsSnprintf(smsg, sizeof(smsg), "OK: wrote %d masked pels", counter);
         setStringParam(0, ADTimePixMaskedPelsExportStatus, smsg);
     }
     FLOW_ARGS("masked pels JSON %s (%d entries)", outPath.c_str(), counter);
@@ -1169,7 +1170,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                     int checkX = 0;
                     int checkY = 0;
                     if (!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
-                            0, 0, pelWidth, originX, originY,
+                            0, 0, pelWidth, originX, originY, rowsLay,
                             orientation, checkX, checkY)) {
                         WARN_ARGS("chip %d MPX3 layout orientation is unsupported: %s",
                                   chip, orientation.c_str());
@@ -1180,7 +1181,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
                             int imageX = 0;
                             int imageY = 0;
                             if (!ADTimePix3ServalPixelConfig::mpx3LayoutCoordinates(
-                                    localX, localY, pelWidth, originX, originY,
+                                    localX, localY, pelWidth, originX, originY, rowsLay,
                                     orientation, imageX, imageY) ||
                                 imageX < 0 || imageX >= colsLay ||
                                 imageY < 0 || imageY >= rowsLay) {
@@ -1213,8 +1214,7 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     }
 
     if (haveBpc) {
-        exportMaskedPelsJsonFromBpcBuffer(
-            reinterpret_cast<const char*>(bpcData.data()), static_cast<int>(bpcData.size()));
+        exportMaskedPelsJsonFromBpcBuffer(bpcData);
     }
     /* Waveform PixelConfigDiff: row-major image (j*cols+i). TPX3 uses pelIndex;
      * MPX3 uses Serval's per-chip Layout entries. */

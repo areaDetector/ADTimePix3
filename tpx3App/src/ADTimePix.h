@@ -286,7 +286,7 @@
 #define ADTimePixPixelConfigStatusString         "TPX3_PIXEL_CONFIG_STATUS"      // (asynOctet,   r)      Short status / error message
 #define ADTimePixPixelConfigDiffString           "TPX3_PIXEL_CONFIG_DIFF"        // (asynInt32Array, r)   packed-value |SERVAL-BPC| in family-specific image layout
 #define ADTimePixMaskedPelsJsonPathString        "TPX3_MASKED_PELS_JSON_RBV"     // (asynOctet,   r)      Full path to last _masked_pels.json (RefreshPixelConfig)
-#define ADTimePixMaskedPelsCountString           "TPX3_MASKED_PELS_COUNT_RBV"   // (asynInt32,   r)      Count of fully disabled TPX3 BPC pels
+#define ADTimePixMaskedPelsCountString           "TPX3_MASKED_PELS_COUNT_RBV"   // (asynInt32,   r)      Count of bit-0-masked BPC pixels
 #define ADTimePixMaskedPelsExportStatusString   "TPX3_MASKED_PELS_EXPORT_STATUS_RBV" // (asynOctet,   r)  OK / skipped / I/O error message
     // Server, Preview, ImageChannels[1]
 #define ADTimePixPrvImg1BaseString            "TPX3_PRV_IMG1BASE"          // (asynOctet,         w)      Preview ImageChannels Preview files Base
@@ -1170,8 +1170,10 @@ class ADTimePix : public ADDriver{
         asynStatus findChip(int x, int y, int *xChip, int *yChip, int *width);
         int pelIndex(int x, int y);
         int bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn);
-        /** Write <BPCFilePath><stem>_masked_pels.json from in-memory BPC (bit0 = masked). Called from refreshPixelConfig when BPC is loaded. */
-        void exportMaskedPelsJsonFromBpcBuffer(const char* bpcBuf, int bpcSize);
+        /** Build image-linear -> packed BPC byte-offset mapping for the active family/layout. */
+        asynStatus bpcImageByteOffsets(std::vector<std::size_t>& offsets);
+        /** Write <BPCFilePath><stem>_masked_pels.json from in-memory BPC (bit0 = masked). */
+        void exportMaskedPelsJsonFromBpcBuffer(const std::vector<std::uint8_t>& bpcData);
 };
 
 // Stores number of additional PV parameters are added by the driver
