@@ -18,9 +18,16 @@ peer records one request and returns a configurable status, headers, and body;
 its response can also be held until the test releases it. All fixture waits
 take explicit deadlines, and fixture destruction stops and joins peer threads.
 
-These fixtures intentionally do not change or correct production protocol
-behavior. Later remediation branches can use them to characterize production
-streaming, timeout, and error-handling paths before making those changes.
+The test product exercises the production consume-once stream framer used by
+PrvImg, Img, and PrvHst. Coverage includes every two-chunk split across two
+messages, byte-at-a-time delivery, coalesced frames, binary newline/brace/NUL
+bytes, short payloads, invalid and oversized headers, valid and invalid payload
+terminators, bounded retained bytes, clean and truncated EOF, and
+reconnect-buffer reset. The framer consumes one JSON header, exactly its
+declared binary payload, and Serval's trailing newline while retaining only
+bytes belonging to later messages. Image fixtures also verify Serval `bitDepth` /
+`dataSize` sizing for 8-, 16-, and 32-bit rasters, including MPX3 integrated
+preview frames.
 
 The test product also exercises the production rectangular mask-geometry
 helper. It verifies width-based row-major indexing, clipped rectangle/circle

@@ -10,6 +10,7 @@
 #include "histogram_io.h"
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
+#include "serval_stream_framing.h"
 #include <NDAttribute.h>
 #include <stdexcept>
 #include <algorithm>
@@ -315,33 +316,12 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
             
                     }
         
-        // Read any remaining binary data needed
-                if (binary_read < binary_needed) {
-                                    if (!prvHstMutex_) {
-                                return false;
-            }
-            
-            epicsMutexLock(prvHstMutex_);
-                        if (!prvHstNetworkClient_) {
-                                epicsMutexUnlock(prvHstMutex_);
-                return false;
-            }
-            
-            if (!prvHstNetworkClient_->is_connected()) {
-                                epicsMutexUnlock(prvHstMutex_);
-                return false;
-            }
-            
-                        char* dest_ptr = reinterpret_cast<char*>(tof_bin_values.data()) + binary_read;
-                        if (!prvHstNetworkClient_->receive_exact(dest_ptr, binary_needed - binary_read)) {
-                                epicsMutexUnlock(prvHstMutex_);
-                fprintf(stderr, "ERROR | ADTimePix::%s: Failed to read binary histogram data\n", functionName);
-                return false;
-            }
-            
-                        epicsMutexUnlock(prvHstMutex_);
-                    } else {
-                    }
+        if (binary_read != binary_needed) {
+            fprintf(stderr,
+                    "ERROR | ADTimePix::%s: Incomplete framed histogram payload: have %zu, need %zu\n",
+                    functionName, binary_read, binary_needed);
+            return false;
+        }
         
         // Convert network byte order to host byte order
                 for (int i = 0; i < bin_size; ++i) {
@@ -884,6 +864,31 @@ void ADTimePix::prvHstWorkerThread() {
     
     prvHstLineBuffer_.resize(MAX_BUFFER_SIZE);
     prvHstTotalRead_ = 0;
+    constexpr std::size_t MAX_HISTOGRAM_BINS = 1000000;
+    constexpr std::size_t MAX_HISTOGRAM_PAYLOAD =
+        MAX_HISTOGRAM_BINS * sizeof(uint32_t);
+    ADTimePix3Stream::FrameBuffer frameBuffer(
+        MAX_BUFFER_SIZE, MAX_HISTOGRAM_PAYLOAD, MAX_BUFFER_SIZE);
+
+    const auto resolvePayloadSize =
+        [](const std::string& header, std::size_t& payloadBytes,
+           std::string& error) {
+            const json parsed = json::parse(header, nullptr, false);
+            if (!parsed.is_object() || !parsed.contains("binSize") ||
+                !parsed["binSize"].is_number_integer()) {
+                error = "malformed jsonhisto header or invalid binSize";
+                return false;
+            }
+
+            const long long binSize = parsed["binSize"].get<long long>();
+            if (binSize <= 0 ||
+                static_cast<unsigned long long>(binSize) > MAX_HISTOGRAM_BINS) {
+                error = "binSize is outside the supported range";
+                return false;
+            }
+            payloadBytes = static_cast<std::size_t>(binSize) * sizeof(uint32_t);
+            return true;
+        };
     
     while (prvHstRunning_) {
         epicsMutexLock(prvHstMutex_);
@@ -948,19 +953,10 @@ void ADTimePix::prvHstWorkerThread() {
                     break;
                 }
                 
-                if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
-                    prvHstTotalRead_ = 0;
-                }
-                
                 if (prvHstLineBuffer_.size() < MAX_BUFFER_SIZE) {
                     prvHstLineBuffer_.resize(MAX_BUFFER_SIZE);
                 }
-                
-                size_t available_space = MAX_BUFFER_SIZE - prvHstTotalRead_ - 1;
-                if (available_space == 0 || available_space > MAX_BUFFER_SIZE) {
-                    epicsMutexUnlock(prvHstMutex_);
-                    break;
-                }
+                const size_t available_space = prvHstLineBuffer_.size();
                 
                 // Store pointer locally to avoid issues if it's reset during receive
                 NetworkClient* client = prvHstNetworkClient_.get();
@@ -970,7 +966,7 @@ void ADTimePix::prvHstWorkerThread() {
                 }
                 
                 // Get buffer pointer and validate
-                char* buffer_ptr = prvHstLineBuffer_.data() + prvHstTotalRead_;
+                char* buffer_ptr = prvHstLineBuffer_.data();
                 if (!buffer_ptr) {
                                         epicsMutexUnlock(prvHstMutex_);
                     break;
@@ -995,6 +991,14 @@ void ADTimePix::prvHstWorkerThread() {
                         continue;
                     }
                     if (bytes_read == 0) {
+                        const ADTimePix3Stream::EndOfStreamStatus endStatus =
+                            frameBuffer.endOfStreamStatus();
+                        if (endStatus != ADTimePix3Stream::EndOfStreamStatus::Clean) {
+                            fprintf(stderr,
+                                    "ERROR | ADTimePix::%s: PrvHst TCP stream ended with %s\n",
+                                    functionName,
+                                    ADTimePix3Stream::endOfStreamStatusMessage(endStatus));
+                        }
                         epicsMutexLock(prvHstMutex_);
                         prvHstConnected_ = false;
                         prvHstRunning_ = false;
@@ -1015,137 +1019,60 @@ void ADTimePix::prvHstWorkerThread() {
                 
                                 epicsMutexLock(prvHstMutex_);
                 
-                                prvHstTotalRead_ += bytes_read;
-                
-                                // Ensure we don't write out of bounds
-                if (prvHstTotalRead_ >= MAX_BUFFER_SIZE) {
-                    fprintf(stderr, "ERROR | ADTimePix::prvHstWorkerThread: Buffer overflow! prvHstTotalRead_=%zu, MAX_BUFFER_SIZE=%zu\n", 
-                            prvHstTotalRead_, MAX_BUFFER_SIZE);
-                    prvHstTotalRead_ = MAX_BUFFER_SIZE - 1;
+                const ADTimePix3Stream::FrameResult appendResult =
+                    frameBuffer.append(prvHstLineBuffer_.data(),
+                                       static_cast<std::size_t>(bytes_read));
+                bool frameError =
+                    appendResult == ADTimePix3Stream::FrameResult::BufferLimitExceeded;
+                if (frameError) {
+                    fprintf(stderr,
+                            "ERROR | ADTimePix::%s: PrvHst rejected TCP stream: %s\n",
+                            functionName,
+                            ADTimePix3Stream::frameResultMessage(appendResult));
                 }
-                
-                                prvHstLineBuffer_[prvHstTotalRead_] = '\0';
-                
-                                // Look for newline to find complete JSON line
-                                char* buffer_data = prvHstLineBuffer_.data();
-                if (!buffer_data) {
-                                        epicsMutexUnlock(prvHstMutex_);
+                prvHstTotalRead_ = frameBuffer.bufferedBytes();
+
+                while (!frameError) {
+                    ADTimePix3Stream::FramedMessage frame;
+                    std::string framingError;
+                    const ADTimePix3Stream::FrameResult frameResult =
+                        frameBuffer.next(resolvePayloadSize, frame, framingError);
+                    if (frameResult == ADTimePix3Stream::FrameResult::NeedMoreData) {
+                        break;
+                    }
+                    if (frameResult != ADTimePix3Stream::FrameResult::FrameReady) {
+                        fprintf(stderr,
+                                "ERROR | ADTimePix::%s: PrvHst rejected TCP stream: %s%s%s\n",
+                                functionName,
+                                ADTimePix3Stream::frameResultMessage(frameResult),
+                                framingError.empty() ? "" : ": ",
+                                framingError.c_str());
+                        frameError = true;
+                        break;
+                    }
+
+                    std::vector<char> completeFrame;
+                    completeFrame.reserve(
+                        frame.header.size() + 1 + frame.payload.size());
+                    completeFrame.insert(completeFrame.end(),
+                                         frame.header.begin(), frame.header.end());
+                    completeFrame.push_back('\0');
+                    completeFrame.insert(completeFrame.end(),
+                                         frame.payload.begin(), frame.payload.end());
+                    char* separator = completeFrame.data() + frame.header.size();
+                    if (!processPrvHstDataLine(completeFrame.data(), separator,
+                                               completeFrame.size())) {
+                        frameError = true;
+                        break;
+                    }
+                    prvHstTotalRead_ = frameBuffer.bufferedBytes();
+                }
+
+                if (frameError) {
+                    epicsMutexUnlock(prvHstMutex_);
                     break;
                 }
-                
-                                char* newline_pos = static_cast<char*>(memchr(buffer_data, '\n', prvHstTotalRead_));
-                
-                                if (newline_pos) {
-                                        // Found a newline - check if there's valid JSON before it
-                    char* json_start = nullptr;
-                    
-                    // Try to find {" pattern (most reliable indicator of JSON)
-                    for (char* p = prvHstLineBuffer_.data(); p < newline_pos - 1; ++p) {
-                        if (*p == '{' && p[1] == '"') {
-                            json_start = p;
-                            break;
-                        }
-                    }
-                    
-                    // If we didn't find {", try finding { followed by valid JSON structure
-                    if (!json_start) {
-                        for (char* p = prvHstLineBuffer_.data(); p < newline_pos - 2; ++p) {
-                            if (*p == '{') {
-                                bool looks_like_json = false;
-                                size_t check_len = std::min(size_t(newline_pos - p - 1), size_t(100));
-                                
-                                for (size_t i = 1; i < check_len; ++i) {
-                                    char c = p[i];
-                                    if (c == '"' || c == ':' || c == ',' || c == '}' || c == '[' || c == ']') {
-                                        looks_like_json = true;
-                                        break;
-                                    }
-                                    if (c < 32 && c != '\n' && c != '\r' && c != '\t') {
-                                        break;
-                                    }
-                                }
-                                
-                                if (looks_like_json) {
-                                    json_start = p;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    
-                    bool valid_json_start = (json_start != nullptr);
-                    
-                    if (valid_json_start) {
-                        // Try to parse the JSON to verify it's valid
-                        bool is_valid_json = false;
-                        try {
-                            std::string json_str(json_start, newline_pos - json_start);
-                            json test_json = json::parse(json_str);
-                            if (test_json.contains("binSize") || test_json.contains("binWidth") ||
-                                test_json.contains("timeAtFrame")) {
-                                is_valid_json = true;
-                            }
-                        } catch (...) {
-                            is_valid_json = false;
-                        }
-                        
-                        if (is_valid_json) {
-                            *newline_pos = '\0';
-                            
-                            // Process the JSON line (will return early if accumulation is disabled)
-                            if (!processPrvHstDataLine(json_start, newline_pos, prvHstTotalRead_)) {
-                                epicsMutexUnlock(prvHstMutex_);
-                                break;
-                            }
-                            
-                            // Move remaining data to start of buffer
-                            size_t remaining = prvHstTotalRead_ - (newline_pos - prvHstLineBuffer_.data() + 1);
-                            if (remaining > 0) {
-                                memmove(prvHstLineBuffer_.data(), newline_pos + 1, remaining);
-                            }
-                            prvHstTotalRead_ = remaining;
-                        } else {
-                            // Found { but it's not valid JSON - skip this newline
-                            size_t remaining = prvHstTotalRead_ - (newline_pos - prvHstLineBuffer_.data() + 1);
-                            if (remaining > 0) {
-                                memmove(prvHstLineBuffer_.data(), newline_pos + 1, remaining);
-                            }
-                            prvHstTotalRead_ = remaining;
-                        }
-                    } else {
-                        // Found newline but no valid JSON - might be binary data
-                        size_t remaining = prvHstTotalRead_ - (newline_pos - prvHstLineBuffer_.data() + 1);
-                        if (remaining > 0) {
-                            memmove(prvHstLineBuffer_.data(), newline_pos + 1, remaining);
-                        }
-                        prvHstTotalRead_ = remaining;
-                    }
-                } else {
-                    // No newline found yet - check if buffer is getting too full
-                    if (prvHstTotalRead_ >= MAX_BUFFER_SIZE - 1) {
-                        // Check if accumulation is disabled - if so, silently discard data
-                        // (this is expected behavior when accumulation is disabled)
-                        int accumulationEnable = 0;
-                        getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
-                        if (accumulationEnable) {
-                            printf("PrvHst TCP buffer full without finding newline, resetting\n");
-                        }
-                        // Always reset buffer to prevent overflow, but only log warning if accumulation is enabled
-                        prvHstTotalRead_ = 0;
-                    }
-                }
-                
-                if (prvHstTotalRead_ >= MAX_BUFFER_SIZE - 1) {
-                    // Check if accumulation is disabled - if so, silently discard data
-                    int accumulationEnable = 0;
-                    getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
-                    if (accumulationEnable) {
-                        printf("PrvHst TCP buffer full, resetting\n");
-                    }
-                    // Always reset buffer to prevent overflow, but only log warning if accumulation is enabled
-                    prvHstTotalRead_ = 0;
-                }
-                
+
                 epicsMutexUnlock(prvHstMutex_);
                 
             } catch (const std::exception& e) {

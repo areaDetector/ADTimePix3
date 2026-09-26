@@ -71,20 +71,28 @@ ImageHeaderError validateJsonImageHeader(const nlohmann::json& header,
     }
     if (!header["width"].is_number_integer() ||
         !header["height"].is_number_integer() ||
-        (header.contains("pixelFormat") && !header["pixelFormat"].is_string())) {
+        (header.contains("pixelFormat") && !header["pixelFormat"].is_string()) ||
+        (header.contains("dataSize") && !header["dataSize"].is_number_integer()) ||
+        (header.contains("bitDepth") && !header["bitDepth"].is_number_integer())) {
         return ImageHeaderError::InvalidFieldType;
     }
 
     std::int64_t width = 0;
     std::int64_t height = 0;
-    // Serval 4.1.6 omits pixelFormat for its normal uint16 jsonimage stream.
-    // Preserve that wire-compatible default, but validate any explicit value.
-    std::string pixelFormat = "uint16";
+    std::int64_t declaredDataSize = 0;
+    std::int64_t declaredBitDepth = 0;
+    std::string pixelFormat;
     try {
         width = header["width"].get<std::int64_t>();
         height = header["height"].get<std::int64_t>();
         if (header.contains("pixelFormat")) {
             pixelFormat = header["pixelFormat"].get<std::string>();
+        }
+        if (header.contains("dataSize")) {
+            declaredDataSize = header["dataSize"].get<std::int64_t>();
+        }
+        if (header.contains("bitDepth")) {
+            declaredBitDepth = header["bitDepth"].get<std::int64_t>();
         }
     } catch (const nlohmann::json::exception&) {
         return ImageHeaderError::InvalidFieldType;
@@ -98,24 +106,77 @@ ImageHeaderError validateJsonImageHeader(const nlohmann::json& header,
         return ImageHeaderError::InvalidDimension;
     }
 
-    PixelFormat format;
-    std::size_t bytesPerPixel = 0;
-    if (pixelFormat == "uint16" || pixelFormat == "UINT16") {
-        format = PixelFormat::UInt16;
-        bytesPerPixel = sizeof(std::uint16_t);
-    } else if (pixelFormat == "uint32" || pixelFormat == "UINT32") {
-        format = PixelFormat::UInt32;
-        bytesPerPixel = sizeof(std::uint32_t);
-    } else {
-        return ImageHeaderError::UnsupportedPixelFormat;
-    }
-
     const std::size_t checkedWidth = static_cast<std::size_t>(width);
     const std::size_t checkedHeight = static_cast<std::size_t>(height);
     std::size_t pixelCount = 0;
     if (!checkedMultiply(checkedWidth, checkedHeight, pixelCount) ||
         pixelCount > limits.maxPixels) {
         return ImageHeaderError::PixelLimitExceeded;
+    }
+
+    std::size_t bytesPerPixel = 0;
+    const auto mergeBytesPerPixel = [&bytesPerPixel](std::size_t candidate) {
+        if (bytesPerPixel != 0 && bytesPerPixel != candidate) {
+            return false;
+        }
+        bytesPerPixel = candidate;
+        return true;
+    };
+
+    if (!pixelFormat.empty()) {
+        std::size_t explicitBytesPerPixel = 0;
+        if (pixelFormat == "uint8" || pixelFormat == "UINT8") {
+            explicitBytesPerPixel = sizeof(std::uint8_t);
+        } else if (pixelFormat == "uint16" || pixelFormat == "UINT16") {
+            explicitBytesPerPixel = sizeof(std::uint16_t);
+        } else if (pixelFormat == "uint32" || pixelFormat == "UINT32") {
+            explicitBytesPerPixel = sizeof(std::uint32_t);
+        } else {
+            return ImageHeaderError::UnsupportedPixelFormat;
+        }
+        if (!mergeBytesPerPixel(explicitBytesPerPixel)) {
+            return ImageHeaderError::InconsistentPixelMetadata;
+        }
+    }
+
+    if (header.contains("bitDepth")) {
+        if (declaredBitDepth != 8 && declaredBitDepth != 16 && declaredBitDepth != 32) {
+            return ImageHeaderError::UnsupportedPixelFormat;
+        }
+        if (!mergeBytesPerPixel(static_cast<std::size_t>(declaredBitDepth / 8))) {
+            return ImageHeaderError::InconsistentPixelMetadata;
+        }
+    }
+
+    if (header.contains("dataSize")) {
+        if (declaredDataSize <= 0 ||
+            static_cast<std::uint64_t>(declaredDataSize) > limits.maxPayloadBytes ||
+            static_cast<std::uint64_t>(declaredDataSize) % pixelCount != 0) {
+            return ImageHeaderError::PayloadLimitExceeded;
+        }
+        const std::size_t declaredBytesPerPixel =
+            static_cast<std::size_t>(declaredDataSize) / pixelCount;
+        if (declaredBytesPerPixel != sizeof(std::uint8_t) &&
+            declaredBytesPerPixel != sizeof(std::uint16_t) &&
+            declaredBytesPerPixel != sizeof(std::uint32_t)) {
+            return ImageHeaderError::UnsupportedPixelFormat;
+        }
+        if (!mergeBytesPerPixel(declaredBytesPerPixel)) {
+            return ImageHeaderError::InconsistentPixelMetadata;
+        }
+    }
+
+    // Older fixtures may omit all storage metadata. Serval 4.1.6 supplies
+    // dataSize and bitDepth; retain uint16 only as a legacy fallback.
+    if (bytesPerPixel == 0) {
+        bytesPerPixel = sizeof(std::uint16_t);
+    }
+
+    PixelFormat format = PixelFormat::UInt16;
+    if (bytesPerPixel == sizeof(std::uint8_t)) {
+        format = PixelFormat::UInt8;
+    } else if (bytesPerPixel == sizeof(std::uint32_t)) {
+        format = PixelFormat::UInt32;
     }
 
     std::size_t payloadBytes = 0;
@@ -141,11 +202,13 @@ const char* imageHeaderErrorMessage(ImageHeaderError error)
     case ImageHeaderError::MissingField:
         return "missing width or height";
     case ImageHeaderError::InvalidFieldType:
-        return "width, height, or pixelFormat has the wrong JSON type";
+        return "image layout metadata has the wrong JSON type";
     case ImageHeaderError::InvalidDimension:
         return "image dimensions are non-positive or exceed detector limits";
     case ImageHeaderError::UnsupportedPixelFormat:
-        return "unsupported pixelFormat";
+        return "unsupported jsonimage pixel storage format";
+    case ImageHeaderError::InconsistentPixelMetadata:
+        return "pixelFormat, bitDepth, and dataSize disagree";
     case ImageHeaderError::PixelLimitExceeded:
         return "image pixel count exceeds detector limits";
     case ImageHeaderError::PayloadLimitExceeded:
@@ -156,6 +219,9 @@ const char* imageHeaderErrorMessage(ImageHeaderError error)
 
 const char* pixelFormatName(PixelFormat format)
 {
+    if (format == PixelFormat::UInt8) {
+        return "uint8";
+    }
     return format == PixelFormat::UInt32 ? "uint32" : "uint16";
 }
 
