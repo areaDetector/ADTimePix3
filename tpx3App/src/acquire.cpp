@@ -131,6 +131,73 @@ int nextFreeTcpPort(const std::string& host, int startPort, const std::set<int>&
 
 }  // namespace
 
+bool ADTimePix::startStreamWorker(
+    ADTimePix3StreamWorker::State& workerState,
+    epicsThreadId& threadId,
+    const char* threadName,
+    EPICSTHREADFUNC entryPoint,
+    const epicsThreadOpts& options)
+{
+    if (!streamLifecycleMutex_) {
+        ERR("Stream lifecycle mutex is not initialized");
+        return false;
+    }
+
+    epicsMutexLock(streamLifecycleMutex_);
+    bool started = false;
+    if (threadId == nullptr && workerState.start()) {
+        threadId = epicsThreadCreateOpt(threadName, entryPoint, this, &options);
+        started = (threadId != nullptr);
+        if (!started) {
+            workerState.fail();
+        }
+    }
+    epicsMutexUnlock(streamLifecycleMutex_);
+    return started;
+}
+
+void ADTimePix::stopAndJoinStreamWorkers()
+{
+    if (!streamLifecycleMutex_) {
+        return;
+    }
+
+    epicsMutexLock(streamLifecycleMutex_);
+    prvImgWorkerState_.requestStop();
+    prvImg1WorkerState_.requestStop();
+    imgWorkerState_.requestStop();
+    prvHstWorkerState_.requestStop();
+
+    const std::shared_ptr<NetworkClient> clients[] = {
+        std::atomic_load(&prvImgNetworkClient_),
+        std::atomic_load(&prvImg1NetworkClient_),
+        std::atomic_load(&imgNetworkClient_),
+        std::atomic_load(&prvHstNetworkClient_)};
+    for (const std::shared_ptr<NetworkClient>& client : clients) {
+        if (client) {
+            client->interrupt();
+        }
+    }
+
+    epicsThreadId* handles[] = {
+        &prvImgWorkerThreadId_, &prvImg1WorkerThreadId_,
+        &imgWorkerThreadId_, &prvHstWorkerThreadId_};
+    const epicsThreadId self = epicsThreadGetIdSelf();
+    for (epicsThreadId* handle : handles) {
+        if (*handle != nullptr && *handle != self) {
+            const epicsThreadId joinable = *handle;
+            *handle = nullptr;
+            epicsThreadMustJoin(joinable);
+        }
+    }
+
+    prvImgDisconnect();
+    prvImg1Disconnect();
+    imgDisconnect();
+    prvHstDisconnect();
+    epicsMutexUnlock(streamLifecycleMutex_);
+}
+
 void ADTimePix::syncTcpStreamEndpoints() {
     int writePrvImg = 0;
     getIntegerParam(ADTimePixWritePrvImg, &writePrvImg);
@@ -246,42 +313,10 @@ asynStatus ADTimePix::ensurePreviewTcpPortsFree(bool forceRotate) {
 asynStatus ADTimePix::acquireStart(){
     asynStatus status = asynSuccess;
 
-    // Ensure any existing PrvImg TCP connection is disconnected before starting new measurement
-    // This prevents port conflicts
-    if (prvImgMutex_) {
-        epicsMutexLock(prvImgMutex_);
-        prvImgRunning_ = false;
-        epicsMutexUnlock(prvImgMutex_);
-    }
-    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-    prvImgDisconnect();
-
-    if (prvImg1Mutex_) {
-        epicsMutexLock(prvImg1Mutex_);
-        prvImg1Running_ = false;
-        epicsMutexUnlock(prvImg1Mutex_);
-    }
-    if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImg1WorkerThreadId_);
-        prvImg1WorkerThreadId_ = NULL;
-    }
-    prvImg1Disconnect();
-    
-    // Ensure any existing Img TCP connection is disconnected before starting new measurement
-    // This prevents port conflicts
-    if (imgMutex_) {
-        epicsMutexLock(imgMutex_);
-        imgRunning_ = false;
-        epicsMutexUnlock(imgMutex_);
-    }
-    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(imgWorkerThreadId_);
-        imgWorkerThreadId_ = NULL;
-    }
-    imgDisconnect();
+    // Start from one known stream-worker generation. This requests stop,
+    // interrupts any blocking receive, joins every old worker, and only then
+    // releases its socket ownership.
+    stopAndJoinStreamWorkers();
 
     setIntegerParam(ADStatus, ADStatusAcquire);
     setStringParam(ADStatusMessage, "Starting acquisition...");
@@ -366,81 +401,9 @@ asynStatus ADTimePix::acquireStart(){
         } else {
             setStringParam(ADStatusMessage, "Failed to start acquisition");
         }
-        // Ensure any partially started worker thread is stopped
-        epicsMutexLock(prvImgMutex_);
-        prvImgRunning_ = false;
-        epicsMutexUnlock(prvImgMutex_);
-        if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-            epicsThreadMustJoin(prvImgWorkerThreadId_);
-            prvImgWorkerThreadId_ = NULL;
-        }
-        prvImgDisconnect();
+        // No worker should survive a failed remote start.
+        stopAndJoinStreamWorkers();
 
-        if (prvImg1Mutex_) {
-            epicsMutexLock(prvImg1Mutex_);
-            prvImg1Running_ = false;
-            epicsMutexUnlock(prvImg1Mutex_);
-        }
-        if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
-            epicsThreadMustJoin(prvImg1WorkerThreadId_);
-            prvImg1WorkerThreadId_ = NULL;
-        }
-        prvImg1Disconnect();
-        
-        epicsMutexLock(imgMutex_);
-        imgRunning_ = false;
-        epicsMutexUnlock(imgMutex_);
-        if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-            epicsThreadMustJoin(imgWorkerThreadId_);
-            imgWorkerThreadId_ = NULL;
-        }
-        imgDisconnect();
-        
-        // Also stop PrvHst if it was started
-        if (prvHstMutex_) {
-            epicsMutexLock(prvHstMutex_);
-            prvHstRunning_ = false;
-            epicsMutexUnlock(prvHstMutex_);
-        }
-    // Signal PrvHst worker thread to stop FIRST (before trying to join)
-    if (prvHstMutex_) {
-        epicsMutexLock(prvHstMutex_);
-        prvHstRunning_ = false;
-        // Reset metadata tracking for next acquisition (but keep accumulated data)
-        prvHstFirstFrameReceived_ = false;
-        prvHstAcquisitionRate_ = 0.0;
-        prvHstRateSamples_.clear();
-        // Don't reset counters here - let user control via reset PV
-        // Only reset rate tracking
-        setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
-        epicsMutexUnlock(prvHstMutex_);
-    }
-    
-    // Wait for PrvHst worker thread to exit
-    // The thread may have already exited when connection closed, so we need to handle that
-    if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadId threadId = prvHstWorkerThreadId_;
-        prvHstWorkerThreadId_ = NULL;  // Clear pointer first to avoid double-join attempts
-        
-        // Give thread a moment to exit gracefully if it's still running
-        epicsThreadSleep(0.2);
-        
-        // Try to join - if thread already exited, epicsThreadMustJoin will fail
-        // We need to check if thread is still valid before joining
-        if (threadId != NULL) {
-            // epicsThreadMustJoin will handle the case where thread already exited
-            // but it will call cantProceed if thread is not joinable
-            // So we need to check if we can proceed first
-            try {
-                epicsThreadMustJoin(threadId);
-            } catch (...) {
-                // Thread already exited or not joinable - this is OK
-                printf("PrvHst worker thread already exited or not joinable\n");
-            }
-        }
-    }
-        prvHstDisconnect();
-        
         setIntegerParam(ADStatus, ADStatusIdle);
         return asynError;
     }
@@ -480,18 +443,12 @@ asynStatus ADTimePix::acquireStart(){
             // Give Serval time to bind to the TCP port (minimum: 200ms)
             epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
             
-            epicsMutexLock(prvImgMutex_);
-            if (!prvImgRunning_ && !prvImgWorkerThreadId_) {
-                prvImgRunning_ = true;
-                prvImgWorkerThreadId_ = epicsThreadCreateOpt("prvImgWorker", prvImgWorkerThreadC, this, &opts);
-                if (!prvImgWorkerThreadId_) {
-                    ERR("Failed to create PrvImg worker thread");
-                    prvImgRunning_ = false;
-                } else {
-                    LOG("Started PrvImg TCP worker thread in acquireStart");
-                }
+            if (startStreamWorker(prvImgWorkerState_, prvImgWorkerThreadId_,
+                                  "prvImgWorker", prvImgWorkerThreadC, opts)) {
+                LOG("Started PrvImg TCP worker thread in acquireStart");
+            } else if (!prvImgWorkerState_.running()) {
+                ERR("Failed to create PrvImg worker thread");
             }
-            epicsMutexUnlock(prvImgMutex_);
         }
     }
 
@@ -504,18 +461,12 @@ asynStatus ADTimePix::acquireStart(){
         if (prvImg1Path.find("tcp://") == 0) {
             epicsThreadSleep(0.2);
 
-            epicsMutexLock(prvImg1Mutex_);
-            if (!prvImg1Running_ && !prvImg1WorkerThreadId_) {
-                prvImg1Running_ = true;
-                prvImg1WorkerThreadId_ = epicsThreadCreateOpt("prvImg1Worker", prvImg1WorkerThreadC, this, &opts);
-                if (!prvImg1WorkerThreadId_) {
-                    ERR("Failed to create PrvImg1 worker thread");
-                    prvImg1Running_ = false;
-                } else {
-                    LOG("Started PrvImg1 TCP worker thread in acquireStart");
-                }
+            if (startStreamWorker(prvImg1WorkerState_, prvImg1WorkerThreadId_,
+                                  "prvImg1Worker", prvImg1WorkerThreadC, opts)) {
+                LOG("Started PrvImg1 TCP worker thread in acquireStart");
+            } else if (!prvImg1WorkerState_.running()) {
+                ERR("Failed to create PrvImg1 worker thread");
             }
-            epicsMutexUnlock(prvImg1Mutex_);
         }
     }
     
@@ -533,18 +484,12 @@ asynStatus ADTimePix::acquireStart(){
                 // Give Serval time to bind to the TCP port (minimum: 200ms)
                 epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
                 
-                epicsMutexLock(imgMutex_);
-                if (!imgRunning_ && !imgWorkerThreadId_) {
-                    imgRunning_ = true;
-                    imgWorkerThreadId_ = epicsThreadCreateOpt("imgWorker", imgWorkerThreadC, this, &opts);
-                    if (!imgWorkerThreadId_) {
-                        ERR("Failed to create Img worker thread");
-                        imgRunning_ = false;
-                    } else {
-                        LOG("Started Img TCP worker thread in acquireStart");
-                    }
+                if (startStreamWorker(imgWorkerState_, imgWorkerThreadId_,
+                                      "imgWorker", imgWorkerThreadC, opts)) {
+                    LOG("Started Img TCP worker thread in acquireStart");
+                } else if (!imgWorkerState_.running()) {
+                    ERR("Failed to create Img worker thread");
                 }
-                epicsMutexUnlock(imgMutex_);
             } else {
                 LOG("ImgAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
             }
@@ -645,21 +590,13 @@ asynStatus ADTimePix::acquireStart(){
                                 printf("PrvHst: Mutex became null before second lock\n");
                                 return status;
                             }
-                            epicsMutexLock(prvHstMutex_);
-                            if (!prvHstRunning_ && !prvHstWorkerThreadId_) {
-                                prvHstRunning_ = true;
-                                prvHstWorkerThreadId_ = epicsThreadCreateOpt("prvHstWorker", prvHstWorkerThreadC, this, &opts);
-                                if (!prvHstWorkerThreadId_) {
-                                    printf("PrvHst: Failed to create worker thread\n");
-                                    prvHstRunning_ = false;
-                                } else {
-                                    printf("PrvHst: Started TCP worker thread (host=%s, port=%d)\n", host.c_str(), port);
-                                }
-                            } else {
-                                printf("PrvHst: Worker thread already running or exists (running=%d, threadId=%p)\n", 
-                                       prvHstRunning_, prvHstWorkerThreadId_);
+                            if (startStreamWorker(prvHstWorkerState_, prvHstWorkerThreadId_,
+                                                  "prvHstWorker", prvHstWorkerThreadC, opts)) {
+                                printf("PrvHst: Started TCP worker thread (host=%s, port=%d)\n",
+                                       host.c_str(), port);
+                            } else if (!prvHstWorkerState_.running()) {
+                                printf("PrvHst: Failed to create worker thread\n");
                             }
-                            epicsMutexUnlock(prvHstMutex_);
                         } else {
                             printf("PrvHst: Failed to parse TCP path: %s\n", prvHstPath.c_str());
                         }
@@ -868,11 +805,13 @@ asynStatus ADTimePix::acquireStop(){
         epicsThreadSleep(0.5);
     }
 
-    // Stop and join all stream workers after Serval has had the opportunity to
-    // flush final data. Receive polling ensures a silent peer cannot block a join.
+    // Establish quiescence before resetting any state the workers update. Stop
+    // publishes the stopped phase, wakes reconnect waits, interrupts blocked
+    // receives, and joins every worker before returning.
+    stopAndJoinStreamWorkers();
+
     if (prvImgMutex_) {
         epicsMutexLock(prvImgMutex_);
-        prvImgRunning_ = false;
         prvImgFirstFrameReceived_ = false;
         prvImgT1ReadyForDiff_ = false;
         prvImgT0OrphanForDiff_ = false;
@@ -886,7 +825,6 @@ asynStatus ADTimePix::acquireStop(){
 
     if (prvImg1Mutex_) {
         epicsMutexLock(prvImg1Mutex_);
-        prvImg1Running_ = false;
         prvImg1FirstFrameReceived_ = false;
         prvImg1T1ReadyForDiff_ = false;
         prvImg1T0OrphanForDiff_ = false;
@@ -899,7 +837,6 @@ asynStatus ADTimePix::acquireStop(){
 
     if (imgMutex_) {
         epicsMutexLock(imgMutex_);
-        imgRunning_ = false;
         imgFirstFrameReceived_ = false;
         imgAcquisitionRate_ = 0.0;
         imgRateSamples_.clear();
@@ -910,40 +847,12 @@ asynStatus ADTimePix::acquireStop(){
 
     if (prvHstMutex_) {
         epicsMutexLock(prvHstMutex_);
-        prvHstRunning_ = false;
         prvHstFirstFrameReceived_ = false;
         prvHstAcquisitionRate_ = 0.0;
         prvHstRateSamples_.clear();
         setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
         epicsMutexUnlock(prvHstMutex_);
     }
-
-    if (prvImgWorkerThreadId_ != NULL && prvImgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-
-    if (prvImg1WorkerThreadId_ != NULL && prvImg1WorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(prvImg1WorkerThreadId_);
-        prvImg1WorkerThreadId_ = NULL;
-    }
-
-    if (imgWorkerThreadId_ != NULL && imgWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(imgWorkerThreadId_);
-        imgWorkerThreadId_ = NULL;
-    }
-
-    if (prvHstWorkerThreadId_ != NULL && prvHstWorkerThreadId_ != epicsThreadGetIdSelf()) {
-        epicsThreadId prvHstThreadId = prvHstWorkerThreadId_;
-        prvHstWorkerThreadId_ = NULL;
-        epicsThreadSleep(0.1);
-        epicsThreadMustJoin(prvHstThreadId);
-    }
-
-    prvImgDisconnect();
-    prvImg1Disconnect();
-    imgDisconnect();
-    prvHstDisconnect();
 
     if (!stopSucceeded){
         logHttpFailure("acquireStop GET /measurement/stop", "GET", stopMeasurementURL, (long)r.status_code, r.text);

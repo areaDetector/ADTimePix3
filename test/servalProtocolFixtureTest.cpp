@@ -23,6 +23,7 @@
 #include "serval_reconnect.h"
 #include "serval_stream_framing.h"
 #include "serval_stream_validation.h"
+#include "stream_worker_state.h"
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -30,11 +31,13 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstring>
 #include <fstream>
 #include <limits>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -239,6 +242,104 @@ void testProductionNetworkClient()
            "production NetworkClient bounds a receive from a silent peer");
     testOk(NetworkClient::kReceivePollTimeoutMs == 250,
            "production stream receive polling uses the documented interval");
+
+    FakeServalTcpServer interruptServer({"not released"}, false);
+    NetworkClient interruptClient;
+    testOk(interruptClient.connect("127.0.0.1", interruptServer.port()) &&
+               interruptServer.waitForClient(kFixtureDeadline),
+           "production NetworkClient connects before blocked-receive interruption");
+
+    std::atomic<bool> receiveStarted(false);
+    ssize_t interruptRead = 1;
+    int interruptError = 0;
+    std::thread receiver([&]() {
+        char interruptByte = 0;
+        receiveStarted.store(true, std::memory_order_release);
+        errno = 0;
+        interruptRead = interruptClient.receive(&interruptByte, 1);
+        interruptError = errno;
+    });
+    while (!receiveStarted.load(std::memory_order_acquire)) {
+        std::this_thread::yield();
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    const auto interruptStarted = std::chrono::steady_clock::now();
+    interruptClient.interrupt();
+    receiver.join();
+    const auto interruptElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - interruptStarted);
+    testOk(interruptRead <= 0 && !interruptClient.is_connected(),
+           "interrupt terminates a receive from a silent peer and clears connection state");
+    testOk(!NetworkClient::isReceiveTimeout(interruptError) &&
+               interruptElapsed < kFixtureDeadline,
+           "interrupt wakes a blocked receive without a polling timeout");
+    interruptClient.interrupt();
+    interruptClient.disconnect();
+    testOk(!interruptClient.is_connected(),
+           "repeated interrupt and disconnect are idempotent");
+}
+
+void testStreamWorkerState()
+{
+    using ADTimePix3StreamWorker::State;
+
+    State state;
+    testOk(!state.running() && !state.connected(),
+           "stream worker state starts stopped and disconnected");
+    testOk(state.start() && !state.start() && state.running(),
+           "stream worker state admits exactly one start per generation");
+    state.markConnected();
+    testOk(state.connected(),
+           "running stream worker can publish connected state");
+
+    std::atomic<bool> waiterStarted(false);
+    bool stopObserved = false;
+    std::thread waiter([&]() {
+        waiterStarted.store(true, std::memory_order_release);
+        stopObserved = state.waitForStopFor(kFixtureDeadline);
+    });
+    while (!waiterStarted.load(std::memory_order_acquire)) {
+        std::this_thread::yield();
+    }
+    state.requestStop();
+    waiter.join();
+    testOk(stopObserved, "stop request wakes an interruptible worker wait");
+    testOk(!state.running() && !state.connected(),
+           "stop request atomically leaves the worker stopped and disconnected");
+
+    testOk(state.start(), "stream worker state permits a new generation after stop");
+    state.markConnected();
+    state.fail();
+    testOk(!state.running() && !state.connected(),
+           "worker failure clears running and connected state");
+
+    bool concurrentStopPassed = true;
+    for (int cycle = 0; cycle < 100; ++cycle) {
+        concurrentStopPassed = concurrentStopPassed && state.start();
+        std::atomic<bool> publish(false);
+        std::thread publisher([&]() {
+            while (!publish.load(std::memory_order_acquire)) {
+                std::this_thread::yield();
+            }
+            state.markConnected();
+        });
+        publish.store(true, std::memory_order_release);
+        state.requestStop();
+        publisher.join();
+        concurrentStopPassed = concurrentStopPassed &&
+                               !state.running() && !state.connected();
+    }
+    testOk(concurrentStopPassed,
+           "concurrent connection publication cannot revive a stopped worker");
+
+    bool cyclesPassed = true;
+    for (int cycle = 0; cycle < 100; ++cycle) {
+        cyclesPassed = cyclesPassed && state.start();
+        state.markConnected();
+        state.requestStop();
+        cyclesPassed = cyclesPassed && !state.running() && !state.connected();
+    }
+    testOk(cyclesPassed, "stream worker state survives repeated start-stop cycles");
 }
 
 void testConsumeOnceStreamFraming()
@@ -1597,10 +1698,11 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(259);
+    testPlan(272);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
+    testStreamWorkerState();
     testConsumeOnceStreamFraming();
     testHttpRequestAndResponse();
     testProductionHttpClient();

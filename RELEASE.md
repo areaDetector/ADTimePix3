@@ -36,6 +36,14 @@ Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * Hardware-free regression tests cover every two-chunk split across adjacent messages, byte-at-a-time delivery, coalescing, binary delimiter bytes, short payloads, clean/truncated EOF, and reconnect-buffer reset.
   * Emulator qualification passed on 2026-09-26 with Serval 4.1.6: TPX3 processed 117 frames with zero drops while image and histogram displays updated; MPX3 processed four frames with zero drops, delivered four arrays on every T0/T1 preview, integrated-preview, threshold-difference, and full-image output, and closed all three TCP image channels normally at measurement end.
 
+* **Synchronized Serval TCP worker lifecycle**:
+  * PrvImg, PrvImg1, Img, and PrvHst use one atomic stopped/running/connected phase protocol instead of unsynchronized Boolean flags. Thread-handle creation and joining are serialized separately from channel data access.
+  * Stop first publishes the stopped phase, wakes reconnect waits, and interrupts any blocked socket receive with `shutdown()`. The driver then joins every worker before releasing its socket; shared socket ownership keeps a receiver valid until it exits.
+  * The worker read loops no longer hold a channel mutex across blocking TCP receives, reconnect delays, or invocation of the frame-processing path.
+  * Hardware-free tests cover duplicate starts, stop/failure transitions, concurrent stop versus connection publication, 100 repeated start/stop cycles, idempotent socket teardown, and prompt interruption of a silent peer.
+  * TPX3 emulator qualification with Serval 4.1.6 completed 17 consecutive IOC acquisition start/stop cycles with preview image, full image, and preview histogram enabled. Every cycle returned `ADStatus` to Idle after all enabled workers closed; the histogram worker connected and exited on every cycle. The 16 corresponding Serval measurement summaries processed 1,178 frames with zero drops and reported no TCP sender errors.
+  * MPX3 emulator qualification with Serval 4.1.6 completed six finite acquisitions with frame preview, integrated preview, and full image enabled. All three TCP streams closed normally after every measurement, every subsequent acquisition began from Idle, and Serval processed 139 frames with zero drops and no TCP sender errors.
+
 * **Family-safe BPC mask semantics**:
   * ASI confirmed that **bit 0** is the per-pixel mask for both TPX3 and MPX3: set it to mask and clear it for normal operation. Mask changes preserve every adjustment, test-pulse, reserved, and unknown bit.
   * TPX3 mask readback, counts, writes, and masked-pels JSON now test or update only bit 0. The observed value **31 / `0x1f`** is a masked pixel whose adjustment bits are also set; it is not a required complete-byte replacement value.

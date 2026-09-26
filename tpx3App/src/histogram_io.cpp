@@ -795,55 +795,54 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
 
 void ADTimePix::prvHstConnect() {
     const char* functionName = "prvHstConnect";
-    // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
-    // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
-    
     if (!prvHstMutex_) {
         fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Mutex not initialized\n", functionName);
+        prvHstWorkerState_.fail();
         return;
     }
-    
+
     epicsMutexLock(prvHstMutex_);
-    std::string host = prvHstHost_;
-    int port = prvHstPort_;
+    const std::string host = prvHstHost_;
+    const int port = prvHstPort_;
     epicsMutexUnlock(prvHstMutex_);
-    
+
+    if (!prvHstWorkerState_.running()) {
+        return;
+    }
     if (host.empty() || port <= 0) {
-        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Invalid host or port\n", functionName);
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Invalid host or port\n",
+                functionName);
         return;
     }
-    
-    prvHstDisconnect(); // Ensure clean state
-    
-    prvHstNetworkClient_.reset(new NetworkClient());
-    if (!prvHstNetworkClient_) {
-        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP: Failed to create NetworkClient\n", functionName);
+
+    prvHstDisconnect();
+    const std::shared_ptr<NetworkClient> client = std::make_shared<NetworkClient>();
+    std::atomic_store(&prvHstNetworkClient_, client);
+    if (!prvHstWorkerState_.running()) {
+        prvHstDisconnect();
         return;
     }
-    
-    if (prvHstNetworkClient_->connect(host, port)) {
-        epicsMutexLock(prvHstMutex_);
-        prvHstConnected_ = true;
-        epicsMutexUnlock(prvHstMutex_);
-        printf("PrvHst TCP connected to %s:%d\n", host.c_str(), port);
-    } else {
-        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP failed to connect to %s:%d\n", functionName, host.c_str(), port);
-        prvHstNetworkClient_.reset();
+    if (client->connect(host, port)) {
+        prvHstWorkerState_.markConnected();
+        if (prvHstWorkerState_.connected()) {
+            printf("PrvHst TCP connected to %s:%d\n", host.c_str(), port);
+            return;
+        }
     }
+
+    if (prvHstWorkerState_.running()) {
+        fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst TCP failed to connect to %s:%d\n",
+                functionName, host.c_str(), port);
+    }
+    prvHstDisconnect();
 }
 
 void ADTimePix::prvHstDisconnect() {
-    // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
-    // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
-    epicsMutexLock(prvHstMutex_);
-    prvHstConnected_ = false;
-    bool had_client = (prvHstNetworkClient_ != nullptr);
-    if (had_client) {
-        prvHstNetworkClient_->disconnect();
-        prvHstNetworkClient_.reset();
-    }
-    epicsMutexUnlock(prvHstMutex_);
-    if (had_client) {
+    prvHstWorkerState_.markDisconnected();
+    std::shared_ptr<NetworkClient> client =
+        std::atomic_exchange(&prvHstNetworkClient_, std::shared_ptr<NetworkClient>());
+    if (client) {
+        client->disconnect();
         printf("PrvHst TCP disconnected\n");
     }
 }
@@ -855,20 +854,21 @@ void ADTimePix::prvHstWorkerThreadC(void *pPvt) {
 
 void ADTimePix::prvHstWorkerThread() {
     const char* functionName = "prvHstWorkerThread";
-    constexpr double RECONNECT_DELAY_SEC = 1.0;
-    
+    constexpr auto reconnectDelay = std::chrono::milliseconds(1000);
+    constexpr auto accumulationDelay = std::chrono::milliseconds(100);
+
     if (!prvHstMutex_) {
         fprintf(stderr, "ERROR | ADTimePix::%s: PrvHst worker thread: Mutex not initialized\n", functionName);
+        prvHstWorkerState_.fail();
         return;
     }
-    
+
     prvHstLineBuffer_.resize(MAX_BUFFER_SIZE);
     prvHstTotalRead_ = 0;
-    constexpr std::size_t MAX_HISTOGRAM_BINS = 1000000;
-    constexpr std::size_t MAX_HISTOGRAM_PAYLOAD =
-        MAX_HISTOGRAM_BINS * sizeof(uint32_t);
+    constexpr std::size_t maxHistogramBins = 1000000;
+    constexpr std::size_t maxHistogramPayload = maxHistogramBins * sizeof(uint32_t);
     ADTimePix3Stream::FrameBuffer frameBuffer(
-        MAX_BUFFER_SIZE, MAX_HISTOGRAM_PAYLOAD, MAX_BUFFER_SIZE);
+        MAX_BUFFER_SIZE, maxHistogramPayload, MAX_BUFFER_SIZE);
 
     const auto resolvePayloadSize =
         [](const std::string& header, std::size_t& payloadBytes,
@@ -882,211 +882,138 @@ void ADTimePix::prvHstWorkerThread() {
 
             const long long binSize = parsed["binSize"].get<long long>();
             if (binSize <= 0 ||
-                static_cast<unsigned long long>(binSize) > MAX_HISTOGRAM_BINS) {
+                static_cast<unsigned long long>(binSize) > maxHistogramBins) {
                 error = "binSize is outside the supported range";
                 return false;
             }
             payloadBytes = static_cast<std::size_t>(binSize) * sizeof(uint32_t);
             return true;
         };
-    
-    while (prvHstRunning_) {
+
+    bool frameError = false;
+    while (prvHstWorkerState_.running() && !frameError) {
         epicsMutexLock(prvHstMutex_);
-        bool should_connect = prvHstRunning_ && !prvHstConnected_;
-        std::string host = prvHstHost_;
-        int port = prvHstPort_;
+        const std::string host = prvHstHost_;
+        const int port = prvHstPort_;
         epicsMutexUnlock(prvHstMutex_);
-        
-        if (should_connect && !host.empty() && port > 0) {
-            printf("PrvHst worker thread: Attempting to connect to %s:%d\n", host.c_str(), port);
+
+        if (!prvHstWorkerState_.connected() && !host.empty() && port > 0) {
+            printf("PrvHst worker thread: Attempting to connect to %s:%d\n",
+                   host.c_str(), port);
             prvHstConnect();
-            epicsMutexLock(prvHstMutex_);
-            bool connected_after = prvHstConnected_;
-            epicsMutexUnlock(prvHstMutex_);
-            if (!connected_after) {
-                printf("PrvHst worker thread: Connection failed, will retry in %.1f seconds\n", RECONNECT_DELAY_SEC);
-                epicsThreadSleep(RECONNECT_DELAY_SEC);
-                continue;
-            } else {
-                printf("PrvHst worker thread: Connection successful, starting data reception\n");
-            }
-        } else if (should_connect) {
-            if (host.empty() || port <= 0) {
-                printf("PrvHst worker thread: Invalid host/port (host='%s', port=%d), waiting...\n", host.c_str(), port);
-                epicsThreadSleep(RECONNECT_DELAY_SEC);
-                continue;
-            }
         }
-        
-        if (!prvHstRunning_) {
+        if (!prvHstWorkerState_.running()) {
             break;
         }
-        
-        epicsMutexLock(prvHstMutex_);
-        bool connected = prvHstConnected_;
-        bool has_client = (prvHstNetworkClient_ != nullptr);
-        epicsMutexUnlock(prvHstMutex_);
-        
-        if (connected && has_client) {
-            // Check if accumulation is disabled - if so, skip reading data to prevent buffer overflow
-            // The worker thread stays connected but doesn't consume data when accumulation is disabled
-            int accumulationEnable = 0;
-            getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
-            if (!accumulationEnable) {
-                // Accumulation disabled - sleep briefly and skip data reading to prevent buffer overflow
-                // This prevents log spam from buffer full messages
-                epicsThreadSleep(0.1);
-                continue;
-            }
-            
-            try {
-                // Defensive checks before accessing network client
-                if (!prvHstMutex_) {
-                                        break;
-                }
-                
-                epicsMutexLock(prvHstMutex_);
-                
-                // Re-check inside mutex to avoid race condition
-                if (!prvHstNetworkClient_) {
-                                        epicsMutexUnlock(prvHstMutex_);
-                    break;
-                }
-                
-                if (prvHstLineBuffer_.size() < MAX_BUFFER_SIZE) {
-                    prvHstLineBuffer_.resize(MAX_BUFFER_SIZE);
-                }
-                const size_t available_space = prvHstLineBuffer_.size();
-                
-                // Store pointer locally to avoid issues if it's reset during receive
-                NetworkClient* client = prvHstNetworkClient_.get();
-                if (!client) {
-                                        epicsMutexUnlock(prvHstMutex_);
-                    break;
-                }
-                
-                // Get buffer pointer and validate
-                char* buffer_ptr = prvHstLineBuffer_.data();
-                if (!buffer_ptr) {
-                                        epicsMutexUnlock(prvHstMutex_);
-                    break;
-                }
-                
-                ssize_t bytes_read = client->receive(
-                    buffer_ptr,
-                    available_space
-                );
-                const int receiveError = (bytes_read < 0) ? errno : 0;
+        if (!prvHstWorkerState_.connected()) {
+            prvHstWorkerState_.waitForStopFor(reconnectDelay);
+            continue;
+        }
 
-                epicsMutexUnlock(prvHstMutex_);
-                
-                                if (bytes_read > 0) {
-                    static int log_counter = 0;
-                    if (++log_counter % 100 == 0) {  // Log every 100 reads to avoid spam
-                    }
+        int accumulationEnable = 0;
+        getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
+        if (!accumulationEnable) {
+            prvHstWorkerState_.waitForStopFor(accumulationDelay);
+            continue;
+        }
+
+        const std::shared_ptr<NetworkClient> client =
+            std::atomic_load(&prvHstNetworkClient_);
+        if (!client) {
+            prvHstWorkerState_.waitForStopFor(reconnectDelay);
+            continue;
+        }
+
+        try {
+            const ssize_t bytesRead = client->receive(
+                prvHstLineBuffer_.data(), prvHstLineBuffer_.size());
+            const int receiveError = (bytesRead < 0) ? errno : 0;
+
+            if (bytesRead <= 0) {
+                if (bytesRead < 0 && NetworkClient::isReceiveTimeout(receiveError) &&
+                    prvHstWorkerState_.running()) {
+                    continue;
                 }
-                
-                if (bytes_read <= 0) {
-                    if (bytes_read < 0 && NetworkClient::isReceiveTimeout(receiveError)) {
-                        continue;
+                if (bytesRead == 0) {
+                    const ADTimePix3Stream::EndOfStreamStatus endStatus =
+                        frameBuffer.endOfStreamStatus();
+                    if (endStatus != ADTimePix3Stream::EndOfStreamStatus::Clean &&
+                        prvHstWorkerState_.running()) {
+                        fprintf(stderr,
+                                "ERROR | ADTimePix::%s: PrvHst TCP stream ended with %s\n",
+                                functionName,
+                                ADTimePix3Stream::endOfStreamStatusMessage(endStatus));
                     }
-                    if (bytes_read == 0) {
-                        const ADTimePix3Stream::EndOfStreamStatus endStatus =
-                            frameBuffer.endOfStreamStatus();
-                        if (endStatus != ADTimePix3Stream::EndOfStreamStatus::Clean) {
-                            fprintf(stderr,
-                                    "ERROR | ADTimePix::%s: PrvHst TCP stream ended with %s\n",
-                                    functionName,
-                                    ADTimePix3Stream::endOfStreamStatusMessage(endStatus));
-                        }
-                        epicsMutexLock(prvHstMutex_);
-                        prvHstConnected_ = false;
-                        prvHstRunning_ = false;
-                        epicsMutexUnlock(prvHstMutex_);
-                        printf("PrvHst TCP connection closed by peer\n");
-                        break;
-                    } else {
-                        epicsMutexLock(prvHstMutex_);
-                        if (prvHstConnected_) {
-                            prvHstConnected_ = false;
-                            prvHstRunning_ = false;
-                            printf("PrvHst TCP socket error: %s\n", strerror(receiveError));
-                        }
-                        epicsMutexUnlock(prvHstMutex_);
-                        break;
-                    }
+                    printf("PrvHst TCP connection closed by peer\n");
+                } else if (prvHstWorkerState_.running()) {
+                    fprintf(stderr, "PrvHst TCP socket error: %s\n",
+                            strerror(receiveError));
                 }
-                
-                                epicsMutexLock(prvHstMutex_);
-                
-                const ADTimePix3Stream::FrameResult appendResult =
-                    frameBuffer.append(prvHstLineBuffer_.data(),
-                                       static_cast<std::size_t>(bytes_read));
-                bool frameError =
-                    appendResult == ADTimePix3Stream::FrameResult::BufferLimitExceeded;
-                if (frameError) {
+                prvHstWorkerState_.fail();
+                break;
+            }
+
+            const ADTimePix3Stream::FrameResult appendResult =
+                frameBuffer.append(prvHstLineBuffer_.data(),
+                                   static_cast<std::size_t>(bytesRead));
+            if (appendResult == ADTimePix3Stream::FrameResult::BufferLimitExceeded) {
+                fprintf(stderr,
+                        "ERROR | ADTimePix::%s: PrvHst rejected TCP stream: %s\n",
+                        functionName,
+                        ADTimePix3Stream::frameResultMessage(appendResult));
+                frameError = true;
+                break;
+            }
+            prvHstTotalRead_ = frameBuffer.bufferedBytes();
+
+            while (prvHstWorkerState_.running()) {
+                ADTimePix3Stream::FramedMessage frame;
+                std::string framingError;
+                const ADTimePix3Stream::FrameResult frameResult =
+                    frameBuffer.next(resolvePayloadSize, frame, framingError);
+                if (frameResult == ADTimePix3Stream::FrameResult::NeedMoreData) {
+                    break;
+                }
+                if (frameResult != ADTimePix3Stream::FrameResult::FrameReady) {
                     fprintf(stderr,
-                            "ERROR | ADTimePix::%s: PrvHst rejected TCP stream: %s\n",
+                            "ERROR | ADTimePix::%s: PrvHst rejected TCP stream: %s%s%s\n",
                             functionName,
-                            ADTimePix3Stream::frameResultMessage(appendResult));
+                            ADTimePix3Stream::frameResultMessage(frameResult),
+                            framingError.empty() ? "" : ": ",
+                            framingError.c_str());
+                    frameError = true;
+                    break;
+                }
+
+                std::vector<char> completeFrame;
+                completeFrame.reserve(frame.header.size() + 1 + frame.payload.size());
+                completeFrame.insert(completeFrame.end(),
+                                     frame.header.begin(), frame.header.end());
+                completeFrame.push_back(0);
+                completeFrame.insert(completeFrame.end(),
+                                     frame.payload.begin(), frame.payload.end());
+                char* separator = completeFrame.data() + frame.header.size();
+                if (!processPrvHstDataLine(completeFrame.data(), separator,
+                                           completeFrame.size())) {
+                    frameError = true;
+                    break;
                 }
                 prvHstTotalRead_ = frameBuffer.bufferedBytes();
-
-                while (!frameError) {
-                    ADTimePix3Stream::FramedMessage frame;
-                    std::string framingError;
-                    const ADTimePix3Stream::FrameResult frameResult =
-                        frameBuffer.next(resolvePayloadSize, frame, framingError);
-                    if (frameResult == ADTimePix3Stream::FrameResult::NeedMoreData) {
-                        break;
-                    }
-                    if (frameResult != ADTimePix3Stream::FrameResult::FrameReady) {
-                        fprintf(stderr,
-                                "ERROR | ADTimePix::%s: PrvHst rejected TCP stream: %s%s%s\n",
-                                functionName,
-                                ADTimePix3Stream::frameResultMessage(frameResult),
-                                framingError.empty() ? "" : ": ",
-                                framingError.c_str());
-                        frameError = true;
-                        break;
-                    }
-
-                    std::vector<char> completeFrame;
-                    completeFrame.reserve(
-                        frame.header.size() + 1 + frame.payload.size());
-                    completeFrame.insert(completeFrame.end(),
-                                         frame.header.begin(), frame.header.end());
-                    completeFrame.push_back('\0');
-                    completeFrame.insert(completeFrame.end(),
-                                         frame.payload.begin(), frame.payload.end());
-                    char* separator = completeFrame.data() + frame.header.size();
-                    if (!processPrvHstDataLine(completeFrame.data(), separator,
-                                               completeFrame.size())) {
-                        frameError = true;
-                        break;
-                    }
-                    prvHstTotalRead_ = frameBuffer.bufferedBytes();
-                }
-
-                if (frameError) {
-                    epicsMutexUnlock(prvHstMutex_);
-                    break;
-                }
-
-                epicsMutexUnlock(prvHstMutex_);
-                
-            } catch (const std::exception& e) {
-                epicsMutexUnlock(prvHstMutex_);
-                fprintf(stderr, "ERROR | ADTimePix::prvHstWorkerThread: Error in worker thread: %s\n", e.what());
             }
-        } else {
-            epicsThreadSleep(RECONNECT_DELAY_SEC);
+        } catch (const std::exception& exception) {
+            fprintf(stderr, "ERROR | ADTimePix::%s: %s\n",
+                    functionName, exception.what());
+            frameError = true;
+        } catch (...) {
+            fprintf(stderr, "ERROR | ADTimePix::%s: unknown exception\n", functionName);
+            frameError = true;
         }
     }
-    
+
+    if (frameError) {
+        prvHstWorkerState_.fail();
+    }
+    prvHstTotalRead_ = 0;
     prvHstDisconnect();
-    // Leave prvHstWorkerThreadId_ set until acquireStop/destructor joins
-    // (joinable threads must be joined; clearing here races with epicsThreadMustJoin).
-    
     printf("PrvHst worker thread exiting\n");
 }
