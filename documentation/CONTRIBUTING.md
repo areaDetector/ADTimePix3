@@ -2,6 +2,66 @@
 
 Thank you for contributing to the EPICS areaDetector driver for TimePix3 (Serval).
 
+## Fork, branch, and pull request
+
+Use `origin` for the contributor's GitHub fork and `upstream` for the canonical
+[`areaDetector/ADTimePix3`](https://github.com/areaDetector/ADTimePix3)
+repository.
+
+### One-time remote setup
+
+Clone the contributor fork as `origin`, then add the canonical repository as
+`upstream`:
+
+```bash
+git clone https://github.com/kgofron/ADTimePix3.git
+cd ADTimePix3
+git remote add upstream https://github.com/areaDetector/ADTimePix3.git
+git remote -v
+```
+
+The expected remote names are:
+
+- `origin` -- the contributor's fork (`kgofron/ADTimePix3` in this example).
+- `upstream` -- the canonical `areaDetector/ADTimePix3` repository.
+
+Contributors using another fork should replace `kgofron` with their GitHub
+username.
+
+### Submit one cohesive change
+
+Create each feature or fix branch from the current `upstream/master`. Each
+branch should contain one cohesive change.
+
+```bash
+git fetch --prune upstream
+git switch -c fix/short-description upstream/master
+# edit, build, and test
+git push -u origin fix/short-description
+gh pr create \
+  --repo areaDetector/ADTimePix3 \
+  --base master \
+  --head kgofron:fix/short-description
+```
+
+The pull request should report the module build, all applicable automated test
+results, and relevant hardware or emulator evidence. Clearly identify any
+validation that was not applicable or could not be performed.
+
+### After the pull request is merged
+
+Synchronize the local `master` branch with `upstream/master`, update the fork,
+and remove the completed feature branch:
+
+```bash
+git switch master
+git fetch --prune upstream
+git merge --ff-only upstream/master
+git push origin master
+git branch -d fix/short-description
+git push origin --delete fix/short-description
+```
+
 ## License and copyright
 
 - The project is released under the **MIT License**. The full text is in [`LICENSE`](../LICENSE) at the repository root.
@@ -38,6 +98,7 @@ The command should finish with **REUSE Specification 3.0** compliance. If you ad
 
 ```bash
 make -j
+make -C test runtests
 python3 test/verify_coordinate_map.py
 ```
 
