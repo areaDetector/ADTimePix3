@@ -1721,12 +1721,16 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setStringParam(NDDriverVersion, versionString);
     setStringParam(ADTimePixServerName, serverURL);
 
+    streamLifecycleMutex_ = epicsMutexMustCreate();
+    if (!streamLifecycleMutex_) {
+        ERR("Failed to create stream lifecycle mutex");
+    }
+
     // Initialize TCP streaming for PrvImg channel
     prvImgNetworkClient_.reset();
     prvImgHost_ = "";
     prvImgPort_ = 0;
-    prvImgConnected_ = false;
-    prvImgRunning_ = false;
+    prvImgWorkerState_.requestStop();
     prvImgWorkerThreadId_ = nullptr;
     prvImgMutex_ = epicsMutexMustCreate();
     if (!prvImgMutex_) {
@@ -1752,8 +1756,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvImg1NetworkClient_.reset();
     prvImg1Host_ = "";
     prvImg1Port_ = 0;
-    prvImg1Connected_ = false;
-    prvImg1Running_ = false;
+    prvImg1WorkerState_.requestStop();
     prvImg1WorkerThreadId_ = nullptr;
     prvImg1Mutex_ = epicsMutexMustCreate();
     if (!prvImg1Mutex_) {
@@ -1777,8 +1780,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     imgNetworkClient_.reset();
     imgHost_ = "";
     imgPort_ = 0;
-    imgConnected_ = false;
-    imgRunning_ = false;
+    imgWorkerState_.requestStop();
     imgWorkerThreadId_ = nullptr;
     imgMutex_ = epicsMutexMustCreate();
     
@@ -1795,8 +1797,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvHstNetworkClient_.reset();
     prvHstHost_ = "";
     prvHstPort_ = 0;
-    prvHstConnected_ = false;
-    prvHstRunning_ = false;
+    prvHstWorkerState_.requestStop();
     prvHstWorkerThreadId_ = NULL;
     prvHstLineBuffer_.clear();
     prvHstTotalRead_ = 0;
@@ -2069,53 +2070,7 @@ void ADTimePix::shutdownPortDriver() {
         connectionPollThreadId_ = NULL;
     }
 
-    // Stop PrvImg TCP streaming
-    if (prvImgMutex_) {
-        epicsMutexLock(prvImgMutex_);
-        prvImgRunning_ = false;
-        epicsMutexUnlock(prvImgMutex_);
-    }
-    if (prvImgWorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-    prvImgDisconnect();
-
-    // Stop PrvImg1 TCP streaming
-    if (prvImg1Mutex_) {
-        epicsMutexLock(prvImg1Mutex_);
-        prvImg1Running_ = false;
-        epicsMutexUnlock(prvImg1Mutex_);
-    }
-    if (prvImg1WorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(prvImg1WorkerThreadId_);
-        prvImg1WorkerThreadId_ = NULL;
-    }
-    prvImg1Disconnect();
-
-    // Stop Img TCP streaming
-    if (imgMutex_) {
-        epicsMutexLock(imgMutex_);
-        imgRunning_ = false;
-        epicsMutexUnlock(imgMutex_);
-    }
-    if (imgWorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(imgWorkerThreadId_);
-        imgWorkerThreadId_ = NULL;
-    }
-    imgDisconnect();
-
-    // Stop PrvHst TCP streaming
-    if (prvHstMutex_) {
-        epicsMutexLock(prvHstMutex_);
-        prvHstRunning_ = false;
-        epicsMutexUnlock(prvHstMutex_);
-    }
-    if (prvHstWorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(prvHstWorkerThreadId_);
-        prvHstWorkerThreadId_ = NULL;
-    }
-    prvHstDisconnect();
+    stopAndJoinStreamWorkers();
 
 #ifdef ASYN_DESTRUCTIBLE
     asynPortDriver::shutdownPortDriver();
@@ -2146,68 +2101,27 @@ ADTimePix::~ADTimePix(){
         connectionPollEvent_ = NULL;
     }
 
-    // Stop PrvImg TCP streaming
-    epicsMutexLock(prvImgMutex_);
-    prvImgRunning_ = false;
-    epicsMutexUnlock(prvImgMutex_);
-    
-    if (prvImgWorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(prvImgWorkerThreadId_);
-        prvImgWorkerThreadId_ = NULL;
-    }
-    prvImgDisconnect();
-    
+    stopAndJoinStreamWorkers();
+
     if (prvImgMutex_) {
         epicsMutexDestroy(prvImgMutex_);
         prvImgMutex_ = NULL;
     }
-
-    // Stop PrvImg1 TCP streaming
-    epicsMutexLock(prvImg1Mutex_);
-    prvImg1Running_ = false;
-    epicsMutexUnlock(prvImg1Mutex_);
-
-    if (prvImg1WorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(prvImg1WorkerThreadId_);
-        prvImg1WorkerThreadId_ = NULL;
-    }
-    prvImg1Disconnect();
-
     if (prvImg1Mutex_) {
         epicsMutexDestroy(prvImg1Mutex_);
         prvImg1Mutex_ = NULL;
     }
-    
-    // Stop Img TCP streaming
-    epicsMutexLock(imgMutex_);
-    imgRunning_ = false;
-    epicsMutexUnlock(imgMutex_);
-    
-    if (imgWorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(imgWorkerThreadId_);
-        imgWorkerThreadId_ = NULL;
-    }
-    imgDisconnect();
-    
     if (imgMutex_) {
         epicsMutexDestroy(imgMutex_);
         imgMutex_ = NULL;
     }
-    
-    // Stop PrvHst TCP streaming
-    epicsMutexLock(prvHstMutex_);
-    prvHstRunning_ = false;
-    epicsMutexUnlock(prvHstMutex_);
-    
-    if (prvHstWorkerThreadId_ != NULL) {
-        epicsThreadMustJoin(prvHstWorkerThreadId_);
-        prvHstWorkerThreadId_ = NULL;
-    }
-    prvHstDisconnect();
-    
     if (prvHstMutex_) {
         epicsMutexDestroy(prvHstMutex_);
         prvHstMutex_ = NULL;
+    }
+    if (streamLifecycleMutex_) {
+        epicsMutexDestroy(streamLifecycleMutex_);
+        streamLifecycleMutex_ = NULL;
     }
 
     if (pixelConfigDiffMutex_) {

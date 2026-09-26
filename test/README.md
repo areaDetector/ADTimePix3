@@ -29,6 +29,12 @@ bytes belonging to later messages. Image fixtures also verify Serval `bitDepth` 
 `dataSize` sizing for 8-, 16-, and 32-bit rasters, including MPX3 integrated
 preview frames.
 
+Worker-lifecycle coverage exercises the production atomic state protocol and
+`NetworkClient` interruption path. Tests cover duplicate starts, stop and
+failure transitions, a concurrent stop-versus-connect race, 100 repeated
+start/stop cycles, idempotent teardown, and prompt wakeup of a receive blocked
+on a silent loopback peer.
+
 Reconnect-policy coverage drives the production read-only policy against fake
 Serval HTTP peers. It verifies that automatic reconnect requests only
 `GET /server/destination`, `GET /detector`, and `GET /measurement/config`, and

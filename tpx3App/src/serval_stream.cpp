@@ -483,11 +483,10 @@ void ADTimePix::releasePreviewBandArrays()
 /** Shared consume-once TCP read loop for PrvImg, PrvImg1, and Img. */
 void ADTimePix::runJsonImageTcpWorker(
     epicsMutexId mutex,
-    bool& running,
-    bool& connected,
+    ADTimePix3StreamWorker::State& workerState,
     std::string& host,
     int& port,
-    std::unique_ptr<NetworkClient>& networkClient,
+    std::shared_ptr<NetworkClient>& networkClient,
     std::vector<char>& lineBuffer,
     size_t& totalRead,
     void (ADTimePix::*connectFn)(),
@@ -495,10 +494,11 @@ void ADTimePix::runJsonImageTcpWorker(
     bool (ADTimePix::*processLineFn)(char*, char*, size_t),
     const char* logTag)
 {
-    constexpr double RECONNECT_DELAY_SEC = 1.0;
+    constexpr auto reconnectDelay = std::chrono::milliseconds(1000);
 
     if (!mutex) {
         ERR_ARGS("%s worker thread: Mutex not initialized", logTag);
+        workerState.fail();
         return;
     }
 
@@ -539,61 +539,48 @@ void ADTimePix::runJsonImageTcpWorker(
         };
 
     bool framingFailed = false;
-    while (running && !framingFailed) {
+    while (workerState.running() && !framingFailed) {
         epicsMutexLock(mutex);
-        const bool shouldConnect = running && !connected;
         const std::string connectHost = host;
         const int connectPort = port;
         epicsMutexUnlock(mutex);
 
-        if (shouldConnect && !connectHost.empty() && connectPort > 0) {
+        if (!workerState.connected() && !connectHost.empty() && connectPort > 0) {
             (this->*connectFn)();
         }
-        if (!running) {
+        if (!workerState.running()) {
             break;
         }
 
-        epicsMutexLock(mutex);
-        const bool isConnected = connected;
-        const bool hasClient = (networkClient != nullptr);
-        epicsMutexUnlock(mutex);
-
-        if (!isConnected || !hasClient) {
-            epicsThreadSleep(RECONNECT_DELAY_SEC);
+        const std::shared_ptr<NetworkClient> client = std::atomic_load(&networkClient);
+        if (!workerState.connected() || !client) {
+            workerState.waitForStopFor(reconnectDelay);
             continue;
         }
 
-        epicsMutexLock(mutex);
-        if (!connected || !networkClient) {
-            epicsMutexUnlock(mutex);
-            continue;
-        }
-        const ssize_t bytesRead =
-            networkClient->receive(lineBuffer.data(), lineBuffer.size());
+        const ssize_t bytesRead = client->receive(lineBuffer.data(), lineBuffer.size());
         const int receiveError = (bytesRead < 0) ? errno : 0;
-        epicsMutexUnlock(mutex);
 
         if (bytesRead <= 0) {
-            if (bytesRead < 0 && NetworkClient::isReceiveTimeout(receiveError)) {
+            if (bytesRead < 0 && NetworkClient::isReceiveTimeout(receiveError) &&
+                workerState.running()) {
                 continue;
             }
 
             if (bytesRead == 0) {
                 const ADTimePix3Stream::EndOfStreamStatus endStatus =
                     frameBuffer.endOfStreamStatus();
-                if (endStatus != ADTimePix3Stream::EndOfStreamStatus::Clean) {
+                if (endStatus != ADTimePix3Stream::EndOfStreamStatus::Clean &&
+                    workerState.running()) {
                     ERR_ARGS("%s TCP stream ended with %s", logTag,
                              ADTimePix3Stream::endOfStreamStatusMessage(endStatus));
                 }
                 printf("%s TCP connection closed by peer\n", logTag);
-            } else {
+            } else if (workerState.running()) {
                 LOG_ARGS("%s TCP socket error: %s", logTag, strerror(receiveError));
             }
 
-            epicsMutexLock(mutex);
-            connected = false;
-            running = false;
-            epicsMutexUnlock(mutex);
+            workerState.fail();
             break;
         }
 
@@ -608,7 +595,7 @@ void ADTimePix::runJsonImageTcpWorker(
             }
             totalRead = frameBuffer.bufferedBytes();
 
-            while (running) {
+            while (workerState.running()) {
                 ADTimePix3Stream::FramedMessage frame;
                 std::string framingError;
                 const ADTimePix3Stream::FrameResult frameResult =
@@ -650,10 +637,7 @@ void ADTimePix::runJsonImageTcpWorker(
     }
 
     if (framingFailed) {
-        epicsMutexLock(mutex);
-        connected = false;
-        running = false;
-        epicsMutexUnlock(mutex);
+        workerState.fail();
     }
     totalRead = 0;
     (this->*disconnectFn)();
@@ -710,7 +694,7 @@ void ADTimePix::prvImgWorkerThreadC(void *pPvt) {
 
 void ADTimePix::prvImgWorkerThread() {
     runJsonImageTcpWorker(
-        prvImgMutex_, prvImgRunning_, prvImgConnected_, prvImgHost_, prvImgPort_,
+        prvImgMutex_, prvImgWorkerState_, prvImgHost_, prvImgPort_,
         prvImgNetworkClient_, prvImgLineBuffer_, prvImgTotalRead_,
         &ADTimePix::prvImgConnect, &ADTimePix::prvImgDisconnect,
         &ADTimePix::processPrvImgDataLine, "PrvImg");
@@ -723,7 +707,7 @@ void ADTimePix::prvImg1WorkerThreadC(void *pPvt) {
 
 void ADTimePix::prvImg1WorkerThread() {
     runJsonImageTcpWorker(
-        prvImg1Mutex_, prvImg1Running_, prvImg1Connected_, prvImg1Host_, prvImg1Port_,
+        prvImg1Mutex_, prvImg1WorkerState_, prvImg1Host_, prvImg1Port_,
         prvImg1NetworkClient_, prvImg1LineBuffer_, prvImg1TotalRead_,
         &ADTimePix::prvImg1Connect, &ADTimePix::prvImg1Disconnect,
         &ADTimePix::processPrvImg1DataLine, "PrvImg1");
@@ -736,7 +720,7 @@ void ADTimePix::imgWorkerThreadC(void *pPvt) {
 
 void ADTimePix::imgWorkerThread() {
     runJsonImageTcpWorker(
-        imgMutex_, imgRunning_, imgConnected_, imgHost_, imgPort_,
+        imgMutex_, imgWorkerState_, imgHost_, imgPort_,
         imgNetworkClient_, imgLineBuffer_, imgTotalRead_,
         &ADTimePix::imgConnect, &ADTimePix::imgDisconnect,
         &ADTimePix::processImgDataLine, "Img");
@@ -1669,148 +1653,155 @@ bool ADTimePix::processPrvImg1DataLine(char* line_buffer, char* newline_pos, siz
 }
 
 void ADTimePix::imgConnect() {
-    
     if (!imgMutex_) {
         ERR("Img TCP: Mutex not initialized");
+        imgWorkerState_.fail();
         return;
     }
-    
+
     epicsMutexLock(imgMutex_);
-    std::string host = imgHost_;
-    int port = imgPort_;
+    const std::string host = imgHost_;
+    const int port = imgPort_;
     epicsMutexUnlock(imgMutex_);
-    
+
+    if (!imgWorkerState_.running()) {
+        return;
+    }
     if (host.empty() || port <= 0) {
         ERR("Img TCP: Invalid host or port");
         return;
     }
-    
-    imgDisconnect(); // Ensure clean state
-    
-    imgNetworkClient_.reset(new NetworkClient());
-    if (!imgNetworkClient_) {
-        ERR("Img TCP: Failed to create NetworkClient");
+
+    imgDisconnect();
+    const std::shared_ptr<NetworkClient> client = std::make_shared<NetworkClient>();
+    std::atomic_store(&imgNetworkClient_, client);
+    if (!imgWorkerState_.running()) {
+        imgDisconnect();
         return;
     }
-    
-    if (imgNetworkClient_->connect(host, port)) {
-        epicsMutexLock(imgMutex_);
-        imgConnected_ = true;
-        epicsMutexUnlock(imgMutex_);
-        LOG_ARGS("Img TCP connected to %s:%d", host.c_str(), port);
-    } else {
-        ERR_ARGS("Img TCP failed to connect to %s:%d", host.c_str(), port);
-        imgNetworkClient_.reset();
+    if (client->connect(host, port)) {
+        imgWorkerState_.markConnected();
+        if (imgWorkerState_.connected()) {
+            LOG_ARGS("Img TCP connected to %s:%d", host.c_str(), port);
+            return;
+        }
     }
+
+    if (imgWorkerState_.running()) {
+        ERR_ARGS("Img TCP failed to connect to %s:%d", host.c_str(), port);
+    }
+    imgDisconnect();
 }
 
 void ADTimePix::imgDisconnect() {
-    epicsMutexLock(imgMutex_);
-    imgConnected_ = false;
-    epicsMutexUnlock(imgMutex_);
-    
-    if (imgNetworkClient_) {
-        imgNetworkClient_->disconnect();
-        imgNetworkClient_.reset();
+    imgWorkerState_.markDisconnected();
+    std::shared_ptr<NetworkClient> client =
+        std::atomic_exchange(&imgNetworkClient_, std::shared_ptr<NetworkClient>());
+    if (client) {
+        client->disconnect();
     }
 }
 
 void ADTimePix::prvImgConnect() {
-    
     if (!prvImgMutex_) {
         ERR("PrvImg TCP: Mutex not initialized");
+        prvImgWorkerState_.fail();
         return;
     }
-    
+
     epicsMutexLock(prvImgMutex_);
-    std::string host = prvImgHost_;
-    int port = prvImgPort_;
+    const std::string host = prvImgHost_;
+    const int port = prvImgPort_;
     epicsMutexUnlock(prvImgMutex_);
-    
+
+    if (!prvImgWorkerState_.running()) {
+        return;
+    }
     if (host.empty() || port <= 0) {
         ERR("PrvImg TCP: Invalid host or port");
         return;
     }
-    
-    prvImgDisconnect(); // Ensure clean state
-    
-    prvImgNetworkClient_.reset(new NetworkClient());
-    if (!prvImgNetworkClient_) {
-        ERR("PrvImg TCP: Failed to create NetworkClient");
+
+    prvImgDisconnect();
+    const std::shared_ptr<NetworkClient> client = std::make_shared<NetworkClient>();
+    std::atomic_store(&prvImgNetworkClient_, client);
+    if (!prvImgWorkerState_.running()) {
+        prvImgDisconnect();
         return;
     }
-    
-    if (prvImgNetworkClient_->connect(host, port)) {
-        epicsMutexLock(prvImgMutex_);
-        prvImgConnected_ = true;
-        epicsMutexUnlock(prvImgMutex_);
-        LOG_ARGS("PrvImg TCP connected to %s:%d", host.c_str(), port);
-    } else {
-        ERR_ARGS("PrvImg TCP failed to connect to %s:%d", host.c_str(), port);
-        prvImgNetworkClient_.reset();
+    if (client->connect(host, port)) {
+        prvImgWorkerState_.markConnected();
+        if (prvImgWorkerState_.connected()) {
+            LOG_ARGS("PrvImg TCP connected to %s:%d", host.c_str(), port);
+            return;
+        }
     }
+
+    if (prvImgWorkerState_.running()) {
+        ERR_ARGS("PrvImg TCP failed to connect to %s:%d", host.c_str(), port);
+    }
+    prvImgDisconnect();
 }
 
 void ADTimePix::prvImgDisconnect() {
-    
-    epicsMutexLock(prvImgMutex_);
-    prvImgConnected_ = false;
-    epicsMutexUnlock(prvImgMutex_);
-    
-    if (prvImgNetworkClient_) {
-        prvImgNetworkClient_->disconnect();
-        prvImgNetworkClient_.reset();
+    prvImgWorkerState_.markDisconnected();
+    std::shared_ptr<NetworkClient> client =
+        std::atomic_exchange(&prvImgNetworkClient_, std::shared_ptr<NetworkClient>());
+    if (client) {
+        client->disconnect();
+        LOG("PrvImg TCP disconnected");
     }
-    
-    LOG("PrvImg TCP disconnected");
 }
 
 void ADTimePix::prvImg1Connect() {
     if (!prvImg1Mutex_) {
         ERR("PrvImg1 TCP: Mutex not initialized");
+        prvImg1WorkerState_.fail();
         return;
     }
 
     epicsMutexLock(prvImg1Mutex_);
-    std::string host = prvImg1Host_;
-    int port = prvImg1Port_;
+    const std::string host = prvImg1Host_;
+    const int port = prvImg1Port_;
     epicsMutexUnlock(prvImg1Mutex_);
 
+    if (!prvImg1WorkerState_.running()) {
+        return;
+    }
     if (host.empty() || port <= 0) {
         ERR("PrvImg1 TCP: Invalid host or port");
         return;
     }
 
     prvImg1Disconnect();
-
-    prvImg1NetworkClient_.reset(new NetworkClient());
-    if (!prvImg1NetworkClient_) {
-        ERR("PrvImg1 TCP: Failed to create NetworkClient");
+    const std::shared_ptr<NetworkClient> client = std::make_shared<NetworkClient>();
+    std::atomic_store(&prvImg1NetworkClient_, client);
+    if (!prvImg1WorkerState_.running()) {
+        prvImg1Disconnect();
         return;
     }
-
-    if (prvImg1NetworkClient_->connect(host, port)) {
-        epicsMutexLock(prvImg1Mutex_);
-        prvImg1Connected_ = true;
-        epicsMutexUnlock(prvImg1Mutex_);
-        LOG_ARGS("PrvImg1 TCP connected to %s:%d", host.c_str(), port);
-    } else {
-        ERR_ARGS("PrvImg1 TCP failed to connect to %s:%d", host.c_str(), port);
-        prvImg1NetworkClient_.reset();
+    if (client->connect(host, port)) {
+        prvImg1WorkerState_.markConnected();
+        if (prvImg1WorkerState_.connected()) {
+            LOG_ARGS("PrvImg1 TCP connected to %s:%d", host.c_str(), port);
+            return;
+        }
     }
+
+    if (prvImg1WorkerState_.running()) {
+        ERR_ARGS("PrvImg1 TCP failed to connect to %s:%d", host.c_str(), port);
+    }
+    prvImg1Disconnect();
 }
 
 void ADTimePix::prvImg1Disconnect() {
-    epicsMutexLock(prvImg1Mutex_);
-    prvImg1Connected_ = false;
-    epicsMutexUnlock(prvImg1Mutex_);
-
-    if (prvImg1NetworkClient_) {
-        prvImg1NetworkClient_->disconnect();
-        prvImg1NetworkClient_.reset();
+    prvImg1WorkerState_.markDisconnected();
+    std::shared_ptr<NetworkClient> client =
+        std::atomic_exchange(&prvImg1NetworkClient_, std::shared_ptr<NetworkClient>());
+    if (client) {
+        client->disconnect();
+        LOG("PrvImg1 TCP disconnected");
     }
-
-    LOG("PrvImg1 TCP disconnected");
 }
 
 asynStatus ADTimePix::readImageFromTCP() {
@@ -1840,7 +1831,7 @@ asynStatus ADTimePix::readImageFromTCP() {
     
     // Wait briefly for a frame to be available (worker thread processes it)
     epicsMutexLock(prvImgMutex_);
-    bool connected = prvImgConnected_;
+    bool connected = prvImgWorkerState_.connected();
     epicsMutexUnlock(prvImgMutex_);
     
     if (!connected) {

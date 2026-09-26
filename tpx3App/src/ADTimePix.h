@@ -41,6 +41,7 @@
 #include "img_accumulation.h"
 #include "histogram_io.h"
 #include "network_client.h"
+#include "stream_worker_state.h"
 #include "detector_family.h"
 
 // Driver-specific PV string definitions here
@@ -835,13 +836,14 @@ class ADTimePix : public ADDriver{
 
         /** Set in acquireStart(); must be NULL otherwise (destructor / shutdown join guard). */
         epicsThreadId callbackThreadId = nullptr;
+        /** Serializes stream thread-handle creation and joining; workers never take it. */
+        epicsMutexId streamLifecycleMutex_ = nullptr;
         
         // TCP streaming for PrvImg channel
-        std::unique_ptr<NetworkClient> prvImgNetworkClient_;
+        std::shared_ptr<NetworkClient> prvImgNetworkClient_;
         std::string prvImgHost_;
         int prvImgPort_;
-        bool prvImgConnected_;
-        bool prvImgRunning_;
+        ADTimePix3StreamWorker::State prvImgWorkerState_;
         epicsThreadId prvImgWorkerThreadId_ = nullptr;
         epicsMutexId prvImgMutex_;
         std::vector<char> prvImgLineBuffer_;
@@ -882,11 +884,10 @@ class ADTimePix : public ADDriver{
         static constexpr int NDARRAY_MAX_ADDR = 14;
 
         // TCP streaming for PrvImg1 channel (integrated preview)
-        std::unique_ptr<NetworkClient> prvImg1NetworkClient_;
+        std::shared_ptr<NetworkClient> prvImg1NetworkClient_;
         std::string prvImg1Host_;
         int prvImg1Port_;
-        bool prvImg1Connected_;
-        bool prvImg1Running_;
+        ADTimePix3StreamWorker::State prvImg1WorkerState_;
         epicsThreadId prvImg1WorkerThreadId_ = nullptr;
         epicsMutexId prvImg1Mutex_;
         std::vector<char> prvImg1LineBuffer_;
@@ -905,11 +906,10 @@ class ADTimePix : public ADDriver{
         int prvImg1JsonHeadersRemaining_;
 
         // TCP streaming for Img channel
-        std::unique_ptr<NetworkClient> imgNetworkClient_;
+        std::shared_ptr<NetworkClient> imgNetworkClient_;
         std::string imgHost_;
         int imgPort_;
-        bool imgConnected_;
-        bool imgRunning_;
+        ADTimePix3StreamWorker::State imgWorkerState_;
         epicsThreadId imgWorkerThreadId_ = nullptr;
         epicsMutexId imgMutex_;
         std::vector<char> imgLineBuffer_;
@@ -951,11 +951,10 @@ class ADTimePix : public ADDriver{
         std::vector<uint64_t> imgSumArray64WorkBuffer_;   // Working buffer for sum calculation
 
         // TCP streaming for PrvHst channel
-        std::unique_ptr<NetworkClient> prvHstNetworkClient_;
+        std::shared_ptr<NetworkClient> prvHstNetworkClient_;
         std::string prvHstHost_;
         int prvHstPort_;
-        bool prvHstConnected_;
-        bool prvHstRunning_;
+        ADTimePix3StreamWorker::State prvHstWorkerState_;
         epicsThreadId prvHstWorkerThreadId_ = nullptr;
         epicsMutexId prvHstMutex_;
         std::vector<char> prvHstLineBuffer_;
@@ -1112,9 +1111,10 @@ class ADTimePix : public ADDriver{
                                       int frame_number, const char* logTag,
                                       int& lastDiffT0Frame);
         void releasePreviewBandArrays();
-        void runJsonImageTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
+        void runJsonImageTcpWorker(epicsMutexId mutex,
+                                 ADTimePix3StreamWorker::State& workerState,
                                  std::string& host, int& port,
-                                 std::unique_ptr<NetworkClient>& networkClient,
+                                 std::shared_ptr<NetworkClient>& networkClient,
                                  std::vector<char>& lineBuffer, size_t& totalRead,
                                  void (ADTimePix::*connectFn)(),
                                  void (ADTimePix::*disconnectFn)(),
@@ -1143,6 +1143,12 @@ class ADTimePix : public ADDriver{
         static void prvHstWorkerThreadC(void *pPvt);
         void prvHstConnect();
         void prvHstDisconnect();
+
+        bool startStreamWorker(ADTimePix3StreamWorker::State& workerState,
+                               epicsThreadId& threadId, const char* threadName,
+                               EPICSTHREADFUNC entryPoint,
+                               const epicsThreadOpts& options);
+        void stopAndJoinStreamWorkers();
         
         // Helper functions for fileWriter optimization
         asynStatus getParameterSafely(int param, int& value);

@@ -30,6 +30,7 @@ servalProtocolFixtureTest_SRCS += serval_pixel_config.cpp
 servalProtocolFixtureTest_SRCS += serval_reconnect.cpp
 servalProtocolFixtureTest_SRCS += serval_stream_framing.cpp
 servalProtocolFixtureTest_SRCS += serval_stream_validation.cpp
+servalProtocolFixtureTest_SRCS += stream_worker_state.cpp
 servalProtocolFixtureTest_LIBS += Com
 servalProtocolFixtureTest_SYS_LIBS += cpr curl z
 

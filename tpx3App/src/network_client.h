@@ -10,7 +10,9 @@
 #ifndef ADTIMEPIX_NETWORK_CLIENT_H
 #define ADTIMEPIX_NETWORK_CLIENT_H
 
+#include <atomic>
 #include <cstddef>
+#include <mutex>
 #include <string>
 #include <sys/types.h>
 
@@ -29,7 +31,6 @@ public:
     NetworkClient(const NetworkClient&) = delete;
     NetworkClient& operator=(const NetworkClient&) = delete;
 
-    // Allow move
     NetworkClient(NetworkClient&& other) noexcept;
     NetworkClient& operator=(NetworkClient&& other) noexcept;
 
@@ -52,11 +53,14 @@ public:
      */
     void disconnect();
 
+    /** Interrupt a blocking receive without destroying the client. */
+    void interrupt();
+
     /**
      * @brief Check if connected
      * @return true if connected
      */
-    bool is_connected() const { return connected_; }
+    bool is_connected() const { return connected_.load(std::memory_order_acquire); }
 
     /**
      * @brief Receive data from socket
@@ -78,8 +82,9 @@ public:
     bool receive_exact(char* buffer, size_t size);
 
 private:
-    int socket_fd_;
-    bool connected_;
+    std::atomic<int> socket_fd_;
+    std::atomic<bool> connected_;
+    std::mutex lifecycleMutex_;
 };
 
 // Constants for TCP streaming
