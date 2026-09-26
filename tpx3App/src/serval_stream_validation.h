@@ -16,6 +16,7 @@
 namespace ADTimePix3Stream {
 
 enum class PixelFormat {
+    UInt8,
     UInt16,
     UInt32
 };
@@ -26,6 +27,7 @@ enum class ImageHeaderError {
     InvalidFieldType,
     InvalidDimension,
     UnsupportedPixelFormat,
+    InconsistentPixelMetadata,
     PixelLimitExceeded,
     PayloadLimitExceeded
 };

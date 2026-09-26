@@ -27,6 +27,7 @@ servalProtocolFixtureTest_SRCS += serval_health.cpp
 servalProtocolFixtureTest_SRCS += serval_http_client.cpp
 servalProtocolFixtureTest_SRCS += serval_measurement.cpp
 servalProtocolFixtureTest_SRCS += serval_pixel_config.cpp
+servalProtocolFixtureTest_SRCS += serval_stream_framing.cpp
 servalProtocolFixtureTest_SRCS += serval_stream_validation.cpp
 servalProtocolFixtureTest_LIBS += Com
 servalProtocolFixtureTest_SYS_LIBS += cpr curl z

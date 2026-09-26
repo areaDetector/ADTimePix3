@@ -1111,7 +1111,7 @@ class ADTimePix : public ADDriver{
                                       int frame_number, const char* logTag,
                                       int& lastDiffT0Frame);
         void releasePreviewBandArrays();
-        void runPreviewTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
+        void runJsonImageTcpWorker(epicsMutexId mutex, bool& running, bool& connected,
                                  std::string& host, int& port,
                                  std::unique_ptr<NetworkClient>& networkClient,
                                  std::vector<char>& lineBuffer, size_t& totalRead,

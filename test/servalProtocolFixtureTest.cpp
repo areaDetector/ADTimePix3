@@ -20,6 +20,7 @@
 #include "serval_http.h"
 #include "serval_measurement.h"
 #include "serval_pixel_config.h"
+#include "serval_stream_framing.h"
 #include "serval_stream_validation.h"
 
 #include <arpa/inet.h>
@@ -33,6 +34,7 @@
 #include <fstream>
 #include <limits>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <epicsUnitTest.h>
@@ -236,6 +238,198 @@ void testProductionNetworkClient()
            "production NetworkClient bounds a receive from a silent peer");
     testOk(NetworkClient::kReceivePollTimeoutMs == 250,
            "production stream receive polling uses the documented interval");
+}
+
+void testConsumeOnceStreamFraming()
+{
+    using ADTimePix3Stream::EndOfStreamStatus;
+    using ADTimePix3Stream::FrameBuffer;
+    using ADTimePix3Stream::FramedMessage;
+    using ADTimePix3Stream::FrameResult;
+
+    int resolverCalls = 0;
+    const auto resolver = [&resolverCalls](const std::string& header,
+                                           std::size_t& payloadBytes,
+                                           std::string& error) {
+        ++resolverCalls;
+        const nlohmann::json parsed = nlohmann::json::parse(
+            header, nullptr, false);
+        if (!parsed.is_object() || !parsed.contains("payloadBytes") ||
+            !parsed["payloadBytes"].is_number_unsigned()) {
+            error = "missing unsigned payloadBytes";
+            return false;
+        }
+        payloadBytes = parsed["payloadBytes"].get<std::size_t>();
+        return true;
+    };
+
+    const std::string header1 = "{\"payloadBytes\":4}\n";
+    const std::string payload1("\n{\x00\xff", 4);
+    const std::string header2 = "{\"payloadBytes\":2}\n";
+    const std::string payload2("}\n", 2);
+    FrameBuffer frames(128, 16, 128);
+    FramedMessage frame;
+    std::string error;
+
+    testOk(frames.append(header1.data(), 7) == FrameResult::NeedMoreData &&
+               frames.next(resolver, frame, error) == FrameResult::NeedMoreData &&
+               resolverCalls == 0,
+           "consume-once framing waits for a fragmented JSON header");
+
+    const std::string firstRemainder = header1.substr(7) + payload1.substr(0, 2);
+    frames.append(firstRemainder.data(), firstRemainder.size());
+    testOk(frames.next(resolver, frame, error) == FrameResult::NeedMoreData &&
+               frames.awaitingPayload() && resolverCalls == 1,
+           "consume-once framing resolves one header then waits for its declared payload");
+
+    const std::string coalesced = payload1.substr(2) + "\n" +
+                                  header2 + payload2 + "\n";
+    frames.append(coalesced.data(), coalesced.size());
+    testOk(frames.next(resolver, frame, error) == FrameResult::FrameReady &&
+               frame.header == header1.substr(0, header1.size() - 1) &&
+               frames.bufferedBytes() == header2.size() + payload2.size() + 1,
+           "consume-once framing extracts one frame and retains the coalesced successor");
+    testOk(std::string(reinterpret_cast<const char*>(frame.payload.data()),
+                       frame.payload.size()) == payload1,
+           "consume-once framing preserves newline, brace, NUL, and high-bit payload bytes");
+
+    testOk(frames.next(resolver, frame, error) == FrameResult::FrameReady &&
+               frame.header == header2.substr(0, header2.size() - 1) &&
+               std::string(reinterpret_cast<const char*>(frame.payload.data()),
+                           frame.payload.size()) == payload2 &&
+               frames.bufferedBytes() == 0,
+           "consume-once framing extracts the retained second message exactly once");
+    testOk(resolverCalls == 2,
+           "consume-once framing resolves each coalesced header exactly once");
+
+    FrameBuffer crlfFrame(64, 4, 16);
+    const std::string crlf = "{\"payloadBytes\":0}\r\n\n";
+    crlfFrame.append(crlf.data(), crlf.size());
+    testOk(crlfFrame.next(resolver, frame, error) == FrameResult::FrameReady &&
+               frame.header == "{\"payloadBytes\":0}" && frame.payload.empty(),
+           "consume-once framing accepts CRLF and a zero-length payload");
+
+    FrameBuffer invalidHeader(64, 4, 16);
+    const std::string invalid = "not-json\n";
+    invalidHeader.append(invalid.data(), invalid.size());
+    testOk(invalidHeader.next(resolver, frame, error) == FrameResult::InvalidHeader &&
+               !error.empty(),
+           "consume-once framing fails closed when payload size cannot be resolved");
+
+    FrameBuffer longHeader(4, 4, 4);
+    const std::string fiveBytes = "12345";
+    longHeader.append(fiveBytes.data(), fiveBytes.size());
+    testOk(longHeader.next(resolver, frame, error) == FrameResult::HeaderTooLarge,
+           "consume-once framing rejects a header beyond its configured limit");
+
+    FrameBuffer largePayload(64, 3, 16);
+    largePayload.append(header1.data(), header1.size());
+    testOk(largePayload.next(resolver, frame, error) == FrameResult::PayloadTooLarge,
+           "consume-once framing rejects a declared payload beyond its configured limit");
+
+    FrameBuffer boundedBuffer(4, 4, 0);
+    const std::string elevenBytes(11, 'x');
+    testOk(boundedBuffer.append(elevenBytes.data(), elevenBytes.size()) ==
+               FrameResult::BufferLimitExceeded,
+           "consume-once framing enforces its total retained-byte limit");
+
+    FrameBuffer truncatedHeader(64, 8, 16);
+    truncatedHeader.append(header1.data(), 5);
+    testOk(truncatedHeader.endOfStreamStatus() == EndOfStreamStatus::TruncatedHeader,
+           "consume-once framing identifies EOF in a partial header");
+
+    FrameBuffer truncatedPayload(64, 8, 16);
+    truncatedPayload.append(header1.data(), header1.size());
+    testOk(truncatedPayload.next(resolver, frame, error) == FrameResult::NeedMoreData &&
+               truncatedPayload.endOfStreamStatus() == EndOfStreamStatus::TruncatedPayload,
+           "consume-once framing identifies EOF in a declared payload");
+
+    FrameBuffer truncatedTrailer(64, 8, 16);
+    const std::string frameWithoutTrailer = header1 + payload1;
+    truncatedTrailer.append(frameWithoutTrailer.data(), frameWithoutTrailer.size());
+    testOk(truncatedTrailer.next(resolver, frame, error) == FrameResult::NeedMoreData &&
+               truncatedTrailer.endOfStreamStatus() == EndOfStreamStatus::TruncatedTrailer,
+           "consume-once framing identifies EOF before the payload terminator");
+
+    FrameBuffer invalidTrailer(64, 8, 16);
+    const std::string frameWithInvalidTrailer = header1 + payload1 + "x";
+    invalidTrailer.append(frameWithInvalidTrailer.data(), frameWithInvalidTrailer.size());
+    testOk(invalidTrailer.next(resolver, frame, error) == FrameResult::InvalidTrailer,
+           "consume-once framing rejects a non-newline payload terminator");
+
+    testOk(frames.endOfStreamStatus() == EndOfStreamStatus::Clean,
+           "consume-once framing reports clean EOF after an exact frame boundary");
+
+    const std::string wire = header1 + payload1 + "\n" +
+                             header2 + payload2 + "\n";
+    const auto drainFrames = [&resolver](FrameBuffer& candidate,
+                                         std::vector<FramedMessage>& output) {
+        while (true) {
+            FramedMessage candidateFrame;
+            std::string candidateError;
+            const FrameResult result =
+                candidate.next(resolver, candidateFrame, candidateError);
+            if (result == FrameResult::NeedMoreData) {
+                return true;
+            }
+            if (result != FrameResult::FrameReady) {
+                return false;
+            }
+            output.push_back(std::move(candidateFrame));
+        }
+    };
+    const auto exactMessages = [&header1, &header2, &payload1, &payload2](
+                                   const std::vector<FramedMessage>& output) {
+        return output.size() == 2 &&
+            output[0].header == header1.substr(0, header1.size() - 1) &&
+            output[1].header == header2.substr(0, header2.size() - 1) &&
+            std::string(reinterpret_cast<const char*>(output[0].payload.data()),
+                        output[0].payload.size()) == payload1 &&
+            std::string(reinterpret_cast<const char*>(output[1].payload.data()),
+                        output[1].payload.size()) == payload2;
+    };
+
+    bool everyTwoChunkSplitPassed = true;
+    for (std::size_t split = 0; split <= wire.size(); ++split) {
+        FrameBuffer candidate(128, 16, 128);
+        std::vector<FramedMessage> output;
+        everyTwoChunkSplitPassed = everyTwoChunkSplitPassed &&
+            candidate.append(wire.data(), split) == FrameResult::NeedMoreData &&
+            drainFrames(candidate, output) &&
+            candidate.append(wire.data() + split, wire.size() - split) ==
+                FrameResult::NeedMoreData &&
+            drainFrames(candidate, output) && exactMessages(output) &&
+            candidate.bufferedBytes() == 0;
+    }
+    testOk(everyTwoChunkSplitPassed,
+           "consume-once framing handles every two-chunk split across two messages");
+
+    FrameBuffer bytewise(128, 16, 128);
+    std::vector<FramedMessage> bytewiseOutput;
+    bool bytewisePassed = true;
+    for (char byteValue : wire) {
+        bytewisePassed = bytewisePassed &&
+            bytewise.append(&byteValue, 1) == FrameResult::NeedMoreData &&
+            drainFrames(bytewise, bytewiseOutput);
+    }
+    testOk(bytewisePassed && exactMessages(bytewiseOutput) &&
+               bytewise.bufferedBytes() == 0,
+           "consume-once framing handles byte-at-a-time delivery without duplication");
+
+    FrameBuffer reconnect(128, 16, 128);
+    reconnect.append(header1.data(), header1.size() / 2);
+    reconnect.clear();
+    const std::string afterReconnect = header2 + payload2 + "\n";
+    reconnect.append(afterReconnect.data(), afterReconnect.size());
+    std::vector<FramedMessage> reconnectOutput;
+    testOk(drainFrames(reconnect, reconnectOutput) &&
+               reconnectOutput.size() == 1 &&
+               reconnectOutput[0].header == header2.substr(0, header2.size() - 1) &&
+               std::string(reinterpret_cast<const char*>(
+                              reconnectOutput[0].payload.data()),
+                          reconnectOutput[0].payload.size()) == payload2 &&
+               reconnect.bufferedBytes() == 0,
+           "consume-once framing discards a partial old connection before reconnect data");
 }
 
 void testHttpRequestAndResponse()
@@ -1055,6 +1249,20 @@ void testStreamHeaderValidation()
                layout.pixelCount == 1024U * 512U && layout.payloadBytes == 1024U * 512U * 4U,
            "production validator accepts the detector pixel limit without overflow");
     testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 512}, {"height", 512},
+                              {"bitDepth", 32}, {"dataSize", 512 * 512 * 4}},
+               limits, layout) == ImageHeaderError::None &&
+               layout.pixelFormat == ADTimePix3Stream::PixelFormat::UInt32 &&
+               layout.payloadBytes == 512U * 512U * 4U,
+           "production validator uses Serval metadata for an MPX3 integrated uint32 image");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 2}, {"height", 1},
+                              {"bitDepth", 8}, {"dataSize", 2}},
+               limits, layout) == ImageHeaderError::None &&
+               layout.pixelFormat == ADTimePix3Stream::PixelFormat::UInt8 &&
+               layout.payloadBytes == 2U,
+           "production validator accepts Serval byte rasters for lower MPX3 pixel depths");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
                nlohmann::json{{"width", 1}, {"height", 1}}, limits, layout) ==
                ImageHeaderError::None &&
                layout.pixelFormat == ADTimePix3Stream::PixelFormat::UInt16 &&
@@ -1081,14 +1289,54 @@ void testStreamHeaderValidation()
                limits, layout) == ImageHeaderError::PixelLimitExceeded,
            "production validator rejects oversized total pixel counts");
     testOk(ADTimePix3Stream::validateJsonImageHeader(
-               nlohmann::json{{"width", 512}, {"height", 512}, {"pixelFormat", "uint8"}},
+               nlohmann::json{{"width", 512}, {"height", 512}, {"pixelFormat", "float32"}},
                limits, layout) == ImageHeaderError::UnsupportedPixelFormat,
            "production validator rejects unknown pixel formats");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 2}, {"height", 1},
+                              {"bitDepth", 32}, {"dataSize", 4}},
+               limits, layout) == ImageHeaderError::InconsistentPixelMetadata,
+           "production validator rejects contradictory Serval bitDepth and dataSize");
+    testOk(ADTimePix3Stream::validateJsonImageHeader(
+               nlohmann::json{{"width", 2}, {"height", 1},
+                              {"bitDepth", 32}, {"dataSize", "8"}},
+               limits, layout) == ImageHeaderError::InvalidFieldType,
+           "production validator rejects non-integer Serval dataSize metadata");
     const ADTimePix3Stream::ImageFrameLimits byteLimited{1024U, 1024U * 512U, 1024U};
     testOk(ADTimePix3Stream::validateJsonImageHeader(
                nlohmann::json{{"width", 512}, {"height", 512}, {"pixelFormat", "uint16"}},
                byteLimited, layout) == ImageHeaderError::PayloadLimitExceeded,
            "production validator enforces the configured payload-byte budget");
+
+    const std::string mpx3Header =
+        "{\"width\":2,\"height\":1,\"bitDepth\":32,\"dataSize\":8}\n";
+    const std::string mpx3Payload("\x00\x00\x00\x01\n{}\xff", 8);
+    const std::string mpx3Wire = mpx3Header + mpx3Payload + "\n";
+    ADTimePix3Stream::FrameBuffer mpx3Frames(256, limits.maxPayloadBytes, 16);
+    ADTimePix3Stream::FramedMessage mpx3Frame;
+    std::string mpx3Error;
+    const auto mpx3Resolver = [&limits](const std::string& header,
+                                        std::size_t& payloadBytes,
+                                        std::string& error) {
+        const nlohmann::json parsed = nlohmann::json::parse(header, nullptr, false);
+        ADTimePix3Stream::ImageFrameLayout resolvedLayout;
+        const ADTimePix3Stream::ImageHeaderError result =
+            ADTimePix3Stream::validateJsonImageHeader(parsed, limits, resolvedLayout);
+        if (result != ADTimePix3Stream::ImageHeaderError::None) {
+            error = ADTimePix3Stream::imageHeaderErrorMessage(result);
+            return false;
+        }
+        payloadBytes = resolvedLayout.payloadBytes;
+        return true;
+    };
+    mpx3Frames.append(mpx3Wire.data(), mpx3Wire.size());
+    testOk(mpx3Frames.next(mpx3Resolver, mpx3Frame, mpx3Error) ==
+               ADTimePix3Stream::FrameResult::FrameReady &&
+               mpx3Frame.payload.size() == mpx3Payload.size() &&
+               std::equal(mpx3Frame.payload.begin(), mpx3Frame.payload.end(),
+                          reinterpret_cast<const std::uint8_t*>(mpx3Payload.data())) &&
+               mpx3Frames.bufferedBytes() == 0,
+           "consume-once framing uses MPX3 dataSize and preserves embedded delimiter bytes");
 
     const std::string invalidHeader =
         "{\"width\":2147483647,\"height\":2147483647,\"pixelFormat\":\"uint32\"}\n";
@@ -1306,10 +1554,11 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(232);
+    testPlan(256);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
+    testConsumeOnceStreamFraming();
     testHttpRequestAndResponse();
     testProductionHttpClient();
     testMeasurementResponseValidation();

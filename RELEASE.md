@@ -28,6 +28,14 @@ R1-7-3 (in progress)
 
 Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
+* **Consume-once Serval TCP stream framing**:
+  * Preview-image, full-image, and preview-histogram workers use one bounded framing component that owns all unconsumed receive bytes.
+  * Each frame consumes exactly one newline-terminated JSON header, its declared binary payload, and Serval's trailing payload newline. Payload newline, brace, NUL, and high-bit bytes are never interpreted as delimiters, and coalesced later messages remain buffered for the next decode.
+  * Image payload width is derived from Serval metadata (`bitDepth` and `dataSize`, 8-, 16-, or 32-bit) and cross-checked against dimensions and any explicit `pixelFormat`; this includes MPX3 integrated previews serialized as 32-bit rasters.
+  * Stream decoders receive only complete frames and no longer read additional payload bytes directly from the socket. Invalid or oversized headers, retained-byte overflow, and truncated EOF fail closed with channel-specific diagnostics.
+  * Hardware-free regression tests cover every two-chunk split across adjacent messages, byte-at-a-time delivery, coalescing, binary delimiter bytes, short payloads, clean/truncated EOF, and reconnect-buffer reset.
+  * Emulator qualification passed on 2026-09-26 with Serval 4.1.6: TPX3 processed 117 frames with zero drops while image and histogram displays updated; MPX3 processed four frames with zero drops, delivered four arrays on every T0/T1 preview, integrated-preview, threshold-difference, and full-image output, and closed all three TCP image channels normally at measurement end.
+
 * **Family-safe BPC mask semantics**:
   * ASI confirmed that **bit 0** is the per-pixel mask for both TPX3 and MPX3: set it to mask and clear it for normal operation. Mask changes preserve every adjustment, test-pulse, reserved, and unknown bit.
   * TPX3 mask readback, counts, writes, and masked-pels JSON now test or update only bit 0. The observed value **31 / `0x1f`** is a masked pixel whose adjustment bits are also set; it is not a required complete-byte replacement value.
