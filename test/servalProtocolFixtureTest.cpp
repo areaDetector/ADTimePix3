@@ -6,6 +6,7 @@
 
 #include "FakeServalHttpServer.h"
 #include "FakeServalTcpServer.h"
+#include "acquisition_coordinator.h"
 #include "bpc_file_io.h"
 #include "bpc_mask_semantics.h"
 #include "mask_geometry.h"
@@ -279,6 +280,116 @@ void testProductionNetworkClient()
            "repeated interrupt and disconnect are idempotent");
 }
 
+void testAcquisitionCoordinator()
+{
+    using ADTimePix3Acquisition::Coordinator;
+    using ADTimePix3Acquisition::Phase;
+    using ADTimePix3Acquisition::Resource;
+
+    Coordinator incomplete;
+    testOk(incomplete.snapshot().phase == Phase::Idle,
+           "acquisition coordinator starts idle");
+    testOk(incomplete.beginStart() && !incomplete.beginStart() &&
+               incomplete.snapshot().phase == Phase::Starting,
+           "acquisition coordinator admits one start transition");
+    testOk(!incomplete.commitStart(),
+           "acquisition start cannot commit without remote and monitor resources");
+
+    const Resource resources[] = {
+        Resource::RemoteMeasurement,
+        Resource::PreviewWorker,
+        Resource::IntegratedPreviewWorker,
+        Resource::ImageWorker,
+        Resource::HistogramWorker,
+        Resource::MonitorThread};
+    bool faultMatrixPassed = true;
+    for (std::size_t failure = 0;
+         failure < sizeof(resources) / sizeof(resources[0]); ++failure) {
+        Coordinator partial;
+        faultMatrixPassed = faultMatrixPassed && partial.beginStart();
+        for (std::size_t resource = 0; resource <= failure; ++resource) {
+            faultMatrixPassed =
+                faultMatrixPassed && partial.noteResource(resources[resource]);
+        }
+        const auto cleanup = partial.beginStop(true);
+        faultMatrixPassed = faultMatrixPassed && cleanup.owner && cleanup.fault;
+        for (std::size_t resource = 0; resource <= failure; ++resource) {
+            faultMatrixPassed =
+                faultMatrixPassed && cleanup.snapshot.has(resources[resource]);
+        }
+        faultMatrixPassed =
+            faultMatrixPassed && partial.finishStop(true, true) == Phase::Fault &&
+            partial.snapshot().resources == 0 && partial.beginStart();
+    }
+    testOk(faultMatrixPassed,
+           "every injected partial-start failure owns complete rollback and permits retry");
+
+    Coordinator running;
+    testOk(running.beginStart() &&
+               running.noteResource(Resource::RemoteMeasurement) &&
+               running.noteResource(Resource::MonitorThread) &&
+               running.commitStart() && running.requestedAcquire(),
+           "remote and monitor readiness commit one running acquisition");
+    testOk(running.waitForRunningFor(std::chrono::milliseconds(1)),
+           "monitor readiness gate observes committed running state");
+    const auto cleanup = running.beginStop(false);
+    testOk(cleanup.owner && !cleanup.fault &&
+               cleanup.snapshot.has(Resource::RemoteMeasurement) &&
+               cleanup.snapshot.has(Resource::MonitorThread),
+           "normal stop claims every committed acquisition resource");
+    testOk(!running.beginStop(false).owner,
+           "duplicate stop is idempotent while cleanup is owned");
+    testOk(running.finishStop(true, false) == Phase::Idle &&
+               running.snapshot().resources == 0 &&
+               !running.requestedAcquire(),
+           "successful cleanup returns to truthful idle state");
+
+    Coordinator uncertainRemote;
+    testOk(uncertainRemote.beginStart() &&
+               uncertainRemote.noteResource(Resource::RemoteMeasurement) &&
+               uncertainRemote.noteResource(Resource::MonitorThread) &&
+               uncertainRemote.commitStart(),
+           "remote-stop fault fixture reaches running state");
+    testOk(uncertainRemote.beginStop(false).owner,
+           "remote-stop fault fixture claims cleanup");
+    testOk(uncertainRemote.finishStop(false, false) == Phase::Fault &&
+               uncertainRemote.snapshot().has(Resource::RemoteMeasurement),
+           "unconfirmed remote stop retains ownership in fault state");
+    testOk(std::string(ADTimePix3Acquisition::connectedStatusMessage(
+               uncertainRemote.snapshot())) ==
+               "Acquisition fault; write Acquire=0 to retry cleanup",
+           "connected unresolved fault reports the explicit cleanup action");
+    testOk(!uncertainRemote.beginStart(),
+           "new start is rejected while remote acquisition ownership is unresolved");
+    testOk(uncertainRemote.beginStop(false).owner,
+           "explicit stop retries unresolved remote cleanup");
+    testOk(uncertainRemote.finishStop(true, false) == Phase::Idle,
+           "successful retry reconciles unresolved remote state to idle");
+
+    Coordinator concurrent;
+    (void)concurrent.beginStart();
+    (void)concurrent.noteResource(Resource::RemoteMeasurement);
+    (void)concurrent.noteResource(Resource::MonitorThread);
+    (void)concurrent.commitStart();
+    std::atomic<int> owners(0);
+    std::thread stopA([&]() {
+        if (concurrent.beginStop(false).owner) ++owners;
+    });
+    std::thread stopB([&]() {
+        if (concurrent.beginStop(true).owner) ++owners;
+    });
+    stopA.join();
+    stopB.join();
+    testOk(owners.load() == 1,
+           "concurrent stop and fault requests elect exactly one cleanup owner");
+    testOk(concurrent.finishStop(true, false) == Phase::Fault,
+           "a racing fault request remains latched through cleanup completion");
+    testOk(std::string(ADTimePix3Acquisition::connectedStatusMessage(
+               concurrent.snapshot())) ==
+               "Acquisition fault; retry acquisition",
+           "connected resolved fault does not retain a stale disconnect message");
+}
+
 void testStreamWorkerState()
 {
     using ADTimePix3StreamWorker::State;
@@ -291,6 +402,8 @@ void testStreamWorkerState()
     state.markConnected();
     testOk(state.connected(),
            "running stream worker can publish connected state");
+    testOk(state.waitForConnectedFor(std::chrono::milliseconds(1)),
+           "worker readiness wait observes a connected stream");
 
     std::atomic<bool> waiterStarted(false);
     bool stopObserved = false;
@@ -306,6 +419,8 @@ void testStreamWorkerState()
     testOk(stopObserved, "stop request wakes an interruptible worker wait");
     testOk(!state.running() && !state.connected(),
            "stop request atomically leaves the worker stopped and disconnected");
+    testOk(!state.waitForConnectedFor(std::chrono::milliseconds(1)),
+           "worker readiness wait rejects a stopped stream");
 
     testOk(state.start(), "stream worker state permits a new generation after stop");
     state.markConnected();
@@ -697,8 +812,13 @@ void testMeasurementResponseValidation()
                snapshot.status == "DA_IDLE",
            "measurement status parser supports legacy TDC rate and top-level status");
     testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
-               "{\"Info\":null}", snapshot) == StatusResponseError::InvalidInfo,
-           "measurement status parser rejects a non-object Info field");
+               "{\"Config\":{},\"Info\":null}", snapshot) ==
+               StatusResponseError::None && snapshot.hasStatus &&
+               snapshot.status == "DA_IDLE",
+           "measurement status parser maps Serval null Info to idle");
+    testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
+               "{\"Info\":[]}", snapshot) == StatusResponseError::InvalidInfo,
+           "measurement status parser rejects a non-null non-object Info field");
     testOk(ADTimePix3ServalMeasurement::parseStatusResponse(
                "{\"Info\":{\"Status\":4}}", snapshot) ==
                StatusResponseError::InvalidStatus,
@@ -1698,10 +1818,11 @@ void testOneShotActions()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(272);
+    testPlan(294);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
+    testAcquisitionCoordinator();
     testStreamWorkerState();
     testConsumeOnceStreamFraming();
     testHttpRequestAndResponse();

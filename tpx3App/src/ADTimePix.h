@@ -38,6 +38,7 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include "acquisition_coordinator.h"
 #include "img_accumulation.h"
 #include "histogram_io.h"
 #include "network_client.h"
@@ -832,7 +833,7 @@ class ADTimePix : public ADDriver{
         bool detectorFamilyApplied_;
         // GraphicsMagick Image member removed - TCP streaming used instead
 
-        bool acquiring=false;
+        ADTimePix3Acquisition::Coordinator acquisitionCoordinator_;
 
         /** Set in acquireStart(); must be NULL otherwise (destructor / shutdown join guard). */
         epicsThreadId callbackThreadId = nullptr;
@@ -1052,6 +1053,10 @@ class ADTimePix : public ADDriver{
 
         //function that stops image acquisition
         asynStatus acquireStop();
+        asynStatus stopAcquisition(bool fault, const std::string& reason);
+        void publishAcquisitionPhase(ADTimePix3Acquisition::Phase phase,
+                                     const std::string& message);
+        void resetAcquisitionRuntimeState();
 
         // TimePix3 specific functions
         asynStatus getDashboard();
@@ -1149,6 +1154,12 @@ class ADTimePix : public ADDriver{
                                EPICSTHREADFUNC entryPoint,
                                const epicsThreadOpts& options);
         void stopAndJoinStreamWorkers();
+        bool startRequiredStreamWorker(
+            ADTimePix3StreamWorker::State& workerState,
+            epicsThreadId& threadId, const char* threadName,
+            EPICSTHREADFUNC entryPoint, const epicsThreadOpts& options,
+            ADTimePix3Acquisition::Resource resource);
+        void waitForStreamWorkersToStop(std::chrono::milliseconds timeout);
         
         // Helper functions for fileWriter optimization
         asynStatus getParameterSafely(int param, int& value);
