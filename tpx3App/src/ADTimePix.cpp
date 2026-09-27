@@ -49,6 +49,7 @@ using json = nlohmann::json;
 // Add any additional namespaces here
 
 const char* driverName = "ADTimePix";
+constexpr const char* permissiveDestinationAllowlist = "file:/*,tcp://*,http://*";
 
 // Add any driver constants here
 
@@ -70,17 +71,27 @@ const char* driverName = "ADTimePix";
  * @return:     status
  */
 extern "C" int ADTimePixConfig(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize){
+    const char* calibrationRoot = getenv("ADTIMEPIX_CALIBRATION_ROOT");
+    if (calibrationRoot == nullptr || calibrationRoot[0] == '\0') calibrationRoot = "/";
+    const char* destinationAllowlist = getenv("ADTIMEPIX_DESTINATION_ALLOWLIST");
+    if (destinationAllowlist == nullptr || destinationAllowlist[0] == '\0')
+        destinationAllowlist = permissiveDestinationAllowlist;
 #ifdef ASYN_DESTRUCTIBLE
-    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, ASYN_DESTRUCTIBLE);
+    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, ASYN_DESTRUCTIBLE, calibrationRoot, destinationAllowlist);
 #else
-    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, 0);
+    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, 0, calibrationRoot, destinationAllowlist);
 #endif
     return(asynSuccess);
 }
 
 /** Optional config with asyn flags (e.g. ASYN_DESTRUCTIBLE for asyn R4-45+). Use when building with ASYN_DESTRUCTIBLE defined. */
 extern "C" int ADTimePixConfigWithFlags(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags){
-    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, asynFlags);
+    const char* calibrationRoot = getenv("ADTIMEPIX_CALIBRATION_ROOT");
+    if (calibrationRoot == nullptr || calibrationRoot[0] == '\0') calibrationRoot = "/";
+    const char* destinationAllowlist = getenv("ADTIMEPIX_DESTINATION_ALLOWLIST");
+    if (destinationAllowlist == nullptr || destinationAllowlist[0] == '\0')
+        destinationAllowlist = permissiveDestinationAllowlist;
+    new ADTimePix(portName, serverURL, maxBuffers, maxMemory, priority, stackSize, asynFlags, calibrationRoot, destinationAllowlist);
     return(asynSuccess);
 }
 
@@ -139,19 +150,64 @@ bool ADTimePix::checkPath(std::string &filePath)
   */
 /* checkBPCPath() implemented in mask_io.cpp with other BPC/mask path logic */
 
+asynStatus ADTimePix::resolveCalibrationFile(
+    const std::string& directory, const std::string& fileName,
+    ADTimePix3Calibration::PathAccess access, std::string& resolved)
+{
+    const ADTimePix3Calibration::PathStatus pathStatus =
+        calibrationPathPolicy_.resolve(directory, fileName, access, resolved);
+    if (pathStatus == ADTimePix3Calibration::PathStatus::Ok) return asynSuccess;
+
+    char message[384];
+    epicsSnprintf(message, sizeof(message), "Calibration path blocked: %s",
+                  ADTimePix3Calibration::statusMessage(pathStatus));
+    setStringParam(ADTimePixWriteMsg, message);
+    ERR_ARGS("%s (directory=\"%s\", name=\"%s\")",
+             message, directory.c_str(), fileName.c_str());
+    callParamCallbacks();
+    return asynError;
+}
+
+
+asynStatus ADTimePix::validateDestination(const std::string& destination)
+{
+    if (destinationPolicy_.allows(destination)) return asynSuccess;
+
+    char message[384];
+    epicsSnprintf(message, sizeof(message), "Destination blocked by startup allowlist: %s",
+                  destination.c_str());
+    setStringParam(ADTimePixWriteMsg, message);
+    ERR_ARGS("%s", message);
+    callParamCallbacks();
+    return asynError;
+}
+
 asynStatus ADTimePix::checkDACSPath()
 {
-    asynStatus status;
     std::string filePath;
-    int pathExists;
-
     getStringParam(ADTimePixDACSFilePath, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixDACSFilePath, filePath);
-    setIntegerParam(ADTimePixDACSFilePathExists, pathExists);
-    return status;
+    if (filePath.empty()) return asynSuccess;
+
+    std::string normalized = filePath;
+    const bool directoryExists = checkPath(normalized);
+    std::string ignored;
+    const bool permitted = directoryExists &&
+        calibrationPathPolicy_.validateDirectory(normalized, ignored) ==
+            ADTimePix3Calibration::PathStatus::Ok;
+    setStringParam(ADTimePixDACSFilePath, normalized.c_str());
+    setIntegerParam(ADTimePixDACSFilePathExists, permitted ? 1 : 0);
+    if (!permitted) {
+        const ADTimePix3Calibration::PathStatus pathStatus =
+            calibrationPathPolicy_.validateDirectory(normalized, ignored);
+        char message[384];
+        epicsSnprintf(message, sizeof(message), "Calibration path blocked: %s",
+                      ADTimePix3Calibration::statusMessage(pathStatus));
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("%s (directory=\"%s\")", message, normalized.c_str());
+        callParamCallbacks();
+        return asynError;
+    }
+    return asynSuccess;
 }
 
 /**
@@ -1369,7 +1425,7 @@ void ADTimePix::resetPrvHstAccumulation() {
  * PrvHst sumN=4, PrvHst running sum=5, PrvHst frame=6, PrvHst ToF=7, PrvImg thresh1=8,
  * PrvImg T0-T1 band=9 (8088), PrvImg1 integrated thresh0=10 / thresh1=11 / T0-T1 band=12 (8089;
  * clip via PrvImgThreshDiffClip), Img thresh1=13 (MPX3 BothCounters full-rate demux) */
-ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags)
+ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags, const char* calibrationRoot, const char* destinationAllowlist)
     : ADDriver(portName, NDARRAY_MAX_ADDR, (int)NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
         asynInt32Mask | asynInt64Mask | asynOctetMask | asynFloat64Mask | asynEnumMask | asynInt32ArrayMask | asynInt64ArrayMask | asynFloat64ArrayMask | asynDrvUserMask,
@@ -1528,11 +1584,45 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixBPCFileNameString,                asynParamOctet,  &ADTimePixBPCFileName);            
     createParam(ADTimePixDACSFilePathString,               asynParamOctet,  &ADTimePixDACSFilePath);           
     createParam(ADTimePixDACSFilePathExistsString,         asynParamInt32,  &ADTimePixDACSFilePathExists);             
+    createParam(ADTimePixCalibrationRootString,               asynParamOctet,  &ADTimePixCalibrationRoot);
+    createParam(ADTimePixCalibrationPolicyString,             asynParamOctet,  &ADTimePixCalibrationPolicy);
+    createParam(ADTimePixDestinationAllowlistString,            asynParamOctet,  &ADTimePixDestinationAllowlist);
+    createParam(ADTimePixDestinationPolicyString,               asynParamOctet,  &ADTimePixDestinationPolicy);
     createParam(ADTimePixDACSFileNameString,               asynParamOctet,  &ADTimePixDACSFileName); 
     createParam(ADTimePixWriteMsgString,                   asynParamOctet,  &ADTimePixWriteMsg); 
     createParam(ADTimePixWriteBPCFileString,               asynParamInt32,  &ADTimePixWriteBPCFile);     
     createParam(ADTimePixWriteDACSFileString,              asynParamInt32,  &ADTimePixWriteDACSFile); 
 
+
+    const ADTimePix3Calibration::PathStatus calibrationStatus =
+        calibrationPathPolicy_.configure(
+            calibrationRoot == nullptr || calibrationRoot[0] == '\0' ? "/" : calibrationRoot);
+    setStringParam(ADTimePixCalibrationRoot, calibrationPathPolicy_.root().c_str());
+    std::string calibrationPolicyStatus;
+    if (calibrationStatus == ADTimePix3Calibration::PathStatus::Ok) {
+        calibrationPolicyStatus = calibrationPathPolicy_.permissive()
+            ? "Permissive: /"
+            : std::string("Enforced: ") + calibrationPathPolicy_.root();
+    } else {
+        calibrationPolicyStatus = std::string("Blocked: ") +
+            ADTimePix3Calibration::statusMessage(calibrationStatus);
+    }
+    setStringParam(ADTimePixCalibrationPolicy, calibrationPolicyStatus.c_str());
+
+    const ADTimePix3Destination::PolicyStatus destinationStatus =
+        destinationPolicy_.configure(
+            destinationAllowlist == nullptr || destinationAllowlist[0] == '\0'
+                ? permissiveDestinationAllowlist
+                : destinationAllowlist);
+    setStringParam(ADTimePixDestinationAllowlist, destinationPolicy_.description().c_str());
+    std::string destinationPolicyStatus;
+    if (destinationStatus == ADTimePix3Destination::PolicyStatus::Ok) {
+        destinationPolicyStatus = destinationPolicy_.permissive() ? "Permissive" : "Enforced";
+    } else {
+        destinationPolicyStatus = std::string("Blocked: ") +
+            ADTimePix3Destination::statusMessage(destinationStatus);
+    }
+    setStringParam(ADTimePixDestinationPolicy, destinationPolicyStatus.c_str());
     // Server, File Writer channels
     createParam(ADTimePixWriteDataString,                  asynParamInt32,  &ADTimePixWriteData);
     createParam(ADTimePixWriteRawString,                   asynParamInt32,  &ADTimePixWriteRaw);
@@ -1962,14 +2052,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
 // asynSuccess = 0, so use !0 for true/connected    
     else{
         asynStatus connected = initialServerCheckConnection();
-        if(connected == asynSuccess) {
+        if (connected == asynSuccess) {
             FLOW("Acquiring device information");
-        //    getDashboard(serverURL); 
-            printf("Dashboard done HERE!\n\n");
-        //    getServer();
-            printf("Server done HERE!\n\n");
-        //    initCamera(); /* Used for testing and emulator, replaced with loadFile for BPC and Chip/DACS */
-            printf("initCamera done HERE!\n\n");
         }
     }
 

@@ -20,6 +20,7 @@
 ##################################################################
 
 record(bo, "$(P)$(R)WriteData"){
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_WRITE_DATA")
   field(ZNAM, "No")
@@ -163,6 +164,7 @@ record(bi, "$(P)$(R)WritePrvHst_RBV")
 # Raw file path.
 record(waveform, "$(P)$(R)RawFilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW_BASE")
@@ -251,6 +253,7 @@ record(longin, "$(P)$(R)RawQueueSize_RBV")
 # Raw1 file path. Serval 3.3.0
 record(waveform, "$(P)$(R)Raw1FilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_RAW1_BASE")
@@ -353,6 +356,7 @@ record(longin, "$(P)$(R)Raw1QueueSize_RBV")
 # Image Channels[0] file path.
 record(waveform, "$(P)$(R)ImgFilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMGBASE")
@@ -813,6 +817,7 @@ record(mbbo, "$(P)$(R)ProcessedHstOutputType")
 # Image Channels[1] file path.
 record(waveform, "$(P)$(R)Img1FilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMG1BASE")
@@ -1082,6 +1087,7 @@ record(mbbi, "$(P)$(R)PrvSmplgMode_RBV")
 # Preview Image Channels[0] file path.
 record(waveform, "$(P)$(R)PrvImgFilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMGBASE")
@@ -1374,6 +1380,7 @@ record(bi, "$(P)$(R)PrvImgThreshDiffClip_RBV")
 # Preview Image Channel[1], measurement/image file path.
 record(waveform, "$(P)$(R)PrvImg1FilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_IMG1BASE")
@@ -1590,6 +1597,7 @@ record(waveform, "$(P)$(R)PrvImg1Ths_RBV")
 # Preview Histogram Channels[0] file path.
 record(waveform, "$(P)$(R)PrvHstFilePath")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HSTBASE")

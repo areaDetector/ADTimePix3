@@ -1,4 +1,4 @@
-# Per-chip database (asyn ADDR 0..7). Driver maxAddr is 8.
+# Per-chip database (asyn ADDR 0..7). Driver maxAddr is 14 (addresses 0-13).
 # Unused addresses on 1- or 4-chip systems: DAC writes fail at HTTP; readbacks benign.
 dbLoadRecords("$(ADTIMEPIX)/db/Chips.template","P=$(PREFIX),R=cam1:,C=CHIP0,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(ADTIMEPIX)/db/Chips.template","P=$(PREFIX),R=cam1:,C=CHIP1,PORT=$(PORT),ADDR=1,TIMEOUT=1")

@@ -1,0 +1,29 @@
+# Example only. Copy to a protected site configuration and replace all names.
+# Load with asSetFilename("/protected/path/accessSecurity.acf") before iocInit.
+
+UAG(calibration_operators) { replace_with_epics_username }
+HAG(calibration_hosts) { replace_with_operator_host }
+
+UAG(destination_operators) { replace_with_epics_username }
+HAG(destination_hosts) { replace_with_operator_host }
+
+ASG(DEFAULT) {
+    RULE(1, READ)
+    RULE(1, WRITE)
+}
+
+ASG(DESTINATION) {
+    RULE(1, READ)
+    RULE(1, WRITE, TRAPWRITE) {
+        UAG(destination_operators)
+        HAG(destination_hosts)
+    }
+}
+
+ASG(CALIBRATION) {
+    RULE(1, READ)
+    RULE(1, WRITE, TRAPWRITE) {
+        UAG(calibration_operators)
+        HAG(calibration_hosts)
+    }
+}

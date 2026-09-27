@@ -22,7 +22,9 @@ enum class Status {
     OpenFailed,
     SizeMismatch,
     ReadFailed,
-    WriteFailed
+    WriteFailed,
+    SyncFailed,
+    RenameFailed
 };
 
 bool expectedSize(int pixelCount, int bytesPerPixel, int thresholdSlices,
@@ -33,6 +35,9 @@ Status readExact(const std::string& path, std::size_t expectedSize,
 
 Status writeExact(const std::string& path, const std::vector<std::uint8_t>& data,
                   std::size_t expectedSize);
+
+/** Atomically replace path with data staged in the same directory. */
+Status writeAtomic(const std::string& path, const void* data, std::size_t size);
 
 const char* statusMessage(Status status);
 

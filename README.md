@@ -9,6 +9,7 @@ Additional information:
 * [Release notes](RELEASE.md)
 * [Contributing](documentation/CONTRIBUTING.md) (license, REUSE, `reuse lint`)
 * **Naming (ADServal vs ADTimePix3)**: [documentation/NAMING.md](documentation/NAMING.md)
+* **Secure deployment** (calibration-root containment, destination allowlist, credentials, and EPICS access security): [documentation/SECURE_DEPLOYMENT.md](documentation/SECURE_DEPLOYMENT.md)
 * [Documentation index](documentation/README.md) (shared driver notes, Medipix3 subfolder)
 * **Eight-chip / dual SPIDR** (IOC `load_chips.cmd`, `MASK_BPC_NELEMENTS`, health, mask indexing): [documentation/8chip-migration.md](documentation/8chip-migration.md)
 * **PixelConfig vs on-disk BPC** (SERVAL live config vs `.bpc` file, `PixelConfigDiff` / mask layout): [documentation/PIXELCONFIG_BPC_DIFF.md](documentation/PIXELCONFIG_BPC_DIFF.md)
@@ -157,7 +158,7 @@ The driver monitors SERVAL and detector connection status and can recover when S
 
 * **ServalConnected_RBV / DetConnected_RBV**: Read-only status PVs (in `Dashboard.template`) indicate whether SERVAL is reachable and whether a detector is reported by SERVAL. They are updated by the initial connection check at startup, by the periodic connection poll, and when `RefreshConnection` or Health is triggered.
 * **RefreshConnection**: Boolean output PV. Writing 1 runs a lightweight connection check and updates `ServalConnected_RBV`, `DetConnected_RBV`, and `ADStatusMessage`. Use this to refresh connection status on demand without running the full Health (getDashboard/getDetector) sequence.
-* **Periodic connection poll**: A background thread (default period 5 s) runs a lightweight connection check. On transition from disconnected to connected, the driver performs read-only GETs of the destination, detector, and measurement configuration. It does not push channel or acquisition configuration, load BPC/DACS files, call `initCamera()`, or stop acquisition. If any readback fails, `ADStatus` is Error, `ADStatusMessage` reports an incomplete reconnect refresh, and the poll retries the read-only refresh.
+* **Periodic connection poll**: A background thread (default period 5 s) runs a lightweight connection check. On transition from disconnected to connected, the driver performs read-only GETs of the destination, detector, and measurement configuration. It does not push channel or acquisition configuration, load BPC/DACS files, change detector settings, or stop acquisition. If any readback fails, `ADStatus` is Error, `ADStatusMessage` reports an incomplete reconnect refresh, and the poll retries the read-only refresh.
 * **Detector initialization**: Customization of detector initialization (e.g. file paths, BPC/DACS, WriteData) is done at startup (e.g. via `profiles/tpx3/init/detector.cmd` or `profiles/tpx3/st.cmd`). Automatic reconnect never reapplies desired PV state. Use the explicit `ApplyConfig`, `WriteBPCFile`, and `WriteDACSFile` actions when configuration must be pushed after a restart.
 
 Detector initialization (single source of truth)
@@ -169,6 +170,7 @@ Detector initialization uses **EPICS PV values** as the single source of truth: 
 * **Chip records and mask DB size:** Per-chip PVs are loaded via `load_chips.cmd` (eight instances of `Chips.template`, `CHIP0`…`CHIP7`). **`MASK_BPC_NELEMENTS`** in `unique.cmd` must be at least the detector **PixCount** (65536 / 262144 / 524288 for typical 1 / 4 / 8 chip sizes) or `MaskBPC.template` fails to load and mask PVs stay disconnected. See the table in `unique.cmd` and [documentation/8chip-migration.md](documentation/8chip-migration.md).
 * **ApplyConfig**: Momentary boolean output PV. Writing 1 runs `fileWriter()` + `getServer()` (same effect as `WriteData=1`) and the record returns to `No`, so you can re-apply the current PV config to SERVAL without toggling WriteData or re-running a script. Use after reconnect or after changing PVs from the OPI.
 * **Driver**: The driver does not use a separate config file; it always builds config from current PVs in `fileWriter()` and sends it to SERVAL via `sendConfiguration()`. So both the init script and the driver use the same source of truth: the EPICS PVs.
+* **Startup containment policy**: The supplied profiles use portable defaults: `ADTIMEPIX_CALIBRATION_ROOT=/` and `ADTIMEPIX_DESTINATION_ALLOWLIST=file:/*,tcp://*,http://*`. The same defaults apply when either variable is unset or empty. Sites can select one narrower calibration subtree and a restrictive list of exact or prefix destination rules. Both policies are immutable for the driver lifetime; invalid explicit settings block the affected operation. See [documentation/SECURE_DEPLOYMENT.md](documentation/SECURE_DEPLOYMENT.md).
 
 How to run:
 -----------
@@ -384,8 +386,7 @@ External Libraries:
   *  Example REST API call
 
 ```
-cpr::Response r = cpr::Get(cpr::Url{serverURL + "/dashboard"},
-                          cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
+cpr::Response r = ADTimePix3ServalHttp::get(serverURL + "/dashboard");
 ```
 
 * Multi-Chip Support:

@@ -10,6 +10,7 @@
 #include "ADTimePix.h"
 #include "ADTimePixLog.h"
 #include "bpc_mask_semantics.h"
+#include "bpc_file_io.h"
 #include "serval_config.h"
 #include "serval_dacs.h"
 #include "serval_dashboard.h"
@@ -941,7 +942,17 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(
         return;
     }
 
-    const std::string outPath = filePath + stripBpcExtForMaskedJson(fileName) + "_masked_pels.json";
+    const std::string outName = stripBpcExtForMaskedJson(fileName) + "_masked_pels.json";
+    std::string outPath;
+    if (resolveCalibrationFile(filePath, outName,
+            ADTimePix3Calibration::PathAccess::Write, outPath) != asynSuccess) {
+        setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
+        setIntegerParam(0, ADTimePixMaskedPelsCount, 0);
+        setStringParam(0, ADTimePixMaskedPelsExportStatus,
+                       "Blocked: outside calibration root");
+        callParamCallbacks(0);
+        return;
+    }
     int rows = 0, cols = 0, xChips = 0, yChips = 0, pelW = 0;
     rowsCols(&rows, &cols, &xChips, &yChips, &pelW);
     (void)xChips;
@@ -965,7 +976,12 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(
 
     json root;
     root["format_version"] = 1;
-    root["source"]["bpc_path"] = filePath + fileName;
+    std::string sourcePath;
+    if (resolveCalibrationFile(filePath, fileName,
+            ADTimePix3Calibration::PathAccess::Read, sourcePath) != asynSuccess) {
+        sourcePath = fileName;
+    }
+    root["source"]["bpc_path"] = sourcePath;
     root["source"]["num_chips"] = nChips;
     root["source"]["detector_orientation"] = detOr;
     root["source"]["chip_pel_width"] = pelW;
@@ -1029,10 +1045,13 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(
     root["masked_pels"] = mlist;
     root["Bad pixels"] = badpixels;
 
-    std::ofstream ofs(outPath.c_str(), std::ios::binary | std::ios::trunc);
-    if (!ofs) {
+    const std::string serialized = root.dump(2);
+    const ADTimePix3BpcFile::Status writeStatus = ADTimePix3BpcFile::writeAtomic(
+        outPath, serialized.data(), serialized.size());
+    if (writeStatus != ADTimePix3BpcFile::Status::Ok) {
         char emsg[256];
-        epicsSnprintf(emsg, sizeof(emsg), "Write failed: %s", outPath.c_str());
+        epicsSnprintf(emsg, sizeof(emsg), "Write failed: %s: %s",
+                      ADTimePix3BpcFile::statusMessage(writeStatus), outPath.c_str());
         setStringParam(0, ADTimePixMaskedPelsJsonPath, "");
         setIntegerParam(0, ADTimePixMaskedPelsCount, 0);
         setStringParam(0, ADTimePixMaskedPelsExportStatus, emsg);
@@ -1040,8 +1059,6 @@ void ADTimePix::exportMaskedPelsJsonFromBpcBuffer(
         callParamCallbacks(0);
         return;
     }
-    ofs << root.dump(2);
-    ofs.close();
 
     setStringParam(0, ADTimePixMaskedPelsJsonPath, outPath.c_str());
     setIntegerParam(0, ADTimePixMaskedPelsCount, counter);
@@ -1640,12 +1657,17 @@ asynStatus ADTimePix::getServer(){
 asynStatus ADTimePix::uploadDACS(){
     asynStatus status = asynSuccess;
     FLOW("Initializing Chips/DACS detector information");
-    std::string dacs_file, filePath, fileName;
+    std::string dacs_file, filePath, fileName, resolvedPath;
 
 //    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(".../vendor/tpx3/2x2/tpx3-demo.dacs");
     getStringParam(ADTimePixDACSFilePath, filePath);
     getStringParam(ADTimePixDACSFileName, fileName);
-    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string(filePath) + std::string(fileName);
+    if (resolveCalibrationFile(filePath, fileName,
+            ADTimePix3Calibration::PathAccess::Read, resolvedPath) != asynSuccess) {
+        ERR("uploadDACS: calibration path validation failed; request not sent");
+        return asynError;
+    }
+    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + resolvedPath;
 
     cpr::Response r = ADTimePix3ServalHttp::getAuthOnly(dacs_file);
     if (r.status_code != 200) {
@@ -1747,6 +1769,7 @@ asynStatus ADTimePix::configureRawChannel(int channelIndex, json& server_j) {
     int queueSizeParam = (channelIndex == 0) ? ADTimePixRawQueueSize : ADTimePixRaw1QueueSize;
     
     if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
+    if (validateDestination(fileStr) != asynSuccess) return asynError;
     server_j["Raw"][channelIndex]["Base"] = fileStr;
     
     // Check if this is a TCP connection (starts with 'tcp://')
@@ -1830,6 +1853,7 @@ asynStatus ADTimePix::configureImageChannel(const std::string& jsonPath, json& s
 
     if (getParameterSafely(baseParam, fileStr) != asynSuccess) return asynError;
     const std::string channelBase = fileStr;
+    if (validateDestination(channelBase) != asynSuccess) return asynError;
 
     // Use correct JSON structure based on channel type
     if (!isPreview) {
@@ -2059,6 +2083,7 @@ asynStatus ADTimePix::configureHistogramChannel(json& server_j) {
     
     // Configure base path and check if this is a streaming connection
     if (getParameterSafely(ADTimePixPrvHstBase, fileStr) != asynSuccess) return asynError;
+    if (validateDestination(fileStr) != asynSuccess) return asynError;
     server_j["Preview"]["HistogramChannels"][0]["Base"] = fileStr;
     
     // Check if this is a streaming connection (http:// or tcp://)
@@ -2389,60 +2414,6 @@ asynStatus ADTimePix::fileWriter(){
     // Send configuration to server
     return sendConfiguration(server_j);
 }
-
-/**
- * Initialize detector - used typically for emulator (uploadBPC/uploadDACS instead for real detector if needed)
- * 
- * serverURL:       the URL of the running SERVAL (string)
- * bpc_file:        an absolute path to the binary pixel configuration file (string), tpx3-demo.bpc
- * dacs_file:       an absolute path to the text chips configuration file (string), tpx3-demo.dacs 
- * 
- * @return: status
- */
-asynStatus ADTimePix::initCamera(){
-    asynStatus status = asynSuccess;
-    FLOW("Initializing detector");
-    
-    std::string config, bpc_file, dacs_file;
-
-    config = this->serverURL + std::string("/detector/config");
-    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string("/epics/support2/areaDetector/ADTimePix3/vendor/tpx3/2x2/tpx3-demo.bpc");
-    dacs_file = this->serverURL + std::string("/config/load?format=dacs&file=") + std::string("/epics/support2/areaDetector/ADTimePix3/vendor/tpx3/2x2/tpx3-demo.dacs");
-
-    printf("\n\ninitCamera0: http_code = \n");
-    cpr::Response r = ADTimePix3ServalHttp::getAuthOnly(bpc_file);
-    printf("\n\ninitCamera1: http_code = %li\n", r.status_code);
-    printf("Status code bpc_file: %li\n", r.status_code);
-    printf("Text bpc_file: %s\n", r.text.c_str());
-    setIntegerParam(ADTimePixHttpCode, r.status_code); 
-    setStringParam(ADTimePixWriteMsg, r.text.c_str());
-    
-
-    r = ADTimePix3ServalHttp::getAuthOnly(dacs_file);
-    printf("\n\ninitCamera2: http_code = %li\n", r.status_code);
-    printf("Status code dacs_file: %li\n", r.status_code);
-    printf("Text dacs_file: %s\n", r.text.c_str()); 
-    setIntegerParam(ADTimePixHttpCode, r.status_code);
-    setStringParam(ADTimePixWriteMsg, r.text.c_str());   
-
-    // Detector configuration file 
-    r = ADTimePix3ServalHttp::get(config);
-    printf("\n\ninitCamera3: http_code = %li\n", r.status_code);
-    json config_j = json::parse(r.text.c_str());
-    config_j["BiasVoltage"] = 103;
-    config_j["BiasEnabled"] = true;
-
-    //config_j["Destination"]["Raw"][0]["Base"] = "file:/media/nvme/raw";
-    //printf("Text JSON server: %s\n", config_j.dump(3,' ', true).c_str());    
-
-    r = ADTimePix3ServalHttp::putJson(config, config_j.dump());
-    printf("\n\ninitCamera4: http_code = %li\n", r.status_code);
-    printf("Status code: %li\n", r.status_code);
-    printf("Text: %s\n", r.text.c_str());
-
-    return status;
-}
-
 
 /**
  * Timing for acquisition

@@ -15,6 +15,7 @@
 # File path.
 record(waveform, "$(P)$(R)BPCFilePath")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_PATH")
@@ -43,6 +44,7 @@ record(bi, "$(P)$(R)BPCFilePathExists_RBV")
 
 record(waveform, "$(P)$(R)DACSFilePath")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_PATH")
@@ -50,6 +52,40 @@ record(waveform, "$(P)$(R)DACSFilePath")
     field(NELM, "256")
     info(autosaveFields, "VAL")
 }
+record(waveform, "$(P)$(R)CalibrationRoot_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_CALIBRATION_ROOT_RBV")
+    field(FTVL, "CHAR")
+    field(NELM, "512")
+    field(SCAN, "I/O Intr")
+}
+record(waveform, "$(P)$(R)CalibrationPolicy_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_CALIBRATION_POLICY_RBV")
+    field(FTVL, "CHAR")
+    field(NELM, "512")
+    field(SCAN, "I/O Intr")
+}
+
+record(waveform, "$(P)$(R)DestinationAllowlist_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_DESTINATION_ALLOWLIST_RBV")
+    field(FTVL, "CHAR")
+    field(NELM, "1024")
+    field(SCAN, "I/O Intr")
+}
+record(waveform, "$(P)$(R)DestinationPolicy_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_DESTINATION_POLICY_RBV")
+    field(FTVL, "CHAR")
+    field(NELM, "256")
+    field(SCAN, "I/O Intr")
+}
+
 record(waveform, "$(P)$(R)DACSFilePath_RBV")
 {
     field(DTYP, "asynOctetRead")
@@ -72,6 +108,7 @@ record(bi, "$(P)$(R)DACSFilePathExists_RBV")
 # Filename
 record(waveform, "$(P)$(R)BPCFileName")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))BPC_FILE_NAME")
@@ -115,6 +152,7 @@ record(waveform, "$(P)$(R)MaskedPelsExportStatus_RBV")
 
 record(waveform, "$(P)$(R)DACSFileName")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))DACS_FILE_NAME")
@@ -135,6 +173,7 @@ record(waveform, "$(P)$(R)DACSFileName_RBV")
 # Write BPC and Chips/DACS file
 record(busy, "$(P)$(R)WriteBPCFile")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_BPC_FILE")
     field(ZNAM, "Done")
@@ -143,6 +182,7 @@ record(busy, "$(P)$(R)WriteBPCFile")
 
 record(busy, "$(P)$(R)WriteDACSFile")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))WRITE_DACS_FILE")
     field(ZNAM, "Done")

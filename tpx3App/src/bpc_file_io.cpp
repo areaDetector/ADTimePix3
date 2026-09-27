@@ -10,6 +10,11 @@
 
 #include <fstream>
 #include <limits>
+#include <cerrno>
+#include <cstdio>
+#include <filesystem>
+#include <unistd.h>
+#include <sys/stat.h>
 
 namespace ADTimePix3BpcFile {
 namespace {
@@ -80,14 +85,59 @@ Status writeExact(const std::string& path, const std::vector<std::uint8_t>& data
         return Status::InvalidExpectedSize;
     }
 
-    std::ofstream output(path, std::ios::binary | std::ios::trunc);
-    if (!output) {
+    return writeAtomic(path, data.data(), data.size());
+}
+
+Status writeAtomic(const std::string& path, const void* data, std::size_t size)
+{
+    if ((data == nullptr && size != 0) || path.empty()) {
+        return Status::InvalidExpectedSize;
+    }
+
+    namespace fs = std::filesystem;
+    const fs::path target(path);
+    const fs::path parent = target.parent_path();
+    if (parent.empty() || target.filename().empty()) return Status::OpenFailed;
+
+    std::string temporary =
+        (parent / (std::string(".") + target.filename().string() + ".tmp.XXXXXX")).string();
+    std::vector<char> temporaryName(temporary.begin(), temporary.end());
+    temporaryName.push_back('\0');
+
+    struct stat existing{};
+    const mode_t outputMode = stat(path.c_str(), &existing) == 0
+        ? static_cast<mode_t>(existing.st_mode & 0777)
+        : static_cast<mode_t>(0640);
+
+    const int descriptor = mkstemp(temporaryName.data());
+    if (descriptor < 0) return Status::OpenFailed;
+    if (fchmod(descriptor, outputMode) != 0) {
+        close(descriptor);
+        unlink(temporaryName.data());
         return Status::OpenFailed;
     }
-    output.write(reinterpret_cast<const char*>(data.data()),
-                 static_cast<std::streamsize>(data.size()));
-    output.close();
-    return output ? Status::Ok : Status::WriteFailed;
+
+    Status status = Status::Ok;
+    const std::uint8_t* bytes = static_cast<const std::uint8_t*>(data);
+    std::size_t written = 0;
+    while (written < size) {
+        const ssize_t count = ::write(descriptor, bytes + written, size - written);
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) {
+            status = Status::WriteFailed;
+            break;
+        }
+        written += static_cast<std::size_t>(count);
+    }
+    if (status == Status::Ok && fsync(descriptor) != 0) status = Status::SyncFailed;
+    if (close(descriptor) != 0 && status == Status::Ok) status = Status::WriteFailed;
+
+    const std::string staged(temporaryName.data());
+    if (status == Status::Ok && rename(staged.c_str(), path.c_str()) != 0) {
+        status = Status::RenameFailed;
+    }
+    if (status != Status::Ok) unlink(staged.c_str());
+    return status;
 }
 
 const char* statusMessage(Status status)
@@ -105,6 +155,10 @@ const char* statusMessage(Status status)
         return "incomplete BPC file read";
     case Status::WriteFailed:
         return "incomplete BPC file write";
+    case Status::SyncFailed:
+        return "unable to synchronize staged file";
+    case Status::RenameFailed:
+        return "unable to atomically replace target file";
     }
     return "unknown BPC file error";
 }
