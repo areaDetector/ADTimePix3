@@ -302,6 +302,8 @@ Where:
 
 `PrvHstFramesToSum` is a request, not an unbounded allocation. The driver caps the retained rolling window to `PrvHstRetentionLimitMB` (512 MiB by default). After changing the bin count, window, or budget, check `PrvHstEffectiveFrames_RBV`, `PrvHstFramesSummed_RBV`, and `PrvHstRetentionStatus_RBV`; use the current-fill count in normalization until the window is full. See [Bounded Rolling Accumulation](ACCUMULATION_CAPACITY.md).
 
+`PrvPeriod` controls the nominal cadence shared by Serval preview image and preview histogram products; it does not throttle the full `Img` stream. `PrvHstAcqRate_RBV` remains the compatibility readback for preview detector `frameNumber` progression. Use `PrvNominalRate_RBV` (`1 / PrvPeriod_RBV`) for configured preview cadence and `PrvHstWindowSpan_RBV` (`PrvHstFramesSummed_RBV * PrvPeriod_RBV`) for the nominal time span represented by the current last-N histogram. Sampling, gating, and missing products can make actual delivery differ from these nominal values.
+
 **Example Configurations:**
 
 **High-Resolution Phase Transition Detection:**

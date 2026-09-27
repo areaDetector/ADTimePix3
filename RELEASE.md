@@ -43,8 +43,15 @@ R1-8-0 (in progress)
   the rolling sums remain exact on every input frame, while waveform and
   NDArray publication may be decimated to control callback and display load.
 * Add the budget, window capacity, current fill, and status to the Img and
-  PrvHst Phoebus accumulation screens. The operator contract and capacity
-  formula are documented in `documentation/ACCUMULATION_CAPACITY.md`.
+  PrvHst Phoebus accumulation screens.
+* Preserve the existing preview acquisition-rate PV names while labeling their
+  detector-frame semantics explicitly. Add nominal preview-product rate and
+  histogram-window span readbacks derived from `PrvPeriod_RBV`, and show them
+  on the PrvImg and PrvHst screens.
+* Refresh the PrvHst memory estimate immediately after a requested-window or
+  retention-budget change; periodic refresh remains active during acquisition.
+* The operator contract and capacity formula are documented in
+  `documentation/ACCUMULATION_CAPACITY.md`.
 * `ADTPX3-CAN-015` numeric publication, saturation, and alarm policy remains a
   separate R1-8-0 workstream; existing output conversion behavior is retained.
 
@@ -61,8 +68,11 @@ R1-8-0 (in progress)
   windows of 10 and 100 frames: requested capacity equaled current fill, memory
   plateaued at the expected bounded values, per-frame publication operated, and
   status text remained complete within the EPICS string limit.
-* Capped-window runtime qualification and physical-hardware qualification remain
-  pending.
+* TPX3 emulator capped-window qualification passed: a 64 MiB image budget
+  capped a requested 100-frame 512 x 512 window at 62 frames, and a 1 MiB
+  histogram budget capped a requested 100-frame, 16000-bin window at 14 frames.
+  Increasing each budget restored 100-frame capacity and fill without a reset.
+* Physical-hardware qualification remains pending.
 
 
 R1-7-4 (September 27, 2026)

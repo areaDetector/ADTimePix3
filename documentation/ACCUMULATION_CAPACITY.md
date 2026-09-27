@@ -65,7 +65,7 @@ These figures cover retained rolling-window storage: one uint64 sum plus
 uint32 copies of retained frames. A frame-sized temporary allocation may exist
 while replacing the oldest frame. Other driver state, current/running-sum
 buffers, network buffers, and areaDetector NDArrays are outside this budget;
-use `ImgMemoryUsage`, `PrvHstMemoryUsage`, and process-level monitoring for
+use `ImgMemoryUsage`, `PrvHstMemoryUsage_RBV`, and process-level monitoring for
 the broader footprint.
 
 At the maximum 4096 MiB budget, a 512 x 512 rolling image can retain
@@ -89,9 +89,31 @@ consume the count with the waveform callback or use interval one to avoid
 reading a newer live count alongside an older waveform. Once the window is
 full, current fill and capacity are equal.
 
+## Preview cadence and nominal time span
+
+`PrvPeriod_RBV` is the configured period shared by the Serval preview image and
+preview histogram products. The additive `PrvNominalRate_RBV` readback is
+`1 / PrvPeriod_RBV`; it is a configured nominal rate, not a measurement of
+product delivery. The full-rate `Img` stream is independent of `PrvPeriod`.
+
+`PrvHstAcqRate_RBV` is preserved for compatibility and reports preview detector
+frame progression calculated from detector `frameNumber` changes. It is not a
+count of histogram products delivered per second.
+
+`PrvHstWindowSpan_RBV` is the nominal time span represented by the current
+histogram rolling-window fill:
+
+```text
+PrvHstWindowSpan_RBV = PrvHstFramesSummed_RBV * PrvPeriod_RBV
+```
+
+This value grows during initial fill and after a capacity increase. Sampling,
+gating, or missing preview products can make the actual elapsed span differ, so
+the readback is explicitly nominal.
+
 ## Performance readbacks
 
-`ImgMemoryUsage` and `PrvHstMemoryUsage` are estimates of driver-owned
+`ImgMemoryUsage` and `PrvHstMemoryUsage_RBV` are estimates of driver-owned
 accumulation buffers, not process resident memory. They rise while retained
 frames fill the requested or capped window, then plateau because each new frame
 replaces the oldest. Allocator capacity and other IOC/plugin memory can make

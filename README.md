@@ -98,7 +98,7 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 
 * **Sum of Last N Frames**: Maintains the rolling sum in O(bins) work per frame, independent of N. `PrvHstFramesToSum` requests the window (default: 10), `PrvHstHistogramSumNFrames` publishes it, and `PrvHstSumUpdateInterval` controls waveform and NDArray publication frequency; the internal rolling sum is updated on every input frame.
 
-* **Bounded Retention**: `PrvHstRetentionLimitMB` (default: 512 MiB) caps retained rolling-window storage for the current bin count. `PrvHstEffectiveFrames_RBV` reports the permitted window capacity, `PrvHstFramesSummed_RBV` reports how many frames currently contribute, and `PrvHstRetentionStatus_RBV` reports `OK`, `Capped`, or an actionable failure.
+* **Bounded Retention**: `PrvHstRetentionLimitMB` (default: 512 MiB) caps retained rolling-window storage for the current bin count. `PrvHstEffectiveFrames_RBV` reports the permitted window capacity, `PrvHstFramesSummed_RBV` reports how many frames currently contribute, `PrvHstWindowSpan_RBV` reports their nominal time span, and `PrvHstRetentionStatus_RBV` reports `OK`, `Capped`, or an actionable failure.
 
 * **Time-of-Flight Axis**: Time axis in milliseconds for plotting histograms vs ToF. Access via `PrvHstHistogramTimeMs` PV (DOUBLE waveform array). Bin centers are calculated from bin edges (using `binWidth` and `binOffset` from jsonhisto metadata) and converted to milliseconds using the TimePix3 TDC clock period.
 
@@ -111,9 +111,11 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
   - `PrvHstFrameBinOffset`: Bin offset parameter (TDC clock ticks)
   - `PrvHstFrameCount`: Total number of frames processed
   - `PrvHstTotalCounts`: Total counts across all accumulated frames (INT64)
-  - `PrvHstAcqRate`: Acquisition rate (Hz)
-  - `PrvHstProcessingTime`: Average processing time per frame (ms)
-  - `PrvHstMemoryUsage`: Estimated memory usage for accumulation buffers (MB)
+  - `PrvHstAcqRate_RBV`: Preview detector frame rate derived from detector `frameNumber` progression (Hz)
+  - `PrvNominalRate_RBV`: Nominal preview-product rate, calculated as `1 / PrvPeriod_RBV` (Hz)
+  - `PrvHstWindowSpan_RBV`: Nominal time span represented by the current rolling-window fill (s)
+  - `PrvHstProcessingTime_RBV`: Average processing time per delivered histogram frame (ms)
+  - `PrvHstMemoryUsage_RBV`: Estimated memory usage for accumulation buffers (MB)
 
 * **Phoebus Screen**: Use `PrvHstHistogram.bob` screen (located in `Acquire/` folder) to visualize histogram data with three XY plots:
   - **Accumulated Histogram**: Running sum vs ToF [ms]
@@ -130,6 +132,8 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 - Configure `PrvHstFramesToSum` (1-100000, default: 10) to request the rolling window
 - Configure `PrvHstRetentionLimitMB` (1-4096 MiB, default: 512) and verify `PrvHstEffectiveFrames_RBV`, `PrvHstFramesSummed_RBV`, and `PrvHstRetentionStatus_RBV`
 - Configure `PrvHstSumUpdateInterval` (1-10000, default: 1) to control waveform and NDArray publication frequency; internal accumulation still runs every frame
+- Set `PrvPeriod` for the shared nominal cadence of Serval preview image and preview histogram products; the full `Img` stream is independent of this period
+- Compare `PrvHstAcqRate_RBV` (preview detector-frame progression) with `PrvNominalRate_RBV` (configured nominal preview-product rate), and use `PrvHstWindowSpan_RBV` for the nominal last-N time span
 - See `documentation/ACCUMULATION_CAPACITY.md` for the capacity formula and operator checks
 
 **File Saving**: Histogram data is available via NDArray callbacks on **addresses 4–7** (see **NDArray callbacks** under Histogram Streaming) for areaDetector file plugins. The same data is mirrored on waveform PVs (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) for displays and CA clients. Use **`WriteProcessedHst`** / **`ProcessedHstOutputType`** for an on-demand typed push (Sum vs Average), similar to processed images. For HDF5 layout examples, see `iocs/tpx3IOC/iocBoot/iocTimePix/templates/hdf5/hdf5_minimal.xml` and `iocs/tpx3IOC/iocBoot/iocTimePix/templates/hdf5/hdf5_prvhst_histogram.xml` (counts + uniform ToF-axis metadata via NDAttributes).

@@ -767,6 +767,8 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
             setStringParam(ADTimePixPrvHstRetentionStatus, "Waiting for histogram geometry");
         }
+        prvHstMemoryUsage_ = calculatePrvHstMemoryUsageMB();
+        setDoubleParam(ADTimePixPrvHstMemoryUsage, prvHstMemoryUsage_);
         epicsMutexUnlock(prvHstMutex_);
         callParamCallbacks(ADTimePixPrvHstFramesToSum);
     }
@@ -783,6 +785,8 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
             setStringParam(ADTimePixPrvHstRetentionStatus, "Waiting for histogram geometry");
         }
+        prvHstMemoryUsage_ = calculatePrvHstMemoryUsageMB();
+        setDoubleParam(ADTimePixPrvHstMemoryUsage, prvHstMemoryUsage_);
         epicsMutexUnlock(prvHstMutex_);
     }
 
@@ -1261,16 +1265,7 @@ void ADTimePix::resetPrvHstAccumulation() {
     setInteger64Param(ADTimePixPrvHstTotalCounts, 0);
     setDoubleParam(ADTimePixPrvHstProcessingTime, 0.0);
     
-    // Calculate memory usage after reset (similar to histogram_io.cpp)
-    double total_memory_mb = 0.0;
-    // Running sum is reset, so no memory for it
-    // Frame buffer is cleared, so no memory for frames
-    // Only buffers remain
-    total_memory_mb += prvHstTimeMsBuffer_.size() * sizeof(epicsFloat64) / (1024.0 * 1024.0);
-    total_memory_mb += (prvHstRateSamples_.size() + prvHstProcessingTimeSamples_.size()) * sizeof(double) / (1024.0 * 1024.0);
-    total_memory_mb += prvHstLineBuffer_.size() * sizeof(char) / (1024.0 * 1024.0);
-    total_memory_mb += 0.1;  // Estimated overhead
-    prvHstMemoryUsage_ = total_memory_mb;
+    prvHstMemoryUsage_ = calculatePrvHstMemoryUsageMB();
     setDoubleParam(ADTimePixPrvHstMemoryUsage, prvHstMemoryUsage_);
     
     // Trigger callbacks with zero arrays to clear waveform PVs immediately
