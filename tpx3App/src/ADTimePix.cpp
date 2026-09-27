@@ -709,7 +709,7 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
             imgSumArray64Buffer_.resize(rollingSum.size());
             sumSnapshot.resize(rollingSum.size());
             for (size_t index = 0; index < rollingSum.size(); ++index) {
-                const epicsInt64 value64 = static_cast<epicsInt64>(rollingSum[index]);
+                const epicsInt64 value64 = ADTimePix3Numeric::preserveUInt64Bits(rollingSum[index]);
                 imgSumArray64Buffer_[index] = value64;
                 sumSnapshot[index] = value64;
             }
@@ -976,7 +976,7 @@ asynStatus ADTimePix::readInt64Array(asynUser *pasynUser, epicsInt64 *value, siz
             size_t elements_to_copy = std::min(nElements, pixel_count);
             const uint64_t* pixels = imgRunningSum_->get_pixels_64_ptr();
             for (size_t i = 0; i < elements_to_copy; ++i) {
-                value[i] = static_cast<epicsInt64>(pixels[i]);
+                value[i] = ADTimePix3Numeric::preserveUInt64Bits(pixels[i]);
             }
             // Zero out remaining elements
             for (size_t i = elements_to_copy; i < nElements; ++i) {
@@ -998,7 +998,7 @@ asynStatus ADTimePix::readInt64Array(asynUser *pasynUser, epicsInt64 *value, siz
             const std::vector<uint64_t>& rollingSum = imgWindowSum_.sum();
             const size_t elements_to_copy = std::min(nElements, rollingSum.size());
             for (size_t i = 0; i < elements_to_copy; ++i) {
-                value[i] = static_cast<epicsInt64>(rollingSum[i]);
+                value[i] = ADTimePix3Numeric::preserveUInt64Bits(rollingSum[i]);
             }
             for (size_t i = elements_to_copy; i < nElements; ++i) {
                 value[i] = 0;
@@ -1145,23 +1145,26 @@ void ADTimePix::pushProcessedHstToPlugins() {
 
         size_t dims[3] = { bin_size, 0, 0 };
         const epicsUInt64 nFrames = (prvHstFrameCount_ > 0) ? prvHstFrameCount_ : 1ULL;
-        const epicsUInt32 nBuf = static_cast<epicsUInt32>(prvHstWindowSum_.frameCount());
+        const uint64_t nBuf = static_cast<uint64_t>(prvHstWindowSum_.frameCount());
         const std::vector<uint64_t>& rollingSum = prvHstWindowSum_.sum();
-        const epicsUInt32 nForSumN = (nBuf > 0) ? nBuf : 1U;
+        const uint64_t nForSumN = (nBuf > 0) ? nBuf : 1U;
 
         if (bin_size > 0) {
-            NDDataType_t dtype5 = (outputType == 1) ? NDInt32 : NDInt64;
+            NDDataType_t dtype5 = (outputType == 1) ? NDUInt32 : NDUInt64;
             NDArray* p5 = pNDArrayPool->alloc(1, dims, dtype5, 0, NULL);
             if (p5 && p5->pData) {
                 if (outputType == 0) {
-                    epicsInt64* pD = reinterpret_cast<epicsInt64*>(p5->pData);
+                    epicsUInt64* pD = reinterpret_cast<epicsUInt64*>(p5->pData);
                     for (size_t i = 0; i < bin_size; ++i)
-                        pD[i] = static_cast<epicsInt64>(prvHstRunningSum_->get_bin_value_64(i));
+                        pD[i] = prvHstRunningSum_->get_bin_value_64(i);
                 } else {
-                    epicsInt32* pD = reinterpret_cast<epicsInt32*>(p5->pData);
+                    epicsUInt32* pD = reinterpret_cast<epicsUInt32*>(p5->pData);
                     for (size_t i = 0; i < bin_size; ++i) {
-                        uint64_t v = prvHstRunningSum_->get_bin_value_64(i);
-                        pD[i] = static_cast<epicsInt32>(v / nFrames);
+                        bool clamped = false;
+                        pD[i] = ADTimePix3Numeric::clampAverageToUInt32(
+                            prvHstRunningSum_->get_bin_value_64(i), nFrames, clamped);
+                        if (clamped) updatePrvHstRangeState(
+                            ADTimePix3Numeric::RangeState::OutputClamped);
                     }
                 }
                 if (p5->pAttributeList) {
@@ -1172,6 +1175,10 @@ void ADTimePix::pushProcessedHstToPlugins() {
                     p5->pAttributeList->add("PrvHstTimeBin0Ms", "First bin center (ms)", NDAttrFloat64, &t0ms);
                     p5->pAttributeList->add("PrvHstTimeBinStepMs", "Bin center spacing (ms)", NDAttrFloat64, &tStepMs);
                     p5->pAttributeList->add("PrvHstNumBins", "Number of bins", NDAttrInt32, &nBinsA);
+                    addNumericRangeAttributes(
+                        p5, outputType == 0 ? "uint64" : "uint32",
+                        outputType == 0 ? "counts" : "counts/frame",
+                        prvHstRangeState_ != ADTimePix3Numeric::RangeState::Ok);
                 }
                 doHistCallback(p5, 5);
             } else if (p5) {
@@ -1189,12 +1196,15 @@ void ADTimePix::pushProcessedHstToPlugins() {
             }
 
             if (prvHstCurrentFrame_ && prvHstCurrentFrame_->get_bin_size() == bin_size) {
-                NDArray* p6 = pNDArrayPool->alloc(1, dims, NDInt32, 0, NULL);
+                NDArray* p6 = pNDArrayPool->alloc(1, dims, NDUInt32, 0, NULL);
                 if (p6 && p6->pData) {
-                    epicsInt32* pD = reinterpret_cast<epicsInt32*>(p6->pData);
+                    epicsUInt32* pD = reinterpret_cast<epicsUInt32*>(p6->pData);
                     for (size_t i = 0; i < bin_size; ++i)
-                        pD[i] = static_cast<epicsInt32>(prvHstCurrentFrame_->get_bin_value_32(i));
-                    if (p6->pAttributeList) getAttributes(p6->pAttributeList);
+                        pD[i] = prvHstCurrentFrame_->get_bin_value_32(i);
+                    if (p6->pAttributeList) {
+                        getAttributes(p6->pAttributeList);
+                        addNumericRangeAttributes(p6, "uint32", "counts", false);
+                    }
                     doHistCallback(p6, 6);
                 } else if (p6) {
                     p6->release();
@@ -1202,16 +1212,21 @@ void ADTimePix::pushProcessedHstToPlugins() {
             }
 
             if (prvHstWindowSum_.frameCount() > 0 && rollingSum.size() >= bin_size) {
-                NDDataType_t dtype4 = (outputType == 1) ? NDInt32 : NDInt64;
+                NDDataType_t dtype4 = (outputType == 1) ? NDUInt32 : NDUInt64;
                 NDArray* p4 = pNDArrayPool->alloc(1, dims, dtype4, 0, NULL);
                 if (p4 && p4->pData) {
                     if (outputType == 0) {
-                        epicsInt64* pD = reinterpret_cast<epicsInt64*>(p4->pData);
-                        for (size_t i = 0; i < bin_size; ++i) pD[i] = static_cast<epicsInt64>(rollingSum[i]);
+                        epicsUInt64* pD = reinterpret_cast<epicsUInt64*>(p4->pData);
+                        std::memcpy(pD, rollingSum.data(), bin_size * sizeof(epicsUInt64));
                     } else {
-                        epicsInt32* pD = reinterpret_cast<epicsInt32*>(p4->pData);
-                        for (size_t i = 0; i < bin_size; ++i)
-                            pD[i] = static_cast<epicsInt32>(rollingSum[i] / nForSumN);
+                        epicsUInt32* pD = reinterpret_cast<epicsUInt32*>(p4->pData);
+                        for (size_t i = 0; i < bin_size; ++i) {
+                            bool clamped = false;
+                            pD[i] = ADTimePix3Numeric::clampAverageToUInt32(
+                                rollingSum[i], nForSumN, clamped);
+                            if (clamped) updatePrvHstRangeState(
+                                ADTimePix3Numeric::RangeState::OutputClamped);
+                        }
                     }
                     if (p4->pAttributeList) {
                         getAttributes(p4->pAttributeList);
@@ -1221,6 +1236,10 @@ void ADTimePix::pushProcessedHstToPlugins() {
                         p4->pAttributeList->add("PrvHstTimeBin0Ms", "First bin center (ms)", NDAttrFloat64, &t0ms);
                         p4->pAttributeList->add("PrvHstTimeBinStepMs", "Bin center spacing (ms)", NDAttrFloat64, &tStepMs);
                         p4->pAttributeList->add("PrvHstNumBins", "Number of bins", NDAttrInt32, &nBinsA);
+                        addNumericRangeAttributes(
+                            p4, outputType == 0 ? "uint64" : "uint32",
+                            outputType == 0 ? "counts" : "counts/frame",
+                            prvHstRangeState_ != ADTimePix3Numeric::RangeState::Ok);
                     }
                     doHistCallback(p4, 4);
                 } else if (p4) {
@@ -1244,12 +1263,56 @@ void ADTimePix::pushProcessedHstToPlugins() {
     epicsMutexUnlock(prvHstMutex_);
 }
 
+void ADTimePix::updateImgRangeState(ADTimePix3Numeric::RangeState state)
+{
+    const ADTimePix3Numeric::RangeState promoted =
+        ADTimePix3Numeric::promoteRangeState(imgRangeState_, state);
+    if (promoted == imgRangeState_ && state != ADTimePix3Numeric::RangeState::Ok) return;
+    imgRangeState_ = promoted;
+    state = promoted;
+    setIntegerParam(ADTimePixImgRangeSaturated,
+                    state == ADTimePix3Numeric::RangeState::Ok ? 0 : 1);
+    setStringParam(ADTimePixImgRangeStatus,
+                   ADTimePix3Numeric::rangeStateName(state));
+    callParamCallbacks(ADTimePixImgRangeSaturated);
+    callParamCallbacks(ADTimePixImgRangeStatus);
+}
+
+void ADTimePix::updatePrvHstRangeState(ADTimePix3Numeric::RangeState state)
+{
+    const ADTimePix3Numeric::RangeState promoted =
+        ADTimePix3Numeric::promoteRangeState(prvHstRangeState_, state);
+    if (promoted == prvHstRangeState_ && state != ADTimePix3Numeric::RangeState::Ok) return;
+    prvHstRangeState_ = promoted;
+    state = promoted;
+    setIntegerParam(ADTimePixPrvHstRangeSaturated,
+                    state == ADTimePix3Numeric::RangeState::Ok ? 0 : 1);
+    setStringParam(ADTimePixPrvHstRangeStatus,
+                   ADTimePix3Numeric::rangeStateName(state));
+    callParamCallbacks(ADTimePixPrvHstRangeSaturated);
+    callParamCallbacks(ADTimePixPrvHstRangeStatus);
+}
+
+void ADTimePix::addNumericRangeAttributes(NDArray* array, const char* range,
+                                           const char* units, bool saturated)
+{
+    if (!array || !array->pAttributeList) return;
+    epicsInt32 saturatedValue = saturated ? 1 : 0;
+    array->pAttributeList->add("ADTimePixNumericRange", "Published numeric range",
+                               NDAttrString, const_cast<char*>(range));
+    array->pAttributeList->add("ADTimePixCountUnits", "Count value units",
+                               NDAttrString, const_cast<char*>(units));
+    array->pAttributeList->add("ADTimePixRangeSaturated", "Range saturation occurred",
+                               NDAttrInt32, &saturatedValue);
+}
+
 void ADTimePix::resetPrvHstAccumulation() {
     // Reset accumulated histogram data
     prvHstRunningSum_.reset();
     prvHstWindowSum_.reset();
     setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
     prvHstFrameCount_ = 0;
+    updatePrvHstRangeState(ADTimePix3Numeric::RangeState::Ok);
     prvHstTotalCounts_ = 0;
     prvHstFramesSinceLastSumUpdate_ = 0;
     prvHstProcessingTime_ = 0.0;
@@ -1257,7 +1320,6 @@ void ADTimePix::resetPrvHstAccumulation() {
     
     // Clear buffers
     prvHstSumArray64Buffer_.clear();
-    prvHstArrayData32Buffer_.clear();
     prvHstTimeMsBuffer_.clear();
     
     // Update PVs
@@ -1565,6 +1627,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixImgEffectiveFramesString,           asynParamInt32, &ADTimePixImgEffectiveFrames);
     createParam(ADTimePixImgFramesSummedString,              asynParamInt32, &ADTimePixImgFramesSummed);
     createParam(ADTimePixImgRetentionStatusString,           asynParamOctet, &ADTimePixImgRetentionStatus);
+    createParam(ADTimePixImgRangeSaturatedString,          asynParamInt32, &ADTimePixImgRangeSaturated);
+    createParam(ADTimePixImgRangeStatusString,             asynParamOctet, &ADTimePixImgRangeStatus);
     // Server, Preview, ImageChannels[1]   
     createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);
     createParam(ADTimePixPrvImg1FilePatString,             asynParamOctet, &ADTimePixPrvImg1FilePat);             
@@ -1614,6 +1678,8 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstEffectiveFramesString,        asynParamInt32, &ADTimePixPrvHstEffectiveFrames);
     createParam(ADTimePixPrvHstFramesSummedString,           asynParamInt32, &ADTimePixPrvHstFramesSummed);
     createParam(ADTimePixPrvHstRetentionStatusString,        asynParamOctet, &ADTimePixPrvHstRetentionStatus);
+    createParam(ADTimePixPrvHstRangeSaturatedString,        asynParamInt32, &ADTimePixPrvHstRangeSaturated);
+    createParam(ADTimePixPrvHstRangeStatusString,           asynParamOctet, &ADTimePixPrvHstRangeStatus);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
@@ -1780,6 +1846,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvHstRetentionLimitMB_ = DEFAULT_RETENTION_LIMIT_MB;
     prvHstTotalCounts_ = 0;
     prvHstFrameCount_ = 0;  // Initialize frame count
+    prvHstRangeState_ = ADTimePix3Numeric::RangeState::Ok;
     
     // Initialize PrvHst frame data from JSON
     prvHstTimeAtFrame_ = 0.0;
@@ -1795,7 +1862,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     prvHstMemoryUsage_ = 0.0;
     
     // Initialize PrvHst buffers
-    prvHstArrayData32Buffer_.clear();
     prvHstSumArray64Buffer_.clear();
     prvHstTimeMsBuffer_.clear();
     if (!imgMutex_) {
@@ -1829,6 +1895,7 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     imgMemoryUsage_ = 0.0;
     imgTotalCounts_ = 0;
     imgAccumulatedFrameCount_ = 0;
+    imgRangeState_ = ADTimePix3Numeric::RangeState::Ok;
     
     // Set initial parameter values
     setIntegerParam(ADTimePixImgAccumulationEnable, 1);  // Default: enabled
@@ -1839,19 +1906,23 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     setIntegerParam(ADTimePixPrvHstEffectiveFrames, 0);
     setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
     setStringParam(ADTimePixPrvHstRetentionStatus, "Waiting for histogram geometry");
+    setIntegerParam(ADTimePixPrvHstRangeSaturated, 0);
+    setStringParam(ADTimePixPrvHstRangeStatus, "OK");
     setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
     setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
     setIntegerParam(ADTimePixImgRetentionLimitMB, imgRetentionLimitMB_);
     setIntegerParam(ADTimePixImgEffectiveFrames, 0);
     setIntegerParam(ADTimePixImgFramesSummed, 0);
     setStringParam(ADTimePixImgRetentionStatus, "Waiting for image geometry");
+    setIntegerParam(ADTimePixImgRangeSaturated, 0);
+    setStringParam(ADTimePixImgRangeStatus, "OK");
     setInteger64Param(ADTimePixImgTotalCounts, 0);
     setDoubleParam(ADTimePixImgProcessingTime, 0.0);
     // Calculate initial memory usage (will be 0.0 initially since buffers are empty)
     imgMemoryUsage_ = calculateImgMemoryUsageMB();
     setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
     setIntegerParam(ADTimePixWriteProcessedImg, 0);
-    setIntegerParam(ADTimePixProcessedImgOutputType, 0);  // 0=Sum (NDInt64), 1=Average (NDInt32)
+    setIntegerParam(ADTimePixProcessedImgOutputType, 0);  // 0=Sum (NDUInt64), 1=Average (NDUInt32)
     setIntegerParam(ADTimePixWriteProcessedHst, 0);
     setIntegerParam(ADTimePixProcessedHstOutputType, 0);
     // Initialize NumImages to 0 (unlimited) for continuous mode

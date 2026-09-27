@@ -65,7 +65,7 @@ public:
     const uint64_t* get_pixels_64_ptr() const { return pixels_64_.data(); }
     
     // Add another image to this one (for running sum)
-    void add_image(const ImageData& other);
+    bool add_image(const ImageData& other);
     
 private:
     size_t width_;

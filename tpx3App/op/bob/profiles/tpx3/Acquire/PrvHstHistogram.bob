@@ -1140,6 +1140,43 @@
           </color>
         </border_color>
       </widget>
+'
+      <widget type="label" version="2.0.0">
+        <name>RangeStatusLabel</name>
+        <text>Numeric range:</text>
+        <x>20</x>
+        <y>125</y>
+        <width>110</width>
+      </widget>
+      <widget type="led" version="2.0.0">
+        <name>RangeSaturatedLED</name>
+        <pv_name>$(P)$(R)PrvHstRangeSaturated_RBV</pv_name>
+        <x>135</x>
+        <y>122</y>
+        <width>26</width>
+        <height>26</height>
+        <off_color>
+          <color red="0" green="200" blue="0">
+          </color>
+        </off_color>
+        <on_color>
+          <color red="255" green="0" blue="0">
+          </color>
+        </on_color>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>RangeStatusDisplay</name>
+        <pv_name>$(P)$(R)PrvHstRangeStatus_RBV</pv_name>
+        <x>175</x>
+        <y>120</y>
+        <width>260</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="235" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+      </widget>'
     </widget>
   </widget>
   <widget type="xyplot" version="3.0.0">

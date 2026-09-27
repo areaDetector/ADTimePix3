@@ -125,14 +125,19 @@ latency. The rolling update is O(elements), so its cost is intentionally nearly
 independent of N. A larger publication interval reduces periodic waveform,
 NDArray, file-plugin, and display work; it does not skip internal frames.
 
-## Numeric contract boundary
+## Numeric range contract
 
-Rolling sums use unsigned 64-bit internal storage and reject an update before
-changing state if it would overflow that storage. Existing waveform and
-NDArray publication types retain their current behavior in this workstream.
-The complete unsigned-to-signed conversion, saturation, and alarm policy is
-tracked separately by `ADTPX3-CAN-015`; users should continue to choose
-average output for TIFF and validate long-running whole-acquisition sums.
+Accumulated count waveforms and NDArrays now publish native unsigned types.
+Running sums saturate at `UINT64_MAX`; a rolling-window update that cannot
+remain exact is rejected. Legacy signed scalar total-count readbacks clamp at
+`INT64_MAX` instead of becoming negative. Each channel exposes
+a latched alarm and detail status, cleared by its accumulation reset. On-demand
+Sum products are `NDUInt64`; Average products are checked `NDUInt32`. See
+[Accumulation Numeric Range Contract](NUMERIC_RANGE_CONTRACT.md) for the complete
+type, unit, saturation, alarm, metadata, and client-compatibility contract.
+CA exposes these unsigned records as doubles, but every supported last-N value
+remains below `2^53` and is therefore integer-exact. Use PVA or `NDUInt64` HDF5
+for exact whole-acquisition values above that boundary.
 
 ## Operator checks
 

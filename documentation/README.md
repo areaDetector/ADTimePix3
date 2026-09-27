@@ -16,6 +16,7 @@ Merged in **R1-7-0** (August 2026). See **[medipix3/](medipix3/)** and [NAMING.m
 | Document | Description |
 |----------|-------------|
 | [ACCUMULATION_CAPACITY.md](ACCUMULATION_CAPACITY.md) | Bounded Img/PrvHst rolling windows, capacity formula, operator checks |
+| [NUMERIC_RANGE_CONTRACT.md](NUMERIC_RANGE_CONTRACT.md) | Unsigned count types, saturation, alarms, units, and compatibility |
 | [PROCESSED_IMAGE_FILE_SAVING.md](PROCESSED_IMAGE_FILE_SAVING.md) | NDArray addresses, file plugins, WriteProcessedImg/Hst |
 | [TCP_PERFORMANCE_LIMITS.md](TCP_PERFORMANCE_LIMITS.md) | TCP/jsonimage streaming limits |
 | [COORDINATE_MAP.md](COORDINATE_MAP.md) | TPX3/MPX3 chip layouts, BPC index ↔ image coordinates, and requirements for future TPX4 mapping |
