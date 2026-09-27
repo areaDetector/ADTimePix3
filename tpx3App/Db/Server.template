@@ -607,7 +607,7 @@ record(waveform, "$(P)$(R)ImgImageData")
     field(DESC, "Accumulated image data (64-bit)")
     field(DTYP, "asynInt64ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_DATA")
-    field(FTVL, "INT64")
+    field(FTVL, "UINT64")
     field(NELM, "$(MAX_PIXELS=262144)")
     field(SCAN, "I/O Intr")
 }
@@ -617,7 +617,7 @@ record(waveform, "$(P)$(R)ImgImageFrame")
     field(DESC, "Current frame data (32-bit)")
     field(DTYP, "asynInt32ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_FRAME")
-    field(FTVL, "LONG")
+    field(FTVL, "ULONG")
     field(NELM, "$(MAX_PIXELS=262144)")
     field(SCAN, "I/O Intr")
 }
@@ -627,7 +627,7 @@ record(waveform, "$(P)$(R)ImgImageSumNFrames")
     field(DESC, "Sum of last N frames (64-bit)")
     field(DTYP, "asynInt64ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_IMAGE_SUM_N_FRAMES")
-    field(FTVL, "INT64")
+    field(FTVL, "UINT64")
     field(NELM, "$(MAX_PIXELS=262144)")
     field(SCAN, "I/O Intr")
 }
@@ -708,6 +708,25 @@ record(stringin, "$(P)$(R)ImgRetentionStatus_RBV")
     field(SCAN, "I/O Intr")
 }
 
+record(bi, "$(P)$(R)ImgRangeSaturated_RBV")
+{
+    field(DESC, "Numeric range saturation latched")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_RANGE_SATURATED")
+    field(ZNAM, "OK")
+    field(ONAM, "Saturated")
+    field(OSV, "MAJOR")
+    field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)ImgRangeStatus_RBV")
+{
+    field(DESC, "Numeric range status")
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_RANGE_STATUS")
+    field(SCAN, "I/O Intr")
+}
+
 record(longout, "$(P)$(R)ImgSumUpdateInterval")
 {
     field(DESC, "Sum publication interval (frames)")
@@ -724,6 +743,7 @@ record(int64in, "$(P)$(R)ImgTotalCounts")
     field(DTYP, "asynInt64")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_TOTAL_COUNTS")
     field(SCAN, "I/O Intr")
+    field(EGU, "counts")
 }
 
 record(ai, "$(P)$(R)ImgProcessingTime")
@@ -1821,7 +1841,7 @@ record(waveform, "$(P)$(R)PrvHstHistogramData")
     field(DESC, "Accumulated histogram data (64-bit)")
     field(DTYP, "asynInt64ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_HISTOGRAM_DATA")
-    field(FTVL, "INT64")
+    field(FTVL, "UINT64")
     field(NELM, "100000")
     field(SCAN, "I/O Intr")
 }
@@ -1831,7 +1851,7 @@ record(waveform, "$(P)$(R)PrvHstHistogramFrame")
     field(DESC, "Current frame histogram data (32-bit)")
     field(DTYP, "asynInt32ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_HISTOGRAM_FRAME")
-    field(FTVL, "LONG")
+    field(FTVL, "ULONG")
     field(NELM, "100000")
     field(SCAN, "I/O Intr")
 }
@@ -1841,7 +1861,7 @@ record(waveform, "$(P)$(R)PrvHstHistogramSumNFrames")
     field(DESC, "Sum of last N frames histogram (64-bit)")
     field(DTYP, "asynInt64ArrayIn")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_HISTOGRAM_SUM_N_FRAMES")
-    field(FTVL, "INT64")
+    field(FTVL, "UINT64")
     field(NELM, "100000")
     field(SCAN, "I/O Intr")
 }
@@ -1931,12 +1951,13 @@ record(ai, "$(P)$(R)PrvHstFrameCount_RBV")
     field(SCAN, "I/O Intr")
 }
 
-record(ai, "$(P)$(R)PrvHstTotalCounts_RBV")
+record(int64in, "$(P)$(R)PrvHstTotalCounts_RBV")
 {
     field(DESC, "Total counts across all frames")
     field(DTYP, "asynInt64")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_TOTAL_COUNTS")
     field(SCAN, "I/O Intr")
+    field(EGU, "counts")
 }
 
 record(ai, "$(P)$(R)PrvHstAcqRate_RBV")
@@ -2026,6 +2047,25 @@ record(stringin, "$(P)$(R)PrvHstRetentionStatus_RBV")
     field(DESC, "Rolling-window budget status")
     field(DTYP, "asynOctetRead")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_RETENTION_STATUS")
+    field(SCAN, "I/O Intr")
+}
+
+record(bi, "$(P)$(R)PrvHstRangeSaturated_RBV")
+{
+    field(DESC, "Numeric range saturation latched")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_RANGE_SATURATED")
+    field(ZNAM, "OK")
+    field(ONAM, "Saturated")
+    field(OSV, "MAJOR")
+    field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)PrvHstRangeStatus_RBV")
+{
+    field(DESC, "Numeric range status")
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_RANGE_STATUS")
     field(SCAN, "I/O Intr")
 }
 

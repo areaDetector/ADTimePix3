@@ -19,6 +19,7 @@ servalProtocolFixtureTest_SRCS += bpc_mask_semantics.cpp
 servalProtocolFixtureTest_SRCS += detector_family.cpp
 servalProtocolFixtureTest_SRCS += mask_geometry.cpp
 servalProtocolFixtureTest_SRCS += network_client.cpp
+servalProtocolFixtureTest_SRCS += numeric_range.cpp
 servalProtocolFixtureTest_SRCS += rolling_window_sum.cpp
 servalProtocolFixtureTest_SRCS += serval_config.cpp
 servalProtocolFixtureTest_SRCS += serval_dacs.cpp

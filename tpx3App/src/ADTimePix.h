@@ -42,6 +42,7 @@
 #include "img_accumulation.h"
 #include "histogram_io.h"
 #include "network_client.h"
+#include "numeric_range.h"
 #include "rolling_window_sum.h"
 #include "stream_worker_state.h"
 #include "detector_family.h"
@@ -282,10 +283,12 @@
 #define ADTimePixImgEffectiveFramesString         "TPX3_IMG_EFFECTIVE_FRAMES" // (asynInt32,         r)      Rolling-window capacity
 #define ADTimePixImgFramesSummedString            "TPX3_IMG_FRAMES_SUMMED" // (asynInt32,            r)      Frames currently present in rolling sum
 #define ADTimePixImgRetentionStatusString         "TPX3_IMG_RETENTION_STATUS" // (asynOctet,          r)      Rolling-window budget status
+#define ADTimePixImgRangeSaturatedString          "TPX3_IMG_RANGE_SATURATED" // (asynInt32, r) Numeric range saturation latched
+#define ADTimePixImgRangeStatusString             "TPX3_IMG_RANGE_STATUS" // (asynOctet, r) Numeric range status
 #define ADTimePixWriteProcessedImgString         "TPX3_IMG_WRITE_PROCESSED" // (asynInt32,         w)      Trigger: push ImgImageData/ImgImageSumNFrames as NDArrays to addresses 2 and 3
-#define ADTimePixProcessedImgOutputTypeString    "TPX3_IMG_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDInt64), 1=Average (NDInt32, divide by N)
+#define ADTimePixProcessedImgOutputTypeString    "TPX3_IMG_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDUInt64), 1=Average (NDUInt32, divide by N)
 #define ADTimePixWriteProcessedHstString         "TPX3_HST_WRITE_PROCESSED" // (asynInt32,         w)      Trigger: push PrvHst NDArrays (addrs 4–7) for file plugins
-#define ADTimePixProcessedHstOutputTypeString    "TPX3_HST_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDInt64), 1=Average (NDInt32, divide by frame count)
+#define ADTimePixProcessedHstOutputTypeString    "TPX3_HST_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDUInt64), 1=Average (NDUInt32, divide by frame count)
 #define ADTimePixRefreshPixelConfigString        "TPX3_REFRESH_PIXEL_CONFIG"     // (asynInt32,   w)      Write 1: GET PixelConfig per chip from SERVAL; optional compare to BPC on disk
 #define ADTimePixPixelConfigLenString            "TPX3_PIXEL_CONFIG_LEN"         // (asynInt32,   r)      Decoded PixelConfig byte length
 #define ADTimePixPixelConfigMatchBPCString       "TPX3_PIXEL_CONFIG_MATCH_BPC"  // (asynInt32,   r)      -1 error, 0 mismatch, 1 match, 2 no BPC, 3 size mismatch
@@ -346,6 +349,8 @@
 #define ADTimePixPrvHstEffectiveFramesString     "TPX3_PRV_HST_EFFECTIVE_FRAMES"    // (asynInt32,         r)      Rolling-window capacity
 #define ADTimePixPrvHstFramesSummedString        "TPX3_PRV_HST_FRAMES_SUMMED"       // (asynInt32,         r)      Frames currently present in rolling sum
 #define ADTimePixPrvHstRetentionStatusString     "TPX3_PRV_HST_RETENTION_STATUS"    // (asynOctet,          r)      Rolling-window budget status
+#define ADTimePixPrvHstRangeSaturatedString      "TPX3_PRV_HST_RANGE_SATURATED" // (asynInt32, r) Numeric range saturation latched
+#define ADTimePixPrvHstRangeStatusString         "TPX3_PRV_HST_RANGE_STATUS" // (asynOctet, r) Numeric range status
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
@@ -690,6 +695,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixImgEffectiveFrames;
         int ADTimePixImgFramesSummed;
         int ADTimePixImgRetentionStatus;
+        int ADTimePixImgRangeSaturated;
+        int ADTimePixImgRangeStatus;
 
             // Controls
         int ADTimePixRawStream;
@@ -744,6 +751,8 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstEffectiveFrames;
         int ADTimePixPrvHstFramesSummed;
         int ADTimePixPrvHstRetentionStatus;
+        int ADTimePixPrvHstRangeSaturated;
+        int ADTimePixPrvHstRangeStatus;
 
             // Measurement
         int ADTimePixPelRate;        
@@ -960,6 +969,7 @@ class ADTimePix : public ADDriver{
         double imgMemoryUsage_;                           // Memory usage (MB)
         uint64_t imgTotalCounts_;                         // Total counts across all frames
         uint64_t imgAccumulatedFrameCount_;        // Number of frames added to running sum (for average-per-frame)
+        ADTimePix3Numeric::RangeState imgRangeState_;
         static constexpr size_t IMG_MAX_PROCESSING_TIME_SAMPLES = 10;
         static constexpr size_t IMG_MEMORY_UPDATE_INTERVAL_SEC = 5;
         static constexpr int DEFAULT_RETENTION_LIMIT_MB = 512;
@@ -1000,6 +1010,7 @@ class ADTimePix : public ADDriver{
         int prvHstRetentionLimitMB_;
         uint64_t prvHstTotalCounts_;
         uint64_t prvHstFrameCount_;  // Track number of frames processed
+        ADTimePix3Numeric::RangeState prvHstRangeState_;
         // PrvHst frame data from JSON
         double prvHstTimeAtFrame_;
         int prvHstFrameBinSize_;
@@ -1015,7 +1026,6 @@ class ADTimePix : public ADDriver{
         static constexpr size_t PRVHST_MEMORY_UPDATE_INTERVAL_SEC = 5;
         
         // PrvHst reusable buffers for EPICS arrays
-        std::vector<epicsInt32> prvHstArrayData32Buffer_;  // For histogram data (32-bit)
         std::vector<epicsInt64> prvHstSumArray64Buffer_;   // For sum of N frames (64-bit)
         std::vector<epicsFloat64> prvHstTimeMsBuffer_;    // For histogram time axis (milliseconds)
 
@@ -1161,6 +1171,10 @@ class ADTimePix : public ADDriver{
         bool configurePrvHstRollingWindow(size_t binCount);
         void resetImgAccumulation();
         void resetPrvHstAccumulation();
+        void updateImgRangeState(ADTimePix3Numeric::RangeState state);
+        void updatePrvHstRangeState(ADTimePix3Numeric::RangeState state);
+        void addNumericRangeAttributes(NDArray* array, const char* range,
+                                       const char* units, bool saturated);
         
         // TCP streaming methods for PrvHst channel
         bool processPrvHstDataLine(char* line_buffer, char* newline_pos, size_t total_read);

@@ -52,18 +52,37 @@ R1-8-0 (in progress)
   retention-budget change; periodic refresh remains active during acquisition.
 * The operator contract and capacity formula are documented in
   `documentation/ACCUMULATION_CAPACITY.md`.
-* `ADTPX3-CAN-015` numeric publication, saturation, and alarm policy remains a
-  separate R1-8-0 workstream; existing output conversion behavior is retained.
+
+### Numeric range contract
+
+* Publish accumulated Img and PrvHst waveforms as `UINT64`, current-frame count
+  waveforms as `ULONG`, Sum NDArrays as `NDUInt64`, and Average NDArrays as
+  checked `NDUInt32`; existing PV names and NDArray addresses are preserved.
+* Saturate running-sum and total-count accumulation at `UINT64_MAX`; reject a
+  rolling-window update that cannot remain exact. Preserve legacy signed scalar
+  total-count PVs by clamping at `INT64_MAX` instead of allowing negative or
+  implementation-defined conversion results.
+* Correct `PrvHstTotalCounts_RBV` from `ai` to `int64in`, without renaming it,
+  so values remain integral and exact through `INT64_MAX`.
+* Document that CA exposes unsigned-32 and 64-bit records as `DBF_DOUBLE`,
+  while PVA preserves `uint[]`, `ulong[]`, and `long`. All supported last-N
+  values remain integer-exact over CA because they are below `2^53`.
+* Add per-channel latched range-alarm and detail readbacks, reset with the
+  corresponding accumulation reset, and expose them on both Phoebus screens.
+* Add numeric range, count-unit, and saturation attributes to count NDArrays.
+  Document the public types and client migration in
+  `documentation/NUMERIC_RANGE_CONTRACT.md`.
 
 
 ### Validation
 
 * Full IOC build passed.
-* 309/309 deterministic protocol, lifecycle, and rolling-window checks passed.
+* 322/322 deterministic protocol, lifecycle, rolling-window, and numeric-range
+  checks passed.
 * Coordinate-map validation passed for 11 implemented cases; five planned
   physical SpIDR 2x4 cases remain deferred.
 * All Phoebus BOB files passed XML validation.
-* REUSE validation passed for 363/363 files.
+* REUSE validation passed for 366/366 files.
 * TPX3 emulator runtime qualification passed at 10 Hz for Img and PrvHst
   windows of 10 and 100 frames: requested capacity equaled current fill, memory
   plateaued at the expected bounded values, per-frame publication operated, and
@@ -72,6 +91,13 @@ R1-8-0 (in progress)
   capped a requested 100-frame 512 x 512 window at 62 frames, and a 1 MiB
   histogram budget capped a requested 100-frame, 16000-bin window at 14 frames.
   Increasing each budget restored 100-frame capacity and fill without a reset.
+* Runtime transport qualification passed: CA reported the expected
+  `DBF_DOUBLE` protocol view, while PVA reported `ulong[]` for accumulated
+  waveforms, `uint[]` for current-frame waveforms, and `long` for
+  `PrvHstTotalCounts_RBV`. Constraining PVA discovery to the configured CA path
+  selected the intended server interface.
+* Runtime reset qualification passed: Img and PrvHst range alarms returned zero
+  / `OK`, and both detail readbacks returned `OK`.
 * Physical-hardware qualification remains pending.
 
 

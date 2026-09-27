@@ -8,6 +8,7 @@
  */
 
 #include "img_accumulation.h"
+#include "numeric_range.h"
 #include <stdexcept>
 #include <algorithm>
 #include <cstring>
@@ -136,7 +137,7 @@ void ImageData::set_pixel_64(size_t x, size_t y, uint64_t value) {
 }
 
 // Add another image to this one (for running sum)
-void ImageData::add_image(const ImageData& other) {
+bool ImageData::add_image(const ImageData& other) {
     if (other.data_type_ != DataType::FRAME_DATA || data_type_ != DataType::RUNNING_SUM) {
         throw std::invalid_argument("Can only add frame data to running sum");
     }
@@ -145,6 +146,7 @@ void ImageData::add_image(const ImageData& other) {
         throw std::invalid_argument("Image dimensions must match for addition");
     }
 
+    bool saturated = false;
     size_t pixel_count = width_ * height_;
     for (size_t i = 0; i < pixel_count; ++i) {
         uint64_t other_value = 0;
@@ -154,12 +156,10 @@ void ImageData::add_image(const ImageData& other) {
             other_value = other.pixels_32_[i];
         }
         
-        uint64_t new_value = pixels_64_[i] + other_value;
-        if (new_value < pixels_64_[i]) {
-            // Overflow detected - cap at maximum value
-            pixels_64_[i] = UINT64_MAX;
-        } else {
-            pixels_64_[i] = new_value;
-        }
+        bool pixelSaturated = false;
+        pixels_64_[i] = ADTimePix3Numeric::saturatingAdd(
+            pixels_64_[i], other_value, pixelSaturated);
+        saturated = saturated || pixelSaturated;
     }
+    return saturated;
 }

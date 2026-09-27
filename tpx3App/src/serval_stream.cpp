@@ -1083,12 +1083,15 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         
         imgTotalCounts_ = 0;
         imgAccumulatedFrameCount_ = 0;
+        updateImgRangeState(ADTimePix3Numeric::RangeState::Ok);
         setInteger64Param(ADTimePixImgTotalCounts, 0);
     }
     
-    // Add frame to running sum
+    // Add frame to running sum and latch any uint64 saturation.
     try {
-        imgRunningSum_->add_image(frame_data);
+        if (imgRunningSum_->add_image(frame_data)) {
+            updateImgRangeState(ADTimePix3Numeric::RangeState::AccumulatorSaturated);
+        }
     } catch (const std::exception& e) {
         ERR_ARGS("Failed to add image to running sum: %s", e.what());
         epicsMutexUnlock(imgMutex_);
@@ -1113,8 +1116,18 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
             frame_total += frame_pixels[i];
         }
     }
-    imgTotalCounts_ += frame_total;
-    imgAccumulatedFrameCount_++;
+    bool totalSaturated = false;
+    imgTotalCounts_ = ADTimePix3Numeric::saturatingAdd(
+        imgTotalCounts_, frame_total, totalSaturated);
+    if (totalSaturated) {
+        updateImgRangeState(ADTimePix3Numeric::RangeState::AccumulatorSaturated);
+    }
+    bool frameCountSaturated = false;
+    imgAccumulatedFrameCount_ = ADTimePix3Numeric::saturatingAdd(
+        imgAccumulatedFrameCount_, 1, frameCountSaturated);
+    if (frameCountSaturated) {
+        updateImgRangeState(ADTimePix3Numeric::RangeState::AccumulatorSaturated);
+    }
     
     // Update the bounded rolling sum in one pixel pass.
     const size_t windowBudgetBytes =
@@ -1132,6 +1145,9 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
             windowStatus = imgWindowSum_.push(frame_data.get_pixels_16_ptr(), pixel_count);
         } else {
             windowStatus = imgWindowSum_.push(frame_data.get_pixels_32_ptr(), pixel_count);
+        }
+        if (windowStatus == ADTimePix3Accumulation::RollingSumStatus::NumericOverflow) {
+            updateImgRangeState(ADTimePix3Numeric::RangeState::AccumulatorSaturated);
         }
         if (windowStatus != ADTimePix3Accumulation::RollingSumStatus::Ok) {
             char statusMessage[160];
@@ -1151,7 +1167,8 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     imgFramesSinceLastSumUpdate_++;
 
     // Snapshot accumulated frame count to use as NDArray uniqueId (32-bit)
-    epicsInt32 imgUid = static_cast<epicsInt32>(imgAccumulatedFrameCount_);
+    epicsInt32 imgUid = imgAccumulatedFrameCount_ > static_cast<uint64_t>(INT32_MAX)
+        ? INT32_MAX : static_cast<epicsInt32>(imgAccumulatedFrameCount_);
     
     // Prepare data for callbacks (while holding mutex)
     // Copy data to buffers that will be used for callbacks
@@ -1171,7 +1188,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         }
         const uint64_t* pixels = imgRunningSum_->get_pixels_64_ptr();
         for (size_t i = 0; i < image_data_size; ++i) {
-            imgArrayData64Buffer_[i] = static_cast<epicsInt64>(pixels[i]);
+            imgArrayData64Buffer_[i] = ADTimePix3Numeric::preserveUInt64Bits(pixels[i]);
         }
     }
     
@@ -1183,12 +1200,12 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
             const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
             for (size_t i = 0; i < image_frame_size; ++i) {
-                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+                imgFrameArrayDataBuffer_[i] = ADTimePix3Numeric::preserveUInt32Bits(pixels[i]);
             }
         } else {
             const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
             for (size_t i = 0; i < image_frame_size; ++i) {
-                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
+                imgFrameArrayDataBuffer_[i] = ADTimePix3Numeric::preserveUInt32Bits(pixels[i]);
             }
         }
     }
@@ -1198,7 +1215,7 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         const std::vector<uint64_t>& rollingSum = imgWindowSum_.sum();
         imgSumArray64Buffer_.resize(rollingSum.size());
         for (size_t index = 0; index < rollingSum.size(); ++index) {
-            imgSumArray64Buffer_[index] = static_cast<epicsInt64>(rollingSum[index]);
+            imgSumArray64Buffer_[index] = ADTimePix3Numeric::preserveUInt64Bits(rollingSum[index]);
         }
         image_sum_size = rollingSum.size();
     }
@@ -1256,6 +1273,8 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
             updateTimeStamp(&pArray->epicsTS);
             if (pArray->pAttributeList) {
                 getAttributes(pArray->pAttributeList);
+                addNumericRangeAttributes(pArray, "uint64", "counts",
+                                          imgRangeState_ != ADTimePix3Numeric::RangeState::Ok);
             }
             pImgSumArray = pArray;
             emitImgSumArray = true;
@@ -1274,11 +1293,9 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
         if (imgSumArray64Buffer_.size() >= nPixels) {
             NDArray* pArrayN = pNDArrayPool->alloc(2, dims, NDUInt64, 0, NULL);
             if (pArrayN && pArrayN->pData) {
-                const epicsInt64* src = imgSumArray64Buffer_.data();
+                const std::vector<uint64_t>& rollingSum = imgWindowSum_.sum();
                 epicsUInt64* dst = static_cast<epicsUInt64*>(pArrayN->pData);
-                for (size_t i = 0; i < nPixels; ++i) {
-                    dst[i] = static_cast<epicsUInt64>(src[i]);
-                }
+                std::memcpy(dst, rollingSum.data(), nPixels * sizeof(epicsUInt64));
                 pArrayN->uniqueId = imgUid;
                 epicsTimeStamp ts;
                 epicsTimeGetCurrent(&ts);
@@ -1286,6 +1303,8 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
                 updateTimeStamp(&pArrayN->epicsTS);
                 if (pArrayN->pAttributeList) {
                     getAttributes(pArrayN->pAttributeList);
+                    addNumericRangeAttributes(pArrayN, "uint64", "counts",
+                                              imgRangeState_ != ADTimePix3Numeric::RangeState::Ok);
                 }
                 pImgSumNArray = pArrayN;
                 emitImgSumNArray = true;
@@ -1329,8 +1348,14 @@ void ADTimePix::updateImgPerformanceMetrics() {
     epicsTimeGetCurrent(&current_time);
     double current_time_seconds = current_time.secPastEpoch + current_time.nsec / 1e9;
     
-    // Update total counts
-    setInteger64Param(ADTimePixImgTotalCounts, imgTotalCounts_);
+    // The legacy scalar is signed; preserve its name and clamp explicitly.
+    bool totalClamped = false;
+    const epicsInt64 publicTotal = ADTimePix3Numeric::clampToInt64(
+        imgTotalCounts_, totalClamped);
+    if (totalClamped) {
+        updateImgRangeState(ADTimePix3Numeric::RangeState::OutputClamped);
+    }
+    setInteger64Param(ADTimePixImgTotalCounts, publicTotal);
     
     // Calculate memory usage periodically (every 5 seconds) or more frequently if buffer is growing
     // Update more frequently if frame buffer is near capacity to catch memory growth
@@ -1399,6 +1424,7 @@ void ADTimePix::resetImgAccumulation() {
     setIntegerParam(ADTimePixImgFramesSummed, 0);
     imgTotalCounts_ = 0;
     imgAccumulatedFrameCount_ = 0;
+    updateImgRangeState(ADTimePix3Numeric::RangeState::Ok);
     imgFramesSinceLastSumUpdate_ = 0;
     imgProcessingTime_ = 0.0;
     imgProcessingTimeSamples_.clear();
@@ -1416,7 +1442,7 @@ void ADTimePix::pushProcessedImgToPlugins() {
     if (!imgMutex_ || !pNDArrayPool) return;
     epicsMutexLock(imgMutex_);
     
-    int outputType = 0;  // 0=Sum (NDInt64), 1=Average (NDInt32)
+    int outputType = 0;  // 0=Sum (NDUInt64), 1=Average (NDUInt32)
     getIntegerParam(ADTimePixProcessedImgOutputType, &outputType);
     if (outputType != 0 && outputType != 1) outputType = 0;
     
@@ -1444,21 +1470,32 @@ void ADTimePix::pushProcessedImgToPlugins() {
         
         // Address 2: running sum (ImgImageData)
         size_t dims[3] = { width, height, 0 };
-        NDDataType_t dataType = (outputType == 1) ? NDInt32 : NDInt64;
+        NDDataType_t dataType = (outputType == 1) ? NDUInt32 : NDUInt64;
         NDArray* pArr2 = pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
         if (pArr2 && pArr2->pData) {
-            epicsUInt32 nFrames = (imgAccumulatedFrameCount_ > 0) ? static_cast<epicsUInt32>(imgAccumulatedFrameCount_) : 1;
+            const uint64_t nFrames = (imgAccumulatedFrameCount_ > 0) ? imgAccumulatedFrameCount_ : 1;
             if (outputType == 0) {
-                epicsInt64* pData = reinterpret_cast<epicsInt64*>(pArr2->pData);
-                for (size_t i = 0; i < pixel_count; i++) pData[i] = static_cast<epicsInt64>(sum_ptr[i]);
+                epicsUInt64* pData = reinterpret_cast<epicsUInt64*>(pArr2->pData);
+                std::memcpy(pData, sum_ptr, pixel_count * sizeof(epicsUInt64));
             } else {
-                epicsInt32* pData = reinterpret_cast<epicsInt32*>(pArr2->pData);
-                for (size_t i = 0; i < pixel_count; i++)
-                    pData[i] = (nFrames > 0) ? static_cast<epicsInt32>(sum_ptr[i] / nFrames) : 0;
+                epicsUInt32* pData = reinterpret_cast<epicsUInt32*>(pArr2->pData);
+                for (size_t i = 0; i < pixel_count; i++) {
+                    bool clamped = false;
+                    pData[i] = ADTimePix3Numeric::clampAverageToUInt32(
+                        sum_ptr[i], nFrames, clamped);
+                    if (clamped) updateImgRangeState(
+                        ADTimePix3Numeric::RangeState::OutputClamped);
+                }
             }
             epicsTimeGetCurrent(&pArr2->epicsTS);
             pArr2->timeStamp = pArr2->epicsTS.secPastEpoch + pArr2->epicsTS.nsec / 1.e9;
-            if (pArr2->pAttributeList) getAttributes(pArr2->pAttributeList);
+            if (pArr2->pAttributeList) {
+                getAttributes(pArr2->pAttributeList);
+                addNumericRangeAttributes(
+                    pArr2, outputType == 0 ? "uint64" : "uint32",
+                    outputType == 0 ? "counts" : "counts/frame",
+                    imgRangeState_ != ADTimePix3Numeric::RangeState::Ok);
+            }
             doCallbacksGenericPointer(pArr2, NDArrayData, 2);
             pArr2->release();
         } else if (pArr2) {
@@ -1471,18 +1508,29 @@ void ADTimePix::pushProcessedImgToPlugins() {
         if (nSumFrames > 0 && sumN.size() >= pixel_count) {
             NDArray* pArr3 = pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
             if (pArr3 && pArr3->pData) {
-                epicsUInt32 nN = static_cast<epicsUInt32>(nSumFrames);
+                const uint64_t nN = static_cast<uint64_t>(nSumFrames);
                 if (outputType == 0) {
-                    epicsInt64* pData = reinterpret_cast<epicsInt64*>(pArr3->pData);
-                    for (size_t i = 0; i < pixel_count; i++) pData[i] = static_cast<epicsInt64>(sumN[i]);
+                    epicsUInt64* pData = reinterpret_cast<epicsUInt64*>(pArr3->pData);
+                    std::memcpy(pData, sumN.data(), pixel_count * sizeof(epicsUInt64));
                 } else {
-                    epicsInt32* pData = reinterpret_cast<epicsInt32*>(pArr3->pData);
-                    for (size_t i = 0; i < pixel_count; i++)
-                        pData[i] = (nN > 0) ? static_cast<epicsInt32>(sumN[i] / nN) : 0;
+                    epicsUInt32* pData = reinterpret_cast<epicsUInt32*>(pArr3->pData);
+                    for (size_t i = 0; i < pixel_count; i++) {
+                        bool clamped = false;
+                        pData[i] = ADTimePix3Numeric::clampAverageToUInt32(
+                            sumN[i], nN, clamped);
+                        if (clamped) updateImgRangeState(
+                            ADTimePix3Numeric::RangeState::OutputClamped);
+                    }
                 }
                 epicsTimeGetCurrent(&pArr3->epicsTS);
                 pArr3->timeStamp = pArr3->epicsTS.secPastEpoch + pArr3->epicsTS.nsec / 1.e9;
-                if (pArr3->pAttributeList) getAttributes(pArr3->pAttributeList);
+                if (pArr3->pAttributeList) {
+                    getAttributes(pArr3->pAttributeList);
+                    addNumericRangeAttributes(
+                        pArr3, outputType == 0 ? "uint64" : "uint32",
+                        outputType == 0 ? "counts" : "counts/frame",
+                        imgRangeState_ != ADTimePix3Numeric::RangeState::Ok);
+                }
                 doCallbacksGenericPointer(pArr3, NDArrayData, 3);
                 pArr3->release();
             } else if (pArr3) {

@@ -11,6 +11,7 @@
 #include "bpc_mask_semantics.h"
 #include "mask_geometry.h"
 #include "network_client.h"
+#include "numeric_range.h"
 #include "one_shot_action.h"
 #include "rolling_window_sum.h"
 #include "serval_config.h"
@@ -1816,6 +1817,57 @@ void testOneShotActions()
            "one-shot action ignores unsupported values and resets them");
 }
 
+void testNumericRangeContract()
+{
+    using namespace ADTimePix3Numeric;
+    const std::uint64_t u64max = std::numeric_limits<std::uint64_t>::max();
+    const std::int64_t i64max = std::numeric_limits<std::int64_t>::max();
+    const std::uint32_t u32max = std::numeric_limits<std::uint32_t>::max();
+    bool changed = false;
+
+    testOk(saturatingAdd(40, 2, changed) == 42 && !changed,
+           "unsigned accumulation preserves an in-range result");
+    testOk(saturatingAdd(u64max - 1, 1, changed) == u64max && !changed,
+           "unsigned accumulation accepts the exact UINT64 maximum");
+    testOk(saturatingAdd(u64max, 1, changed) == u64max && changed,
+           "unsigned accumulation saturates and reports overflow");
+    testOk(clampToInt64(static_cast<std::uint64_t>(i64max), changed) == i64max && !changed,
+           "signed scalar conversion accepts the exact INT64 maximum");
+    testOk(clampToInt64(static_cast<std::uint64_t>(i64max) + 1, changed) == i64max && changed,
+           "signed scalar conversion clamps values above INT64 maximum");
+    testOk(clampAverageToUInt32(99, 0, changed) == 0 && !changed,
+           "average conversion defines a zero-divisor result");
+    testOk(clampAverageToUInt32(static_cast<std::uint64_t>(u32max) * 2, 2, changed) == u32max && !changed,
+           "average conversion accepts the exact UINT32 maximum");
+    testOk(clampAverageToUInt32(static_cast<std::uint64_t>(u32max) + 1, 1, changed) == u32max && changed,
+           "average conversion clamps values above UINT32 maximum");
+    const std::uint64_t u64pattern = UINT64_C(0xfedcba9876543210);
+    const std::int64_t i64bits = preserveUInt64Bits(u64pattern);
+    std::uint64_t u64roundTrip = 0;
+    std::memcpy(&u64roundTrip, &i64bits, sizeof(u64roundTrip));
+    testOk(u64roundTrip == u64pattern,
+           "64-bit waveform callback preserves unsigned payload bits");
+    const std::uint32_t u32pattern = UINT32_C(0xfedcba98);
+    const std::int32_t i32bits = preserveUInt32Bits(u32pattern);
+    std::uint32_t u32roundTrip = 0;
+    std::memcpy(&u32roundTrip, &i32bits, sizeof(u32roundTrip));
+    testOk(u32roundTrip == u32pattern,
+           "32-bit waveform callback preserves unsigned payload bits");
+    testOk(promoteRangeState(RangeState::Ok, RangeState::OutputClamped) ==
+               RangeState::OutputClamped,
+           "range state latches an output clamp");
+    testOk(promoteRangeState(RangeState::OutputClamped,
+                             RangeState::AccumulatorSaturated) ==
+               RangeState::AccumulatorSaturated,
+           "range state promotes a clamp to accumulator saturation");
+    testOk(promoteRangeState(RangeState::AccumulatorSaturated,
+                             RangeState::OutputClamped) ==
+               RangeState::AccumulatorSaturated &&
+               promoteRangeState(RangeState::AccumulatorSaturated, RangeState::Ok) ==
+               RangeState::Ok,
+           "range state cannot downgrade except through explicit reset");
+}
+
 void testRollingWindowSum()
 {
     using ADTimePix3Accumulation::RollingSumStatus;
@@ -1939,7 +1991,7 @@ void testRollingWindowSum()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(309);
+    testPlan(322);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -1963,5 +2015,6 @@ MAIN(servalProtocolFixtureTest)
     testMaskGeometry();
     testOneShotActions();
     testRollingWindowSum();
+    testNumericRangeContract();
     return testDone();
 }

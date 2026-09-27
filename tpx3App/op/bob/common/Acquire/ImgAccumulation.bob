@@ -668,6 +668,43 @@
           </color>
         </border_color>
       </widget>
+'
+      <widget type="label" version="2.0.0">
+        <name>RangeStatusLabel</name>
+        <text>Numeric range:</text>
+        <x>1030</x>
+        <y>55</y>
+        <width>100</width>
+      </widget>
+      <widget type="led" version="2.0.0">
+        <name>RangeSaturatedLED</name>
+        <pv_name>$(P)$(R)RangeSaturated_RBV</pv_name>
+        <x>1130</x>
+        <y>52</y>
+        <width>26</width>
+        <height>26</height>
+        <off_color>
+          <color red="0" green="200" blue="0">
+          </color>
+        </off_color>
+        <on_color>
+          <color red="255" green="0" blue="0">
+          </color>
+        </on_color>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>RangeStatusDisplay</name>
+        <pv_name>$(P)$(R)RangeStatus_RBV</pv_name>
+        <x>1165</x>
+        <y>50</y>
+        <width>160</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="235" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+      </widget>'
     </widget>
   </widget>
   <widget type="image" version="2.0.0">

@@ -60,7 +60,7 @@ public:
     void calculate_bin_edges(int bin_width, int bin_offset);
 
     // Add another histogram to this one (for running sum)
-    void add_histogram(const HistogramData& other);
+    bool add_histogram(const HistogramData& other);
 
 private:
     size_t bin_size_;
