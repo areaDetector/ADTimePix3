@@ -56,22 +56,25 @@ The Img channel (`TPX3-TEST:cam1:ImgFilePath`) supports advanced image accumulat
 
 * **Accumulation Enable Control (`ImgAccumulationEnable`)**: Controls whether the ADTimePix3 driver connects to the TCP port and performs accumulation processing. When enabled, the driver connects to the TCP port (e.g., port 8087) and processes images for accumulation. When disabled, the driver does not connect to the TCP port, allowing other clients to connect instead. This is useful when you want to write images to disk or have other clients connect to the image channel without the driver consuming the TCP connection. Note: `WriteImg` must still be enabled for Serval to configure the Img channel; `ImgAccumulationEnable` only controls whether the driver connects to the TCP stream.
 
-* **Running Sum Accumulation**: Accumulates pixel values over all frames using 64-bit integers to prevent overflow. Access via `ImgImageData` PV (INT64 waveform array).
+* **Running Sum Accumulation**: Accumulates pixel values over all frames using unsigned 64-bit internal storage. Access via `ImgImageData` PV (INT64 waveform array); see the numeric-contract boundary in `documentation/ACCUMULATION_CAPACITY.md`.
 * **Current Frame Display**: Individual frame data available via `ImgImageFrame` PV (INT32 waveform array). This PV is **not** exposed as a separate NDArray address; file plugins that need one frame per callback should use **NDArrayAddress=1** (the Img stream from the TCP jsonimage path), which matches the same frame sequence as accumulation.
-* **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via `ImgFramesToSum` PV, default: 10). Access via `ImgImageSumNFrames` PV (INT64 waveform array). Update interval configurable via `ImgSumUpdateInterval` PV (default: 1 frame).
+* **Sum of Last N Frames**: Maintains the rolling sum in O(pixels) work per frame, independent of N. `ImgFramesToSum` requests the window (default: 10), `ImgImageSumNFrames` publishes it, and `ImgSumUpdateInterval` controls waveform and NDArray publication frequency; the internal rolling sum is updated on every input frame.
+* **Bounded Retention**: `ImgRetentionLimitMB` (default: 512 MiB) caps retained rolling-window storage for the current geometry. `ImgEffectiveFrames_RBV` reports the permitted window capacity, `ImgFramesSummed_RBV` reports how many frames currently contribute, and `ImgRetentionStatus_RBV` reports `OK`, `Capped`, or an actionable failure.
 * **Performance Monitoring**: 
   - Acquisition rate: `ImgAcqRate_RBV` (Hz) - already available from TCP streaming metadata
   - Processing time: `ImgProcessingTime` (ms) - average processing time per frame
   - Memory usage: `ImgMemoryUsage` (MB) - estimated memory usage for accumulation buffers
 * **Total Counts**: `ImgTotalCounts` (INT64) - total counts across all accumulated frames
-* **Reset Control**: `ImgImageDataReset` (boolean output) - one-shot button to reset accumulated image data. Clears running sum, frame buffer, total counts, and processing time samples. The PV automatically resets to 0 after the reset action.
-* **Phoebus Screen**: Use `common/Acquire/ImgAccumulation.bob` (or open from `profiles/tpx3/TimePix3Status.bob`) to visualize accumulated images, sum of N frames, and performance metrics. The screen includes controls for enabling/disabling accumulation, resetting accumulation, and configuring frame buffer parameters.
+* **Reset Control**: `ImgImageDataReset` (boolean output) - one-shot button to reset accumulated image data. Clears running sum, rolling window, total counts, and processing time samples. The PV automatically resets to 0 after the reset action.
+* **Phoebus Screen**: Use `common/Acquire/ImgAccumulation.bob` (or open from `profiles/tpx3/TimePix3Status.bob`) to visualize accumulated images, sum of N frames, and performance metrics. The screen includes the requested window, publication interval, retention budget, permitted capacity, current fill, and status.
 
 **Configuration**:
 - Set `ImgFilePath` to `tcp://listen@hostname:port` (e.g., `tcp://listen@localhost:8087`)
 - Set `ImgFileFmt` to `jsonimage` (format index 3)
-- Configure `ImgFramesToSum` (1-100000, default: 10) to control frame buffer size
-- Configure `ImgSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
+- Configure `ImgFramesToSum` (1-100000, default: 10) to request the rolling window
+- Configure `ImgRetentionLimitMB` (1-4096 MiB, default: 512) and verify `ImgEffectiveFrames_RBV`, `ImgFramesSummed_RBV`, and `ImgRetentionStatus_RBV`
+- Configure `ImgSumUpdateInterval` (1-10000, default: 1) to control waveform and NDArray publication frequency; internal accumulation still runs every frame
+- See `documentation/ACCUMULATION_CAPACITY.md` for the capacity formula and operator checks
 
 **File Saving**: Image data is available via NDArray callbacks for areaDetector file plugins (NDFileTIFF, NDFileHDF5, etc.). **NDArray addresses (Img-related):** 0 = PrvImg preview; **1** = each new Img frame (raw stream); **2** = running sum (same buffer as `ImgImageData`); **3** = sum of last N frames (same buffer as `ImgImageSumNFrames`, updated per `ImgSumUpdateInterval`). With **Img accumulation enabled**, the driver pushes NDArrays to addresses **2** every processed frame and to **3** whenever the sum-of-N buffer is updated (typically every frame if `ImgSumUpdateInterval` is 1). The waveform PVs `ImgImageData`, `ImgImageFrame`, and `ImgImageSumNFrames` are parallel views for displays and CA clients; only **1**, **2**, and **3** are NDArray streams for plugins. **`WriteProcessedImg`** (one-shot) triggers an **additional** push to addresses 2 and 3 built by `pushProcessedImgToPlugins()`: use **`ProcessedImgOutputType`** = Sum (0, NDInt64, good for HDF5) or Average (1, NDInt32, better for NDFileTIFF). **Note:** Changing a single plugin’s `NDArrayAddress` at runtime often has no effect (plugins usually register at init). To save different streams at once, use **separate** plugin instances (e.g. HDF5 on 1, 2, and 3) with each address set at startup. **iocsh:** keep each `dbLoadRecords("NDFileHDF5.template", "...")` on **one line**; a second line starting with the macro string is parsed as a new command and breaks macros (see `profiles/tpx3/st.cmd` and ADCore `commonPlugins.cmd`).
 See `documentation/PROCESSED_IMAGE_FILE_SAVING.md`, section **Runtime NDArrayAddress switching validation (single-plugin test)**, for reproducible HDF5/TIFF runtime-switch verification results and testing notes.
@@ -89,11 +92,13 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 
 * **Accumulation Enable Control (`PrvHstAccumulationEnable`)**: Controls whether the ADTimePix3 driver connects to the TCP port and performs histogram accumulation processing. When enabled, the driver connects to the TCP port (e.g., port 8451) and processes histogram frames for accumulation. When disabled, the driver does not connect to the TCP port, allowing other clients to connect instead. This is useful when you want external clients to process jsonhisto data without the driver consuming the TCP connection. Note: `WritePrvHst` must still be enabled for Serval to configure the PrvHst channel; `PrvHstAccumulationEnable` only controls whether the driver connects to the TCP stream.
 
-* **Running Sum Accumulation**: Accumulates histogram bin values over all frames using 64-bit integers to prevent overflow. Access via `PrvHstHistogramData` PV (INT64 waveform array). The running sum is continuously updated as new frames arrive.
+* **Running Sum Accumulation**: Accumulates histogram bin values over all frames using unsigned 64-bit internal storage. Access via `PrvHstHistogramData` PV (INT64 waveform array). The running sum is continuously updated as new frames arrive; see the numeric-contract boundary in `documentation/ACCUMULATION_CAPACITY.md`.
 
 * **Current Frame Display**: Individual frame histogram data available via `PrvHstHistogramFrame` PV (INT32 waveform array). Each frame shows the histogram bin values for the most recently received frame.
 
-* **Sum of Last N Frames**: Calculates sum of the last N frames (configurable via `PrvHstFramesToSum` PV, default: 10). Access via `PrvHstHistogramSumNFrames` PV (INT64 waveform array). Update interval configurable via `PrvHstSumUpdateInterval` PV (default: 1 frame).
+* **Sum of Last N Frames**: Maintains the rolling sum in O(bins) work per frame, independent of N. `PrvHstFramesToSum` requests the window (default: 10), `PrvHstHistogramSumNFrames` publishes it, and `PrvHstSumUpdateInterval` controls waveform and NDArray publication frequency; the internal rolling sum is updated on every input frame.
+
+* **Bounded Retention**: `PrvHstRetentionLimitMB` (default: 512 MiB) caps retained rolling-window storage for the current bin count. `PrvHstEffectiveFrames_RBV` reports the permitted window capacity, `PrvHstFramesSummed_RBV` reports how many frames currently contribute, and `PrvHstRetentionStatus_RBV` reports `OK`, `Capped`, or an actionable failure.
 
 * **Time-of-Flight Axis**: Time axis in milliseconds for plotting histograms vs ToF. Access via `PrvHstHistogramTimeMs` PV (DOUBLE waveform array). Bin centers are calculated from bin edges (using `binWidth` and `binOffset` from jsonhisto metadata) and converted to milliseconds using the TimePix3 TDC clock period.
 
@@ -122,8 +127,10 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 - Set `PrvHstFileMode` to `tof` (format index 3) for Time-of-Flight histograms
 - Configure `PrvHstNumBins`, `PrvHstBinWidth`, and `PrvHstOffset` for histogram binning parameters
 - Set `PrvHstAccumulationEnable` to `Enable` (1) to enable histogram accumulation processing
-- Configure `PrvHstFramesToSum` (1-100000, default: 10) to control frame buffer size
-- Configure `PrvHstSumUpdateInterval` (1-10000, default: 1) to control update frequency for sum of N frames
+- Configure `PrvHstFramesToSum` (1-100000, default: 10) to request the rolling window
+- Configure `PrvHstRetentionLimitMB` (1-4096 MiB, default: 512) and verify `PrvHstEffectiveFrames_RBV`, `PrvHstFramesSummed_RBV`, and `PrvHstRetentionStatus_RBV`
+- Configure `PrvHstSumUpdateInterval` (1-10000, default: 1) to control waveform and NDArray publication frequency; internal accumulation still runs every frame
+- See `documentation/ACCUMULATION_CAPACITY.md` for the capacity formula and operator checks
 
 **File Saving**: Histogram data is available via NDArray callbacks on **addresses 4–7** (see **NDArray callbacks** under Histogram Streaming) for areaDetector file plugins. The same data is mirrored on waveform PVs (`PrvHstHistogramData`, `PrvHstHistogramFrame`, `PrvHstHistogramSumNFrames`, `PrvHstHistogramTimeMs`) for displays and CA clients. Use **`WriteProcessedHst`** / **`ProcessedHstOutputType`** for an on-demand typed push (Sum vs Average), similar to processed images. For HDF5 layout examples, see `iocs/tpx3IOC/iocBoot/iocTimePix/templates/hdf5/hdf5_minimal.xml` and `iocs/tpx3IOC/iocBoot/iocTimePix/templates/hdf5/hdf5_prvhst_histogram.xml` (counts + uniform ToF-axis metadata via NDAttributes).
 

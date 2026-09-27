@@ -353,8 +353,50 @@ bool ADTimePix::processPrvHstDataLine(char* line_buffer, char* newline_pos, size
     return true;
 }
 
+bool ADTimePix::configurePrvHstRollingWindow(size_t binCount)
+{
+    const size_t budgetBytes =
+        static_cast<size_t>(prvHstRetentionLimitMB_) * 1024U * 1024U;
+    const ADTimePix3Accumulation::RollingSumConfiguration result =
+        prvHstWindowSum_.configure(binCount,
+                                   static_cast<size_t>(prvHstFramesToSum_),
+                                   budgetBytes);
+
+    char statusMessage[40];
+    if (result.status != ADTimePix3Accumulation::RollingSumStatus::Ok) {
+        std::snprintf(statusMessage, sizeof(statusMessage),
+                      "Unavailable: %s",
+                      ADTimePix3Accumulation::rollingSumStatusName(result.status));
+        setIntegerParam(ADTimePixPrvHstEffectiveFrames, 0);
+        setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
+        setStringParam(ADTimePixPrvHstRetentionStatus, statusMessage);
+        WARN_ARGS("PrvHst rolling window unavailable: %s; geometry=%zu, budget=%d MiB",
+                  statusMessage, binCount, prvHstRetentionLimitMB_);
+        return false;
+    }
+
+    setIntegerParam(ADTimePixPrvHstEffectiveFrames,
+                    static_cast<int>(result.effectiveFrames));
+    setIntegerParam(ADTimePixPrvHstFramesSummed,
+                    static_cast<int>(prvHstWindowSum_.frameCount()));
+    if (result.limited) {
+        std::snprintf(statusMessage, sizeof(statusMessage),
+                      "Capped: %zu/%zu frames, %d MiB",
+                      result.effectiveFrames, result.requestedFrames,
+                      prvHstRetentionLimitMB_);
+        WARN_ARGS("PrvHst rolling window %s", statusMessage);
+    } else {
+        std::snprintf(statusMessage, sizeof(statusMessage),
+                      "OK: %zu frames, %d MiB",
+                      result.effectiveFrames, prvHstRetentionLimitMB_);
+    }
+    setStringParam(ADTimePixPrvHstRetentionStatus, statusMessage);
+    return true;
+}
+
 void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     const char* functionName = "processPrvHstFrame";
+    bool rollingWindowParamsChanged = false;
     // NOTE: Avoid asynPrint macros here while debugging a segfault in the worker thread.
     // Use printf/fprintf so we don't depend on pasynUserSelf being valid in this thread.
     
@@ -417,7 +459,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
         // Reset frame count and total counts since we're starting with new bin configuration
         prvHstFrameCount_ = 0;
         prvHstTotalCounts_ = 0;
-        prvHstFrameBuffer_.clear();  // Clear frame buffer on bin size change
+        prvHstWindowSum_.clear();  // Clear rolling window on bin size change
         prvHstFramesSinceLastSumUpdate_ = 0;  // Reset sum update counter
         
         // Update parameters
@@ -478,49 +520,61 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     // Update acquisition rate PV
         setDoubleParam(ADTimePixPrvHstAcqRate, prvHstAcquisitionRate_);
     
-        // Add to frame buffer (circular buffer for sum of N frames)
-        prvHstFrameBuffer_.push_back(frame_data);
-    
-        // Remove old frames if buffer exceeds frames_to_sum_
-        while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
-                prvHstFrameBuffer_.pop_front();
-    }
-    
-        // Update sum of last N frames if needed
-        prvHstFramesSinceLastSumUpdate_++;
-        bool should_update_sum = (prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_);
-        bool prvHstSumNUpdatedThisFrame = false;
-
-        if (should_update_sum && !prvHstFrameBuffer_.empty()) {
-                prvHstFramesSinceLastSumUpdate_ = 0;
-        
-        // Calculate sum of frames in buffer
-        size_t frame_bin_size = prvHstFrameBuffer_[0].get_bin_size();
-        
-        if (prvHstSumArray64WorkBuffer_.size() < frame_bin_size) {
-            prvHstSumArray64WorkBuffer_.resize(frame_bin_size);
-            prvHstSumArray64Buffer_.resize(frame_bin_size);
+        // Update the bounded rolling sum in one bin pass.
+        const size_t windowBudgetBytes =
+            static_cast<size_t>(prvHstRetentionLimitMB_) * 1024U * 1024U;
+        bool windowPushOk = true;
+        if (prvHstWindowSum_.elementCount() != bin_size ||
+            prvHstWindowSum_.requestedFrames() != static_cast<size_t>(prvHstFramesToSum_) ||
+            prvHstWindowSum_.budgetBytes() != windowBudgetBytes) {
+            rollingWindowParamsChanged = true;
+            windowPushOk = configurePrvHstRollingWindow(bin_size);
         }
-        
-        std::memset(prvHstSumArray64WorkBuffer_.data(), 0, frame_bin_size * sizeof(uint64_t));
-        
-        for (const auto& frame : prvHstFrameBuffer_) {
-            if (frame.get_bin_size() == frame_bin_size) {
-                for (size_t i = 0; i < frame_bin_size; ++i) {
-                    prvHstSumArray64WorkBuffer_[i] += frame.get_bin_value_32(i);
-                }
+        if (windowPushOk) {
+            const ADTimePix3Accumulation::RollingSumStatus windowStatus =
+                prvHstWindowSum_.push(frame_data.get_bins_32_ptr(), bin_size);
+            if (windowStatus != ADTimePix3Accumulation::RollingSumStatus::Ok) {
+                char statusMessage[160];
+                std::snprintf(statusMessage, sizeof(statusMessage),
+                              "Update failed: %s",
+                              ADTimePix3Accumulation::rollingSumStatusName(windowStatus));
+                setStringParam(ADTimePixPrvHstRetentionStatus, statusMessage);
+                rollingWindowParamsChanged = true;
+                ERR_ARGS("PrvHst rolling window update failed: %s", statusMessage);
+                windowPushOk = false;
             }
         }
-        
-        // Convert to epicsInt64
-        for (size_t i = 0; i < frame_bin_size; ++i) {
-            prvHstSumArray64Buffer_[i] = static_cast<epicsInt64>(prvHstSumArray64WorkBuffer_[i]);
+
+        int previousFramesSummed = 0;
+        getIntegerParam(ADTimePixPrvHstFramesSummed, &previousFramesSummed);
+        const int framesSummed =
+            static_cast<int>(prvHstWindowSum_.frameCount());
+        setIntegerParam(ADTimePixPrvHstFramesSummed, framesSummed);
+        if (framesSummed != previousFramesSummed) {
+            rollingWindowParamsChanged = true;
         }
-        
-        // Update EPICS PV via callback for sum of N frames
-        doCallbacksInt64Array(prvHstSumArray64Buffer_.data(), frame_bin_size, ADTimePixPrvHstHistogramSumNFrames, 0);
-        prvHstSumNUpdatedThisFrame = true;
-    }
+
+        // Publish the sum-of-N product at the configured interval.
+        prvHstFramesSinceLastSumUpdate_++;
+        bool should_update_sum =
+            windowPushOk &&
+            prvHstFramesSinceLastSumUpdate_ >= prvHstSumUpdateIntervalFrames_;
+        bool prvHstSumNUpdatedThisFrame = false;
+
+        if (should_update_sum && prvHstWindowSum_.frameCount() > 0) {
+            prvHstFramesSinceLastSumUpdate_ = 0;
+            const std::vector<uint64_t>& rollingSum = prvHstWindowSum_.sum();
+            prvHstSumArray64Buffer_.resize(rollingSum.size());
+            for (size_t index = 0; index < rollingSum.size(); ++index) {
+                prvHstSumArray64Buffer_[index] =
+                    static_cast<epicsInt64>(rollingSum[index]);
+            }
+            doCallbacksInt64Array(prvHstSumArray64Buffer_.data(),
+                                  prvHstSumArray64Buffer_.size(),
+                                  ADTimePixPrvHstHistogramSumNFrames, 0);
+            prvHstSumNUpdatedThisFrame = true;
+        }
+
     
     // Update histogram data PVs via callbacks
     if (prvHstRunningSum_) {
@@ -765,10 +819,8 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
             total_memory_mb += (bin_size * sizeof(uint64_t) + (bin_size + 1) * sizeof(double)) / (1024.0 * 1024.0);
         }
         total_memory_mb += prvHstTimeMsBuffer_.size() * sizeof(epicsFloat64) / (1024.0 * 1024.0);
-        for (const auto& frame : prvHstFrameBuffer_) {
-            size_t bin_size = frame.get_bin_size();
-            total_memory_mb += (bin_size * sizeof(uint32_t) + (bin_size + 1) * sizeof(double)) / (1024.0 * 1024.0);
-        }
+        total_memory_mb +=
+            prvHstWindowSum_.memoryBytes() / (1024.0 * 1024.0);
         total_memory_mb += (prvHstRateSamples_.size() + prvHstProcessingTimeSamples_.size()) * sizeof(double) / (1024.0 * 1024.0);
         total_memory_mb += prvHstLineBuffer_.size() * sizeof(char) / (1024.0 * 1024.0);
         total_memory_mb += 0.1;  // Estimated overhead
@@ -791,6 +843,10 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     // processing time and memory usage when they update.
     callParamCallbacks(ADTimePixPrvHstFramesToSum);
     callParamCallbacks(ADTimePixPrvHstSumUpdateInterval);
+    if (rollingWindowParamsChanged) {
+        // Publish the new effective window/status on the driver address.
+        callParamCallbacks(0);
+    }
 }
 
 void ADTimePix::prvHstConnect() {

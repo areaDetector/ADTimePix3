@@ -6,10 +6,11 @@
 
 **Img - Option A implemented** (driver pushes processed Img as NDArrays on addresses 2 and 3):
 
-- **Per-frame path (`processImgFrame`)**: With Img accumulation enabled, each processed Img frame triggers an NDArray on **address 2** (running sum, NDUInt64) and, when the sum-of-N buffer is updated (see `ImgSumUpdateInterval`), on **address 3** (sum of last N frames, NDUInt64). File plugins with `NDArrayAddress=2` or `3` therefore receive a **continuous stream** during acquisition, not only on a manual trigger.
+- **Per-frame path (`processImgFrame`)**: With Img accumulation enabled, each processed Img frame triggers an NDArray on **address 2** (running sum, NDUInt64) and, when the exact rolling sum is published (see `ImgSumUpdateInterval`), on **address 3** (sum of last N frames, NDUInt64). File plugins with `NDArrayAddress=2` or `3` therefore receive a **continuous stream** during acquisition, not only on a manual trigger.
 - **`ImgImageFrame`**: Exposed as an **INT32 waveform** only; there is **no** dedicated NDArray address for it. For "single frame" file saving comparable to that buffer, use **NDArrayAddress=1** (raw Img stream).
 - **WriteProcessedImg** (boolean PV): Write 1 for an **extra on-demand** push to addresses 2 and 3 via `pushProcessedImgToPlugins()` (running sum and sum-of-N when available), with type controlled by **`ProcessedImgOutputType`**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N for TIFF). Use Average when feeding NDFileTIFF.
-- **Address 2** = running sum (`ImgImageData`); **Address 3** = sum of last N (`ImgImageSumNFrames`). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
+- **Address 2** = running sum (`ImgImageData`); **Address 3** = sum of the effective rolling window (`ImgImageSumNFrames`). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
+- **Bounded rolling window**: `ImgFramesToSum` and `PrvHstFramesToSum` request N, while the matching `*EffectiveFrames_RBV` reports what fits within the 512 MiB default per-channel budget and `*FramesSummed_RBV` reports the live fill. Use the current-fill value for normalization until the window is full; see [Bounded Rolling Accumulation](ACCUMULATION_CAPACITY.md).
 
 **Histogram (PrvHst) - implemented (R1-7):** with PrvHst accumulation enabled, each processed frame pushes **1D** NDArrays on **addresses 4-7** (sum-of-N, running sum, current frame, ToF ms). **`WriteProcessedHst`** / **`ProcessedHstOutputType`** add an on-demand Sum vs Average push. Details: [Histogram (PrvHst) file saving](#histogram-prvhst-file-saving). Driver uses **`maxAddr=14`** (asyn lists **0-13**); these histogram products remain on **4-7**, while MPX3 dual-counter products use **8-13**.
 
@@ -51,9 +52,9 @@ Enable writing to file:
 
 **Axis metadata:** NDArrays on **4** and **5** include attributes `PrvHstTimeBin0Ms`, `PrvHstTimeBinStepMs`, `PrvHstNumBins` (uniform bin centers). Use a **second** file plugin instance with `NDArrayAddress=7` to store the ToF axis alongside counts on **5** (or **4**).
 
-**Verification tip:** With stable illumination, the **mean** of a sum-of-N NDArray (address 3) is often about **N times** the mean of a single-frame NDArray (address 1) when `ImgFramesToSum` = N; the running sum (address 2) grows without that fixed ratio until reset.
+**Verification tip:** With stable illumination, the **mean** of a sum-of-N NDArray (address 3) is often about **current-fill N times** the mean of a single-frame NDArray (address 1). Use `ImgFramesSummed_RBV` while the window is filling; after it fills, that value equals the capacity in `ImgEffectiveFrames_RBV`. Because a publication interval greater than one can leave the visible waveform behind the live fill, use interval one or consume the fill readback with the waveform callback when performing this comparison. The running sum (address 2) grows without that fixed ratio until reset.
 
-**On-demand:** **`WriteProcessedHst`** calls `pushProcessedHstToPlugins()` to push **4** (if sum-of-N buffer non-empty), **5**, **6**, and **7** with **`ProcessedHstOutputType`**: 0 = Sum (`NDInt64`), 1 = Average (`NDInt32`, running sum / `PrvHstFrameCount`, sum-of-N / buffer length).
+**On-demand:** **`WriteProcessedHst`** calls `pushProcessedHstToPlugins()` to push **4** (if sum-of-N buffer non-empty), **5**, **6**, and **7** with **`ProcessedHstOutputType`**: 0 = Sum (`NDInt64`), 1 = Average (`NDInt32`, running sum / `PrvHstFrameCount`, sum-of-N / the current rolling-window fill).
 
 ## Options for ImgImageData / ImgImageSumNFrames
 

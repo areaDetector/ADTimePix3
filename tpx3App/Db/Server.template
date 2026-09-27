@@ -672,9 +672,45 @@ record(longout, "$(P)$(R)ImgFramesToSum")
     field(VAL, "10")
 }
 
+record(longout, "$(P)$(R)ImgRetentionLimitMB")
+{
+    field(DESC, "Rolling-window memory budget")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_RETENTION_LIMIT_MB")
+    field(DRVL, "1")
+    field(DRVH, "4096")
+    field(EGU, "MiB")
+    field(VAL, "512")
+    info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)ImgEffectiveFrames_RBV")
+{
+    field(DESC, "Effective retained frame count")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_EFFECTIVE_FRAMES")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)ImgFramesSummed_RBV")
+{
+    field(DESC, "Frames currently in rolling sum")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_FRAMES_SUMMED")
+    field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)ImgRetentionStatus_RBV")
+{
+    field(DESC, "Rolling-window budget status")
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_RETENTION_STATUS")
+    field(SCAN, "I/O Intr")
+}
+
 record(longout, "$(P)$(R)ImgSumUpdateInterval")
 {
-    field(DESC, "Sum update interval (frames)")
+    field(DESC, "Sum publication interval (frames)")
     field(DTYP, "asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_IMG_SUM_UPDATE_INTERVAL")
     field(DRVL, "1")
@@ -1935,9 +1971,45 @@ record(ai, "$(P)$(R)PrvHstFramesToSum_RBV")
     field(SCAN, "I/O Intr")
 }
 
+record(ao, "$(P)$(R)PrvHstRetentionLimitMB")
+{
+    field(DESC, "Rolling-window memory budget")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_RETENTION_LIMIT_MB")
+    field(DRVL, "1")
+    field(DRVH, "4096")
+    field(EGU, "MiB")
+    field(VAL, "512")
+    info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)PrvHstEffectiveFrames_RBV")
+{
+    field(DESC, "Effective retained frame count")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_EFFECTIVE_FRAMES")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)PrvHstFramesSummed_RBV")
+{
+    field(DESC, "Frames currently in rolling sum")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_FRAMES_SUMMED")
+    field(SCAN, "I/O Intr")
+}
+
+record(stringin, "$(P)$(R)PrvHstRetentionStatus_RBV")
+{
+    field(DESC, "Rolling-window budget status")
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_RETENTION_STATUS")
+    field(SCAN, "I/O Intr")
+}
+
 record(ao, "$(P)$(R)PrvHstSumUpdateInterval")
 {
-    field(DESC, "Update interval for sum (frames)")
+    field(DESC, "Sum publication interval (frames)")
     field(DTYP, "asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_SUM_UPDATE_INTERVAL")
     field(VAL, "1")
@@ -1945,7 +2017,7 @@ record(ao, "$(P)$(R)PrvHstSumUpdateInterval")
 }
 record(ai, "$(P)$(R)PrvHstSumUpdateInterval_RBV")
 {
-    field(DESC, "Sum update interval (frames)")
+    field(DESC, "Sum publication interval (frames)")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_PRV_HST_SUM_UPDATE_INTERVAL")
     field(SCAN, "I/O Intr")

@@ -45,6 +45,7 @@ public:
     size_t get_bin_size() const { return bin_size_; }
     DataType get_data_type() const { return data_type_; }
     const std::vector<double>& get_bin_edges() const { return bin_edges_; }
+    const uint32_t* get_bins_32_ptr() const { return bin_values_32_.data(); }
     
     // Access bin values based on type
     uint32_t get_bin_value_32(size_t index) const;

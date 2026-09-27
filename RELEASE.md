@@ -22,6 +22,49 @@ From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) sup
 
 Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-4** (September 27, 2026, driver **1.7.4**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
 
+R1-8-0 (in progress)
+--------------------
+
+### Bounded rolling accumulation
+
+* Replace repeated sum-of-N recomputation with an exact rolling update whose
+  per-frame work is O(elements), independent of the requested window length.
+* Bound retained Img and PrvHst rolling-window state by geometry-aware,
+  per-channel budgets (512 MiB default; 1-4096 MiB configurable). The budget
+  is a ceiling, not an up-front allocation.
+* Publish window-capacity, current-fill, and status readbacks so a capped or
+  unavailable request and the number of frames currently contributing are
+  explicit to operators and analysis clients.
+* Release retained window storage on invalid or undersized reconfiguration and
+  preserve the newest history when a valid window is reduced.
+* Add reusable rolling-sum tests for exact sums, eviction, resize, capacity,
+  frame mismatch, failed reconfiguration, recovery, reset, and size overflow.
+* Rename the operator-facing update-interval labels to publication interval:
+  the rolling sums remain exact on every input frame, while waveform and
+  NDArray publication may be decimated to control callback and display load.
+* Add the budget, window capacity, current fill, and status to the Img and
+  PrvHst Phoebus accumulation screens. The operator contract and capacity
+  formula are documented in `documentation/ACCUMULATION_CAPACITY.md`.
+* `ADTPX3-CAN-015` numeric publication, saturation, and alarm policy remains a
+  separate R1-8-0 workstream; existing output conversion behavior is retained.
+
+
+### Validation
+
+* Full IOC build passed.
+* 309/309 deterministic protocol, lifecycle, and rolling-window checks passed.
+* Coordinate-map validation passed for 11 implemented cases; five planned
+  physical SpIDR 2x4 cases remain deferred.
+* All Phoebus BOB files passed XML validation.
+* REUSE validation passed for 363/363 files.
+* TPX3 emulator runtime qualification passed at 10 Hz for Img and PrvHst
+  windows of 10 and 100 frames: requested capacity equaled current fill, memory
+  plateaued at the expected bounded values, per-frame publication operated, and
+  status text remained complete within the EPICS string limit.
+* Capped-window runtime qualification and physical-hardware qualification remain
+  pending.
+
+
 R1-7-4 (September 27, 2026)
 --------------------
 
