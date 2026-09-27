@@ -11,7 +11,7 @@
 - **WriteProcessedImg** (boolean PV): Write 1 for an **extra on-demand** push to addresses 2 and 3 via `pushProcessedImgToPlugins()` (running sum and sum-of-N when available), with type controlled by **`ProcessedImgOutputType`**: 0 = Sum (NDInt64, for HDF5); 1 = Average (NDInt32, sum/N for TIFF). Use Average when feeding NDFileTIFF.
 - **Address 2** = running sum (`ImgImageData`); **Address 3** = sum of last N (`ImgImageSumNFrames`). Configure e.g. `TIFF2:NDArrayAddress=2`, `HDF53:NDArrayAddress=3` in your IOC.
 
-**Histogram (PrvHst) - implemented (R1-7):** with PrvHst accumulation enabled, each processed frame pushes **1D** NDArrays on **addresses 4-7** (sum-of-N, running sum, current frame, ToF ms). **`WriteProcessedHst`** / **`ProcessedHstOutputType`** add an on-demand Sum vs Average push. Details: [Histogram (PrvHst) file saving](#histogram-prvhst-file-saving). Driver uses **`maxAddr=8`** (asyn lists **0-7**).
+**Histogram (PrvHst) - implemented (R1-7):** with PrvHst accumulation enabled, each processed frame pushes **1D** NDArrays on **addresses 4-7** (sum-of-N, running sum, current frame, ToF ms). **`WriteProcessedHst`** / **`ProcessedHstOutputType`** add an on-demand Sum vs Average push. Details: [Histogram (PrvHst) file saving](#histogram-prvhst-file-saving). Driver uses **`maxAddr=14`** (asyn lists **0-13**); these histogram products remain on **4-7**, while MPX3 dual-counter products use **8-13**.
 
 ### Troubleshooting: TIFF images identical for different NDArrayAddress
 
@@ -63,7 +63,7 @@ Enable writing to file:
 
 **Details:**
 
-- **Addresses:** Driver passes **`maxAddr=8`** to `ADDriver` (**eight** lists, indices **0-7**): **0** PrvImg, **1** Img frame, **2** Img running sum, **3** Img sum-of-N, **4** PrvHst sum-of-N, **5** PrvHst running sum, **6** PrvHst frame, **7** PrvHst ToF (ms).
+- **Addresses:** Driver passes **`maxAddr=14`** to `ADDriver` (lists **0-13**). The products described here use **0** PrvImg T0, **1** Img T0, **2** Img running sum, **3** Img sum-of-N, **4** PrvHst sum-of-N, **5** PrvHst running sum, **6** PrvHst frame, and **7** PrvHst ToF (ms); MPX3 dual-counter products use **8-13** as documented in `documentation/medipix3/integration.md`.
 - **Data type and conversion for TIFF vs HDF5:**
   - **NDFileTIFF** supports NDInt8/16/32, NDUInt8/16/32, NDFloat32/64. It does **not** support NDInt64. So for TIFF, the driver must convert INT64 to a supported type. Three practical options:
     1. **Divide by number of frames (recommended for TIFF):** Compute *average counts per frame* = sum / N_frames (and for sum-of-N: sum / N). The result is a physically meaningful value (counts per pixel per frame) and typically fits in **NDInt32** or **NDUInt32** even for long runs, so NDFileTIFF can write it directly. Use the driver's frame count (e.g. from the same accumulation path or a dedicated counter); handle N_frames=0 (e.g. write zeros or skip).

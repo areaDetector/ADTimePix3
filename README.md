@@ -20,12 +20,12 @@ Notes:
 
 * Depends on the [CPR](https://github.com/libcpr/cpr) version **1.14.2** (bundled under `tpx3Support`).
 * Build baseline for bundled CPR is **C++17** (`-std=c++17` in `tpx3Support` and `tpx3App/src` Makefiles).
-* Depends on the [json](https://github.com/nlohmann/json) version v3.11.2.
-* Developed with ADCore R3-11 and ADSupport R1-10 or newer.
+* Depends on [nlohmann/json](https://github.com/nlohmann/json) version **3.12.0** (bundled under `tpx3Support`).
+* ADCore, ADSupport, and other EPICS module versions are supplied by the surrounding EPICS release configuration (`configure/RELEASE_LIBS_INCLUDE` and local overrides); this repository does not lock them independently.
 * **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * Layout support in driver and OPI is most complete for **1 chip** and **2×2 quad**; **8-chip** (e.g. 2×4 mosaic, two SPIDR boards) has IOC/DB/driver support documented in [documentation/8chip-migration.md](documentation/8chip-migration.md)—validate BPC/mask mapping and screens on your hardware.
-* **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 remains the recommended stable version** for 4.x. R1-7-3 stream, reconnect, and worker-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators. Serval and emulator versions must match. Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
+* **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 remains the recommended stable version** for 4.x. R1-7-4 acquisition-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators. Serval and emulator versions must match. Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
 * The driver has been developed using the TimePix3 Emulator and real detectors (quad-chip and single-chip).
 
 Driver logging (asyn)
@@ -35,7 +35,7 @@ Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers (**`ADTimePixLog.h`**, used acr
 
 * **Shorter prefixes**: define **`ADTPX3_LOG_SHORT`** when building the driver library so prefixes use **`__func__` only** (see commented `USR_CPPFLAGS` line in `tpx3App/src/Makefile`).
 * **`WARN` visibility**: by default **`WARN` / `WARN_ARGS`** use **`ASYN_TRACE_WARNING`**. The port’s asyn **trace mask** must include the **warning** bit for those lines to appear. If your site only enables **ERROR**-level trace and you need the old behavior, build with **`ADTPX3_WARN_AS_ERROR`** so `WARN*` is emitted at **`ASYN_TRACE_ERROR`** (commented example in the same `Makefile`).
-* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-7-3**, September 26, 2026; **R1-7-2**; **R1-7-1**; **R1-7-0**).
+* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-7-4**, September 27, 2026; **R1-7-3**; **R1-7-2**; **R1-7-1**; **R1-7-0**).
 
 TCP Image Streaming
 --------------------
@@ -136,7 +136,7 @@ The PrvHst channel (`TPX3-TEST:cam1:PrvHstFilePath`) supports real-time 1D histo
 - Channel data structures use `epicsMutex`; worker lifecycle uses a separate atomic phase and serialized thread-handle ownership.
 - Stop interrupts a blocked receive, joins the worker, and then releases the socket. Worker code does not acquire the lifecycle mutex around network I/O or callbacks.
 
-**Note on asyn and NDArray addresses**: The driver is constructed with **`maxAddr=8`** (valid asyn **address lists 0–7**): **0** = PrvImg, **1** = Img frame, **2** = Img running sum, **3** = Img sum-of-N, **4** = PrvHst sum-of-N, **5** = PrvHst running sum, **6** = PrvHst current frame, **7** = PrvHst ToF axis (ms). Earlier releases used `maxAddr=6` for PrvHst on address 5 only; the extra lists support processed histogram file saving. The driver preserves shared size parameters (`SizeX_RBV`, `SizeY_RBV`) for image channels when pushing histogram NDArrays. See the Troubleshooting section for historical context on "parameter … in list 5".
+**Note on asyn and NDArray addresses**: The driver is constructed with **`maxAddr=14`** (valid asyn **address lists 0–13**): **0** = PrvImg T0, **1** = Img T0, **2** = Img running sum, **3** = Img sum-of-N, **4** = PrvHst sum-of-N, **5** = PrvHst running sum, **6** = PrvHst current frame, **7** = PrvHst ToF axis (ms), **8** = PrvImg T1, **9** = PrvImg T0−T1, **10** = integrated PrvImg1 T0, **11** = integrated PrvImg1 T1, **12** = integrated PrvImg1 T0−T1, and **13** = Img T1. Earlier releases used `maxAddr=6` for PrvHst on address 5 and then `maxAddr=8` for processed histogram outputs; addresses 8–13 support MPX3 dual-counter products. The driver preserves shared size parameters (`SizeX_RBV`, `SizeY_RBV`) for image channels when pushing histogram NDArrays. See the Troubleshooting section for historical context on "parameter … in list 5".
 
 CONNECT/DISCONNECT (reconnection without IOC restart)
 -----------------------------------------------------
@@ -355,10 +355,9 @@ OPI Screens:
 External Libraries:
 
 -   CPR (v1.14.2): HTTP client library
--   nlohmann/json (v3.11.2): JSON parsing
--   GraphicsMagick: Image processing
--   ADCore (R3-11+): areaDetector core
--   ADSupport (R1-10+): areaDetector support
+-   nlohmann/json (v3.12.0): bundled JSON parser
+-   ADCore and ADSupport: supplied by the surrounding EPICS release configuration; inspect `configure/RELEASE_LIBS_INCLUDE` and local overrides for the exact build inputs
+-   GraphicsMagick is not used by the ADTimePix3 preview path; a selected ADCore/ADSupport build may still link it transitively
 
 #### 8. Supported Platforms
 
@@ -382,7 +381,7 @@ cpr::Response r = cpr::Get(cpr::Url{serverURL + "/dashboard"},
 * Uses asyn multi-device mechanism
 
 ```
-ADDriver(portName, 8, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+ADDriver(portName, NDARRAY_MAX_ADDR, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
          asynInt64Mask | asynEnumMask,
          asynInt64Mask | asynEnumMask,
          ASYN_MULTIDEVICE | ASYN_CANBLOCK, 1, priority, stackSize)
@@ -397,7 +396,7 @@ ADDriver(portName, 8, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
 
 #### 10. Release history
 
-Current release: **R1-7-3** (driver **1.7.3**). See [RELEASE.md](RELEASE.md) for the complete current notes and upgrade guidance.
+Current release: **R1-7-4** (driver **1.7.4**). See [RELEASE.md](RELEASE.md) for the complete current notes and upgrade guidance.
 
 Historical milestone — version R1-3:
 
@@ -530,7 +529,7 @@ Since these warnings can fill log files, here are several methods to suppress th
 
 * **`ArrayCounter_RBV` showing double count when histogram channel enabled**: Fixed in R1-5. When jsonhisto streaming was enabled, `ArrayCounter_RBV` was approximately twice `NumImagesCounter_RBV` (e.g., 46 vs 22). The histogram channel was calling `doCallbacksGenericPointer()`, which automatically increments the shared `NDArrayCounter` parameter. Since histogram uses NDArray address 5 (separate from image addresses 0 and 1) and should not affect the image channel counter, the driver now saves and restores `NDArrayCounter` around histogram callbacks to prevent histogram from incrementing it. `ArrayCounter_RBV` now correctly reflects only image frame counts, matching `NumImagesCounter_RBV` when histogram is enabled. **No action required** - this has been resolved in R1-5.
 
-* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: Fixed in R1-5. The driver was created with `maxAddr=4` (addresses 0–3 only), but the histogram channel uses NDArray address 5. When asyn or plugins accessed parameter 51 (ARRAY_DATA) at address 5, asyn reported "invalid list" because that address did not exist. The driver now uses **`maxAddr=8`** (R1-7; was `maxAddr=6` from R1-5 through R1-6) so lists **0–7** are valid, including PrvHst **4–7**. The warning no longer appears when the histogram channel is enabled. **No action required** after recompile and IOC restart.
+* **`asynPortDriver:getParamStatus: port=TPX3 error setting parameter 51 in list 5, invalid list`**: Fixed in R1-5. The driver was created with `maxAddr=4` (addresses 0–3 only), but the histogram channel uses NDArray address 5. When asyn or plugins accessed parameter 51 (ARRAY_DATA) at address 5, asyn reported "invalid list" because that address did not exist. The driver now uses **`maxAddr=14`** (R1-7-4; R1-7 initially used `maxAddr=8`, and R1-5 through R1-6 used `maxAddr=6`) so lists **0–13** are valid, including PrvHst **4–7** and MPX3 dual-counter products **8–13**. The warning no longer appears when the histogram channel is enabled. **No action required** after recompile and IOC restart.
 
 * **Histogram appears connected but does not accumulate (timing reference required)**: If `PrvHst` frame metadata updates but histogram bins stay near zero, verify the ToF timing reference path. For the TimePix3 emulator, start Java with **`-Dtdc=0`** (TDC selection), which was required in local tests for `jsonhisto` accumulation to populate correctly. For physical detectors, ensure **TDC1 and/or TDC2** receive valid time reference pulses; without those reference pulses, ToF bins can remain near zero even though streaming and metadata PVs update.
 

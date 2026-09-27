@@ -16,14 +16,19 @@ current Serval-based implementation here.
 
 Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
-The master branch supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** remains the recommended stable 4.1.x version and includes dual-image and other Serval fixes. R1-7-3 stream, reconnect, and worker-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators.
+The master branch supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** remains the recommended stable 4.1.x version and includes dual-image and other Serval fixes. R1-7-4 acquisition-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators.
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-3** (September 26, 2026, driver **1.7.3**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-4** (September 27, 2026, driver **1.7.4**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
 
-R1-7-4 (in progress)
+R1-7-4 (September 27, 2026)
 --------------------
+
+Driver / user-visible version **1.7.4** (see `ADTIMEPIX_*` in `ADTimePix.h`).
+
+The functional change since R1-7-3 is the transactional acquisition-lifecycle
+work merged as PR #49.
 
 ### Acquisition lifecycle
 
@@ -49,7 +54,26 @@ R1-7-4 (in progress)
     explicit Stop reconciled the retained fault, explicit Apply restored the
     full-image and dual-preview destinations, and the recovered acquisition
     processed 81 frames with zero dropped.
-  * Physical-hardware qualification remains pending.
+
+### Documentation consistency
+
+* Correct the current bundled nlohmann/json version, 14-address NDArray map,
+  and GraphicsMagick status; document the surrounding EPICS release files as
+  the source of external module versions.
+* Align the support2 migration note with read-only reconnect behavior and
+  require source/exit-test verification of the ADCore shutdown fix instead of
+  inferring it from an ADCore version number.
+
+### Deferred assessment scope
+
+* `ADTPX3-CAN-011`, `ADTPX3-CAN-012`, and `ADTPX3-CAN-015` remain open for the
+  post-release R11 numeric, accumulation, and retained-capacity contract. Large
+  retained workloads require site validation and resource monitoring meanwhile.
+* Calibration-path/deployment containment (`CAN-014`), incremental component
+  extraction (`CAN-017`), and broader CI, sanitizer, generated-dependency, and
+  evidence gates remain separate post-release workstreams.
+* Physical-hardware qualification remains pending under the controlled R19
+  acceptance matrix.
 
 
 R1-7-3 (September 26, 2026)
