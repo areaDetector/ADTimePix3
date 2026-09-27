@@ -489,7 +489,7 @@ After equalization, restore the dual-counter profile:
 | **`BothCounters`** | **Not recommended by default.** If used: set to 1 with **th1 high (~250)**. | **`profiles/mpx3/init/hw.cmd`** (Accos / IXS dual-threshold) is a **separate opt-in profile**, not Erik’s default. |
 | **`IDelayConfig`** | Standard values; manual per-system tuning **no longer required**. | `[15,15,15,10]` in IOC defaults remains fine. |
 
-Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). The packed-word BPC layout, shared mask-bit behavior, and emulator behavior are resolved. ASI confirmed that bit 0 masks both counters, clearing it restores normal operation, and mask changes must preserve other fields. The September 25 follow-up below resolves chip order, unused upper bits, `PixelConfig` interpretation, and fixture redistribution. Public manual storage/citation permission remains pending.
+Erik offered a **quad MPX3 on loan** for synchrotron/experiment testing (follow up separately). The packed-word BPC layout, shared mask-bit behavior, and emulator behavior are resolved. ASI confirmed that bit 0 masks both counters, clearing it restores normal operation, and mask changes must preserve other fields. The September 25 follow-up below resolves chip order, unused upper bits, and fixture redistribution and records ASI's current `PixelConfig` interpretation. Public manual storage/citation permission remains pending.
 
 ## Open work (TODO)
 
@@ -534,14 +534,14 @@ Preview and dual-threshold paths are validated. PixelConfig comparison uses the 
 **ASI follow-up received September 25, 2026:**
 
 - The supplied `detector-chips.json` array and BPC blocks use chip order **0, 1, 2, 3**.
-- Serval `PixelConfig` values are believed to be converted from the BPC rather than read directly from chip registers. Accordingly, the IOC comparison validates the value held/returned by Serval against the selected file; it is not independent hardware-register readback.
+- Serval `PixelConfig` values are believed to be converted from BPC configuration rather than guaranteed to be read directly from chip registers. Accordingly, the IOC comparison validates the Serval-reported configured value against the selected file; it is not independent hardware-register readback. During TPX3 emulator qualification, the applied BPC/mask effect persisted across a Serval process restart while the emulator remained running, ruling out the Serval JVM as the sole persistence layer but not distinguishing emulator, SPIDR/controller, or chip state.
 - TPX3 bits 6–7 and MPX3 bits 12–15 are unused and normally kept at zero. The driver still preserves them during mask changes so it never normalizes or destroys an unexpected value.
 - ASI permits redistribution of `eq-02.bpc` and `detector-chips.json` as example/test configuration. They are stored under `test/fixtures/mpx3/eq-02/`, are not default operational calibration, and carry a fixture-specific redistribution notice.
 - Accos startup, Serval API, and detector-operation manuals are available to end users and developers on request. ASI is still considering which manuals, if any, may be stored with the public EPICS interface project. Do not redistribute or publicly cite an unpublished manual until that is confirmed.
 
 **Still open:**
 
-- Confirm whether ASI documents a guaranteed public interface contract for how Serval derives/caches `PixelConfig`; until then, describe it as Serval-held configuration, not detector-register readback.
+- Confirm whether ASI documents a guaranteed public interface contract for how Serval derives and reports `PixelConfig`, and which downstream layer retains active BPC/mask state. Until then, describe it as a Serval-reported configured value, not detector-register readback or Serval-process-local storage.
 - Obtain titles/revisions and explicit storage or public-citation permission for any ASI manuals to be referenced by the repository.
 
 **Next steps:**
