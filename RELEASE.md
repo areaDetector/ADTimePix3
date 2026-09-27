@@ -16,14 +16,14 @@ current Serval-based implementation here.
 
 Since Serval features differ the driver is specific to Serval version.
 Different branches of ADTimePix3 support different Serval versions.
-The master branch (under development) supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** is recommended for **4.1.x** (latest tested; includes dual-image and other Serval fixes).
+The master branch supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** remains the recommended stable 4.1.x version and includes dual-image and other Serval fixes. R1-7-3 stream, reconnect, and worker-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators.
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-2** (August 24, 2026, driver **1.7.2**). **R1-7-3** (driver **1.7.3**) is documented below and in progress on `master`. Tested with Serval **4.1.5**, 4.1.x, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-3** (September 26, 2026, driver **1.7.3**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
 
 
-R1-7-3 (in progress)
+R1-7-3 (September 26, 2026)
 --------
 
 Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
@@ -36,6 +36,12 @@ Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * Hardware-free regression tests cover every two-chunk split across adjacent messages, byte-at-a-time delivery, coalescing, binary delimiter bytes, short payloads, clean/truncated EOF, and reconnect-buffer reset.
   * Emulator qualification passed on 2026-09-26 with Serval 4.1.6: TPX3 processed 117 frames with zero drops while image and histogram displays updated; MPX3 processed four frames with zero drops, delivered four arrays on every T0/T1 preview, integrated-preview, threshold-difference, and full-image output, and closed all three TCP image channels normally at measurement end.
 
+* **Read-only Serval reconnect reconciliation**:
+  * On a disconnected-to-connected transition, `refreshOnReconnect()` performs read-only GETs of destination, detector, and measurement state. It never calls `fileWriter()`, `initAcquisition()`, `uploadBPC()`, or `uploadDACS()`; configuration and calibration changes remain explicit operator actions.
+  * Partial reconnect readback reports Error and is retried by the periodic connection poll instead of publishing a false OK state. Dashboard version data and measurement TDC rates are refreshed by field presence rather than a stale SDK-version value.
+  * `RefreshConnection`, `RefreshPixelConfig`, and `ApplyConfig` are reliable momentary actions. Shared Phoebus controls provide **Refresh Status**, **Apply Destination**, **Verify BPC**, and **View Differences** without redundant command readbacks.
+  * TPX3 Serval-restart qualification left `Server.Destination` unset and performed no automatic BPC or DACS upload. Explicit `ApplyConfig` restored the preview destination, after which 30 frames were processed with zero drops and preview images updated.
+
 * **Synchronized Serval TCP worker lifecycle**:
   * PrvImg, PrvImg1, Img, and PrvHst use one atomic stopped/running/connected phase protocol instead of unsynchronized Boolean flags. Thread-handle creation and joining are serialized separately from channel data access.
   * Stop first publishes the stopped phase, wakes reconnect waits, and interrupts any blocked socket receive with `shutdown()`. The driver then joins every worker before releasing its socket; shared socket ownership keeps a receiver valid until it exits.
@@ -43,6 +49,12 @@ Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * Hardware-free tests cover duplicate starts, stop/failure transitions, concurrent stop versus connection publication, 100 repeated start/stop cycles, idempotent socket teardown, and prompt interruption of a silent peer.
   * TPX3 emulator qualification with Serval 4.1.6 completed 17 consecutive IOC acquisition start/stop cycles with preview image, full image, and preview histogram enabled. Every cycle returned `ADStatus` to Idle after all enabled workers closed; the histogram worker connected and exited on every cycle. The 16 corresponding Serval measurement summaries processed 1,178 frames with zero drops and reported no TCP sender errors.
   * MPX3 emulator qualification with Serval 4.1.6 completed six finite acquisitions with frame preview, integrated preview, and full image enabled. All three TCP streams closed normally after every measurement, every subsequent acquisition began from Idle, and Serval processed 139 frames with zero drops and no TCP sender errors.
+
+* **Release qualification and deferred scope**:
+  * R1-7-3 is software- and emulator-qualified. Physical post-equalization MPX3 mask/PixelConfig confirmation, broader physical reconnect testing, and 2x4 SpIDR placement/rotation/BPC ordering remain controlled-hardware follow-up work; a Serval PixelConfig match is not proof of detector-register state.
+  * Standard acquisition start/stop and reconnect paths are covered, but exhaustive transactional partial-start and injected-fault coordination remain future work.
+  * Large retained image/histogram accumulation workloads do not yet have a geometry-aware memory-capacity or unsigned-to-signed overflow contract. Validate site workloads and monitor resource use.
+  * File and destination configuration assume a trusted deployment boundary; canonical writable-root confinement, destination allowlists, access control, and credential policy remain deployment-hardening work.
 
 * **Family-safe BPC mask semantics**:
   * ASI confirmed that **bit 0** is the per-pixel mask for both TPX3 and MPX3: set it to mask and clear it for normal operation. Mask changes preserve every adjustment, test-pulse, reserved, and unknown bit.
@@ -166,8 +178,7 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * **`getDetector()`**: Guards optional **`Layout`** / **`Original`** / **`Chips`**; **`try`/`catch`** around JSON parse/update so malformed detector JSON logs **`getDetector JSON error`** and returns **`asynError`** instead of aborting the IOC (extends R1-6-2 HTTP/JSON robustness to the full detector refresh path).
 * **Connection status UX**: **`updateStatusFromConnection()`** sets **`DetectorState_RBV`** (**`ADStatus`**) to **Disconnected** when SERVAL or the detector is unreachable, with specific **`StatusMessage_RBV`** text; restores **Idle** / **Acquire** when linked. Phoebus: **`ConnectionStatus.bob`** (SERVAL/detector LEDs, status line, **Refresh**); **`Acquire/ADCollect.bob`** shows enum labels (**Idle**, **Disconnected**, **Error**, ...) not raw integers (replaces unused **`bob/Acquire/ADCollect.opi`**; **`TimePix3.bob`** embeds the **`.bob`**). **`ADSetup.bob`** (local fork): **Ready** / **Not ready** follow **`DetConnected_RBV`** (not **`AsynIO.CNCT`**); **Connect**/**Disconnect** buttons still control the asyn port only (**Asyn port** label). **`ADSetup.bob`** and **`Acquire/ADCollect.bob`** use **11 pt Sans** and tighter widget spacing (rescaled from ADCore autoconvert **16 pt Liberation Sans**) so they align with native TimePix3 OPI panels; **`TimePix3.bob`** embed heights and layout were adjusted accordingly.
 * **IOC boot raw channel defaults (`init_detector_paths.cmd`)**: **`RawFilePath`** default is **`tcp://listen@localhost:8085`** (TCP stream); **`Raw1FilePath`** default is **`file:/media/nvme/raw1`** (disk). The previous example IOC boot had these reversed (primary Raw to disk, Raw1 to TCP). Sites that write raw events to disk should set **`RawFilePath`** explicitly.
-* **Late SERVAL/detector connect (issue #14)**: When the IOC starts before SERVAL or the detector is available, connection poll **`refreshOnReconnect()`** runs on disconnect-to-connect transition. The refresh is read-only: it updates **`SDKVersion_RBV`** / FW timestamp from **`/dashboard`** (**`updateServalVersionFromDashboard`** in **`checkConnection`**, **`getDashboard`**, and startup), then reads destination, detector, and measurement configuration. It never calls **`fileWriter()`**, **`initAcquisition()`**, **`uploadBPC()`**, or **`uploadDACS()`**; those remain explicit operator actions. A partial readback publishes Error instead of OK and is retried by the poll. **`updateTdcRatesFromMeasurementInfo()`** in **`acquire.cpp`** reads **`Tdc1EventRate`** / **`Tdc2EventRate`** / legacy **`TdcEventRate`** from measurement JSON by field presence, not stale **`SDKVersion_RBV`** (fixes **`Tdc1EvtRate_RBV`** stuck at zero and log spam when version was **`unknown`** at IOC start).
-* **Momentary dashboard actions and shared Phoebus controls**: **`RefreshConnection`**, **`RefreshPixelConfig`**, and **`ApplyConfig`** return to **No** after a 0.1 s pulse. The driver's zero-write handling is side-effect-free, so record reset cannot repeat an HTTP action. The shared connection panel provides **Refresh Status** and **Apply Destination**; the shared BPC/DACS workflow provides **Verify BPC** and **View Differences**. Command `_RBV` mirrors are intentionally omitted because success is reported by the existing connection, HTTP, write-message, and per-chip PixelConfig readbacks.
+* **Late SERVAL/detector connect (issue #14)**: When the IOC starts before SERVAL or the detector is available, connection poll **`refreshOnReconnect()`** now runs on disconnect-to-connect transition: updates **`SDKVersion_RBV`** / FW timestamp from **`/dashboard`** (**`updateServalVersionFromDashboard`** in **`checkConnection`**, **`getDashboard`**, and startup), **`getDetector()`**, **`getMeasurementConfig()`**, channel config (**`fileWriter`** / **`initAcquisition`** / **`getServer`**), and BPC/DACS upload when file names are configured. **`updateTdcRatesFromMeasurementInfo()`** in **`acquire.cpp`** reads **`Tdc1EventRate`** / **`Tdc2EventRate`** / legacy **`TdcEventRate`** from measurement JSON by field presence, not stale **`SDKVersion_RBV`** (fixes **`Tdc1EvtRate_RBV`** stuck at zero and log spam when version was **`unknown`** at IOC start).
 
 
 R1-6-2 (April 29, 2026)

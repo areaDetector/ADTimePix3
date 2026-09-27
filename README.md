@@ -25,7 +25,7 @@ Notes:
 * **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
 * Layout support in driver and OPI is most complete for **1 chip** and **2×2 quad**; **8-chip** (e.g. 2×4 mosaic, two SPIDR boards) has IOC/DB/driver support documented in [documentation/8chip-migration.md](documentation/8chip-migration.md)—validate BPC/mask mapping and screens on your hardware.
-* **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 is currently recommended** for 4.x. Serval 4.1.5-rc2 requires the same version of the TimePix3 Emulator (4.1.5-rc2). Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
+* **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 remains the recommended stable version** for 4.x. R1-7-3 stream, reconnect, and worker-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators. Serval and emulator versions must match. Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
 * The driver has been developed using the TimePix3 Emulator and real detectors (quad-chip and single-chip).
 
 Driver logging (asyn)
@@ -35,7 +35,7 @@ Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers (**`ADTimePixLog.h`**, used acr
 
 * **Shorter prefixes**: define **`ADTPX3_LOG_SHORT`** when building the driver library so prefixes use **`__func__` only** (see commented `USR_CPPFLAGS` line in `tpx3App/src/Makefile`).
 * **`WARN` visibility**: by default **`WARN` / `WARN_ARGS`** use **`ASYN_TRACE_WARNING`**. The port’s asyn **trace mask** must include the **warning** bit for those lines to appear. If your site only enables **ERROR**-level trace and you need the old behavior, build with **`ADTPX3_WARN_AS_ERROR`** so `WARN*` is emitted at **`ASYN_TRACE_ERROR`** (commented example in the same `Makefile`).
-* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-7-2**, August 21, 2026; **R1-7-1**; **R1-7-0**, August 11, 2026).
+* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-7-3**, September 26, 2026; **R1-7-2**; **R1-7-1**; **R1-7-0**).
 
 TCP Image Streaming
 --------------------
@@ -381,7 +381,7 @@ cpr::Response r = cpr::Get(cpr::Url{serverURL + "/dashboard"},
 * Uses asyn multi-device mechanism
 
 ```
-ADDriver(portName, 4, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
+ADDriver(portName, 8, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
          asynInt64Mask | asynEnumMask,
          asynInt64Mask | asynEnumMask,
          ASYN_MULTIDEVICE | ASYN_CANBLOCK, 1, priority, stackSize)
@@ -394,9 +394,11 @@ ADDriver(portName, 4, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
   -   TCP streaming for preview images (PrvImg) and image channel (Img) using jsonimage format with configurable ports
   -   Concurrent TCP streaming support: PrvImg and Img channels can operate simultaneously using separate array slots
 
-#### 10. Recent Developments
+#### 10. Release history
 
-Version R1-3 (Latest):
+Current release: **R1-7-3** (driver **1.7.3**). See [RELEASE.md](RELEASE.md) for the complete current notes and upgrade guidance.
+
+Historical milestone — version R1-3:
 
 -   Serval 4.x.x compatibility improvements
 -   Enhanced TDC1/TDC2 reporting
