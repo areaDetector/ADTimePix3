@@ -1002,6 +1002,47 @@ bool ADTimePix::processImgDataLine(char* line_buffer, char* newline_pos, size_t 
     return true;
 }
 
+bool ADTimePix::configureImgRollingWindow(size_t pixelCount)
+{
+    const size_t budgetBytes =
+        static_cast<size_t>(imgRetentionLimitMB_) * 1024U * 1024U;
+    const ADTimePix3Accumulation::RollingSumConfiguration result =
+        imgWindowSum_.configure(pixelCount,
+                                static_cast<size_t>(imgFramesToSum_),
+                                budgetBytes);
+
+    char statusMessage[40];
+    if (result.status != ADTimePix3Accumulation::RollingSumStatus::Ok) {
+        std::snprintf(statusMessage, sizeof(statusMessage),
+                      "Unavailable: %s",
+                      ADTimePix3Accumulation::rollingSumStatusName(result.status));
+        setIntegerParam(ADTimePixImgEffectiveFrames, 0);
+        setIntegerParam(ADTimePixImgFramesSummed, 0);
+        setStringParam(ADTimePixImgRetentionStatus, statusMessage);
+        WARN_ARGS("Img rolling window unavailable: %s; geometry=%zu, budget=%d MiB",
+                  statusMessage, pixelCount, imgRetentionLimitMB_);
+        return false;
+    }
+
+    setIntegerParam(ADTimePixImgEffectiveFrames,
+                    static_cast<int>(result.effectiveFrames));
+    setIntegerParam(ADTimePixImgFramesSummed,
+                    static_cast<int>(imgWindowSum_.frameCount()));
+    if (result.limited) {
+        std::snprintf(statusMessage, sizeof(statusMessage),
+                      "Capped: %zu/%zu frames, %d MiB",
+                      result.effectiveFrames, result.requestedFrames,
+                      imgRetentionLimitMB_);
+        WARN_ARGS("Img rolling window %s", statusMessage);
+    } else {
+        std::snprintf(statusMessage, sizeof(statusMessage),
+                      "OK: %zu frames, %d MiB",
+                      result.effectiveFrames, imgRetentionLimitMB_);
+    }
+    setStringParam(ADTimePixImgRetentionStatus, statusMessage);
+    return true;
+}
+
 void ADTimePix::processImgFrame(const ImageData& frame_data) {
     epicsTimeStamp processing_start_time;
     epicsTimeGetCurrent(&processing_start_time);
@@ -1075,13 +1116,38 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     imgTotalCounts_ += frame_total;
     imgAccumulatedFrameCount_++;
     
-    // Add to frame buffer (must be done BEFORE checking update condition)
-    imgFrameBuffer_.push_back(frame_data);
-    while (imgFrameBuffer_.size() > static_cast<size_t>(imgFramesToSum_)) {
-        imgFrameBuffer_.pop_front();
+    // Update the bounded rolling sum in one pixel pass.
+    const size_t windowBudgetBytes =
+        static_cast<size_t>(imgRetentionLimitMB_) * 1024U * 1024U;
+    bool windowPushOk = true;
+    if (imgWindowSum_.elementCount() != pixel_count ||
+        imgWindowSum_.requestedFrames() != static_cast<size_t>(imgFramesToSum_) ||
+        imgWindowSum_.budgetBytes() != windowBudgetBytes) {
+        windowPushOk = configureImgRollingWindow(pixel_count);
     }
-    
-    // Increment frame counter for sum update interval
+
+    if (windowPushOk) {
+        ADTimePix3Accumulation::RollingSumStatus windowStatus;
+        if (frame_data.get_pixel_format() == ImageData::PixelFormat::UINT16) {
+            windowStatus = imgWindowSum_.push(frame_data.get_pixels_16_ptr(), pixel_count);
+        } else {
+            windowStatus = imgWindowSum_.push(frame_data.get_pixels_32_ptr(), pixel_count);
+        }
+        if (windowStatus != ADTimePix3Accumulation::RollingSumStatus::Ok) {
+            char statusMessage[160];
+            std::snprintf(statusMessage, sizeof(statusMessage),
+                          "Update failed: %s",
+                          ADTimePix3Accumulation::rollingSumStatusName(windowStatus));
+            setStringParam(ADTimePixImgRetentionStatus, statusMessage);
+            ERR_ARGS("Img rolling window update failed: %s", statusMessage);
+            windowPushOk = false;
+        }
+    }
+
+    setIntegerParam(ADTimePixImgFramesSummed,
+                    static_cast<int>(imgWindowSum_.frameCount()));
+
+    // Increment frame counter for sum publication interval.
     imgFramesSinceLastSumUpdate_++;
 
     // Snapshot accumulated frame count to use as NDArray uniqueId (32-bit)
@@ -1094,7 +1160,9 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     size_t image_sum_size = 0;
     bool has_running_sum = (imgRunningSum_ != nullptr);
     bool has_current_frame = (imgCurrentFrame_.get_pixel_count() > 0);
-    bool should_update_sum = (imgFramesSinceLastSumUpdate_ >= imgSumUpdateIntervalFrames_ && !imgFrameBuffer_.empty());
+    bool should_update_sum = windowPushOk &&
+        imgFramesSinceLastSumUpdate_ >= imgSumUpdateIntervalFrames_ &&
+        imgWindowSum_.frameCount() > 0;
     
     if (has_running_sum) {
         image_data_size = imgRunningSum_->get_pixel_count();
@@ -1127,45 +1195,12 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     
     if (should_update_sum) {
         imgFramesSinceLastSumUpdate_ = 0;
-        
-        // Use dimensions from first frame in buffer (should match current frame)
-        size_t sum_pixel_count = imgFrameBuffer_[0].get_pixel_count();
-        size_t sum_frame_width = imgFrameBuffer_[0].get_width();
-        size_t sum_frame_height = imgFrameBuffer_[0].get_height();
-        
-        if (imgSumArray64WorkBuffer_.size() < sum_pixel_count) {
-            imgSumArray64WorkBuffer_.resize(sum_pixel_count);
-            imgSumArray64Buffer_.resize(sum_pixel_count);
+        const std::vector<uint64_t>& rollingSum = imgWindowSum_.sum();
+        imgSumArray64Buffer_.resize(rollingSum.size());
+        for (size_t index = 0; index < rollingSum.size(); ++index) {
+            imgSumArray64Buffer_[index] = static_cast<epicsInt64>(rollingSum[index]);
         }
-        
-        // Initialize sum array to zero
-        std::memset(imgSumArray64WorkBuffer_.data(), 0, sum_pixel_count * sizeof(uint64_t));
-        
-        // Sum all frames in buffer
-        size_t frames_summed = 0;
-        for (const auto& frame : imgFrameBuffer_) {
-            if (frame.get_width() == sum_frame_width && 
-                frame.get_height() == sum_frame_height) {
-                frames_summed++;
-                if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-                    const uint16_t* pixels = frame.get_pixels_16_ptr();
-                    for (size_t i = 0; i < sum_pixel_count; ++i) {
-                        imgSumArray64WorkBuffer_[i] += pixels[i];
-                    }
-                } else {
-                    const uint32_t* pixels = frame.get_pixels_32_ptr();
-                    for (size_t i = 0; i < sum_pixel_count; ++i) {
-                        imgSumArray64WorkBuffer_[i] += pixels[i];
-                    }
-                }
-            }
-        }
-        
-        // Convert to epicsInt64
-        for (size_t i = 0; i < sum_pixel_count; ++i) {
-            imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
-        }
-        image_sum_size = sum_pixel_count;
+        image_sum_size = rollingSum.size();
     }
     
     // Calculate processing time
@@ -1289,125 +1324,6 @@ void ADTimePix::processImgFrame(const ImageData& frame_data) {
     }
 }
 
-void ADTimePix::updateImgDisplayData() {
-    
-    // Update IMAGE_DATA (running sum)
-    if (imgRunningSum_) {
-        size_t pixel_count = imgRunningSum_->get_pixel_count();
-        // Resize buffer if needed
-        if (imgArrayData64Buffer_.size() < pixel_count) {
-            imgArrayData64Buffer_.resize(pixel_count);
-        }
-        // Copy running sum to buffer
-        const uint64_t* pixels = imgRunningSum_->get_pixels_64_ptr();
-        for (size_t i = 0; i < pixel_count; ++i) {
-            imgArrayData64Buffer_[i] = static_cast<epicsInt64>(pixels[i]);
-        }
-        // Trigger callback - must be done while holding mutex to ensure data consistency
-        asynStatus status = doCallbacksInt64Array(imgArrayData64Buffer_.data(), pixel_count, 
-                                                   ADTimePixImgImageData, 0);
-        if (status != asynSuccess) {
-            ERR_ARGS("Failed to trigger callback for IMAGE_DATA: status=%d", status);
-        }
-    } else {
-        // No running sum yet - trigger callback with zeros to initialize the array
-        size_t default_pixel_count = 512 * 512; // Default detector size
-        if (imgArrayData64Buffer_.size() < default_pixel_count) {
-            imgArrayData64Buffer_.resize(default_pixel_count, 0);
-        }
-        doCallbacksInt64Array(imgArrayData64Buffer_.data(), default_pixel_count,
-                              ADTimePixImgImageData, 0);
-    }
-    
-    // Update IMAGE_FRAME (current frame)
-    size_t pixel_count = imgCurrentFrame_.get_pixel_count();
-    if (pixel_count > 0) {
-        if (imgFrameArrayDataBuffer_.size() < pixel_count) {
-            imgFrameArrayDataBuffer_.resize(pixel_count);
-        }
-        // Copy current frame to buffer
-        if (imgCurrentFrame_.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-            const uint16_t* pixels = imgCurrentFrame_.get_pixels_16_ptr();
-            for (size_t i = 0; i < pixel_count; ++i) {
-                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
-            }
-        } else {
-            const uint32_t* pixels = imgCurrentFrame_.get_pixels_32_ptr();
-            for (size_t i = 0; i < pixel_count; ++i) {
-                imgFrameArrayDataBuffer_[i] = static_cast<epicsInt32>(pixels[i]);
-            }
-        }
-        asynStatus status = doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), pixel_count,
-                                                   ADTimePixImgImageFrame, 0);
-        if (status != asynSuccess) {
-            ERR_ARGS("Failed to trigger callback for IMAGE_FRAME: status=%d", status);
-        }
-    } else {
-        // No current frame yet - trigger callback with zeros to initialize the array
-        size_t default_pixel_count = 512 * 512; // Default detector size
-        if (imgFrameArrayDataBuffer_.size() < default_pixel_count) {
-            imgFrameArrayDataBuffer_.resize(default_pixel_count, 0);
-        }
-        doCallbacksInt32Array(imgFrameArrayDataBuffer_.data(), default_pixel_count,
-                              ADTimePixImgImageFrame, 0);
-    }
-    
-    // Update IMAGE_SUM_N_FRAMES (sum of last N frames)
-    imgFramesSinceLastSumUpdate_++;
-    if (imgFramesSinceLastSumUpdate_ >= imgSumUpdateIntervalFrames_ && !imgFrameBuffer_.empty()) {
-        imgFramesSinceLastSumUpdate_ = 0;
-        
-        // Calculate sum of frames in buffer
-        size_t pixel_count = imgFrameBuffer_[0].get_pixel_count();
-        size_t frame_width = imgFrameBuffer_[0].get_width();
-        size_t frame_height = imgFrameBuffer_[0].get_height();
-        
-        if (imgSumArray64WorkBuffer_.size() < pixel_count) {
-            imgSumArray64WorkBuffer_.resize(pixel_count);
-            imgSumArray64Buffer_.resize(pixel_count);
-        }
-        
-        std::memset(imgSumArray64WorkBuffer_.data(), 0, pixel_count * sizeof(uint64_t));
-        
-        for (const auto& frame : imgFrameBuffer_) {
-            if (frame.get_width() == frame_width && 
-                frame.get_height() == frame_height) {
-                if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-                    const uint16_t* pixels = frame.get_pixels_16_ptr();
-                    for (size_t i = 0; i < pixel_count; ++i) {
-                        imgSumArray64WorkBuffer_[i] += pixels[i];
-                    }
-                } else {
-                    const uint32_t* pixels = frame.get_pixels_32_ptr();
-                    for (size_t i = 0; i < pixel_count; ++i) {
-                        imgSumArray64WorkBuffer_[i] += pixels[i];
-                    }
-                }
-            }
-        }
-        
-        // Convert to epicsInt64
-        for (size_t i = 0; i < pixel_count; ++i) {
-            imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
-        }
-        
-        // Trigger callback
-        asynStatus status = doCallbacksInt64Array(imgSumArray64Buffer_.data(), pixel_count,
-                                                   ADTimePixImgImageSumNFrames, 0);
-        if (status != asynSuccess) {
-            ERR_ARGS("Failed to trigger callback for IMAGE_SUM_N_FRAMES: status=%d", status);
-        }
-    } else if (imgFrameBuffer_.empty()) {
-        // No frames in buffer yet - trigger callback with zeros to initialize the array
-        size_t default_pixel_count = 512 * 512; // Default detector size
-        if (imgSumArray64Buffer_.size() < default_pixel_count) {
-            imgSumArray64Buffer_.resize(default_pixel_count, 0);
-        }
-        doCallbacksInt64Array(imgSumArray64Buffer_.data(), default_pixel_count,
-                              ADTimePixImgImageSumNFrames, 0);
-    }
-}
-
 void ADTimePix::updateImgPerformanceMetrics() {
     epicsTimeStamp current_time;
     epicsTimeGetCurrent(&current_time);
@@ -1419,7 +1335,8 @@ void ADTimePix::updateImgPerformanceMetrics() {
     // Calculate memory usage periodically (every 5 seconds) or more frequently if buffer is growing
     // Update more frequently if frame buffer is near capacity to catch memory growth
     bool should_update_memory = (current_time_seconds - imgLastMemoryUpdateTime_ >= IMG_MEMORY_UPDATE_INTERVAL_SEC) ||
-                                 (imgFrameBuffer_.size() >= static_cast<size_t>(imgFramesToSum_) * 0.9);
+                                 (imgWindowSum_.effectiveFrames() > 0 &&
+                                  imgWindowSum_.frameCount() >= imgWindowSum_.effectiveFrames());
     
     if (should_update_memory) {
         imgMemoryUsage_ = calculateImgMemoryUsageMB();
@@ -1450,14 +1367,8 @@ double ADTimePix::calculateImgMemoryUsageMB() {
         }
     }
     
-    // Memory for frame buffer (actual frames stored, up to imgFramesToSum_)
-    for (const auto& frame : imgFrameBuffer_) {
-        if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-            total_mb += frame.get_pixel_count() * sizeof(uint16_t) / (1024.0 * 1024.0);
-        } else {
-            total_mb += frame.get_pixel_count() * sizeof(uint32_t) / (1024.0 * 1024.0);
-        }
-    }
+    // Bounded rolling-window storage (uint64 sum plus retained uint32 frames).
+    total_mb += imgWindowSum_.memoryBytes() / (1024.0 * 1024.0);
     
     // Memory for EPICS array buffers (use maximum potential size based on imgFramesToSum_)
     // Calculate maximum pixels based on current frame dimensions or default
@@ -1476,14 +1387,6 @@ double ADTimePix::calculateImgMemoryUsageMB() {
     total_mb += max_pixels * sizeof(epicsInt64) / (1024.0 * 1024.0); // IMAGE_SUM_N_FRAMES (64-bit)
     total_mb += max_pixels * sizeof(epicsInt32) / (1024.0 * 1024.0); // IMAGE_FRAME (32-bit)
     
-    // Internal work buffers
-    total_mb += (imgSumArray64WorkBuffer_.size() * sizeof(uint64_t)) / (1024.0 * 1024.0);
-    
-    // Add overhead for std::vector and std::deque structures (approximate)
-    // Each ImageData object has some overhead, and std::deque has overhead per element
-    size_t frame_buffer_overhead = imgFrameBuffer_.size() * 64; // Approximate overhead per frame in deque
-    total_mb += frame_buffer_overhead / (1024.0 * 1024.0);
-    
     // Add small overhead for other structures
     total_mb += 0.1; // Overhead for rate samples, processing time samples, etc.
     
@@ -1492,7 +1395,8 @@ double ADTimePix::calculateImgMemoryUsageMB() {
 
 void ADTimePix::resetImgAccumulation() {
     imgRunningSum_.reset();
-    imgFrameBuffer_.clear();
+    imgWindowSum_.reset();
+    setIntegerParam(ADTimePixImgFramesSummed, 0);
     imgTotalCounts_ = 0;
     imgAccumulatedFrameCount_ = 0;
     imgFramesSinceLastSumUpdate_ = 0;
@@ -1562,15 +1466,15 @@ void ADTimePix::pushProcessedImgToPlugins() {
         }
         
         // Address 3: sum of last N frames (ImgImageSumNFrames)
-        size_t nSumFrames = imgFrameBuffer_.size();
-        if (nSumFrames > 0 && imgSumArray64Buffer_.size() >= pixel_count) {
+        size_t nSumFrames = imgWindowSum_.frameCount();
+        const std::vector<uint64_t>& sumN = imgWindowSum_.sum();
+        if (nSumFrames > 0 && sumN.size() >= pixel_count) {
             NDArray* pArr3 = pNDArrayPool->alloc(2, dims, dataType, 0, NULL);
             if (pArr3 && pArr3->pData) {
-                const epicsInt64* sumN = imgSumArray64Buffer_.data();
                 epicsUInt32 nN = static_cast<epicsUInt32>(nSumFrames);
                 if (outputType == 0) {
                     epicsInt64* pData = reinterpret_cast<epicsInt64*>(pArr3->pData);
-                    for (size_t i = 0; i < pixel_count; i++) pData[i] = sumN[i];
+                    for (size_t i = 0; i < pixel_count; i++) pData[i] = static_cast<epicsInt64>(sumN[i]);
                 } else {
                     epicsInt32* pData = reinterpret_cast<epicsInt32*>(pArr3->pData);
                     for (size_t i = 0; i < pixel_count; i++)
@@ -1589,7 +1493,7 @@ void ADTimePix::pushProcessedImgToPlugins() {
         // Restore NDArrayCounter so processed-image push does not affect main counter (like histogram)
         int curCounter = 0;
         getIntegerParam(NDArrayCounter, &curCounter);
-        int expectedDelta = (imgFrameBuffer_.size() > 0 && imgSumArray64Buffer_.size() >= pixel_count) ? 2 : 1;
+        int expectedDelta = (imgWindowSum_.frameCount() > 0 && sumN.size() >= pixel_count) ? 2 : 1;
         if (curCounter == savedArrayCounter + expectedDelta) setIntegerParam(NDArrayCounter, savedArrayCounter);
     }
     

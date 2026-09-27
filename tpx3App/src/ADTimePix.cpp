@@ -697,82 +697,52 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
     }
 
     else if(function == ADTimePixImgFramesToSum) {
+        std::vector<epicsInt64> sumSnapshot;
         epicsMutexLock(imgMutex_);
-        imgFramesToSum_ = value;
-        if (imgFramesToSum_ < 1) imgFramesToSum_ = 1;
-        if (imgFramesToSum_ > 100000) imgFramesToSum_ = 100000;
+        imgFramesToSum_ = std::max(1, std::min(value, 100000));
         setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
-        
-        // Trim frame buffer if new limit is smaller
-        while (imgFrameBuffer_.size() > static_cast<size_t>(imgFramesToSum_)) {
-            imgFrameBuffer_.pop_front();
-        }
-        
-        // Prepare to recalculate sum of N frames immediately if buffer has frames
-        size_t sum_pixel_count = 0;
-        bool should_recalc_sum = false;
-        if (!imgFrameBuffer_.empty()) {
-            sum_pixel_count = imgFrameBuffer_[0].get_pixel_count();
-            size_t frame_width = imgFrameBuffer_[0].get_width();
-            size_t frame_height = imgFrameBuffer_[0].get_height();
-            
-            if (imgSumArray64WorkBuffer_.size() < sum_pixel_count) {
-                imgSumArray64WorkBuffer_.resize(sum_pixel_count);
-                imgSumArray64Buffer_.resize(sum_pixel_count);
+
+        const size_t pixelCount = imgWindowSum_.elementCount();
+        if (pixelCount > 0 && configureImgRollingWindow(pixelCount) &&
+            imgWindowSum_.frameCount() > 0) {
+            const std::vector<uint64_t>& rollingSum = imgWindowSum_.sum();
+            imgSumArray64Buffer_.resize(rollingSum.size());
+            sumSnapshot.resize(rollingSum.size());
+            for (size_t index = 0; index < rollingSum.size(); ++index) {
+                const epicsInt64 value64 = static_cast<epicsInt64>(rollingSum[index]);
+                imgSumArray64Buffer_[index] = value64;
+                sumSnapshot[index] = value64;
             }
-            
-            std::memset(imgSumArray64WorkBuffer_.data(), 0, sum_pixel_count * sizeof(uint64_t));
-            
-            for (const auto& frame : imgFrameBuffer_) {
-                if (frame.get_width() == frame_width && 
-                    frame.get_height() == frame_height) {
-                    if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-                        const uint16_t* pixels = frame.get_pixels_16_ptr();
-                        for (size_t i = 0; i < sum_pixel_count; ++i) {
-                            imgSumArray64WorkBuffer_[i] += pixels[i];
-                        }
-                    } else {
-                        const uint32_t* pixels = frame.get_pixels_32_ptr();
-                        for (size_t i = 0; i < sum_pixel_count; ++i) {
-                            imgSumArray64WorkBuffer_[i] += pixels[i];
-                        }
-                    }
-                }
-            }
-            
-            // Convert to epicsInt64
-            for (size_t i = 0; i < sum_pixel_count; ++i) {
-                imgSumArray64Buffer_[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
-            }
-            
-            // Reset update counter to trigger immediate update on next frame
             imgFramesSinceLastSumUpdate_ = imgSumUpdateIntervalFrames_;
-            should_recalc_sum = true;
         }
-        
-        // Recalculate memory usage immediately since buffer size may have changed
+
         imgMemoryUsage_ = calculateImgMemoryUsageMB();
         setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
         epicsMutexUnlock(imgMutex_);
-        
-        // Trigger callbacks outside mutex
+
         callParamCallbacks(ADTimePixImgFramesToSum);
         callParamCallbacks(ADTimePixImgMemoryUsage);
-        
-        // Trigger sum callback if we recalculated it (outside mutex)
-        if (should_recalc_sum && sum_pixel_count > 0) {
-            // Copy buffer data while holding mutex
-            std::vector<epicsInt64> temp_buffer(sum_pixel_count);
-            epicsMutexLock(imgMutex_);
-            for (size_t i = 0; i < sum_pixel_count; ++i) {
-                temp_buffer[i] = imgSumArray64Buffer_[i];
-            }
-            epicsMutexUnlock(imgMutex_);
-            
-            // Trigger callback outside mutex
-            doCallbacksInt64Array(temp_buffer.data(), sum_pixel_count,
+        if (!sumSnapshot.empty()) {
+            doCallbacksInt64Array(sumSnapshot.data(), sumSnapshot.size(),
                                   ADTimePixImgImageSumNFrames, 0);
         }
+    }
+
+    else if(function == ADTimePixImgRetentionLimitMB) {
+        epicsMutexLock(imgMutex_);
+        imgRetentionLimitMB_ = std::max(1, std::min(value, MAX_RETENTION_LIMIT_MB));
+        setIntegerParam(ADTimePixImgRetentionLimitMB, imgRetentionLimitMB_);
+        const size_t pixelCount = imgWindowSum_.elementCount();
+        if (pixelCount > 0) {
+            configureImgRollingWindow(pixelCount);
+        } else {
+            setIntegerParam(ADTimePixImgEffectiveFrames, 0);
+            setIntegerParam(ADTimePixImgFramesSummed, 0);
+            setStringParam(ADTimePixImgRetentionStatus, "Waiting for image geometry");
+        }
+        imgMemoryUsage_ = calculateImgMemoryUsageMB();
+        setDoubleParam(ADTimePixImgMemoryUsage, imgMemoryUsage_);
+        epicsMutexUnlock(imgMutex_);
     }
     
     else if(function == ADTimePixImgSumUpdateIntervalFrames) {
@@ -787,17 +757,33 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
 
     else if(function == ADTimePixPrvHstFramesToSum) {
         epicsMutexLock(prvHstMutex_);
-        prvHstFramesToSum_ = value;
-        if (prvHstFramesToSum_ < 1) prvHstFramesToSum_ = 1;
-        if (prvHstFramesToSum_ > 100000) prvHstFramesToSum_ = 100000;
+        prvHstFramesToSum_ = std::max(1, std::min(value, 100000));
         setIntegerParam(ADTimePixPrvHstFramesToSum, prvHstFramesToSum_);
-        
-        // Trim frame buffer if new limit is smaller
-        while (prvHstFrameBuffer_.size() > static_cast<size_t>(prvHstFramesToSum_)) {
-            prvHstFrameBuffer_.pop_front();
+        const size_t binCount = prvHstWindowSum_.elementCount();
+        if (binCount > 0) {
+            configurePrvHstRollingWindow(binCount);
+        } else {
+            setIntegerParam(ADTimePixPrvHstEffectiveFrames, 0);
+            setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
+            setStringParam(ADTimePixPrvHstRetentionStatus, "Waiting for histogram geometry");
         }
         epicsMutexUnlock(prvHstMutex_);
         callParamCallbacks(ADTimePixPrvHstFramesToSum);
+    }
+
+    else if(function == ADTimePixPrvHstRetentionLimitMB) {
+        epicsMutexLock(prvHstMutex_);
+        prvHstRetentionLimitMB_ = std::max(1, std::min(value, MAX_RETENTION_LIMIT_MB));
+        setIntegerParam(ADTimePixPrvHstRetentionLimitMB, prvHstRetentionLimitMB_);
+        const size_t binCount = prvHstWindowSum_.elementCount();
+        if (binCount > 0) {
+            configurePrvHstRollingWindow(binCount);
+        } else {
+            setIntegerParam(ADTimePixPrvHstEffectiveFrames, 0);
+            setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
+            setStringParam(ADTimePixPrvHstRetentionStatus, "Waiting for histogram geometry");
+        }
+        epicsMutexUnlock(prvHstMutex_);
     }
 
     else if(function == ADTimePixPrvHstSumUpdateInterval) {
@@ -1004,47 +990,17 @@ asynStatus ADTimePix::readInt64Array(asynUser *pasynUser, epicsInt64 *value, siz
         return asynSuccess;
     } else if (function == ADTimePixImgImageSumNFrames) {
         epicsMutexLock(imgMutex_);
-        if (!imgFrameBuffer_.empty()) {
-            size_t pixel_count = imgFrameBuffer_[0].get_pixel_count();
-            size_t elements_to_copy = std::min(nElements, pixel_count);
-            
-            // Calculate sum of frames in buffer
-            if (imgSumArray64WorkBuffer_.size() < pixel_count) {
-                imgSumArray64WorkBuffer_.resize(pixel_count);
-            }
-            std::memset(imgSumArray64WorkBuffer_.data(), 0, pixel_count * sizeof(uint64_t));
-            
-            size_t frame_width = imgFrameBuffer_[0].get_width();
-            size_t frame_height = imgFrameBuffer_[0].get_height();
-            
-            for (const auto& frame : imgFrameBuffer_) {
-                if (frame.get_width() == frame_width && 
-                    frame.get_height() == frame_height) {
-                    if (frame.get_pixel_format() == ImageData::PixelFormat::UINT16) {
-                        const uint16_t* pixels = frame.get_pixels_16_ptr();
-                        for (size_t i = 0; i < pixel_count; ++i) {
-                            imgSumArray64WorkBuffer_[i] += pixels[i];
-                        }
-                    } else {
-                        const uint32_t* pixels = frame.get_pixels_32_ptr();
-                        for (size_t i = 0; i < pixel_count; ++i) {
-                            imgSumArray64WorkBuffer_[i] += pixels[i];
-                        }
-                    }
-                }
-            }
-            
-            // Copy to output buffer
+        if (imgWindowSum_.frameCount() > 0) {
+            const std::vector<uint64_t>& rollingSum = imgWindowSum_.sum();
+            const size_t elements_to_copy = std::min(nElements, rollingSum.size());
             for (size_t i = 0; i < elements_to_copy; ++i) {
-                value[i] = static_cast<epicsInt64>(imgSumArray64WorkBuffer_[i]);
+                value[i] = static_cast<epicsInt64>(rollingSum[i]);
             }
-            // Zero out remaining elements
             for (size_t i = elements_to_copy; i < nElements; ++i) {
                 value[i] = 0;
             }
             *nIn = nElements;
         } else {
-            // No frames in buffer, return zeros
             for (size_t i = 0; i < nElements; ++i) {
                 value[i] = 0;
             }
@@ -1185,7 +1141,8 @@ void ADTimePix::pushProcessedHstToPlugins() {
 
         size_t dims[3] = { bin_size, 0, 0 };
         const epicsUInt64 nFrames = (prvHstFrameCount_ > 0) ? prvHstFrameCount_ : 1ULL;
-        const epicsUInt32 nBuf = static_cast<epicsUInt32>(prvHstFrameBuffer_.size());
+        const epicsUInt32 nBuf = static_cast<epicsUInt32>(prvHstWindowSum_.frameCount());
+        const std::vector<uint64_t>& rollingSum = prvHstWindowSum_.sum();
         const epicsUInt32 nForSumN = (nBuf > 0) ? nBuf : 1U;
 
         if (bin_size > 0) {
@@ -1240,18 +1197,17 @@ void ADTimePix::pushProcessedHstToPlugins() {
                 }
             }
 
-            if (!prvHstFrameBuffer_.empty() && prvHstSumArray64Buffer_.size() >= bin_size) {
+            if (prvHstWindowSum_.frameCount() > 0 && rollingSum.size() >= bin_size) {
                 NDDataType_t dtype4 = (outputType == 1) ? NDInt32 : NDInt64;
                 NDArray* p4 = pNDArrayPool->alloc(1, dims, dtype4, 0, NULL);
                 if (p4 && p4->pData) {
-                    const epicsInt64* sumN = prvHstSumArray64Buffer_.data();
                     if (outputType == 0) {
                         epicsInt64* pD = reinterpret_cast<epicsInt64*>(p4->pData);
-                        for (size_t i = 0; i < bin_size; ++i) pD[i] = sumN[i];
+                        for (size_t i = 0; i < bin_size; ++i) pD[i] = static_cast<epicsInt64>(rollingSum[i]);
                     } else {
                         epicsInt32* pD = reinterpret_cast<epicsInt32*>(p4->pData);
                         for (size_t i = 0; i < bin_size; ++i)
-                            pD[i] = static_cast<epicsInt32>(sumN[i] / nForSumN);
+                            pD[i] = static_cast<epicsInt32>(rollingSum[i] / nForSumN);
                     }
                     if (p4->pAttributeList) {
                         getAttributes(p4->pAttributeList);
@@ -1287,7 +1243,8 @@ void ADTimePix::pushProcessedHstToPlugins() {
 void ADTimePix::resetPrvHstAccumulation() {
     // Reset accumulated histogram data
     prvHstRunningSum_.reset();
-    prvHstFrameBuffer_.clear();
+    prvHstWindowSum_.reset();
+    setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
     prvHstFrameCount_ = 0;
     prvHstTotalCounts_ = 0;
     prvHstFramesSinceLastSumUpdate_ = 0;
@@ -1296,7 +1253,6 @@ void ADTimePix::resetPrvHstAccumulation() {
     
     // Clear buffers
     prvHstSumArray64Buffer_.clear();
-    prvHstSumArray64WorkBuffer_.clear();
     prvHstArrayData32Buffer_.clear();
     prvHstTimeMsBuffer_.clear();
     
@@ -1610,6 +1566,10 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixImgTotalCountsString,               asynParamInt64, &ADTimePixImgTotalCounts);
     createParam(ADTimePixImgProcessingTimeString,            asynParamFloat64, &ADTimePixImgProcessingTime);
     createParam(ADTimePixImgMemoryUsageString,               asynParamFloat64, &ADTimePixImgMemoryUsage);
+    createParam(ADTimePixImgRetentionLimitMBString,          asynParamInt32, &ADTimePixImgRetentionLimitMB);
+    createParam(ADTimePixImgEffectiveFramesString,           asynParamInt32, &ADTimePixImgEffectiveFrames);
+    createParam(ADTimePixImgFramesSummedString,              asynParamInt32, &ADTimePixImgFramesSummed);
+    createParam(ADTimePixImgRetentionStatusString,           asynParamOctet, &ADTimePixImgRetentionStatus);
     // Server, Preview, ImageChannels[1]   
     createParam(ADTimePixPrvImg1BaseString,                asynParamOctet, &ADTimePixPrvImg1Base);
     createParam(ADTimePixPrvImg1FilePatString,             asynParamOctet, &ADTimePixPrvImg1FilePat);             
@@ -1655,6 +1615,10 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     createParam(ADTimePixPrvHstFramesToSumString,            asynParamInt32, &ADTimePixPrvHstFramesToSum);
     createParam(ADTimePixPrvHstSumUpdateIntervalString,      asynParamInt32, &ADTimePixPrvHstSumUpdateInterval);
     createParam(ADTimePixPrvHstDataResetString,               asynParamInt32, &ADTimePixPrvHstDataReset);
+    createParam(ADTimePixPrvHstRetentionLimitMBString,       asynParamInt32, &ADTimePixPrvHstRetentionLimitMB);
+    createParam(ADTimePixPrvHstEffectiveFramesString,        asynParamInt32, &ADTimePixPrvHstEffectiveFrames);
+    createParam(ADTimePixPrvHstFramesSummedString,           asynParamInt32, &ADTimePixPrvHstFramesSummed);
+    createParam(ADTimePixPrvHstRetentionStatusString,        asynParamOctet, &ADTimePixPrvHstRetentionStatus);
 
     // Measurement
     createParam(ADTimePixPelRateString,                     asynParamInt32,     &ADTimePixPelRate);      
@@ -1813,11 +1777,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     
     // Initialize PrvHst histogram data
     prvHstRunningSum_.reset();
-    prvHstFrameBuffer_.clear();
+    prvHstWindowSum_.reset();
     // prvHstCurrentFrame_ will be initialized when first frame is received
     prvHstFramesToSum_ = 10;  // Default: sum last 10 frames
     prvHstSumUpdateIntervalFrames_ = 1;  // Default: update every frame
     prvHstFramesSinceLastSumUpdate_ = 0;
+    prvHstRetentionLimitMB_ = DEFAULT_RETENTION_LIMIT_MB;
     prvHstTotalCounts_ = 0;
     prvHstFrameCount_ = 0;  // Initialize frame count
     
@@ -1837,7 +1802,6 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Initialize PrvHst buffers
     prvHstArrayData32Buffer_.clear();
     prvHstSumArray64Buffer_.clear();
-    prvHstSumArray64WorkBuffer_.clear();
     prvHstTimeMsBuffer_.clear();
     if (!imgMutex_) {
         ERR("Failed to create Img mutex");
@@ -1855,11 +1819,12 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     
     // Initialize Img channel accumulation and frame buffer
     imgRunningSum_.reset();
-    imgFrameBuffer_.clear();
+    imgWindowSum_.reset();
     // imgCurrentFrame_ is initialized in constructor initialization list
     imgFramesToSum_ = 10;
     imgSumUpdateIntervalFrames_ = 1;
     imgFramesSinceLastSumUpdate_ = 0;
+    imgRetentionLimitMB_ = DEFAULT_RETENTION_LIMIT_MB;
     
     // Initialize Img channel performance tracking
     imgProcessingTimeSamples_.clear();
@@ -1873,8 +1838,18 @@ ADTimePix::ADTimePix(const char* portName, const char* serverURL, int maxBuffers
     // Set initial parameter values
     setIntegerParam(ADTimePixImgAccumulationEnable, 1);  // Default: enabled
     setIntegerParam(ADTimePixPrvHstAccumulationEnable, 1);  // Default: enabled
+    setIntegerParam(ADTimePixPrvHstFramesToSum, prvHstFramesToSum_);
+    setIntegerParam(ADTimePixPrvHstSumUpdateInterval, prvHstSumUpdateIntervalFrames_);
+    setIntegerParam(ADTimePixPrvHstRetentionLimitMB, prvHstRetentionLimitMB_);
+    setIntegerParam(ADTimePixPrvHstEffectiveFrames, 0);
+    setIntegerParam(ADTimePixPrvHstFramesSummed, 0);
+    setStringParam(ADTimePixPrvHstRetentionStatus, "Waiting for histogram geometry");
     setIntegerParam(ADTimePixImgFramesToSum, imgFramesToSum_);
     setIntegerParam(ADTimePixImgSumUpdateIntervalFrames, imgSumUpdateIntervalFrames_);
+    setIntegerParam(ADTimePixImgRetentionLimitMB, imgRetentionLimitMB_);
+    setIntegerParam(ADTimePixImgEffectiveFrames, 0);
+    setIntegerParam(ADTimePixImgFramesSummed, 0);
+    setStringParam(ADTimePixImgRetentionStatus, "Waiting for image geometry");
     setInteger64Param(ADTimePixImgTotalCounts, 0);
     setDoubleParam(ADTimePixImgProcessingTime, 0.0);
     // Calculate initial memory usage (will be 0.0 initially since buffers are empty)

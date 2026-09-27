@@ -300,6 +300,8 @@ Where:
   - More frames = better signal-to-noise but reduced temporal resolution
   - Fewer frames = better temporal resolution but lower signal-to-noise
 
+`PrvHstFramesToSum` is a request, not an unbounded allocation. The driver caps the retained rolling window to `PrvHstRetentionLimitMB` (512 MiB by default). After changing the bin count, window, or budget, check `PrvHstEffectiveFrames_RBV`, `PrvHstFramesSummed_RBV`, and `PrvHstRetentionStatus_RBV`; use the current-fill count in normalization until the window is full. See [Bounded Rolling Accumulation](ACCUMULATION_CAPACITY.md).
+
 **Example Configurations:**
 
 **High-Resolution Phase Transition Detection:**
@@ -309,7 +311,7 @@ caput TPX3-TEST:cam1:PrvHstNumBins 166700
 caput TPX3-TEST:cam1:PrvHstBinWidth 384  # 100 ns
 caput TPX3-TEST:cam1:PrvHstOffset 0
 caput TPX3-TEST:cam1:PrvHstFramesToSum 50  # Sum of last 50 frames
-caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 5  # Update every 5 frames
+caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 5  # Publish every 5 frames
 ```
 
 **Standard Phase Transition Detection:**
@@ -319,7 +321,7 @@ caput TPX3-TEST:cam1:PrvHstNumBins 100000
 caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 us
 caput TPX3-TEST:cam1:PrvHstOffset 0
 caput TPX3-TEST:cam1:PrvHstFramesToSum 20  # Sum of last 20 frames
-caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 2  # Update every 2 frames
+caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 2  # Publish every 2 frames
 ```
 
 **Slow Phase Transition Monitoring:**
@@ -329,7 +331,7 @@ caput TPX3-TEST:cam1:PrvHstNumBins 1000000
 caput TPX3-TEST:cam1:PrvHstBinWidth 3840  # 1 us
 caput TPX3-TEST:cam1:PrvHstOffset 0
 caput TPX3-TEST:cam1:PrvHstFramesToSum 10  # Sum of last 10 frames
-caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 1  # Update every frame
+caput TPX3-TEST:cam1:PrvHstSumUpdateInterval 1  # Publish every frame
 ```
 
 **Using Sliding Sum for Signal-to-Noise Improvement:**
@@ -343,7 +345,7 @@ The `PrvHstHistogramSumNFrames` waveform provides a sliding sum of the last N fr
 1. Monitor `PrvHstHistogramSumNFrames` waveform for Bragg edge positions
 2. Track edge position changes over time to detect phase transitions
 3. Adjust `PrvHstFramesToSum` to balance signal-to-noise vs temporal resolution
-4. Use `PrvHstSumUpdateInterval` to control update frequency (reduces processing overhead)
+4. Use `PrvHstSumUpdateInterval` to control publication frequency (reduces callback and display overhead; internal accumulation still runs every frame)
 
 **Comparison with Pump-Probe Experiments:**
 

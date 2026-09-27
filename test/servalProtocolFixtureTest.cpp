@@ -12,6 +12,7 @@
 #include "mask_geometry.h"
 #include "network_client.h"
 #include "one_shot_action.h"
+#include "rolling_window_sum.h"
 #include "serval_config.h"
 #include "serval_dacs.h"
 #include "serval_dashboard.h"
@@ -35,6 +36,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
+#include <deque>
 #include <fstream>
 #include <limits>
 #include <string>
@@ -1814,11 +1816,130 @@ void testOneShotActions()
            "one-shot action ignores unsupported values and resets them");
 }
 
+void testRollingWindowSum()
+{
+    using ADTimePix3Accumulation::RollingSumStatus;
+    using ADTimePix3Accumulation::RollingWindowSum;
+
+    RollingWindowSum sum;
+    const auto invalid = sum.configure(0, 2, 1024);
+    testOk(invalid.status == RollingSumStatus::InvalidArgument,
+           "rolling sum rejects zero-sized geometry");
+
+    const auto tooSmall = sum.configure(3, 2, 35);
+    testOk(tooSmall.status == RollingSumStatus::BudgetTooSmall &&
+               tooSmall.requiredBytes == 36,
+           "rolling sum reports the bytes required for one retained frame");
+
+    const auto configured = sum.configure(3, 4, 48);
+    testOk(configured.status == RollingSumStatus::Ok && configured.limited &&
+               configured.effectiveFrames == 2 && sum.effectiveFrames() == 2,
+           "rolling sum caps the requested window to its geometry-aware byte budget");
+
+    const std::uint16_t first[] = {1, 2, 3};
+    const std::uint32_t second[] = {4, 5, 6};
+    testOk(sum.push(first, 3) == RollingSumStatus::Ok &&
+               sum.push(second, 3) == RollingSumStatus::Ok &&
+               sum.frameCount() == 2 &&
+               sum.sum() == std::vector<std::uint64_t>({5, 7, 9}),
+           "rolling sum accepts uint16 and uint32 frames with exact fill-window totals");
+
+    const std::uint32_t third[] = {10, 20, 30};
+    testOk(sum.push(third, 3) == RollingSumStatus::Ok &&
+               sum.frameCount() == 2 &&
+               sum.sum() == std::vector<std::uint64_t>({14, 25, 36}),
+           "rolling sum evicts the oldest frame in one element-wise update");
+
+    const auto shrunk = sum.configure(3, 1, 48);
+    testOk(shrunk.status == RollingSumStatus::Ok && sum.frameCount() == 1 &&
+               sum.sum() == std::vector<std::uint64_t>({10, 20, 30}),
+           "rolling sum shrinking preserves the newest retained frame and exact sum");
+
+    const auto expanded = sum.configure(3, 2, 48);
+    const std::uint16_t fourth[] = {1, 1, 1};
+    testOk(expanded.status == RollingSumStatus::Ok &&
+               sum.push(fourth, 3) == RollingSumStatus::Ok &&
+               sum.sum() == std::vector<std::uint64_t>({11, 21, 31}),
+           "rolling sum expanding preserves retained history while refilling the window");
+
+    const std::vector<std::uint64_t> beforeMismatch = sum.sum();
+    testOk(sum.push(fourth, 2) == RollingSumStatus::FrameSizeMismatch &&
+               sum.sum() == beforeMismatch && sum.frameCount() == 2,
+           "rolling sum rejects a mismatched frame without changing state");
+
+    testOk(sum.memoryBytes() <= sum.budgetBytes(),
+           "rolling sum retained storage remains within the configured byte budget");
+
+    const auto failedReconfigure = sum.configure(3, 2, 35);
+    testOk(failedReconfigure.status == RollingSumStatus::BudgetTooSmall &&
+               !sum.configured() && sum.frameCount() == 0 && sum.sum().empty(),
+           "rolling sum releases retained storage after failed reconfiguration");
+
+    const auto restored = sum.configure(3, 2, 48);
+    testOk(restored.status == RollingSumStatus::Ok,
+           "rolling sum can be configured again after a failed reconfiguration");
+
+    sum.reset();
+    testOk(sum.configured() && sum.frameCount() == 0 &&
+               sum.sum() == std::vector<std::uint64_t>({0, 0, 0}),
+           "rolling sum reset clears values while retaining its configuration");
+
+    RollingWindowSum longWindow;
+    constexpr std::size_t kElements = 17;
+    constexpr std::size_t kWindow = 37;
+    const std::size_t longBudget =
+        kElements * sizeof(std::uint64_t) +
+        kElements * sizeof(std::uint32_t) * kWindow;
+    const auto longConfigured =
+        longWindow.configure(kElements, kWindow, longBudget);
+    std::deque<std::vector<std::uint32_t>> referenceFrames;
+    std::vector<std::uint64_t> referenceSum(kElements, 0);
+    bool longExact = longConfigured.status == RollingSumStatus::Ok;
+    for (std::size_t frameIndex = 0; frameIndex < 257; ++frameIndex) {
+        std::vector<std::uint32_t> frame(kElements);
+        for (std::size_t element = 0; element < kElements; ++element) {
+            frame[element] = static_cast<std::uint32_t>(
+                (frameIndex * 7919U + element * 104729U) % 100003U);
+            referenceSum[element] += frame[element];
+        }
+        referenceFrames.push_back(frame);
+        if (referenceFrames.size() > kWindow) {
+            for (std::size_t element = 0; element < kElements; ++element) {
+                referenceSum[element] -= referenceFrames.front()[element];
+            }
+            referenceFrames.pop_front();
+        }
+        longExact = longExact &&
+            longWindow.push(frame.data(), frame.size()) == RollingSumStatus::Ok &&
+            longWindow.sum() == referenceSum &&
+            longWindow.frameCount() == referenceFrames.size();
+    }
+    testOk(longExact && longWindow.frameCount() == kWindow,
+           "rolling sum matches a naive last-N reference over 257 changing frames");
+
+    const auto longShrunk = longWindow.configure(kElements, 11, longBudget);
+    while (referenceFrames.size() > 11) {
+        for (std::size_t element = 0; element < kElements; ++element) {
+            referenceSum[element] -= referenceFrames.front()[element];
+        }
+        referenceFrames.pop_front();
+    }
+    testOk(longShrunk.status == RollingSumStatus::Ok &&
+               longWindow.frameCount() == 11 && longWindow.sum() == referenceSum,
+           "rolling sum remains exact when a populated long window is reduced");
+
+    const auto overflow = sum.configure(
+        std::numeric_limits<std::size_t>::max(), 1,
+        std::numeric_limits<std::size_t>::max());
+    testOk(overflow.status == RollingSumStatus::SizeOverflow,
+           "rolling sum rejects geometry whose byte calculation overflows size_t");
+}
+
 }  // namespace
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(294);
+    testPlan(309);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -1841,5 +1962,6 @@ MAIN(servalProtocolFixtureTest)
     testBpcMaskSemantics();
     testMaskGeometry();
     testOneShotActions();
+    testRollingWindowSum();
     return testDone();
 }

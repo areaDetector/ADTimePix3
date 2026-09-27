@@ -10,7 +10,7 @@
   <widget type="group" version="3.0.0">
     <name>TPX3_Image_Control</name>
     <width>1400</width>
-    <height>710</height>
+    <height>740</height>
     <widget type="label" version="2.0.0">
       <name>RasterHint</name>
       <text>Image raster: 256×256, 512×512, or 1024×512 (8-chip) is selected from $(P)$(Cam)PixCount_RBV (65536, 262144, 524288), same as Mask.bob.</text>
@@ -338,7 +338,7 @@
       <x>10</x>
       <y>370</y>
       <width>1350</width>
-      <height>80</height>
+      <height>110</height>
       <widget type="label" version="2.0.0">
         <name>AccumulationControlLabel</name>
         <text>Accumulation Control</text>
@@ -357,14 +357,14 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>FramesToSumLabel2</name>
-        <text>Frames to Sum:</text>
+        <text>Requested frames:</text>
         <x>232</x>
         <y>18</y>
         <width>120</width>
       </widget>
       <widget type="label" version="2.0.0">
         <name>SumUpdateIntervalLabel2</name>
-        <text>Sum Update Interval (frames):</text>
+        <text>Publish every (frames):</text>
         <x>492</x>
         <y>18</y>
         <width>200</width>
@@ -397,11 +397,104 @@
         <minimum>1.0</minimum>
         <maximum>100000.0</maximum>
       </widget>
+      <widget type="label" version="2.0.0">
+        <name>RetentionLimitLabel</name>
+        <text>Window budget (MiB):</text>
+        <x>20</x>
+        <y>50</y>
+        <width>130</width>
+      </widget>
+      <widget type="spinner" version="2.0.0">
+        <name>RetentionLimitSpinner</name>
+        <pv_name>$(P)$(R)RetentionLimitMB</pv_name>
+        <x>150</x>
+        <y>45</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <minimum>1.0</minimum>
+        <maximum>4096.0</maximum>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>EffectiveFramesLabel</name>
+        <text>Window capacity:</text>
+        <x>300</x>
+        <y>50</y>
+        <width>130</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>EffectiveFramesDisplay</name>
+        <pv_name>$(P)$(R)EffectiveFrames_RBV</pv_name>
+        <x>430</x>
+        <y>45</y>
+        <width>120</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>RetentionStatusLabel</name>
+        <text>Window status:</text>
+        <x>580</x>
+        <y>50</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>RetentionStatusDisplay</name>
+        <pv_name>$(P)$(R)RetentionStatus_RBV</pv_name>
+        <x>700</x>
+        <y>45</y>
+        <width>350</width>
+        <height>30</height>
+        <background_color>
+          <color red="220" green="235" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="0" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>FramesSummedLabel</name>
+        <text>Currently summed:</text>
+        <x>1060</x>
+        <y>50</y>
+        <width>120</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>FramesSummedDisplay</name>
+        <pv_name>$(P)$(R)FramesSummed_RBV</pv_name>
+        <x>1180</x>
+        <y>45</y>
+        <width>140</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="200">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="0">
+          </color>
+        </border_color>
+      </widget>
     </widget>
     <widget type="group" version="3.0.0">
       <name>ImageData</name>
       <x>10</x>
-      <y>450</y>
+      <y>480</y>
       <width>1350</width>
       <height>110</height>
       <widget type="label" version="2.0.0">
@@ -472,7 +565,7 @@
     <widget type="group" version="3.0.0">
       <name>PerformanceMonitoring</name>
       <x>10</x>
-      <y>560</y>
+      <y>590</y>
       <width>1350</width>
       <height>120</height>
       <widget type="label" version="2.0.0">
@@ -529,7 +622,7 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>ProcessingTimeLabel</name>
-        <text>Processing Time (ms):</text>
+        <text>Processing avg (ms):</text>
         <x>360</x>
         <y>55</y>
         <width>150</width>
@@ -553,7 +646,7 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>MemoryUsageLabel</name>
-        <text>Memory Usage (MB):</text>
+        <text>Driver memory (MB):</text>
         <x>720</x>
         <y>55</y>
         <width>140</width>
@@ -1004,7 +1097,7 @@
     <name>FrameSum</name>
     <text>Frames Sum</text>
     <x>750</x>
-    <y>720</y>
+    <y>730</y>
     <width>141</width>
     <font>
       <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">

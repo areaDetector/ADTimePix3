@@ -42,6 +42,7 @@
 #include "img_accumulation.h"
 #include "histogram_io.h"
 #include "network_client.h"
+#include "rolling_window_sum.h"
 #include "stream_worker_state.h"
 #include "detector_family.h"
 
@@ -277,6 +278,10 @@
 #define ADTimePixImgTotalCountsString           "TPX3_IMG_TOTAL_COUNTS"     // (asynInt64,         r)      Total counts
 #define ADTimePixImgProcessingTimeString        "TPX3_IMG_PROCESSING_TIME"   // (asynFloat64,       r)      Processing time (ms)
 #define ADTimePixImgMemoryUsageString            "TPX3_IMG_MEMORY_USAGE"    // (asynFloat64,       r)      Memory usage (MB)
+#define ADTimePixImgRetentionLimitMBString        "TPX3_IMG_RETENTION_LIMIT_MB" // (asynInt32,      r/w)    Rolling-window memory budget (MiB)
+#define ADTimePixImgEffectiveFramesString         "TPX3_IMG_EFFECTIVE_FRAMES" // (asynInt32,         r)      Rolling-window capacity
+#define ADTimePixImgFramesSummedString            "TPX3_IMG_FRAMES_SUMMED" // (asynInt32,            r)      Frames currently present in rolling sum
+#define ADTimePixImgRetentionStatusString         "TPX3_IMG_RETENTION_STATUS" // (asynOctet,          r)      Rolling-window budget status
 #define ADTimePixWriteProcessedImgString         "TPX3_IMG_WRITE_PROCESSED" // (asynInt32,         w)      Trigger: push ImgImageData/ImgImageSumNFrames as NDArrays to addresses 2 and 3
 #define ADTimePixProcessedImgOutputTypeString    "TPX3_IMG_PROCESSED_OUTPUT_TYPE" // (asynInt32,   r/w)    0=Sum (NDInt64), 1=Average (NDInt32, divide by N)
 #define ADTimePixWriteProcessedHstString         "TPX3_HST_WRITE_PROCESSED" // (asynInt32,         w)      Trigger: push PrvHst NDArrays (addrs 4–7) for file plugins
@@ -337,6 +342,10 @@
 #define ADTimePixPrvHstFramesToSumString         "TPX3_PRV_HST_FRAMES_TO_SUM"        // (asynInt32,         r/w)    Number of frames to sum
 #define ADTimePixPrvHstSumUpdateIntervalString   "TPX3_PRV_HST_SUM_UPDATE_INTERVAL"   // (asynInt32,         r/w)    Update interval for sum (frames)
 #define ADTimePixPrvHstDataResetString           "TPX3_PRV_HST_DATA_RESET"           // (asynInt32,         w)      Reset accumulated histogram data
+#define ADTimePixPrvHstRetentionLimitMBString    "TPX3_PRV_HST_RETENTION_LIMIT_MB"   // (asynInt32,       r/w)    Rolling-window memory budget (MiB)
+#define ADTimePixPrvHstEffectiveFramesString     "TPX3_PRV_HST_EFFECTIVE_FRAMES"    // (asynInt32,         r)      Rolling-window capacity
+#define ADTimePixPrvHstFramesSummedString        "TPX3_PRV_HST_FRAMES_SUMMED"       // (asynInt32,         r)      Frames currently present in rolling sum
+#define ADTimePixPrvHstRetentionStatusString     "TPX3_PRV_HST_RETENTION_STATUS"    // (asynOctet,          r)      Rolling-window budget status
 
     // Measurement
 #define ADTimePixPelRateString               "TPX3_PEL_RATE"          // (asynInt32,         w)      PixelEventRate
@@ -677,6 +686,10 @@ class ADTimePix : public ADDriver{
         int ADTimePixImgTotalCounts;
         int ADTimePixImgProcessingTime;
         int ADTimePixImgMemoryUsage;
+        int ADTimePixImgRetentionLimitMB;
+        int ADTimePixImgEffectiveFrames;
+        int ADTimePixImgFramesSummed;
+        int ADTimePixImgRetentionStatus;
 
             // Controls
         int ADTimePixRawStream;
@@ -726,7 +739,11 @@ class ADTimePix : public ADDriver{
         int ADTimePixPrvHstMemoryUsage;
         int ADTimePixPrvHstFramesToSum;
         int ADTimePixPrvHstSumUpdateInterval;
-        int ADTimePixPrvHstDataReset;    
+        int ADTimePixPrvHstDataReset;
+        int ADTimePixPrvHstRetentionLimitMB;
+        int ADTimePixPrvHstEffectiveFrames;
+        int ADTimePixPrvHstFramesSummed;
+        int ADTimePixPrvHstRetentionStatus;
 
             // Measurement
         int ADTimePixPelRate;        
@@ -928,11 +945,12 @@ class ADTimePix : public ADDriver{
         
         // Img channel accumulation and frame buffer
         std::unique_ptr<ImageData> imgRunningSum_;           // 64-bit accumulated image
-        std::deque<ImageData> imgFrameBuffer_;              // Circular buffer for last N frames
+        ADTimePix3Accumulation::RollingWindowSum imgWindowSum_; // Bounded sum of last N frames
         ImageData imgCurrentFrame_;                         // Current frame for IMAGE_FRAME PV
         int imgFramesToSum_;                               // Number of frames to sum (configurable)
         int imgSumUpdateIntervalFrames_;                   // Update interval for sum PV
         int imgFramesSinceLastSumUpdate_;                  // Counter for update interval
+        int imgRetentionLimitMB_;                           // Rolling-window memory budget
         
         // Img channel performance tracking
         std::vector<double> imgProcessingTimeSamples_;     // Processing time samples
@@ -944,12 +962,13 @@ class ADTimePix : public ADDriver{
         uint64_t imgAccumulatedFrameCount_;        // Number of frames added to running sum (for average-per-frame)
         static constexpr size_t IMG_MAX_PROCESSING_TIME_SAMPLES = 10;
         static constexpr size_t IMG_MEMORY_UPDATE_INTERVAL_SEC = 5;
+        static constexpr int DEFAULT_RETENTION_LIMIT_MB = 512;
+        static constexpr int MAX_RETENTION_LIMIT_MB = 4096;
         
         // Reusable buffers for EPICS arrays (performance optimization)
         std::vector<epicsInt64> imgArrayData64Buffer_;     // For IMAGE_DATA (64-bit)
         std::vector<epicsInt32> imgFrameArrayDataBuffer_;  // For IMAGE_FRAME (32-bit)
         std::vector<epicsInt64> imgSumArray64Buffer_;      // For IMAGE_SUM_N_FRAMES (64-bit)
-        std::vector<uint64_t> imgSumArray64WorkBuffer_;   // Working buffer for sum calculation
 
         // TCP streaming for PrvHst channel
         std::shared_ptr<NetworkClient> prvHstNetworkClient_;
@@ -973,11 +992,12 @@ class ADTimePix : public ADDriver{
         
         // PrvHst histogram data
         std::unique_ptr<HistogramData> prvHstRunningSum_;
-        std::deque<HistogramData> prvHstFrameBuffer_;
+        ADTimePix3Accumulation::RollingWindowSum prvHstWindowSum_;
         std::unique_ptr<HistogramData> prvHstCurrentFrame_;  // Use pointer to avoid default constructor requirement
         int prvHstFramesToSum_;
         int prvHstSumUpdateIntervalFrames_;
         int prvHstFramesSinceLastSumUpdate_;
+        int prvHstRetentionLimitMB_;
         uint64_t prvHstTotalCounts_;
         uint64_t prvHstFrameCount_;  // Track number of frames processed
         // PrvHst frame data from JSON
@@ -997,7 +1017,6 @@ class ADTimePix : public ADDriver{
         // PrvHst reusable buffers for EPICS arrays
         std::vector<epicsInt32> prvHstArrayData32Buffer_;  // For histogram data (32-bit)
         std::vector<epicsInt64> prvHstSumArray64Buffer_;   // For sum of N frames (64-bit)
-        std::vector<uint64_t> prvHstSumArray64WorkBuffer_; // Working buffer for sum calculation
         std::vector<epicsFloat64> prvHstTimeMsBuffer_;    // For histogram time axis (milliseconds)
 
         // Connection poll (CONNECT/DISCONNECT)
@@ -1135,9 +1154,10 @@ class ADTimePix : public ADDriver{
         
         // Img channel accumulation methods
         void processImgFrame(const ImageData& frame_data);
-        void updateImgDisplayData();
         void updateImgPerformanceMetrics();
         double calculateImgMemoryUsageMB();
+        bool configureImgRollingWindow(size_t pixelCount);
+        bool configurePrvHstRollingWindow(size_t binCount);
         void resetImgAccumulation();
         void resetPrvHstAccumulation();
         
