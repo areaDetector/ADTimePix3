@@ -6,7 +6,7 @@
 #   - Wait until DetConnected_RBV=1, then: dbpf $(PREFIX)cam1:RefreshConnection 1
 #     and < profiles/tpx3/init/hw.cmd
 
-dbpf("$(PREFIX)cam1:RawFilePath","tcp://listen@localhost:8085 ")    # tcp://listen@localhost:8085 for stream; file:/media/nvme/raw for file
+dbpf("$(PREFIX)cam1:RawFilePath","tcp://listen@localhost:8085")    # tcp://listen@localhost:8085 for stream; file:/media/nvme/raw for file
 dbpf("$(PREFIX)cam1:RawFileTemplate","raw%MdHms_")
 dbpf("$(PREFIX)cam1:WriteRaw","0")   # Select raw disk write, or stream
 

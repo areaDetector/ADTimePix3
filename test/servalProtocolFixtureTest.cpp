@@ -8,6 +8,8 @@
 #include "FakeServalTcpServer.h"
 #include "acquisition_coordinator.h"
 #include "bpc_file_io.h"
+#include "calibration_path_policy.h"
+#include "destination_policy.h"
 #include "bpc_mask_semantics.h"
 #include "mask_geometry.h"
 #include "network_client.h"
@@ -39,6 +41,7 @@
 #include <cstring>
 #include <deque>
 #include <fstream>
+#include <filesystem>
 #include <limits>
 #include <string>
 #include <thread>
@@ -70,6 +73,27 @@ public:
     }
 
     ~TemporaryFile() { unlink(path_.c_str()); }
+
+    const std::string& path() const { return path_; }
+
+private:
+    std::string path_;
+};
+
+
+class TemporaryDirectory {
+public:
+    TemporaryDirectory()
+    {
+        char path[] = "/tmp/adtimepix3-calibration-XXXXXX";
+        char* created = mkdtemp(path);
+        if (created != nullptr) path_ = created;
+    }
+
+    ~TemporaryDirectory()
+    {
+        if (!path_.empty()) std::filesystem::remove_all(path_);
+    }
 
     const std::string& path() const { return path_; }
 
@@ -1622,6 +1646,102 @@ void testStreamHeaderValidation()
            "fragmented overflow header is rejected without reading a payload");
 }
 
+
+void testCalibrationPathPolicy()
+{
+    namespace fs = std::filesystem;
+    using ADTimePix3Calibration::PathAccess;
+    using ADTimePix3Calibration::PathPolicy;
+    using ADTimePix3Calibration::PathStatus;
+
+    PathPolicy policy;
+    std::string resolved;
+    testOk(policy.configure("") == PathStatus::RootNotConfigured && !policy.configured(),
+           "calibration policy fails closed without a configured root");
+    testOk(policy.configure("relative/path") == PathStatus::RootNotAbsolute,
+           "calibration policy rejects a relative approved root");
+    testOk(policy.configure("/") == PathStatus::Ok && policy.permissive(),
+           "calibration policy identifies the system-wide permissive root");
+
+    TemporaryDirectory root;
+    TemporaryDirectory outside;
+    const fs::path child = fs::path(root.path()) / "detector";
+    fs::create_directory(child);
+    testOk(policy.configure(root.path()) == PathStatus::Ok && policy.configured(),
+           "calibration policy canonicalizes an existing absolute root");
+    testOk(policy.resolve(child.string(), "new-mask.bpc", PathAccess::Write, resolved) ==
+               PathStatus::Ok && fs::path(resolved).parent_path() == fs::canonical(child),
+           "calibration policy permits a new basename under a root descendant");
+
+    const fs::path existing = child / "existing.bpc";
+    replaceFileContents(existing.string(), 4);
+    testOk(policy.resolve(child.string(), "existing.bpc", PathAccess::Read, resolved) ==
+               PathStatus::Ok && fs::path(resolved) == fs::canonical(existing),
+           "calibration policy permits and canonicalizes an existing in-root file");
+    testOk(policy.resolve(child.string(), "../escape.bpc", PathAccess::Write, resolved) ==
+               PathStatus::InvalidFileName,
+           "calibration policy rejects traversal in a calibration filename");
+    testOk(policy.resolve(child.string(), "/tmp/escape.bpc", PathAccess::Write, resolved) ==
+               PathStatus::InvalidFileName,
+           "calibration policy rejects an absolute calibration filename");
+    testOk(policy.resolve(outside.path(), "outside.bpc", PathAccess::Write, resolved) ==
+               PathStatus::DirectoryOutsideRoot,
+           "calibration policy rejects an existing directory outside the approved root");
+
+    const fs::path outsideFile = fs::path(outside.path()) / "outside.bpc";
+    replaceFileContents(outsideFile.string(), 4);
+    const fs::path escapeLink = child / "escape-link.bpc";
+    fs::create_symlink(outsideFile, escapeLink);
+    testOk(policy.resolve(child.string(), escapeLink.filename().string(),
+                          PathAccess::Read, resolved) == PathStatus::TargetOutsideRoot,
+           "calibration policy rejects a symlink target outside the approved root");
+    testOk(policy.resolve(child.string(), "missing.bpc", PathAccess::Read, resolved) ==
+               PathStatus::TargetUnavailable,
+           "calibration policy rejects a missing read target");
+    testOk(policy.resolve(root.path(), "detector", PathAccess::Read, resolved) ==
+               PathStatus::TargetNotRegular,
+           "calibration policy rejects a directory used as a read target");
+}
+
+
+void testDestinationPolicy()
+{
+    using ADTimePix3Destination::Policy;
+    using ADTimePix3Destination::PolicyStatus;
+
+    Policy policy;
+    testOk(policy.configure("") == PolicyStatus::NotConfigured && !policy.configured() &&
+               !policy.allows("tcp://listen@localhost:8088"),
+           "destination policy fails closed when no allowlist is configured");
+    testOk(policy.configure("ftp://example.invalid/*") == PolicyStatus::InvalidEntry,
+           "destination policy rejects unsupported URL schemes");
+    testOk(policy.configure("tcp://listen@local*host:8088") == PolicyStatus::InvalidEntry,
+           "destination policy permits a wildcard only as the final character");
+    testOk(policy.configure("file:/approved/*, tcp://listen@localhost:8088") ==
+               PolicyStatus::Ok && policy.configured(),
+           "destination policy accepts trimmed exact and trailing-prefix entries");
+    testOk(policy.allows("tcp://listen@localhost:8088"),
+           "destination policy permits an exact TCP endpoint");
+    testOk(!policy.allows("tcp://listen@localhost:80880"),
+           "destination policy does not treat an exact endpoint as a prefix");
+    testOk(policy.allows("file:/approved/run/file"),
+           "destination policy permits a file destination below an approved root");
+    testOk(!policy.allows("file:/approved-sibling/run/file"),
+           "destination policy rejects a sibling that only shares a root prefix");
+    testOk(!policy.allows("file:/approved/run/../../etc/shadow"),
+           "destination policy rejects traversal below an approved file prefix");
+
+    Policy permissivePolicy;
+    testOk(permissivePolicy.configure("file:/*,tcp://*,http://*") == PolicyStatus::Ok &&
+               permissivePolicy.permissive() &&
+               permissivePolicy.allows("tcp://listen@localhost:65000") &&
+               permissivePolicy.allows("tcp://connect@example.invalid:12345") &&
+               permissivePolicy.allows("file:/arbitrary/output/run") &&
+               permissivePolicy.allows("http://example.invalid:8080/output") &&
+               !permissivePolicy.allows("file:/approved/../escape"),
+           "permissive destination policy accepts supported endpoints while rejecting unsafe file paths");
+}
+
 void testBpcFileBounds()
 {
     using ADTimePix3BpcFile::Status;
@@ -1676,6 +1796,33 @@ void testBpcFileBounds()
     testOk(ADTimePix3BpcFile::writeExact(file.path(), written, written.size() + 1) ==
                Status::InvalidExpectedSize,
            "bounded BPC writer rejects a buffer-size mismatch");
+
+    TemporaryFile preserved;
+    const std::vector<std::uint8_t> original{0x11, 0x22};
+    const std::vector<std::uint8_t> replacement{0x33};
+    testOk(ADTimePix3BpcFile::writeExact(preserved.path(), original, original.size()) == Status::Ok &&
+               ADTimePix3BpcFile::writeExact(preserved.path(), replacement, original.size()) ==
+                   Status::InvalidExpectedSize &&
+               ADTimePix3BpcFile::readExact(preserved.path(), original.size(), read) == Status::Ok &&
+               read == original,
+           "rejected staged BPC replacement preserves the complete prior file");
+
+    TemporaryDirectory renameRoot;
+    const std::filesystem::path directoryTarget =
+        std::filesystem::path(renameRoot.path()) / "target.bpc";
+    std::filesystem::create_directory(directoryTarget);
+    replaceFileContents((directoryTarget / "keep").string(), 1);
+    const Status renameStatus = ADTimePix3BpcFile::writeAtomic(
+        directoryTarget.string(), written.data(), written.size());
+    bool stagedFileLeft = false;
+    for (const auto& entry : std::filesystem::directory_iterator(renameRoot.path())) {
+        if (entry.path().filename().string().find(".target.bpc.tmp.") == 0) {
+            stagedFileLeft = true;
+        }
+    }
+    testOk(renameStatus == Status::RenameFailed &&
+               std::filesystem::is_directory(directoryTarget) && !stagedFileLeft,
+           "failed atomic replacement leaves the target intact and removes staging files");
 }
 
 void testBpcMaskSemantics()
@@ -1991,7 +2138,7 @@ void testRollingWindowSum()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(322);
+    testPlan(346);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -2010,6 +2157,8 @@ MAIN(servalProtocolFixtureTest)
     testHealthResponseValidation();
     testPixelConfigResponseValidation();
     testStreamHeaderValidation();
+    testCalibrationPathPolicy();
+    testDestinationPolicy();
     testBpcFileBounds();
     testBpcMaskSemantics();
     testMaskGeometry();

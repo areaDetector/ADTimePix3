@@ -572,8 +572,7 @@ void ADTimePix::timePixCallback(){
     cpr::ReserveSize reserveSize = cpr::ReserveSize{1024 * 1024 * 4};
     session.SetOption(reserveSize);
     //session.SetReserveSize(reserveSize);
-    cpr::Authentication authentication = cpr::Authentication("user", "pass", cpr::AuthMode::BASIC);
-    session.SetOption(authentication);
+    ADTimePix3ServalHttp::configureSessionAuthentication(session);
     cpr::Parameters parameters = cpr::Parameters{{"anon", "true"}, {"key", "value"}};
     session.SetOption(parameters);
     cpr::Response r = session.Get();

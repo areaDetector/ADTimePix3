@@ -43,6 +43,8 @@
 #include "histogram_io.h"
 #include "network_client.h"
 #include "numeric_range.h"
+#include "calibration_path_policy.h"
+#include "destination_policy.h"
 #include "rolling_window_sum.h"
 #include "stream_worker_state.h"
 #include "detector_family.h"
@@ -179,6 +181,10 @@
 #define ADTimePixBPCFileNameString          "BPC_FILE_NAME"             /**< (asynOctet,    r/w) The BPC file name */    
 #define ADTimePixDACSFilePathString         "DACS_FILE_PATH"            /**< (asynOctet,    r/w) The file path  Chip configuration*/
 #define ADTimePixDACSFilePathExistsString   "DACS_FILE_PATH_EXISTS"     /**< (asynInt32,    r/w) File path exists? */
+#define ADTimePixCalibrationRootString         "TPX3_CALIBRATION_ROOT_RBV"   /**< (asynOctet, r) Immutable approved calibration root */
+#define ADTimePixCalibrationPolicyString       "TPX3_CALIBRATION_POLICY_RBV" /**< (asynOctet, r) Root policy status */
+#define ADTimePixDestinationAllowlistString    "TPX3_DESTINATION_ALLOWLIST_RBV" /**< (asynOctet, r) Immutable destination allowlist */
+#define ADTimePixDestinationPolicyString       "TPX3_DESTINATION_POLICY_RBV"    /**< (asynOctet, r) Destination policy status */
 #define ADTimePixDACSFileNameString         "DACS_FILE_NAME"            /**< (asynOctet,    r/w) The file name */    
 #define ADTimePixWriteMsgString             "WRITE_FILE_MESSAGE"        /**< (asynOctet,    r  ) Config File write message */
 #define ADTimePixWriteBPCFileString         "WRITE_BPC_FILE"            /**< (asynInt32,    r/w) Manually upload BPC file to detector when value=1 */
@@ -422,7 +428,7 @@ class ADTimePix : public ADDriver{
 
         // Constructor - NOTE THERE IS A CHANCE THAT YOUR CAMERA DOES NOT CONNECT WITH SERVAL # AND THIS MUST BE CHANGED
         // asynFlags: optional extra asyn flags (e.g. ASYN_DESTRUCTIBLE when using asyn R4-45+ and PR 572); 0 for default.
-        ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags = 0);
+        ADTimePix(const char* portName, const char* serial, int maxBuffers, size_t maxMemory, int priority, int stackSize, int asynFlags = 0, const char* calibrationRoot = nullptr, const char* destinationAllowlist = nullptr);
 
         /** Called on IOC shutdown when driver is destructible (asyn R4-45+, ASYN_DESTRUCTIBLE). Stop threads here; destructor does resource cleanup. */
         virtual void shutdownPortDriver();
@@ -593,6 +599,10 @@ class ADTimePix : public ADDriver{
         int ADTimePixBPCFileName;          
         int ADTimePixDACSFilePath;         
         int ADTimePixDACSFilePathExists;   
+        int ADTimePixCalibrationRoot;
+        int ADTimePixCalibrationPolicy;
+        int ADTimePixDestinationAllowlist;
+        int ADTimePixDestinationPolicy;
         int ADTimePixDACSFileName;
         int ADTimePixWriteMsg; 
         int ADTimePixWriteBPCFile;                
@@ -852,6 +862,8 @@ class ADTimePix : public ADDriver{
         std::vector<epicsInt32> pixelConfigDiff_;
 
         std::string serverURL;
+        ADTimePix3Calibration::PathPolicy calibrationPathPolicy_;
+        ADTimePix3Destination::Policy destinationPolicy_;
         /** Extra asyn flags passed at construction (e.g. ASYN_DESTRUCTIBLE). When set, asyn performs teardown on IOC exit. */
         int asynFlags_;
         DetectorFamily detectorFamily_;
@@ -1092,7 +1104,6 @@ class ADTimePix : public ADDriver{
         asynStatus getServer();
         asynStatus getHealth();
         asynStatus getDetector(bool publishHttpStatus = true);
-        asynStatus initCamera();
         asynStatus initAcquisition();
         asynStatus checkBPCPath();
         asynStatus checkDACSPath();
@@ -1108,6 +1119,11 @@ class ADTimePix : public ADDriver{
         bool checkPath(std::string &filePath);
         asynStatus uploadBPC();
         asynStatus uploadDACS();
+        asynStatus resolveCalibrationFile(const std::string& directory,
+                                             const std::string& fileName,
+                                             ADTimePix3Calibration::PathAccess access,
+                                             std::string& resolved);
+        asynStatus validateDestination(const std::string& destination);
         asynStatus writeDac(int chip, int parameter, const std::string &dac,
                             int value, int previousValue);
         asynStatus fetchDacs(json &data, int chip);

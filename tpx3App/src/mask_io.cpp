@@ -450,17 +450,30 @@ int ADTimePix::checkFile(std::string &filePath) {
  */
 asynStatus ADTimePix::checkBPCPath()
 {
-    asynStatus status;
     std::string filePath;
-    int pathExists;
-
     getStringParam(ADTimePixBPCFilePath, filePath);
-    if (filePath.size() == 0) return asynSuccess;
-    pathExists = checkPath(filePath);
-    status = pathExists ? asynSuccess : asynError;
-    setStringParam(ADTimePixBPCFilePath, filePath);
-    setIntegerParam(ADTimePixBPCFilePathExists, pathExists);
-    return status;
+    if (filePath.empty()) return asynSuccess;
+
+    std::string normalized = filePath;
+    const bool directoryExists = checkPath(normalized);
+    std::string ignored;
+    const bool permitted = directoryExists &&
+        calibrationPathPolicy_.validateDirectory(normalized, ignored) ==
+            ADTimePix3Calibration::PathStatus::Ok;
+    setStringParam(ADTimePixBPCFilePath, normalized.c_str());
+    setIntegerParam(ADTimePixBPCFilePathExists, permitted ? 1 : 0);
+    if (!permitted) {
+        const ADTimePix3Calibration::PathStatus pathStatus =
+            calibrationPathPolicy_.validateDirectory(normalized, ignored);
+        char message[384];
+        epicsSnprintf(message, sizeof(message), "Calibration path blocked: %s",
+                      ADTimePix3Calibration::statusMessage(pathStatus));
+        setStringParam(ADTimePixWriteMsg, message);
+        ERR_ARGS("%s (directory=\"%s\")", message, normalized.c_str());
+        callParamCallbacks();
+        return asynError;
+    }
+    return asynSuccess;
 }
 
 /**
@@ -475,18 +488,23 @@ asynStatus ADTimePix::uploadBPC(){
     }
 
     asynStatus status = asynSuccess;
-    std::string bpc_file, filePath, fileName;
+    std::string bpc_file, filePath, fileName, resolvedPath;
 
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixBPCFileName, fileName);
-    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + std::string(filePath) + std::string(fileName);
+    if (resolveCalibrationFile(filePath, fileName,
+            ADTimePix3Calibration::PathAccess::Read, resolvedPath) != asynSuccess) {
+        ERR("uploadBPC: calibration path validation failed; request not sent");
+        return asynError;
+    }
+    bpc_file = this->serverURL + std::string("/config/load?format=pixelconfig&file=") + resolvedPath;
 
     cpr::Response r = servalHttpGetAuthOnly(bpc_file);
     if (r.status_code != 200) {
         logHttpFailure("uploadBPC GET /config/load pixelconfig", "GET", bpc_file, (long)r.status_code, r.text);
         status = asynError;
     }
-    LOG_ARGS("uploadBPC: http_code=%ld file=%s%s", (long)r.status_code, filePath.c_str(), fileName.c_str());
+    LOG_ARGS("uploadBPC: http_code=%ld file=%s", (long)r.status_code, resolvedPath.c_str());
     setIntegerParam(ADTimePixHttpCode, r.status_code);
     setStringParam(ADTimePixWriteMsg, r.text.c_str());
 
@@ -522,7 +540,10 @@ asynStatus ADTimePix::readBPCfile(std::vector<std::uint8_t>& data) {
 
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixBPCFileName, fileName);
-    fullFileName = filePath + fileName;
+    if (resolveCalibrationFile(filePath, fileName,
+            ADTimePix3Calibration::PathAccess::Read, fullFileName) != asynSuccess) {
+        return asynError;
+    }
 
 //    printf("ReadBPC: name=%s\n", fullFileName.c_str());
 
@@ -582,20 +603,21 @@ asynStatus ADTimePix::writeBPCfile(const std::vector<std::uint8_t>& data) {
 
     getStringParam(ADTimePixBPCFilePath, filePath);
     getStringParam(ADTimePixMaskFileName, maskFile);
-    fullFileName = filePath + maskFile;
 
     /* checkFile: 0=missing, 1=directory, 2=file, ... (see checkFile) */
     LOG_ARGS("Mask write: BPCFilePath type=%d (1=dir) path=\"%s\" maskName=\"%s\"",
              checkFile(filePath), filePath.c_str(), maskFile.c_str());
 
     pathExists = checkFile(filePath);
-    maskExists = checkFile(fullFileName);
-    if ((maskExists != 2) &&  (strlen(maskFile.c_str()) == 0)) {
-        setStringParam(ADTimePixMaskFileName,"mask.bpc");
+    if (maskFile.empty()) {
+        setStringParam(ADTimePixMaskFileName, "mask.bpc");
         getStringParam(ADTimePixMaskFileName, maskFile);
-        fullFileName = filePath + maskFile;
-        maskExists = checkFile(fullFileName);
     }
+    if (resolveCalibrationFile(filePath, maskFile,
+            ADTimePix3Calibration::PathAccess::Write, fullFileName) != asynSuccess) {
+        return asynError;
+    }
+    maskExists = checkFile(fullFileName);
 
     if (pathExists == 1) {
         if (maskExists == 2) {

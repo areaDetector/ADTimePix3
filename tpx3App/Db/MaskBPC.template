@@ -170,6 +170,7 @@ record(bo, "$(P)$(R)MaskCircle"){
 # BPC mask file name  "_maskBPC". Probably write it to same FilePath as BPC file exists
 record(waveform, "$(P)$(R)MaskBPCFileName")
 {
+    field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
     field(PINI, "YES")
     field(DTYP, "asynOctetWrite")
     field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_MASK_FILENAME")
@@ -195,6 +196,7 @@ record(bo, "$(P)$(R)MaskPel"){
 }
 
 record(bo, "$(P)$(R)MaskWrite"){
+  field(ASG,  "$(CALIBRATION_ASG=DEFAULT)")
   field(DTYP, "asynInt32")
   field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))TPX3_MASK_WRITE")
   field(ZNAM, "No")

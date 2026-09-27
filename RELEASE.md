@@ -74,15 +74,44 @@ R1-8-0 (in progress)
   `documentation/NUMERIC_RANGE_CONTRACT.md`.
 
 
+
+### Security and deployment containment
+
+* Canonicalize an immutable startup `ADTIMEPIX_CALIBRATION_ROOT` and reject
+  BPC/DACS paths, mask filenames, traversal, absolute filenames, and symlink
+  targets that escape it. An unset root defaults to `/`; an explicitly invalid
+  root fails closed.
+* Keep the shipped TPX3 and MPX3 profiles portable by defaulting the root to
+  `/`, reported as `Permissive: /`; restrictive sites select one narrower
+  subtree in the family `unique.cmd`. Basename, regular-file, and atomic-write
+  protections remain active in permissive mode.
+* Stage BPC and masked-pixel JSON output beside the target, synchronize the
+  complete content, and atomically rename it; local failure never initiates a
+  BPC upload and does not expose a partial replacement.
+* Check every enabled Raw, Image, Preview Image, and Preview Histogram base
+  against the immutable startup `ADTIMEPIX_DESTINATION_ALLOWLIST` before any
+  destination update is sent to Serval. The shipped portable default,
+  `file:/*,tcp://*,http://*`, permits arbitrary supported ports and TCP roles;
+  restrictive sites replace it with exact endpoints and directory prefixes.
+* Remove compiled placeholder Basic credentials. Optional Serval credentials
+  come from the protected startup environment and are never exposed as PVs.
+* Add readbacks for both active policies and configurable `CALIBRATION_ASG`
+  fields for calibration-path, calibration-load, and mask-upload controls.
+* Remove the unused legacy `initCamera` helper, which contained hard-coded
+  calibration paths and a fixed bias write.
+* Document the ACF/ASG, least-privilege service-account, filesystem,
+  credential, destination, and protected-network/TLS deployment contract in
+  `documentation/SECURE_DEPLOYMENT.md`.
+
 ### Validation
 
 * Full IOC build passed.
-* 322/322 deterministic protocol, lifecycle, rolling-window, and numeric-range
-  checks passed.
+* 346/346 deterministic protocol, lifecycle, rolling-window, numeric-range,
+  path-containment, atomic-write, and destination-policy checks passed.
 * Coordinate-map validation passed for 11 implemented cases; five planned
   physical SpIDR 2x4 cases remain deferred.
 * All Phoebus BOB files passed XML validation.
-* REUSE validation passed for 366/366 files.
+* REUSE validation passed for 372/372 files.
 * TPX3 emulator runtime qualification passed at 10 Hz for Img and PrvHst
   windows of 10 and 100 frames: requested capacity equaled current fill, memory
   plateaued at the expected bounded values, per-frame publication operated, and
@@ -98,6 +127,18 @@ R1-8-0 (in progress)
   selected the intended server interface.
 * Runtime reset qualification passed: Img and PrvHst range alarms returned zero
   / `OK`, and both detail readbacks returned `OK`.
+* TPX3 emulator deployment-containment qualification passed with the
+  restrictive module-vendor root: startup policy readbacks reported `Enforced`;
+  an approved destination Apply succeeded without configured credentials;
+  an out-of-root calibration directory produced
+  `WRITE/INVALID` with the path-exists readback set to `No`; a traversal
+  filename was rejected before any BPC request; and an unapproved histogram
+  endpoint was rejected before Serval configuration. Restoring the approved
+  values returned both calibration records and destination Apply to normal.
+* Portable-default restart qualification passed: the IOC environment and driver
+  readbacks agreed on calibration root `/`, calibration policy `Permissive: /`,
+  destination allowlist `file:/*,tcp://*,http://*`, and destination policy
+  `Permissive`.
 * Physical-hardware qualification remains pending.
 
 

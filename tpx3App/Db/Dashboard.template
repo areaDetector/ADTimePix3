@@ -59,6 +59,7 @@ record(bo, "$(P)$(R)RefreshPixelConfig")
 # Detector init single source of truth: push current PV config to SERVAL (fileWriter + getServer), same effect as WriteData=1
 record(bo, "$(P)$(R)ApplyConfig")
 {
+    field(ASG,  "$(DESTINATION_ASG=DEFAULT)")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))TPX3_APPLY_CONFIG")
     field(ZNAM, "No")

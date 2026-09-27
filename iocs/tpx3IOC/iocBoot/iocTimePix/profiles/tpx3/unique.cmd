@@ -34,6 +34,18 @@ epicsEnvSet("YSIZE",                    "512")
 epicsEnvSet("NELMT",                    "262144")
 # Serval URL and PV prefix (override per site/beamline).
 epicsEnvSet("SERVER_URL", "http://localhost:8081")
+# Calibration path policy: permissive by default for portable/community deployments.
+# This variable accepts exactly one absolute directory, not a comma-separated list.
+# Restrictive root examples (choose one by replacing "/"; one subtree is supported):
+#   "$(ADTIMEPIX)/vendor"          module-supplied calibration tree
+#   "/opt/adtimepix/calibration"  site calibration tree
+#   "/data/detectors/tpx3"        detector-specific calibration tree
+epicsEnvSet("ADTIMEPIX_CALIBRATION_ROOT", "/")
+# Destination policy: permit any supported file/TCP/HTTP base by default.
+# Restrictive examples (replace the permissive list):
+#   "file:/data/detector/*,tcp://listen@localhost:8088"
+#   "tcp://connect@example.invalid:9000,http://example.invalid:8080/output"
+epicsEnvSet("ADTIMEPIX_DESTINATION_ALLOWLIST", "file:/*,tcp://*,http://*")
 epicsEnvSet("PREFIX", "TPX3-TEST:")
 
 # --- Mask BPC waveform size (MaskBPC.template NELEMENTS) ---

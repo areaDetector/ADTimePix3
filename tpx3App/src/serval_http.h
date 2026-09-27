@@ -23,6 +23,11 @@ cpr::Response getJson(const std::string& url, int timeout_ms = kDefaultTimeoutMs
 cpr::Response putJson(const std::string& url, const std::string& body,
                       int timeout_ms = kDefaultTimeoutMs);
 
+/** Apply startup-environment Serval credentials to a reusable CPR session when configured. */
+void configureSessionAuthentication(cpr::Session& session);
+
+bool credentialsConfigured();
+
 }  // namespace ADTimePix3ServalHttp
 
 #endif

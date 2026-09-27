@@ -78,10 +78,8 @@ LIB_SYS_LIBS += curl z
 ```cpp
 using json = nlohmann::json;
 
-// HTTP requests using embedded cpr
-cpr::Response r = cpr::Get(cpr::Url{this->serverURL},
-                           cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC},
-                           cpr::Parameters{{"anon", "true"}, {"key", "value"}});
+// HTTP requests use the bounded helper; optional credentials come from the startup environment.
+cpr::Response r = ADTimePix3ServalHttp::get(this->serverURL);
 ```
 
 ## File Structure Changes
