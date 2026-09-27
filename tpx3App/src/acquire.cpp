@@ -311,24 +311,35 @@ asynStatus ADTimePix::ensurePreviewTcpPortsFree(bool forceRotate) {
  * @return: status  -> error if no device, camera values not set, or execute command fails. Otherwise, success
  */
 asynStatus ADTimePix::acquireStart(){
+    using ADTimePix3Acquisition::Phase;
+    using ADTimePix3Acquisition::Resource;
+
     asynStatus status = asynSuccess;
+    if (!acquisitionCoordinator_.beginStart()) {
+        const auto state = acquisitionCoordinator_.snapshot();
+        const std::string message =
+            std::string("Acquisition start rejected while state is ") +
+            ADTimePix3Acquisition::phaseName(state.phase);
+        publishAcquisitionPhase(state.phase, message);
+        return asynError;
+    }
+    publishAcquisitionPhase(Phase::Starting, "Starting acquisition...");
+
+    const auto failStart = [this](const std::string& message) {
+        (void)stopAcquisition(true, message);
+        return asynError;
+    };
 
     // Start from one known stream-worker generation. This requests stop,
     // interrupts any blocking receive, joins every old worker, and only then
     // releases its socket ownership.
     stopAndJoinStreamWorkers();
 
-    setIntegerParam(ADStatus, ADStatusAcquire);
-    setStringParam(ADStatusMessage, "Starting acquisition...");
-
     int triggerMode = 0;
     getIntegerParam(ADTriggerMode, &triggerMode);
     if (mpx3BothCountersTriggerConflict(triggerMode)) {
         ERR_ARGS("%s", kMpx3BothCountersTriggerMsg);
-        setStringParam(ADStatusMessage, kMpx3BothCountersTriggerMsg);
-        setIntegerParam(ADStatus, ADStatusError);
-        callParamCallbacks();
-        return asynError;
+        return failStart(kMpx3BothCountersTriggerMsg);
     }
 
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
@@ -339,9 +350,7 @@ asynStatus ADTimePix::acquireStart(){
     {
         string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
         cpr::Response stop_r = ADTimePix3ServalHttp::get(stopMeasurementURL);
-        if (stop_r.status_code == 200) {
-            epicsThreadSleep(0.2);
-        } else if (stop_r.status_code != 404) {
+        if (stop_r.status_code != 200 && stop_r.status_code != 404) {
             logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
                            (long)stop_r.status_code, stop_r.text);
         }
@@ -364,9 +373,7 @@ asynStatus ADTimePix::acquireStart(){
                      snapshot.status.c_str());
             string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
             cpr::Response stop_r = ADTimePix3ServalHttp::get(stopMeasurementURL);
-            if (stop_r.status_code == 200) {
-                epicsThreadSleep(0.2);
-            } else {
+            if (stop_r.status_code != 200) {
                 logHttpWarning("acquireStart stop prior measurement", "GET", stopMeasurementURL,
                                (long)stop_r.status_code, stop_r.text);
             }
@@ -375,41 +382,32 @@ asynStatus ADTimePix::acquireStart(){
 
     status = ensurePreviewTcpPortsFree();
     if (status != asynSuccess) {
-        setStringParam(ADStatusMessage, "Failed to reassign occupied preview TCP ports");
-        setIntegerParam(ADStatus, ADStatusIdle);
-        return asynError;
+        return failStart("Failed to reassign occupied preview TCP ports");
     }
 
     string startMeasurementURL = this->serverURL + std::string("/measurement/start");
+    if (!acquisitionCoordinator_.noteResource(Resource::RemoteMeasurement)) {
+        return failStart("Acquisition start was cancelled");
+    }
     r = ADTimePix3ServalHttp::get(startMeasurementURL);
 
     if (r.status_code != 200 && r.text.find("Address already in use") != std::string::npos) {
         WARN("measurement/start failed with port conflict; rotating preview ports and retrying once");
         status = ensurePreviewTcpPortsFree(true);
         if (status == asynSuccess) {
-            epicsThreadSleep(0.3);
             r = ADTimePix3ServalHttp::get(startMeasurementURL);
         }
     }
 
     if (r.status_code != 200){
-        logHttpFailure("acquireStart GET /measurement/start", "GET", startMeasurementURL, (long)r.status_code, r.text);
-        if (r.text.find("Address already in use") != std::string::npos) {
-            setStringParam(ADStatusMessage,
-                           "Preview TCP port in use (Serval did not release a prior listener). "
-                           "Restart Serval or change preview ports, then WriteData=1.");
-        } else {
-            setStringParam(ADStatusMessage, "Failed to start acquisition");
-        }
-        // No worker should survive a failed remote start.
-        stopAndJoinStreamWorkers();
-
-        setIntegerParam(ADStatus, ADStatusIdle);
-        return asynError;
+        logHttpFailure("acquireStart GET /measurement/start", "GET", startMeasurementURL,
+                       (long)r.status_code, r.text);
+        const std::string failureMessage =
+            r.text.find("Address already in use") != std::string::npos
+                ? "Preview TCP port in use (Serval did not release a prior listener)"
+                : "Failed to start acquisition";
+        return failStart(failureMessage);
     }
-
-    this->callbackThreadId = epicsThreadCreateOpt("timePixCallback", timePixCallbackC, this, &opts);
-    this->acquiring = true;
 
     {
         int logHeaders = 0;
@@ -432,195 +430,105 @@ asynStatus ADTimePix::acquireStart(){
     // Path PV may have changed (port rotation or Phoebus WriteData); refresh before connect.
     syncTcpStreamEndpoints();
     
-    // Start PrvImg TCP streaming worker thread if WritePrvImg is enabled and path is TCP
-    // Wait a bit for Serval to bind to the port before trying to connect
-    int writePrvImg;
+    // Every enabled TCP receiver is required: startup commits only after each
+    // worker has connected within its bounded readiness deadline.
+    int writePrvImg = 0;
     getIntegerParam(ADTimePixWritePrvImg, &writePrvImg);
     if (writePrvImg != 0) {
-        std::string prvImgPath;
-        getStringParam(ADTimePixPrvImgBase, prvImgPath);
-        if (prvImgPath.find("tcp://") == 0) {
-            // Give Serval time to bind to the TCP port (minimum: 200ms)
-            epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
-            
-            if (startStreamWorker(prvImgWorkerState_, prvImgWorkerThreadId_,
-                                  "prvImgWorker", prvImgWorkerThreadC, opts)) {
-                LOG("Started PrvImg TCP worker thread in acquireStart");
-            } else if (!prvImgWorkerState_.running()) {
-                ERR("Failed to create PrvImg worker thread");
-            }
+        std::string path;
+        getStringParam(ADTimePixPrvImgBase, path);
+        if (path.find("tcp://") == 0 &&
+            !startRequiredStreamWorker(
+                prvImgWorkerState_, prvImgWorkerThreadId_, "prvImgWorker",
+                prvImgWorkerThreadC, opts, Resource::PreviewWorker)) {
+            return failStart("Preview stream did not become ready");
         }
     }
 
-    // Start PrvImg1 TCP worker when WritePrvImg1 is enabled (integrated preview on 8089)
-    int writePrvImg1;
+    int writePrvImg1 = 0;
     getIntegerParam(ADTimePixWritePrvImg1, &writePrvImg1);
     if (writePrvImg1 != 0) {
-        std::string prvImg1Path;
-        getStringParam(ADTimePixPrvImg1Base, prvImg1Path);
-        if (prvImg1Path.find("tcp://") == 0) {
-            epicsThreadSleep(0.2);
-
-            if (startStreamWorker(prvImg1WorkerState_, prvImg1WorkerThreadId_,
-                                  "prvImg1Worker", prvImg1WorkerThreadC, opts)) {
-                LOG("Started PrvImg1 TCP worker thread in acquireStart");
-            } else if (!prvImg1WorkerState_.running()) {
-                ERR("Failed to create PrvImg1 worker thread");
-            }
+        std::string path;
+        getStringParam(ADTimePixPrvImg1Base, path);
+        if (path.find("tcp://") == 0 &&
+            !startRequiredStreamWorker(
+                prvImg1WorkerState_, prvImg1WorkerThreadId_, "prvImg1Worker",
+                prvImg1WorkerThreadC, opts,
+                Resource::IntegratedPreviewWorker)) {
+            return failStart("Integrated preview stream did not become ready");
         }
     }
-    
-    // Start Img TCP streaming worker thread if WriteImg is enabled, path is TCP, and accumulation is enabled
-    // If accumulation is disabled, don't connect to TCP port so other clients can connect
-    int writeImg;
+
+    int writeImg = 0;
     getIntegerParam(ADTimePixWriteImg, &writeImg);
     if (writeImg != 0) {
-        std::string imgPath;
-        getStringParam(ADTimePixImgBase, imgPath);
-        if (imgPath.find("tcp://") == 0) {
-            int accumulationEnable;
-            getIntegerParam(ADTimePixImgAccumulationEnable, &accumulationEnable);
-            if (accumulationEnable) {
-                // Give Serval time to bind to the TCP port (minimum: 200ms)
-                epicsThreadSleep(0.2);  // 200ms - allows Serval to bind TCP port and start server
-                
-                if (startStreamWorker(imgWorkerState_, imgWorkerThreadId_,
-                                      "imgWorker", imgWorkerThreadC, opts)) {
-                    LOG("Started Img TCP worker thread in acquireStart");
-                } else if (!imgWorkerState_.running()) {
-                    ERR("Failed to create Img worker thread");
-                }
-            } else {
-                LOG("ImgAccumulationEnable is disabled - not connecting to TCP port (other clients can connect)");
+        std::string path;
+        int accumulationEnable = 0;
+        getStringParam(ADTimePixImgBase, path);
+        getIntegerParam(ADTimePixImgAccumulationEnable, &accumulationEnable);
+        if (path.find("tcp://") == 0 && accumulationEnable != 0 &&
+            !startRequiredStreamWorker(
+                imgWorkerState_, imgWorkerThreadId_, "imgWorker",
+                imgWorkerThreadC, opts, Resource::ImageWorker)) {
+            return failStart("Image stream did not become ready");
+        }
+    }
+
+    int writePrvHst = 0;
+    if (!prvHstMutex_ || ADTimePixWritePrvHst < 0 ||
+        getIntegerParam(ADTimePixWritePrvHst, &writePrvHst) != asynSuccess) {
+        return failStart("Histogram stream parameters are unavailable");
+    }
+    if (writePrvHst != 0) {
+        std::string path;
+        int format = 0;
+        int accumulationEnable = 0;
+        if (getStringParam(ADTimePixPrvHstBase, path) != asynSuccess ||
+            getIntegerParam(ADTimePixPrvHstFormat, &format) != asynSuccess ||
+            getIntegerParam(ADTimePixPrvHstAccumulationEnable,
+                            &accumulationEnable) != asynSuccess) {
+            return failStart("Histogram stream configuration is unavailable");
+        }
+        if (path.find("tcp://") == 0 && format == 4 &&
+            accumulationEnable != 0) {
+            std::string host;
+            int port = 0;
+            if (!parseTcpPath(path, host, port)) {
+                return failStart("Histogram TCP path is invalid");
+            }
+            epicsMutexLock(prvHstMutex_);
+            prvHstHost_ = host;
+            prvHstPort_ = port;
+            prvHstFormat_ = format;
+            epicsMutexUnlock(prvHstMutex_);
+
+            epicsThreadOpts histogramOpts = EPICS_THREAD_OPTS_INIT;
+            histogramOpts.priority = epicsThreadPriorityMedium;
+            histogramOpts.stackSize =
+                epicsThreadGetStackSize(epicsThreadStackMedium);
+            histogramOpts.joinable = 1;
+            if (!startRequiredStreamWorker(
+                    prvHstWorkerState_, prvHstWorkerThreadId_,
+                    "prvHstWorker", prvHstWorkerThreadC, histogramOpts,
+                    Resource::HistogramWorker)) {
+                return failStart("Histogram stream did not become ready");
             }
         }
     }
-    
-    // Start PrvHst TCP streaming if enabled, path is TCP, format is jsonhisto, and accumulation is enabled
-    // If accumulation is disabled, don't connect to TCP port so other clients can connect
-    // Skip PrvHst setup if mutex is not initialized (defensive check to prevent segfault)
-    if (!prvHstMutex_) {
-        // Mutex not initialized, skip PrvHst setup silently
-        return status;
+
+    callbackThreadId =
+        epicsThreadCreateOpt("timePixCallback", timePixCallbackC, this, &opts);
+    if (callbackThreadId == nullptr) {
+        return failStart("Failed to create measurement monitor thread");
     }
-    
-    // Check if parameter indices are valid before using them (defensive check)
-    if (ADTimePixWritePrvHst < 0) {
-        // Parameter not initialized, skip PrvHst setup
-        return status;
+    if (!acquisitionCoordinator_.noteResource(Resource::MonitorThread) ||
+        !acquisitionCoordinator_.commitStart()) {
+        return failStart("Acquisition start was cancelled before commit");
     }
-    
-    try {
-        int writePrvHst = 0;
-        asynStatus paramStatus = getIntegerParam(ADTimePixWritePrvHst, &writePrvHst);
-        if (paramStatus != asynSuccess) {
-            // Parameter might not exist or be accessible, skip PrvHst setup
-            return status;
-        }
-        if (writePrvHst == 0) {
-            // PrvHst not enabled: skip all PrvHst setup and messaging
-        } else {
-        // Use printf for initial logging to avoid potential issues with LOG_ARGS
-        printf("PrvHst: Checking if TCP streaming should start - WritePrvHst=%d\n", writePrvHst);
-        {
-            if (ADTimePixPrvHstBase < 0 || ADTimePixPrvHstFormat < 0 || ADTimePixPrvHstAccumulationEnable < 0) {
-                ERR("PrvHst parameters not initialized");
-                return status;
-            }
-            
-            std::string prvHstPath;
-            paramStatus = getStringParam(ADTimePixPrvHstBase, prvHstPath);
-            if (paramStatus != asynSuccess) {
-                printf("PrvHst: Failed to get PrvHstBase parameter\n");
-                return status;
-            }
-            printf("PrvHst: Path=%s\n", prvHstPath.c_str());
-            
-            if (prvHstPath.find("tcp://") == 0) {
-                if (ADTimePixPrvHstFormat < 0) {
-                    printf("PrvHst: PrvHstFormat parameter not initialized\n");
-                    return status;
-                }
-                int format = 0;
-                paramStatus = getIntegerParam(ADTimePixPrvHstFormat, &format);
-                if (paramStatus != asynSuccess) {
-                    printf("PrvHst: Failed to get PrvHstFormat parameter\n");
-                    return status;
-                }
-                printf("PrvHst: Format=%d (4=jsonhisto)\n", format);
-                if (format == 4) {  // jsonhisto format
-                    if (ADTimePixPrvHstAccumulationEnable < 0) {
-                        printf("PrvHst: PrvHstAccumulationEnable parameter not initialized\n");
-                        return status;
-                    }
-                    int accumulationEnable = 0;
-                    paramStatus = getIntegerParam(ADTimePixPrvHstAccumulationEnable, &accumulationEnable);
-                    if (paramStatus != asynSuccess) {
-                        printf("PrvHst: Failed to get PrvHstAccumulationEnable parameter\n");
-                        return status;
-                    }
-                    printf("PrvHst: AccumulationEnable=%d\n", accumulationEnable);
-                    if (accumulationEnable) {
-                        // Parse TCP path
-                        std::string host;
-                        int port;
-                        printf("PrvHst: Parsing TCP path: %s\n", prvHstPath.c_str());
-                        if (parseTcpPath(prvHstPath, host, port)) {
-                            printf("PrvHst: Parsed TCP path - host=%s, port=%d\n", host.c_str(), port);
-                            if (!prvHstMutex_) {
-                                printf("PrvHst: Mutex became null before lock\n");
-                                return status;
-                            }
-                            epicsMutexLock(prvHstMutex_);
-                            prvHstHost_ = host;
-                            prvHstPort_ = port;
-                            prvHstFormat_ = format;
-                            epicsMutexUnlock(prvHstMutex_);
-                            
-                            // Give Serval time to bind to the TCP port
-                            printf("PrvHst: Waiting 200ms for Serval to bind TCP port...\n");
-                            epicsThreadSleep(0.2);  // 200ms
-                            
-                            epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
-                            opts.priority = epicsThreadPriorityMedium;
-                            opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
-                            opts.joinable = 1;  // Required: acquireStop uses epicsThreadMustJoin
-                            
-                            if (!prvHstMutex_) {
-                                printf("PrvHst: Mutex became null before second lock\n");
-                                return status;
-                            }
-                            if (startStreamWorker(prvHstWorkerState_, prvHstWorkerThreadId_,
-                                                  "prvHstWorker", prvHstWorkerThreadC, opts)) {
-                                printf("PrvHst: Started TCP worker thread (host=%s, port=%d)\n",
-                                       host.c_str(), port);
-                            } else if (!prvHstWorkerState_.running()) {
-                                printf("PrvHst: Failed to create worker thread\n");
-                            }
-                        } else {
-                            printf("PrvHst: Failed to parse TCP path: %s\n", prvHstPath.c_str());
-                        }
-                    } else {
-                        printf("PrvHst: AccumulationEnable is disabled - not connecting to TCP port\n");
-                    }
-                } else {
-                    printf("PrvHst: Format is not jsonhisto (4), got %d - TCP streaming not started\n", format);
-                }
-            } else {
-                printf("PrvHst: Path is not TCP (doesn't start with tcp://): %s\n", prvHstPath.c_str());
-            }
-        }
-        }
-    } catch (const std::exception& e) {
-        printf("PrvHst: Exception in TCP streaming setup: %s\n", e.what());
-    } catch (...) {
-        printf("PrvHst: Unknown exception in TCP streaming setup\n");
-    }
-    
+
     // Update status message on successful start
     if (status == asynSuccess) {
-        setStringParam(ADStatusMessage, "Acquisition running");
-        callParamCallbacks();
+        publishAcquisitionPhase(Phase::Running, "Acquisition running");
     }
     
     return status;
@@ -628,6 +536,11 @@ asynStatus ADTimePix::acquireStart(){
 
 
 void ADTimePix::timePixCallback(){
+
+    if (!acquisitionCoordinator_.waitForRunningFor(
+            std::chrono::milliseconds(5000))) {
+        return;
+    }
 
 
     int numImages;
@@ -667,11 +580,8 @@ void ADTimePix::timePixCallback(){
 
     if (r.status_code != 200) {
         logHttpFailure("timePixCallback GET /measurement", "GET", measurement, (long)r.status_code, r.text);
-        this->acquiring = false;
-        (void)acquireStop();
-        setStringParam(ADStatusMessage, "Measurement HTTP error; acquisition stopped");
-        setIntegerParam(ADStatus, ADStatusError);
-        callParamCallbacks();
+        (void)stopAcquisition(
+            true, "Measurement HTTP error; acquisition rolled back");
         return;
     }
     ADTimePix3ServalMeasurement::StatusSnapshot measurementSnapshot;
@@ -680,11 +590,8 @@ void ADTimePix::timePixCallback(){
     if (statusError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
         ERR_ARGS("timePixCallback: invalid measurement response: %s",
                  ADTimePix3ServalMeasurement::statusResponseErrorMessage(statusError));
-        this->acquiring = false;
-        (void)acquireStop();
-        setStringParam(ADStatusMessage, "Invalid measurement response; acquisition stopped");
-        setIntegerParam(ADStatus, ADStatusError);
-        callParamCallbacks();
+        (void)stopAcquisition(
+            true, "Invalid measurement response; acquisition rolled back");
         return;
     }
 
@@ -692,7 +599,7 @@ void ADTimePix::timePixCallback(){
     if (measurementSnapshot.hasFrameCount) new_frame_num = measurementSnapshot.frameCount;
     callParamCallbacks();
 
-    while(this->acquiring){
+    while(acquisitionCoordinator_.monitoring()){
 
         getIntegerParam(ADNumImages, &numImages);
         getIntegerParam(ADNumImagesCounter, &imageCounter);
@@ -704,19 +611,20 @@ void ADTimePix::timePixCallback(){
             r = session.Get();  // same Session as initial GET; see setup above
 
             if (r.status_code != 200) {
-                logHttpWarning("timePixCallback poll GET /measurement", "GET", measurement, (long)r.status_code,
-                               r.text);
-                break;
+                logHttpWarning("timePixCallback poll GET /measurement", "GET",
+                               measurement, (long)r.status_code, r.text);
+                (void)stopAcquisition(
+                    true, "Measurement poll HTTP error; acquisition rolled back");
+                return;
             }
             statusError = ADTimePix3ServalMeasurement::parseStatusResponse(
                 r.text, measurementSnapshot);
             if (statusError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
                 ERR_ARGS("timePixCallback: invalid poll response: %s",
                          ADTimePix3ServalMeasurement::statusResponseErrorMessage(statusError));
-                setStringParam(ADStatusMessage, "Invalid measurement JSON; stopping acquisition");
-                this->acquiring = false;
-                isIdle = true;
-                break;
+                (void)stopAcquisition(
+                    true, "Invalid measurement JSON; acquisition rolled back");
+                return;
             }
 
             publishMeasurementSnapshot(measurementSnapshot);
@@ -727,7 +635,7 @@ void ADTimePix::timePixCallback(){
                       measurementSnapshot.status == "DA_STOPPED");
             callParamCallbacks();
             
-            if (isIdle || this->acquiring == false) {
+            if (isIdle || !acquisitionCoordinator_.monitoring()) {
                 break;
             }
 
@@ -745,7 +653,7 @@ void ADTimePix::timePixCallback(){
         if (writeChannel != 0) {
             // Preview, ImageChannels[0]
 
-            if(this->acquiring){
+            if(acquisitionCoordinator_.monitoring()){
                 // Check if we're using TCP streaming
                 std::string prvImgPath;
                 getStringParam(ADTimePixPrvImgBase, prvImgPath);
@@ -770,7 +678,10 @@ void ADTimePix::timePixCallback(){
             }
         }
 
-        if (isIdle)  acquireStop();
+        if (isIdle) {
+            (void)acquireStop();
+            return;
+        }
 
     }
 }
@@ -784,115 +695,5 @@ void ADTimePix::timePixCallback(){
  * @return: status  -> error if no camera or command fails to execute, success otherwise
  */ 
 asynStatus ADTimePix::acquireStop(){
-    asynStatus status = asynSuccess;
-
-    this->acquiring=false;
-    
-    // Stop callback thread first
-    if(this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf())
-        epicsThreadMustJoin(this->callbackThreadId);
-
-    this->callbackThreadId = NULL;
-
-    // Keep TCP readers alive while Serval finishes and closes its senders.  Closing
-    // the IOC sockets first turns normal final writes into reset-by-peer errors.
-    // HTTP and socket receive timeouts bound this graceful shutdown if Serval stalls.
-    string stopMeasurementURL = this->serverURL + std::string("/measurement/stop");
-    cpr::Response r = ADTimePix3ServalHttp::get(stopMeasurementURL);
-    const bool stopSucceeded = (r.status_code == 200);
-    if (stopSucceeded) {
-        // Serval may return just before its sender threads close their sockets.
-        epicsThreadSleep(0.5);
-    }
-
-    // Establish quiescence before resetting any state the workers update. Stop
-    // publishes the stopped phase, wakes reconnect waits, interrupts blocked
-    // receives, and joins every worker before returning.
-    stopAndJoinStreamWorkers();
-
-    if (prvImgMutex_) {
-        epicsMutexLock(prvImgMutex_);
-        prvImgFirstFrameReceived_ = false;
-        prvImgT1ReadyForDiff_ = false;
-        prvImgT0OrphanForDiff_ = false;
-        prvImgLastSeenFrameForPair_ = -1;
-        prvImgLastDiffT0Frame_ = -1;
-        prvImgAcquisitionRate_ = 0.0;
-        prvImgRateSamples_.clear();
-        setDoubleParam(ADTimePixPrvImgAcqRate, 0.0);
-        epicsMutexUnlock(prvImgMutex_);
-    }
-
-    if (prvImg1Mutex_) {
-        epicsMutexLock(prvImg1Mutex_);
-        prvImg1FirstFrameReceived_ = false;
-        prvImg1T1ReadyForDiff_ = false;
-        prvImg1T0OrphanForDiff_ = false;
-        prvImg1LastSeenFrameForPair_ = -1;
-        prvImg1LastDiffT0Frame_ = -1;
-        prvImg1AcquisitionRate_ = 0.0;
-        prvImg1RateSamples_.clear();
-        epicsMutexUnlock(prvImg1Mutex_);
-    }
-
-    if (imgMutex_) {
-        epicsMutexLock(imgMutex_);
-        imgFirstFrameReceived_ = false;
-        imgAcquisitionRate_ = 0.0;
-        imgRateSamples_.clear();
-        setDoubleParam(ADTimePixImgAcqRate, 0.0);
-        resetImgAccumulation();
-        epicsMutexUnlock(imgMutex_);
-    }
-
-    if (prvHstMutex_) {
-        epicsMutexLock(prvHstMutex_);
-        prvHstFirstFrameReceived_ = false;
-        prvHstAcquisitionRate_ = 0.0;
-        prvHstRateSamples_.clear();
-        setDoubleParam(ADTimePixPrvHstAcqRate, 0.0);
-        epicsMutexUnlock(prvHstMutex_);
-    }
-
-    if (!stopSucceeded){
-        logHttpFailure("acquireStop GET /measurement/stop", "GET", stopMeasurementURL, (long)r.status_code, r.text);
-        setStringParam(ADStatusMessage, "Failed to stop acquisition");
-        setIntegerParam(ADStatus, ADStatusError);
-        return asynError;
-    }
-
-    setIntegerParam(ADStatus, ADStatusIdle);
-    setStringParam(ADStatusMessage, "Acquisition stopped");
-    setIntegerParam(ADAcquire, 0);
-    callParamCallbacks();
-    FLOW("Stopping Image Acquisition");
-
-    // Update end measurement values
-    string measurementURL = this->serverURL + std::string("/measurement");
-    r = ADTimePix3ServalHttp::get(measurementURL);
-
-    if (r.status_code != 200){
-        logHttpFailure("acquireStop GET /measurement (post-stop)", "GET", measurementURL, (long)r.status_code,
-                       r.text);
-        return asynError;
-    }
-
-    ADTimePix3ServalMeasurement::StatusSnapshot measurementSnapshot;
-    const ADTimePix3ServalMeasurement::StatusResponseError statusError =
-        ADTimePix3ServalMeasurement::parseStatusResponse(r.text, measurementSnapshot);
-    if (statusError != ADTimePix3ServalMeasurement::StatusResponseError::None) {
-        ERR_ARGS("acquireStop: invalid post-stop measurement response: %s",
-                 ADTimePix3ServalMeasurement::statusResponseErrorMessage(statusError));
-        setStringParam(ADStatusMessage, "Acquisition stopped; invalid measurement response");
-        callParamCallbacks();
-        return asynError;
-    }
-
-    publishMeasurementSnapshot(measurementSnapshot);
-    if (!measurementSnapshot.hasStatus) {
-        updateMeasurementStatusFromJson("DA_IDLE");
-    }
-    callParamCallbacks();
-
-    return status;
+    return stopAcquisition(false, std::string());
 }

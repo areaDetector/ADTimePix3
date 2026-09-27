@@ -10,39 +10,58 @@
 
 namespace ADTimePix3StreamWorker {
 
-bool State::start() noexcept
+bool State::start()
 {
-    Phase expected = Phase::Stopped;
-    return phase_.compare_exchange_strong(
-        expected, Phase::Running,
-        std::memory_order_acq_rel, std::memory_order_acquire);
+    bool started = false;
+    {
+        std::lock_guard<std::mutex> guard(waitMutex_);
+        Phase expected = Phase::Stopped;
+        started = phase_.compare_exchange_strong(
+            expected, Phase::Running,
+            std::memory_order_acq_rel, std::memory_order_acquire);
+    }
+    if (started) {
+        stateChanged_.notify_all();
+    }
+    return started;
 }
 
-void State::requestStop() noexcept
+void State::requestStop()
 {
-    phase_.store(Phase::Stopped, std::memory_order_release);
-    stopRequested_.notify_all();
+    {
+        std::lock_guard<std::mutex> guard(waitMutex_);
+        phase_.store(Phase::Stopped, std::memory_order_release);
+    }
+    stateChanged_.notify_all();
 }
 
-void State::fail() noexcept
+void State::fail()
 {
     requestStop();
 }
 
-void State::markConnected() noexcept
+void State::markConnected()
 {
-    Phase expected = Phase::Running;
-    (void)phase_.compare_exchange_strong(
-        expected, Phase::Connected,
-        std::memory_order_acq_rel, std::memory_order_acquire);
+    {
+        std::lock_guard<std::mutex> guard(waitMutex_);
+        Phase expected = Phase::Running;
+        (void)phase_.compare_exchange_strong(
+            expected, Phase::Connected,
+            std::memory_order_acq_rel, std::memory_order_acquire);
+    }
+    stateChanged_.notify_all();
 }
 
-void State::markDisconnected() noexcept
+void State::markDisconnected()
 {
-    Phase expected = Phase::Connected;
-    (void)phase_.compare_exchange_strong(
-        expected, Phase::Running,
-        std::memory_order_acq_rel, std::memory_order_acquire);
+    {
+        std::lock_guard<std::mutex> guard(waitMutex_);
+        Phase expected = Phase::Connected;
+        (void)phase_.compare_exchange_strong(
+            expected, Phase::Running,
+            std::memory_order_acq_rel, std::memory_order_acquire);
+    }
+    stateChanged_.notify_all();
 }
 
 bool State::running() const noexcept
@@ -61,7 +80,18 @@ bool State::waitForStopFor(std::chrono::milliseconds timeout)
         return true;
     }
     std::unique_lock<std::mutex> guard(waitMutex_);
-    return stopRequested_.wait_for(guard, timeout, [this]() { return !running(); });
+    return stateChanged_.wait_for(guard, timeout, [this]() { return !running(); });
+}
+
+bool State::waitForConnectedFor(std::chrono::milliseconds timeout)
+{
+    if (connected()) {
+        return true;
+    }
+    std::unique_lock<std::mutex> guard(waitMutex_);
+    (void)stateChanged_.wait_for(
+        guard, timeout, [this]() { return connected() || !running(); });
+    return connected();
 }
 
 }  // namespace ADTimePix3StreamWorker

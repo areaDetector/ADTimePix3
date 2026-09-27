@@ -448,28 +448,28 @@ asynStatus ADTimePix::writeInt32(asynUser* pasynUser, epicsInt32 value){
         return asynError;
     }
 
-    status = setIntegerParam(addr, function, value);
-    // start/stop acquisition
-    if(function == ADAcquire){
-        int currentADStatus;
+    if (function != ADAcquire) {
+        status = setIntegerParam(addr, function, value);
+    }
+    // Start/stop is published only after the coordinator accepts the transition.
+    if (function == ADAcquire) {
+        const auto acquisition = acquisitionCoordinator_.snapshot();
+        const bool active = acquisitionCoordinator_.requestedAcquire();
+        const bool needsStop = active || acquisition.resources != 0 ||
+                               acquisition.phase ==
+                                   ADTimePix3Acquisition::Phase::Stopping;
+        int currentADStatus = 0;
         getIntegerParam(ADStatus, &currentADStatus);
-        printf("ACQUIRE CHANGE: ADAcquire=%d (was %d), current ADStatus=%d\n", value, acquiring, currentADStatus);
-        if(value && !acquiring){
-            FLOW("Entering acquire start\n");
-            status = acquireStart();  // Start acquisition
-            if(status < 0) {
-                return asynError;
-            }
-            // After acquireStart, ADStatus should be ADStatusAcquire (1)
-            getIntegerParam(ADStatus, &currentADStatus);
-            printf("After acquireStart: ADStatus=%d\n", currentADStatus);
-        }
-        if(!value && acquiring){
+        printf("ACQUIRE CHANGE: ADAcquire=%d (active=%d), current ADStatus=%d\n",
+               value, active ? 1 : 0, currentADStatus);
+        if (value != 0 && !active) {
+            FLOW("Entering acquire start");
+            status = acquireStart();
+        } else if (value == 0 && needsStop) {
             FLOW("Entering acquire stop");
-            acquireStop();  // Stop acquisition
-            // After acquireStop, ADStatus should be ADStatusIdle (0)
-            getIntegerParam(ADStatus, &currentADStatus);
-            printf("After acquireStop: ADStatus=%d\n", currentADStatus);
+            status = acquireStop();
+        } else {
+            status = asynSuccess;
         }
     }
 
@@ -2054,11 +2054,7 @@ void ADTimePix::shutdownPortDriver() {
     FLOW("ADTimePix shutdownPortDriver");
 
     // Stop callback thread first so it cannot touch driver state during teardown
-    this->acquiring = false;
-    if (this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(this->callbackThreadId);
-        this->callbackThreadId = NULL;
-    }
+    (void)stopAcquisition(false, "Driver shutdown");
 
     // Stop connection poll thread
     connectionPollEnable_ = 0;
@@ -2081,11 +2077,7 @@ ADTimePix::~ADTimePix(){
     FLOW("ADTimePix driver exiting");
 
     // Stop callback thread first so it cannot touch driver state during teardown (idempotent if shutdownPortDriver already ran)
-    this->acquiring = false;
-    if (this->callbackThreadId != NULL && this->callbackThreadId != epicsThreadGetIdSelf()) {
-        epicsThreadMustJoin(this->callbackThreadId);
-        this->callbackThreadId = NULL;
-    }
+    (void)stopAcquisition(false, "Driver shutdown");
 
     // Stop connection poll thread so it cannot run during teardown (avoids SIGSEGV)
     connectionPollEnable_ = 0;

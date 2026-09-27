@@ -249,10 +249,28 @@ void ADTimePix::publishDashboardFailure(bool servalReachable) {
 
 void ADTimePix::updateStatusFromConnection(bool servalOk, bool detOk) {
     if (servalOk && detOk) {
-        setStringParam(ADStatusMessage, "OK");
-        int acquiring = 0;
-        getIntegerParam(ADAcquire, &acquiring);
-        setIntegerParam(ADStatus, acquiring ? ADStatusAcquire : ADStatusIdle);
+        using ADTimePix3Acquisition::Phase;
+        const auto acquisition = acquisitionCoordinator_.snapshot();
+        setStringParam(
+            ADStatusMessage,
+            ADTimePix3Acquisition::connectedStatusMessage(acquisition));
+        switch (acquisition.phase) {
+        case Phase::Starting:
+            setIntegerParam(ADStatus, ADStatusAcquire);
+            break;
+        case Phase::Running:
+            setIntegerParam(ADStatus, ADStatusAcquire);
+            break;
+        case Phase::Stopping:
+            setIntegerParam(ADStatus, ADStatusAcquire);
+            break;
+        case Phase::Fault:
+            setIntegerParam(ADStatus, ADStatusError);
+            break;
+        case Phase::Idle:
+            setIntegerParam(ADStatus, ADStatusIdle);
+            break;
+        }
     } else {
         if (!servalOk && !detOk) {
             setStringParam(ADStatusMessage, "SERVAL and detector disconnected");

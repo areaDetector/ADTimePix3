@@ -15,6 +15,7 @@ USR_CPPFLAGS += -std=c++17
 
 INC += ADTimePix.h
 INC += ADTimePixLog.h
+INC += acquisition_coordinator.h
 INC += bpc_file_io.h
 INC += bpc_mask_semantics.h
 INC += detector_family.h
@@ -40,6 +41,8 @@ INC += serval_stream_validation.h
 
 LIBRARY_IOC = ADTimePix
 LIB_SRCS += ADTimePix.cpp
+LIB_SRCS += acquisition_coordinator.cpp
+LIB_SRCS += acquisition_runtime.cpp
 LIB_SRCS += bpc_file_io.cpp
 LIB_SRCS += bpc_mask_semantics.cpp
 LIB_SRCS += detector_family.cpp

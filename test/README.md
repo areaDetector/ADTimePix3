@@ -35,6 +35,12 @@ failure transitions, a concurrent stop-versus-connect race, 100 repeated
 start/stop cycles, idempotent teardown, and prompt wakeup of a receive blocked
 on a silent loopback peer.
 
+Acquisition-coordinator coverage exercises the production `Idle`, `Starting`,
+`Running`, `Stopping`, and `Fault` transitions. Injected failures after every
+startup resource verify complete rollback, truthful requested/observed state,
+retry of unresolved remote cleanup, exactly one cleanup owner under concurrent
+stop and fault requests, and bounded stream-readiness gates.
+
 Reconnect-policy coverage drives the production read-only policy against fake
 Serval HTTP peers. It verifies that automatic reconnect requests only
 `GET /server/destination`, `GET /detector`, and `GET /measurement/config`, and

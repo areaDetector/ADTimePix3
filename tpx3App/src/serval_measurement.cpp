@@ -140,9 +140,15 @@ StatusResponseError parseStatusResponse(const std::string& body, StatusSnapshot&
     }
 
     const nlohmann::json* info = nullptr;
+    bool infoIsNull = false;
     if (measurement.contains("Info")) {
-        if (!measurement["Info"].is_object()) return StatusResponseError::InvalidInfo;
-        info = &measurement["Info"];
+        if (measurement["Info"].is_null()) {
+            infoIsNull = true;
+        } else {
+            if (!measurement["Info"].is_object())
+                return StatusResponseError::InvalidInfo;
+            info = &measurement["Info"];
+        }
     }
 
     if (info) {
@@ -181,6 +187,10 @@ StatusResponseError parseStatusResponse(const std::string& body, StatusSnapshot&
         if (!measurement["Status"].is_string()) return StatusResponseError::InvalidStatus;
         snapshot.hasStatus = true;
         snapshot.status = measurement["Status"].get<std::string>();
+    }
+    if (!snapshot.hasStatus && infoIsNull) {
+        snapshot.hasStatus = true;
+        snapshot.status = "DA_IDLE";
     }
     return StatusResponseError::None;
 }

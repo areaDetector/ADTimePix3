@@ -13,6 +13,7 @@ TESTPROD_HOST += servalProtocolFixtureTest
 servalProtocolFixtureTest_SRCS += servalProtocolFixtureTest.cpp
 servalProtocolFixtureTest_SRCS += FakeServalHttpServer.cpp
 servalProtocolFixtureTest_SRCS += FakeServalTcpServer.cpp
+servalProtocolFixtureTest_SRCS += acquisition_coordinator.cpp
 servalProtocolFixtureTest_SRCS += bpc_file_io.cpp
 servalProtocolFixtureTest_SRCS += bpc_mask_semantics.cpp
 servalProtocolFixtureTest_SRCS += detector_family.cpp

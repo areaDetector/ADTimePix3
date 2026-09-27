@@ -22,6 +22,35 @@ From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) sup
 
 Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-3** (September 26, 2026, driver **1.7.3**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
 
+R1-7-4 (in progress)
+--------------------
+
+### Acquisition lifecycle
+
+* Add one coordinator for the legal `Idle`, `Starting`, `Running`, `Stopping`,
+  and `Fault` transitions and derive `ADAcquire`, `ADStatus`, and status messages
+  from that state.
+* Commit acquisition startup only after Serval, the measurement monitor, and
+  every enabled TCP receiver are ready within bounded deadlines.
+* Route partial-start, monitor, stop, and shutdown failures through one
+  idempotent cleanup owner. Unconfirmed remote stop state remains `Fault` and
+  an explicit stop retries reconciliation.
+* Add 22 deterministic transition, injected partial-start, concurrent
+  stop/fault, worker-readiness, fault-message, and Serval `Info: null`
+  reconciliation checks; the full fixture suite passes 294/294.
+* Emulator qualification:
+  * MPX3 completed eight normal start/stop acquisitions (98 frames total,
+    zero dropped) with preview, integrated-preview, and full-image streams.
+  * TPX3 survived a forced Serval stop/restart during acquisition: explicit
+    Stop reconciled the retained fault, explicit Apply restored the
+    destination, and the recovered Image, Preview, and histogram acquisition
+    processed 403 frames with zero dropped.
+  * MPX3 likewise survived a forced Serval stop/restart during acquisition:
+    explicit Stop reconciled the retained fault, explicit Apply restored the
+    full-image and dual-preview destinations, and the recovered acquisition
+    processed 81 frames with zero dropped.
+  * Physical-hardware qualification remains pending.
+
 
 R1-7-3 (September 26, 2026)
 --------
