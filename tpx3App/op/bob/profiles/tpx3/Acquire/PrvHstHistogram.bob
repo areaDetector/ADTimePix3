@@ -9,7 +9,7 @@
   <widget type="group" version="3.0.0">
     <name>TPX3_Histogram_Control</name>
     <width>1100</width>
-    <height>1270</height>
+    <height>1300</height>
     <widget type="label" version="2.0.0">
       <name>Title</name>
       <text>ADTimePix3 Histogram (PrvHst) Control Panel</text>
@@ -444,7 +444,7 @@
     <widget type="group" version="3.0.0">
       <name>InfoDisplay</name>
       <x>10</x>
-      <y>1110</y>
+      <y>1140</y>
       <width>1050</width>
       <height>130</height>
       <widget type="label" version="2.0.0">
@@ -969,7 +969,7 @@
       <x>10</x>
       <y>990</y>
       <width>1050</width>
-      <height>120</height>
+      <height>150</height>
       <widget type="label" version="2.0.0">
         <name>PerformanceMonitoringLabel</name>
         <text>Performance Monitoring</text>
@@ -988,7 +988,7 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>InfoLabel</name>
-        <text>Real-time monitoring of acquisition rate, processing time, and memory usage</text>
+        <text>Preview detector progression, processing time, memory, and nominal preview cadence</text>
         <x>320</x>
         <y>10</y>
         <width>600</width>
@@ -1000,15 +1000,15 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>AcquisitionRateLabel</name>
-        <text>Acquisition Rate (Hz):</text>
-        <x>40</x>
+        <text>Preview detector frame rate (Hz):</text>
+        <x>20</x>
         <y>55</y>
-        <width>150</width>
+        <width>210</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>AcquisitionRateDisplay</name>
         <pv_name>$(P)$(R)PrvHstAcqRate_RBV</pv_name>
-        <x>190</x>
+        <x>230</x>
         <y>50</y>
         <height>30</height>
         <background_color>
@@ -1054,8 +1054,81 @@
       <widget type="textupdate" version="2.0.0">
         <name>MemoryUsageDisplay</name>
         <pv_name>$(P)$(R)PrvHstMemoryUsage_RBV</pv_name>
-        <x>860</x>
+        <x>870</x>
         <y>50</y>
+        <width>110</width>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>PreviewPeriodLabel</name>
+        <text>Preview period (s):</text>
+        <x>40</x>
+        <y>90</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>PreviewPeriodDisplay</name>
+        <pv_name>$(P)$(R)PrvPeriod_RBV</pv_name>
+        <x>190</x>
+        <y>85</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>6</precision>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>NominalPreviewRateLabel</name>
+        <text>Nominal preview rate (Hz):</text>
+        <x>360</x>
+        <y>90</y>
+        <width>160</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>NominalPreviewRateDisplay</name>
+        <pv_name>$(P)$(R)PrvNominalRate_RBV</pv_name>
+        <x>520</x>
+        <y>85</y>
+        <height>30</height>
+        <background_color>
+          <color red="200" green="255" blue="255">
+          </color>
+        </background_color>
+        <border_width>1</border_width>
+        <border_color>
+          <color red="0" green="128" blue="128">
+          </color>
+        </border_color>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>NominalWindowSpanLabel</name>
+        <text>Nominal window span (s):</text>
+        <x>720</x>
+        <y>90</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>NominalWindowSpanDisplay</name>
+        <pv_name>$(P)$(R)PrvHstWindowSpan_RBV</pv_name>
+        <x>870</x>
+        <y>85</y>
+        <width>110</width>
         <height>30</height>
         <background_color>
           <color red="200" green="255" blue="255">

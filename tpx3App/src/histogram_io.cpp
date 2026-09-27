@@ -394,6 +394,29 @@ bool ADTimePix::configurePrvHstRollingWindow(size_t binCount)
     return true;
 }
 
+double ADTimePix::calculatePrvHstMemoryUsageMB()
+{
+    double totalMemoryMB = 0.0;
+    if (prvHstRunningSum_) {
+        const size_t binCount = prvHstRunningSum_->get_bin_size();
+        totalMemoryMB +=
+            (binCount * sizeof(uint64_t) +
+             (binCount + 1U) * sizeof(double)) /
+            (1024.0 * 1024.0);
+    }
+    totalMemoryMB +=
+        prvHstTimeMsBuffer_.size() * sizeof(epicsFloat64) /
+        (1024.0 * 1024.0);
+    totalMemoryMB += prvHstWindowSum_.memoryBytes() / (1024.0 * 1024.0);
+    totalMemoryMB +=
+        (prvHstRateSamples_.size() + prvHstProcessingTimeSamples_.size()) *
+        sizeof(double) / (1024.0 * 1024.0);
+    totalMemoryMB +=
+        prvHstLineBuffer_.size() * sizeof(char) / (1024.0 * 1024.0);
+    totalMemoryMB += 0.1;  // Estimated container and allocator overhead.
+    return totalMemoryMB;
+}
+
 void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     const char* functionName = "processPrvHstFrame";
     bool rollingWindowParamsChanged = false;
@@ -812,20 +835,7 @@ void ADTimePix::processPrvHstFrame(const HistogramData& frame_data) {
     
     // Update memory usage every 5 seconds
     if (current_time_seconds - prvHstLastMemoryUpdateTime_ >= PRVHST_MEMORY_UPDATE_INTERVAL_SEC) {
-        // Calculate memory usage (similar to standalone histogram IOC)
-        double total_memory_mb = 0.0;
-        if (prvHstRunningSum_) {
-            size_t bin_size = prvHstRunningSum_->get_bin_size();
-            total_memory_mb += (bin_size * sizeof(uint64_t) + (bin_size + 1) * sizeof(double)) / (1024.0 * 1024.0);
-        }
-        total_memory_mb += prvHstTimeMsBuffer_.size() * sizeof(epicsFloat64) / (1024.0 * 1024.0);
-        total_memory_mb +=
-            prvHstWindowSum_.memoryBytes() / (1024.0 * 1024.0);
-        total_memory_mb += (prvHstRateSamples_.size() + prvHstProcessingTimeSamples_.size()) * sizeof(double) / (1024.0 * 1024.0);
-        total_memory_mb += prvHstLineBuffer_.size() * sizeof(char) / (1024.0 * 1024.0);
-        total_memory_mb += 0.1;  // Estimated overhead
-        
-        prvHstMemoryUsage_ = total_memory_mb;
+        prvHstMemoryUsage_ = calculatePrvHstMemoryUsageMB();
         setDoubleParam(ADTimePixPrvHstMemoryUsage, prvHstMemoryUsage_);
         callParamCallbacks(ADTimePixPrvHstMemoryUsage);
         prvHstLastMemoryUpdateTime_ = current_time_seconds;

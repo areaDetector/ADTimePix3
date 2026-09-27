@@ -257,7 +257,7 @@
     // PrvImg TCP streaming metadata (from jsonimage header)
 #define ADTimePixPrvImgFrameNumberString        "TPX3_PRVIMG_FRAME_NUMBER"  // (asynInt32,         r)      Frame number from jsonimage
 #define ADTimePixPrvImgTimeAtFrameString        "TPX3_PRVIMG_TIME_AT_FRAME" // (asynFloat64,       r)      Timestamp at frame (nanoseconds)
-#define ADTimePixPrvImgAcqRateString            "TPX3_PRVIMG_ACQ_RATE"      // (asynFloat64,       r)      Calculated acquisition rate (fps)
+#define ADTimePixPrvImgAcqRateString            "TPX3_PRVIMG_ACQ_RATE"      // (asynFloat64,       r)      Preview detector frame rate (Hz)
 #define ADTimePixPrvImgThresholdIDString        "TPX3_PRVIMG_THRESHOLD_ID"  // (asynInt32,         r)      thresholdID from jsonimage header
 #define ADTimePixPrvImgIntegrationSizeString  "TPX3_PRVIMG_INTEGRATION_SIZE" // (asynInt32,      r)      integrationSize from jsonimage header
 #define ADTimePixPrvImgLogHeadersString         "TPX3_PRVIMG_LOG_HEADERS"   // (asynInt32,         r/w)    Log N jsonimage headers per acquire (0=off)
@@ -336,7 +336,7 @@
     // PrvHst accumulation statistics
 #define ADTimePixPrvHstFrameCountString          "TPX3_PRV_HST_FRAME_COUNT"          // (asynInt32,         r)      Number of frames processed
 #define ADTimePixPrvHstTotalCountsString         "TPX3_PRV_HST_TOTAL_COUNTS"         // (asynInt64,         r)      Total counts across all frames
-#define ADTimePixPrvHstAcqRateString             "TPX3_PRV_HST_ACQ_RATE"             // (asynFloat64,       r)      Calculated acquisition rate (fps)
+#define ADTimePixPrvHstAcqRateString             "TPX3_PRV_HST_ACQ_RATE"             // (asynFloat64,       r)      Preview detector frame rate (Hz)
 #define ADTimePixPrvHstProcessingTimeString      "TPX3_PRV_HST_PROCESSING_TIME"      // (asynFloat64,       r)      Processing time (ms)
 #define ADTimePixPrvHstMemoryUsageString          "TPX3_PRV_HST_MEMORY_USAGE"         // (asynFloat64,       r)      Memory usage (MB)
 #define ADTimePixPrvHstFramesToSumString         "TPX3_PRV_HST_FRAMES_TO_SUM"        // (asynInt32,         r/w)    Number of frames to sum
@@ -1156,6 +1156,7 @@ class ADTimePix : public ADDriver{
         void processImgFrame(const ImageData& frame_data);
         void updateImgPerformanceMetrics();
         double calculateImgMemoryUsageMB();
+        double calculatePrvHstMemoryUsageMB();
         bool configureImgRollingWindow(size_t pixelCount);
         bool configurePrvHstRollingWindow(size_t binCount);
         void resetImgAccumulation();

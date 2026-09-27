@@ -166,17 +166,17 @@
       </widget>
       <widget type="label" version="2.0.0">
         <name>AcqRateLabel</name>
-        <text>Acquisition Rate (Hz):</text>
+        <text>Preview detector frame rate (Hz):</text>
         <x>20</x>
         <y>130</y>
-        <width>140</width>
+        <width>210</width>
       </widget>
       <widget type="textupdate" version="2.0.0">
         <name>AcqRateDisplay</name>
         <pv_name>$(P)$(R)PrvImgAcqRate_RBV</pv_name>
-        <x>160</x>
+        <x>230</x>
         <y>125</y>
-        <width>180</width>
+        <width>110</width>
         <height>30</height>
         <background_color>
           <color red="220" green="255" blue="220">
@@ -468,6 +468,28 @@
         <x>420</x>
         <y>45</y>
         <width>150</width>
+        <height>30</height>
+        <background_color>
+          <color red="255" green="255" blue="200">
+          </color>
+        </background_color>
+        <format>3</format>
+        <precision>6</precision>
+        <border_width>1</border_width>
+      </widget>
+      <widget type="label" version="2.0.0">
+        <name>NominalPreviewRateLabel</name>
+        <text>Nominal preview rate (Hz):</text>
+        <x>300</x>
+        <y>90</y>
+        <width>150</width>
+      </widget>
+      <widget type="textupdate" version="2.0.0">
+        <name>NominalPreviewRateDisplay</name>
+        <pv_name>$(P)$(R)PrvNominalRate_RBV</pv_name>
+        <x>450</x>
+        <y>85</y>
+        <width>120</width>
         <height>30</height>
         <background_color>
           <color red="255" green="255" blue="200">
