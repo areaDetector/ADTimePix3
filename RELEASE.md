@@ -28,6 +28,20 @@ R1-7-3 (September 26, 2026)
 
 Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
 
+* **Release contents and traceability**:
+  * The exact `R1-7-2..R1-7-3` range contains 32 merged pull requests (#16 through #47), 67 commits, and 87 changed files. The grouped ledger below accounts for every merged PR; later sections provide the operator-visible detail.
+  * **#16** established the deterministic C++ test product and bounded fake Serval HTTP/TCP peers.
+  * **#17-#22** hardened request booleans, stream dimensions, BPC file bounds, momentary upload actions, HTTP deadlines, and stream shutdown ordering.
+  * **#23-#37** added typed/atomic validation and failure propagation for measurement, detector configuration, TPX3 clock/enum/TDC state, DAC writes, destination, dashboard, status, health, measurement configuration, and PixelConfig responses.
+  * **#38-#42** completed family-safe mask semantics, MPX3 packed PixelConfig mapping, bit preservation, documentation, and rectangular mask geometry.
+  * **#43** documented the fork/branch/pull-request workflow; **#44-#46** completed consume-once framing, read-only reconnect, and synchronized worker lifecycle; **#47** prepared and validated the release.
+  * Direct commit `d081fe3` removed TPX3-specific default macros from shared launcher shells; the other direct commits in the range are release-version bookkeeping.
+
+* **Serval request, file, and response hardening**:
+  * `BiasEnabled` and TPX3 clock flags are serialized as native JSON booleans; TPX3 enum inputs are range-checked before use. TDC readbacks are decoded by field presence and malformed values fail without overwriting prior state.
+  * Image dimensions and byte counts use checked products and detector-derived limits. BPC reads/writes require exact family/geometry sizes, retain bounded storage, and stop before upload on local failure. Calibration upload actions reset reliably after processing.
+  * Shared Serval HTTP calls have finite deadlines. Measurement, detector, destination, dashboard, health, DAC, configuration, and PixelConfig paths validate status and complete JSON shape before changing driver state; failed PUT/GET operations propagate errors instead of publishing partial success.
+
 * **Consume-once Serval TCP stream framing**:
   * Preview-image, full-image, and preview-histogram workers use one bounded framing component that owns all unconsumed receive bytes.
   * Each frame consumes exactly one newline-terminated JSON header, its declared binary payload, and Serval's trailing payload newline. Payload newline, brace, NUL, and high-bit bytes are never interpreted as delimiters, and coalesced later messages remain buffered for the next decode.
@@ -70,7 +84,7 @@ Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * `PixelConfigDiff` compares complete packed words; a bit-0-only change displays as **1**. Full-block mismatch PVs continue counting differing byte positions.
   * Place MPX3 diff pixels using Serval's per-chip rotated layout instead of the TPX3 quad map. After converting Serval's bottom-origin tile Y to top-origin image Y, the `UP` image assigns chips 2/3 to the top row with `LtRTtB` (identity) and 1/0 to the bottom row with `RtLBtT` (180°).
   * Emulator validation set only bit 0 in five words per chip. Serval round-trip comparison reported five byte mismatches per chip, and identical acquisitions showed exactly those 20 pixels suppressed in both counters with no other image changes.
-  * ASI subsequently confirmed the shared bit-0 set/clear rule, chip-block order **0, 1, 2, 3**, and that the remaining TPX3/MPX3 upper bits are unused. ASI indicated that Serval `PixelConfig` is converted from the BPC rather than read back from detector registers; the comparison is therefore a Serval-stored/configured-value check, not proof of hardware register state.
+  * ASI subsequently confirmed the shared bit-0 set/clear rule, chip-block order **0, 1, 2, 3**, and that the remaining TPX3/MPX3 upper bits are unused. ASI indicated that the `PixelConfig` value reported through Serval is converted from the BPC rather than guaranteed to be read directly from detector registers. During TPX3 emulator qualification, the applied BPC/mask effect persisted across a Serval process restart while the emulator remained running, ruling out the Serval JVM as the sole persistence layer. The comparison therefore validates a Serval-reported configured value against the selected file; it neither proves hardware-register state nor identifies whether persistence is in the emulator, SPIDR/controller, or detector chip.
   * ASI granted redistribution of the supplied `eq-02.bpc` and `detector-chips.json` as example/test configuration. They are included under `test/fixtures/mpx3/eq-02/` with provenance, integrity hashes, and a fixture-specific redistribution notice.
 
 * **Rectangular mask geometry safety**:

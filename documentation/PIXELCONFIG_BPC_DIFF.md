@@ -6,7 +6,7 @@ This note explains what the **PixelConfig** refresh and **`PixelConfigDiff`** wa
 
 | Source | Meaning |
 |--------|--------|
-| **SERVAL PixelConfig** (per chip) | The Base64-encoded pixel configuration returned by `GET /detector/chips/<i>/PixelConfig`. **Timepix3:** 65536 bytes per chip. **Medipix3 (dual counter):** **131072 bytes** per chip (see below). ASI indicates this is converted from the BPC and is not a direct detector-register readback. Treat it as Serval's stored/configured value. |
+| **SERVAL PixelConfig** (per chip) | The Base64-encoded pixel configuration returned by `GET /detector/chips/<i>/PixelConfig`. **Timepix3:** 65536 bytes per chip. **Medipix3 (dual counter):** **131072 bytes** per chip (see below). ASI indicates this value is converted from BPC configuration and is not guaranteed to be a direct detector-register readback. Treat it as a Serval-reported configured value; do not infer which lower layer retains the active state. |
 | **On-disk `.bpc` file** | The file the IOC reads using **`BPCFilePath`** + **`BPCFileName`**. Used for mask editing, upload, and **this comparison**. |
 
 They can differ if, for example: the file was edited on disk but not uploaded; **`ApplyConfig` / `WriteData`** was not run; another client changed SERVAL; or the IOC points at a different path than you expect.
@@ -48,10 +48,7 @@ are ordered **chip 0, 1, 2, 3**. The supplied `eq-02` fixture under
 `test/fixtures/mpx3/eq-02/` independently matches each decoded array element to
 the same-index BPC block byte-for-byte.
 
-**Interpretation limit:** a zero diff proves that the file and the value held
-and returned by Serval agree. Because ASI indicates `PixelConfig` is converted
-from the BPC rather than read back from detector registers, it does **not** by
-itself prove that every hardware pixel register contains that value.
+**Interpretation limit:** a zero diff proves that the file and the value reported through Serval agree. Because ASI indicates `PixelConfig` is converted from BPC configuration rather than guaranteed to be read directly from detector registers, it does **not** by itself prove that every hardware pixel register contains that value. During TPX3 emulator qualification, the applied BPC/mask effect persisted across a Serval process restart while the emulator remained running. That observation rules out the Serval JVM as the sole persistence layer, but it cannot distinguish emulator state from SPIDR/controller state or detector-chip registers.
 
 **Driver status:** `refreshPixelConfigFromServal()` uses the detector-family capabilities for the per-chip size and stride. MPX3 compares each full 131072-byte chip block and decodes each heatmap sample as one big-endian 16-bit value. `CounterSelectIn` does not select a separate BPC slice because both adjustment fields occupy the same word.
 
