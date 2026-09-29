@@ -100,9 +100,18 @@ The command should finish with **REUSE Specification 3.0** compliance. If you ad
 make -j
 make -C test runtests
 python3 test/verify_coordinate_map.py
+python3 test/validate_bob_xml.py
+reuse lint
 ```
 
-Run IOC/integration tests on your facility hardware or emulator as appropriate; there is no single CI matrix in this repository yet.
+GitHub Actions uses the pinned `epics-base/ci-scripts` submodule to build a
+clean EPICS Base 7.0 dependency tree with asyn and ADCore, build this module,
+run the deterministic C++ suite, validate coordinate mappings and all
+Phoebus BOB XML, and check REUSE compliance. TAP results are retained as job
+artifacts. The driver uses the Base 7 `epicsThreadOpts` API, so EPICS Base 3.15
+is not a supported CI target. Run IOC/integration tests on facility hardware
+or an emulator as appropriate; those environment-specific tests are not
+replaced by CI.
 
 ## Questions
 

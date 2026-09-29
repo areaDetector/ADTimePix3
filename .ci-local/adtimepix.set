@@ -1,0 +1,10 @@
+include defaults
+
+MODULES=asyn ADCore
+
+BASE_RECURSIVE=no
+
+ASYN_REPOOWNER=epics-modules
+
+ADCORE_REPOOWNER=areaDetector
+ADCORE_HOOK=.ci-local/adcore-config.sh

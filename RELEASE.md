@@ -25,6 +25,18 @@ Driver depends on Serval versions, at this time. Latest **tagged** release is **
 R1-8-0 (in progress)
 --------------------
 
+### CI and release assurance
+
+* Add a pinned `epics-base/ci-scripts` submodule and GitHub Actions workflow
+  that builds a clean EPICS Base 7.0 dependency tree with asyn and ADCore
+  before building ADTimePix3.
+* Run the deterministic C++ suite, coordinate-map validation, Phoebus BOB XML
+  validation, REUSE compliance, and whitespace checks in CI, retaining TAP
+  results as workflow artifacts.
+* Add a repository-owned BOB XML validator so local and CI validation use the
+  same command. Sanitizer jobs and generated dependency/version evidence
+  remain follow-up R1-8-0 release-assurance work.
+
 ### Bounded rolling accumulation
 
 * Replace repeated sum-of-N recomputation with an exact rolling update whose

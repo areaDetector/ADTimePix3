@@ -1,0 +1,80 @@
+name: ADTimePix3
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SETUP_PATH: .ci-local:.ci
+  SET: adtimepix
+
+jobs:
+  build-and-test:
+    name: Linux / EPICS Base ${{ matrix.base }} / ${{ matrix.configuration }}
+    runs-on: ubuntu-24.04
+    env:
+      BASE: ${{ matrix.base }}
+      BCFG: ${{ matrix.configuration }}
+      CMP: gcc
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - base: "7.0"
+            configuration: default
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install build and validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libncurses-dev \
+            libreadline-dev \
+            libtirpc-dev \
+            libxml2-dev \
+            zlib1g-dev
+          python3 -m pip install reuse
+
+      - name: Prepare and compile EPICS dependencies
+        run: python3 .ci/cue.py prepare
+
+      - name: Configure the module build
+        run: echo "BUILD_IOCS=NO" > configure/CONFIG_SITE.local
+
+      - name: Build ADTimePix3
+        run: python3 .ci/cue.py build
+
+      - name: Run deterministic C++ tests
+        run: python3 .ci/cue.py -T 15M test
+
+      - name: Run portable validation
+        run: |
+          python3 test/verify_coordinate_map.py
+          python3 test/validate_bob_xml.py
+          reuse lint
+          git diff --check
+
+      - name: Upload TAP results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: tapfiles-base-${{ matrix.base }}-${{ matrix.configuration }}
+          path: '**/O.*/*.tap'
+          if-no-files-found: warn
+
+      - name: Collect test results
+        if: ${{ always() }}
+        run: python3 .ci/cue.py -T 5M test-results
