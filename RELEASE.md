@@ -362,7 +362,7 @@ Driver / user-visible version **1.6.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * **`ADTimePix.cpp`** - core driver shell (~1.8k lines): constructor, path checks, PV I/O (**`writeInt32`** / **`writeOctet`**), **`report`**, PrvHst NDArray plugin push.
 * **Copyright, SPDX, and REUSE (license compliance)**:
   * **`LICENSE`**: Dual copyright (Brookhaven Science Associates / BNL, UT-Battelle / ORNL) with development-history note; MIT terms unchanged.
-  * **`tpx3App/src/*.{cpp,h}`**: Matching file headers with **`SPDX-License-Identifier: MIT`**.
+  * **`tpx3App/src/*.{cpp,h}`**: Matching file headers with the SPDX MIT license identifier.
   * **`.reuse/dep5`**: Machine-readable copyright/license for Db templates, OPI (`op/**`), IOCs, documentation, vendored **CPR** / **nlohmann/json**, and other paths without per-file headers.
   * **`LICENSES/MIT.txt`**: REUSE 3.0 license text; run **`reuse lint`** from the repository root before tagging a release (project is compliant when lint reports success).
   * **`SPDX.spdx`**: Minimal SBOM listing the driver (MIT), bundled dependencies, EPICS build-time packages, and external Serval (`NOASSERTION`).
