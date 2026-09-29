@@ -54,6 +54,19 @@ R1-8-0 (in progress)
 * Preserve the existing waveform and geometry PV names and the accumulation
   controls introduced for R1-8-0.
 
+### Mask and histogram display stability
+
+* Replace overlapping fixed-size MaskBPC, BPC, and PixelConfig-difference
+  widgets with one dynamically sized widget per image. Rules based on
+  `PixCount_RBV` retain 256x256, 512x512, and 1024x512 raster support.
+* Restore a direct **Verify BPC** action on the PixelConfig mask panel while
+  preserving the existing `RefreshPixelConfig` PV and BPC/DACS navigation.
+* Keep accumulated preview-histogram Y autoscaling enabled as frame updates
+  arrive. No histogram data, axis PV, or acquisition behavior changes.
+* SNS Phoebus qualification passes for 256x256 and 512x512 mask displays and
+  preview-histogram accumulation. The 1024x512 mask-display check remains
+  pending.
+
 ### Bounded rolling accumulation
 
 * Replace repeated sum-of-N recomputation with an exact rolling update whose
