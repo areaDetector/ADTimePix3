@@ -36,8 +36,14 @@ R1-8-0 (in progress)
 * Add a repository-owned BOB XML validator so local and CI validation use the
   same command.
 * Add AddressSanitizer and UndefinedBehaviorSanitizer debug jobs for the
-  deterministic C++ suite. Generated dependency/version evidence remains
-  follow-up R1-8-0 release-assurance work.
+  deterministic C++ suite.
+* Generate deterministic JSON and Markdown dependency/version evidence for
+  each default CI build. The retained workflow artifact records the exact
+  ADTimePix3, ci-scripts, EPICS Base, asyn, and ADCore commits; component and
+  bundled CPR/json versions; and the ADCore configuration-hook digest without
+  embedding timestamps or local filesystem paths. Generation fails if a
+  declared dependency ref does not match the branch or tag actually checked
+  out for the build.
 
 ### Image accumulation display stability
 

@@ -113,10 +113,29 @@ applied to ADTimePix3 while the prepared Base, asyn, and ADCore dependencies
 remain non-instrumented. Leak detection is disabled for the AddressSanitizer
 job because EPICS process-lifetime allocations are outside this module's
 ownership; address errors still stop the job. TAP results are retained as job
-artifacts. The driver uses the Base 7 `epicsThreadOpts` API, so EPICS Base 3.15
-is not a supported CI target. Run IOC/integration tests on facility hardware or
-an emulator as appropriate; those environment-specific tests are not replaced
-by CI.
+artifacts. The default job also retains a `dependency-versions-base-7.0`
+artifact containing deterministic JSON and Markdown evidence for the exact
+source commits, component versions, bundled CPR/json versions, pinned
+ci-scripts revision, and ADCore configuration hook used by the build. The
+report omits generation timestamps and local paths, so identical inputs
+produce byte-identical evidence. Report generation also verifies that each
+declared dependency ref matches the branch or exact tag checked out by the
+build. The driver uses the Base 7 `epicsThreadOpts` API, so EPICS Base 3.15 is
+not a supported CI target. Run IOC/integration tests on facility hardware or an
+emulator as appropriate; those environment-specific tests are not replaced by
+CI.
+
+After `ci-scripts` has prepared and built the local dependency tree, reproduce
+the report with:
+
+```bash
+python3 test/generate_dependency_report.py \
+  --release-file configure/RELEASE.local \
+  --output-dir dependency-evidence \
+  --selected-ref EPICS_BASE=7.0 \
+  --selected-ref ASYN=master \
+  --selected-ref ADCORE=master
+```
 
 ## Questions
 
