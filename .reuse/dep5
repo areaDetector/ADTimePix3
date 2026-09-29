@@ -4,62 +4,62 @@ Source: https://www.osti.gov/doecode/biblio/176778
 
 Files: LICENSE
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: tpx3App/src/*
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: tpx3App/Db/*
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: tpx3App/op/**
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: iocs/**
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: documentation/**
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: docs/**
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: test/*
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: README.md RELEASE.md
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: configure/*
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: Makefile
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: tpx3App/Makefile
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: tpx3Support/cpr/**
@@ -72,20 +72,25 @@ License: MIT
 
 Files: tpx3Support/Makefile
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: vendor/**
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: .gitignore
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+License: MIT
+
+Files: .ci-local/** .github/** .gitmodules
+Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: MIT
 
 Files: SPDX.spdx
 Copyright: 2022 Brookhaven Science Associates, Brookhaven National Laboratory
-Copyright: 2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
+           2022-2026 UT-Battelle, LLC, Oak Ridge National Laboratory
 License: CC0-1.0
