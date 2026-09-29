@@ -37,6 +37,13 @@ Offline TPX3 tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same
 | `yChips` | `numChips / xChips` | Chip rows |
 | `w` | `chipPelWidth` = `rows / xChips` | Pixels per chip edge (often 256) |
 
+**Known 4x2 limitation:** the current `rowsCols()` formulas only produce the
+correct chip width and image columns for square chip grids. With 512 rows and
+`RowLen=4`, they derive `w=128` and `cols=256` instead of `w=256` and
+`cols=1024`. The mapping formulas below describe the intended linear layout,
+but the live eight-chip mask path must not be considered qualified until the
+geometry helper is corrected and tested.
+
 **BPC file layout (Timepix3):** chip `c` occupies bytes `[c * w*w, (c+1) * w*w)`. Chip id in file order:
 
 ```text
@@ -228,7 +235,7 @@ These formulas describe the legacy TPX3 mapping. MPX3 `PixelConfigDiff` does not
 
 ## Eight-chip mosaic (`numChips == 8`)
 
-### Linear 2×4 grid — **implemented** (UP only)
+### Linear 2×4 grid — mapping implemented; live geometry unqualified (UP only)
 
 **Current driver behavior** (`mask_io.cpp`): assumes chip IDs are laid out in a simple raster over the mosaic tiles:
 
