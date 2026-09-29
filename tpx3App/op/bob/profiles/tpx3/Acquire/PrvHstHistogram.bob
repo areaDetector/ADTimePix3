@@ -1184,6 +1184,14 @@
     <y>718</y>
     <width>700</width>
     <height>700</height>
+    <rules>
+      <rule name="Keep accumulated Y autoscale enabled" prop_id="y_axes[0].autoscale" out_exp="false">
+        <exp bool_exp="pvInt0&gt;=0">
+          <value>true</value>
+        </exp>
+        <pv_name>$(P)$(R)PrvHstFrameCount_RBV</pv_name>
+      </rule>
+    </rules>
     <x_axis>
       <title>ToF [ms]</title>
       <autoscale>true</autoscale>

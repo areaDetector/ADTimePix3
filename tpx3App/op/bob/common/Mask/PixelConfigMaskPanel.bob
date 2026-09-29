@@ -33,7 +33,7 @@
     <name>Hint</name>
     <text>Use Verify BPC on the BPC/DACS screen to update the packed-pixel |SERVAL − BPC| heatmap and write *_masked_pels.json (see block below).</text>
     <x>5</x>
-    <y>28</y>
+    <y>32</y>
     <width>650</width>
     <height>36</height>
     <foreground_color>
@@ -42,6 +42,26 @@
     </foreground_color>
     <actions>
     </actions>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>VerifyBPCBtn</name>
+    <actions>
+      <action type="write_pv">
+        <description>Verify BPC</description>
+        <pv_name>$(P)$(R)RefreshPixelConfig</pv_name>
+        <value>1</value>
+      </action>
+    </actions>
+    <text>Verify BPC</text>
+    <x>420</x>
+    <y>3</y>
+    <width>95</width>
+    <height>24</height>
+    <background_color>
+      <color red="120" green="200" blue="255">
+      </color>
+    </background_color>
+    <tooltip>Read Serval PixelConfig, decode it, and compare it with the selected BPC file.</tooltip>
   </widget>
   <widget type="action_button" version="3.0.0">
     <name>BPCDACSBtn</name>
@@ -53,10 +73,10 @@
       </action>
     </actions>
     <text>BPC / DACS...</text>
-    <x>420</x>
+    <x>520</x>
     <y>3</y>
     <width>120</width>
-    <height>28</height>
+    <height>24</height>
     <background_color>
       <color red="120" green="200" blue="255">
       </color>
@@ -812,178 +832,8 @@
     </actions>
   </widget>
   <widget type="label" version="2.0.0">
-    <name>ImgLab512</name>
-    <text>|Δ| (512×512)</text>
-    <x>5</x>
-    <y>380</y>
-    <width>120</width>
-    <visible>false</visible>
-    <font>
-      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
-      </font>
-    </font>
-    <foreground_color>
-      <color red="0" green="0" blue="200">
-      </color>
-    </foreground_color>
-    <vertical_alignment>1</vertical_alignment>
-    <wrap_words>false</wrap_words>
-    <actions>
-    </actions>
-    <rules>
-      <rule name="visLab512" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==262144">
-          <value>true</value>
-        </exp>
-        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
-      </rule>
-    </rules>
-  </widget>
-  <widget type="image" version="2.0.0">
-    <name>PixelConfigDiff512</name>
-    <pv_name>$(P)$(R)PixelConfigDiff</pv_name>
-    <x>5</x>
-    <y>402</y>
-    <width>512</width>
-    <height>512</height>
-    <visible>false</visible>
-    <background_color>
-      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
-      </color>
-    </background_color>
-    <color_map>
-      <name>JET</name>
-    </color_map>
-    <x_axis>
-      <visible>true</visible>
-      <title>X</title>
-      <minimum>0.0</minimum>
-      <maximum>512.0</maximum>
-      <title_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </title_font>
-      <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </scale_font>
-    </x_axis>
-    <y_axis>
-      <visible>true</visible>
-      <title>Y</title>
-      <minimum>512.0</minimum>
-      <maximum>0.0</maximum>
-      <title_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </title_font>
-      <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </scale_font>
-    </y_axis>
-    <actions>
-    </actions>
-    <rules>
-      <rule name="vis512" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==262144">
-          <value>true</value>
-        </exp>
-        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
-      </rule>
-    </rules>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <data_width>512</data_width>
-    <data_height>512</data_height>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>ImgLab256</name>
-    <text>|Δ| (256×256)</text>
-    <x>5</x>
-    <y>380</y>
-    <width>120</width>
-    <visible>false</visible>
-    <font>
-      <font name="Default Bold" family="Liberation Sans" style="BOLD" size="14.0">
-      </font>
-    </font>
-    <foreground_color>
-      <color red="0" green="0" blue="200">
-      </color>
-    </foreground_color>
-    <vertical_alignment>1</vertical_alignment>
-    <wrap_words>false</wrap_words>
-    <actions>
-    </actions>
-    <rules>
-      <rule name="visLab256" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==65536">
-          <value>true</value>
-        </exp>
-        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
-      </rule>
-    </rules>
-  </widget>
-  <widget type="image" version="2.0.0">
-    <name>PixelConfigDiff256</name>
-    <pv_name>$(P)$(R)PixelConfigDiff</pv_name>
-    <x>5</x>
-    <y>402</y>
-    <width>256</width>
-    <height>256</height>
-    <visible>false</visible>
-    <background_color>
-      <color name="Transparent" red="255" green="255" blue="255" alpha="0">
-      </color>
-    </background_color>
-    <color_map>
-      <name>JET</name>
-    </color_map>
-    <x_axis>
-      <visible>true</visible>
-      <title>X</title>
-      <minimum>0.0</minimum>
-      <maximum>256.0</maximum>
-      <title_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </title_font>
-      <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </scale_font>
-    </x_axis>
-    <y_axis>
-      <visible>true</visible>
-      <title>Y</title>
-      <minimum>256.0</minimum>
-      <maximum>0.0</maximum>
-      <title_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </title_font>
-      <scale_font>
-        <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
-        </font>
-      </scale_font>
-    </y_axis>
-    <actions>
-    </actions>
-    <rules>
-      <rule name="vis256" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==65536">
-          <value>true</value>
-        </exp>
-        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
-      </rule>
-    </rules>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <data_width>256</data_width>
-    <data_height>256</data_height>
-  </widget>
-  <widget type="label" version="2.0.0">
-    <name>ImgLab1024</name>
-    <text>|Δ| (1024×512, 8-chip mosaic)</text>
+    <name>PixelConfigDiffLabel</name>
+    <text>|Δ| PixelConfig vs BPC</text>
     <x>5</x>
     <y>380</y>
     <width>400</width>
@@ -1001,21 +851,19 @@
     <actions>
     </actions>
     <rules>
-      <rule name="visLab1024" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==524288">
-          <value>true</value>
-        </exp>
+      <rule name="Supported raster" prop_id="visible" out_exp="false">
+        <exp bool_exp="pvInt0==65536 || pvInt0==262144 || pvInt0==524288"><value>true</value></exp>
         <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
   </widget>
   <widget type="image" version="2.0.0">
-    <name>PixelConfigDiff1024</name>
+    <name>PixelConfigDiff</name>
     <pv_name>$(P)$(R)PixelConfigDiff</pv_name>
     <x>5</x>
     <y>402</y>
-    <width>700</width>
-    <height>350</height>
+    <width>512</width>
+    <height>512</height>
     <visible>false</visible>
     <background_color>
       <color name="Transparent" red="255" green="255" blue="255" alpha="0">
@@ -1028,7 +876,7 @@
       <visible>true</visible>
       <title>X</title>
       <minimum>0.0</minimum>
-      <maximum>1024.0</maximum>
+      <maximum>1.0</maximum>
       <title_font>
         <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
         </font>
@@ -1041,7 +889,7 @@
     <y_axis>
       <visible>true</visible>
       <title>Y</title>
-      <minimum>512.0</minimum>
+      <minimum>1.0</minimum>
       <maximum>0.0</maximum>
       <title_font>
         <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
@@ -1055,15 +903,47 @@
     <actions>
     </actions>
     <rules>
-      <rule name="vis1024" prop_id="visible" out_exp="false">
-        <exp bool_exp="pv0==524288">
-          <value>true</value>
-        </exp>
+      <rule name="Supported raster" prop_id="visible" out_exp="false">
+        <exp bool_exp="pvInt0==65536 || pvInt0==262144 || pvInt0==524288"><value>true</value></exp>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
+      </rule>
+      <rule name="Image width" prop_id="data_width" out_exp="true">
+        <exp bool_exp="pvInt0==65536"><expression>256</expression></exp>
+        <exp bool_exp="pvInt0==262144"><expression>512</expression></exp>
+        <exp bool_exp="pvInt0==524288"><expression>1024</expression></exp>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
+      </rule>
+      <rule name="Image height" prop_id="data_height" out_exp="true">
+        <exp bool_exp="pvInt0==65536"><expression>256</expression></exp>
+        <exp bool_exp="pvInt0==262144 || pvInt0==524288"><expression>512</expression></exp>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
+      </rule>
+      <rule name="X axis maximum" prop_id="x_axis.maximum" out_exp="true">
+        <exp bool_exp="pvInt0==65536"><expression>256</expression></exp>
+        <exp bool_exp="pvInt0==262144"><expression>512</expression></exp>
+        <exp bool_exp="pvInt0==524288"><expression>1024</expression></exp>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
+      </rule>
+      <rule name="Y axis minimum" prop_id="y_axis.minimum" out_exp="true">
+        <exp bool_exp="pvInt0==65536"><expression>256</expression></exp>
+        <exp bool_exp="pvInt0==262144 || pvInt0==524288"><expression>512</expression></exp>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
+      </rule>
+      <rule name="Widget width" prop_id="width" out_exp="true">
+        <exp bool_exp="pvInt0==65536"><expression>256</expression></exp>
+        <exp bool_exp="pvInt0==262144"><expression>512</expression></exp>
+        <exp bool_exp="pvInt0==524288"><expression>700</expression></exp>
+        <pv_name>$(P)$(R)PixCount_RBV</pv_name>
+      </rule>
+      <rule name="Widget height" prop_id="height" out_exp="true">
+        <exp bool_exp="pvInt0==65536"><expression>256</expression></exp>
+        <exp bool_exp="pvInt0==262144"><expression>512</expression></exp>
+        <exp bool_exp="pvInt0==524288"><expression>350</expression></exp>
         <pv_name>$(P)$(R)PixCount_RBV</pv_name>
       </rule>
     </rules>
     <border_alarm_sensitive>false</border_alarm_sensitive>
-    <data_width>1024</data_width>
-    <data_height>512</data_height>
+    <data_width>1</data_width>
+    <data_height>1</data_height>
   </widget>
 </display>
