@@ -17,12 +17,15 @@ env:
 
 jobs:
   build-and-test:
-    name: Linux / EPICS Base ${{ matrix.base }} / ${{ matrix.configuration }}
+    name: Linux / EPICS Base ${{ matrix.base }} / ${{ matrix.name }}
     runs-on: ubuntu-24.04
     env:
       BASE: ${{ matrix.base }}
       BCFG: ${{ matrix.configuration }}
       CMP: gcc
+      SANITIZER: ${{ matrix.sanitizer }}
+      ASAN_OPTIONS: detect_leaks=0:halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
 
     strategy:
       fail-fast: false
@@ -30,6 +33,19 @@ jobs:
         include:
           - base: "7.0"
             configuration: default
+            name: default
+            sanitizer: ""
+            run_validation: true
+          - base: "7.0"
+            configuration: debug
+            name: address-sanitizer
+            sanitizer: address
+            run_validation: false
+          - base: "7.0"
+            configuration: debug
+            name: undefined-behavior-sanitizer
+            sanitizer: undefined
+            run_validation: false
 
     steps:
       - uses: actions/checkout@v7
@@ -52,7 +68,15 @@ jobs:
         run: python3 .ci/cue.py prepare
 
       - name: Configure the module build
-        run: echo "BUILD_IOCS=NO" > configure/CONFIG_SITE.local
+        run: |
+          echo "BUILD_IOCS=NO" > configure/CONFIG_SITE.local
+          if [ -n "$SANITIZER" ]; then
+            {
+              echo "USR_CFLAGS += -fsanitize=$SANITIZER -fno-omit-frame-pointer -fno-sanitize-recover=all"
+              echo "USR_CXXFLAGS += -fsanitize=$SANITIZER -fno-omit-frame-pointer -fno-sanitize-recover=all"
+              echo "USR_LDFLAGS += -fsanitize=$SANITIZER"
+            } >> configure/CONFIG_SITE.local
+          fi
 
       - name: Build ADTimePix3
         run: python3 .ci/cue.py build
@@ -61,6 +85,7 @@ jobs:
         run: python3 .ci/cue.py -T 15M test
 
       - name: Run portable validation
+        if: ${{ matrix.run_validation }}
         run: |
           python3 test/verify_coordinate_map.py
           python3 test/validate_bob_xml.py
@@ -71,7 +96,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: tapfiles-base-${{ matrix.base }}-${{ matrix.configuration }}
+          name: tapfiles-base-${{ matrix.base }}-${{ matrix.name }}
           path: '**/O.*/*.tap'
           if-no-files-found: warn
 

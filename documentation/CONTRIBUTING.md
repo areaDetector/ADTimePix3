@@ -106,12 +106,17 @@ reuse lint
 
 GitHub Actions uses the pinned `epics-base/ci-scripts` submodule to build a
 clean EPICS Base 7.0 dependency tree with asyn and ADCore, build this module,
-run the deterministic C++ suite, validate coordinate mappings and all
-Phoebus BOB XML, and check REUSE compliance. TAP results are retained as job
+run the deterministic C++ suite in default, AddressSanitizer, and
+UndefinedBehaviorSanitizer configurations, validate coordinate mappings and
+all Phoebus BOB XML, and check REUSE compliance. Sanitizer instrumentation is
+applied to ADTimePix3 while the prepared Base, asyn, and ADCore dependencies
+remain non-instrumented. Leak detection is disabled for the AddressSanitizer
+job because EPICS process-lifetime allocations are outside this module's
+ownership; address errors still stop the job. TAP results are retained as job
 artifacts. The driver uses the Base 7 `epicsThreadOpts` API, so EPICS Base 3.15
-is not a supported CI target. Run IOC/integration tests on facility hardware
-or an emulator as appropriate; those environment-specific tests are not
-replaced by CI.
+is not a supported CI target. Run IOC/integration tests on facility hardware or
+an emulator as appropriate; those environment-specific tests are not replaced
+by CI.
 
 ## Questions
 
