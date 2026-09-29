@@ -67,6 +67,26 @@ R1-8-0 (in progress)
   preview-histogram accumulation. The 1024x512 mask-display check remains
   pending.
 
+### Eight-chip IOC waveform capacity
+
+* Raise the TPX3 NDStats profile capacity to 1024x512 so the horizontal cursor
+  profile is not truncated at 512 pixels for an eight-chip 2x4 mosaic. Smaller
+  detector geometries continue to publish their actual profile lengths.
+* Select `MASK_BPC_NELEMENTS=524288` to reserve 1024x512 record capacity for
+  mask/BPC, PixelConfig-difference, and image-accumulation waveforms. This is a
+  capacity prerequisite; it does not provide an eight-chip calibration file.
+* Remove the unused legacy `NELMT` setting from the TPX3 profile; current
+  waveform capacities are controlled by `XSIZE`, `YSIZE`, and
+  `MASK_BPC_NELEMENTS`.
+* SNS Phoebus qualification passes for the full-width 1024-pixel horizontal
+  profile, 1024x512 image accumulation, and preview-histogram accumulation.
+* The 1024x512 mask display remains unqualified. The available quad BPC
+  provides 262144 samples rather than 524288, and the current rectangular
+  geometry helper derives a 128-pixel chip (`16384` PixelConfig bytes) from
+  the 4x2 layout instead of the required 256-pixel chip (`65536` bytes).
+  Eight-chip calibration composition and rectangular mask geometry are
+  deferred to a separate change.
+
 ### Bounded rolling accumulation
 
 * Replace repeated sum-of-N recomputation with an exact rolling update whose

@@ -27,11 +27,10 @@ epicsEnvSet("IOCNAME",                  "tpx3")
 epicsEnvSet("QSIZE",                    "30")
 epicsEnvSet("NCHANS",                   "2048")
 epicsEnvSet("HIST_SIZE",                "4096")
-# Image / NDStats profile max size — keep in sync with MASK_BPC_NELEMENTS / mosaic.
-# 256×256 → profiles truncate at ~250 on a 512×512 Preview (wrong row-axis span).
-epicsEnvSet("XSIZE",                    "512")
+# Image / NDStats profile maximum dimensions. These are waveform capacities;
+# smaller detector geometries publish their actual lengths through NORD.
+epicsEnvSet("XSIZE",                    "1024")
 epicsEnvSet("YSIZE",                    "512")
-epicsEnvSet("NELMT",                    "262144")
 # Serval URL and PV prefix (override per site/beamline).
 epicsEnvSet("SERVER_URL", "http://localhost:8081")
 # Calibration path policy: permissive by default for portable/community deployments.
@@ -59,8 +58,8 @@ epicsEnvSet("PREFIX", "TPX3-TEST:")
 #
 # Pick exactly one active line for your detector (comment the others):
 #epicsEnvSet("MASK_BPC_NELEMENTS", "65536") # 1 chip 256×256
-epicsEnvSet("MASK_BPC_NELEMENTS", "262144") # 4 chips 512×512
-#epicsEnvSet("MASK_BPC_NELEMENTS", "524288") # 8 chips 1024×512
+#epicsEnvSet("MASK_BPC_NELEMENTS", "262144") # 4 chips 512×512
+epicsEnvSet("MASK_BPC_NELEMENTS", "524288") # 8 chips 1024×512
 epicsEnvSet("NDTYPE",                   "Int16")  #'Int8' (8bit B/W, Color) | 'Int16' (16bit B/W)
 epicsEnvSet("NDFTVL",                   "SHORT") #'UCHAR' (8bit B/W, Color) | 'SHORT' (16bit B/W)
 epicsEnvSet("CBUFFS",                   "500")
