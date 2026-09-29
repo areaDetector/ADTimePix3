@@ -37,6 +37,15 @@ R1-8-0 (in progress)
   same command. Sanitizer jobs and generated dependency/version evidence
   remain follow-up R1-8-0 release-assurance work.
 
+### Image accumulation display stability
+
+* Replace nine overlapping, geometry-specific Phoebus image widgets with one
+  dynamically sized widget for each accumulated, current-frame, and last-N
+  waveform. The display continues to support 256x256, 512x512, and 1024x512
+  detector rasters while avoiding repeated array-index update warnings.
+* Preserve the existing waveform and geometry PV names and the accumulation
+  controls introduced for R1-8-0.
+
 ### Bounded rolling accumulation
 
 * Replace repeated sum-of-N recomputation with an exact rolling update whose
