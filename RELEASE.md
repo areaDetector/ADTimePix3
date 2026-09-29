@@ -34,8 +34,10 @@ R1-8-0 (in progress)
   validation, REUSE compliance, and whitespace checks in CI, retaining TAP
   results as workflow artifacts.
 * Add a repository-owned BOB XML validator so local and CI validation use the
-  same command. Sanitizer jobs and generated dependency/version evidence
-  remain follow-up R1-8-0 release-assurance work.
+  same command.
+* Add AddressSanitizer and UndefinedBehaviorSanitizer debug jobs for the
+  deterministic C++ suite. Generated dependency/version evidence remains
+  follow-up R1-8-0 release-assurance work.
 
 ### Image accumulation display stability
 
