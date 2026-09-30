@@ -180,7 +180,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>DetectorInfoPanel</name>
-    <file>../../common/Detector/TimePixDetectorInfo.opi</file>
+    <file>../../common/Detector/TimePixDetectorInfo.bob</file>
     <x>720</x>
     <y>270</y>
     <width>350</width>
@@ -210,7 +210,7 @@
   </widget>
   <widget type="embedded" version="2.0.0">
     <name>Mpx3AlarmPanel</name>
-    <file>Mpx3Alarm.opi</file>
+    <file>Mpx3Alarm.bob</file>
     <x>2</x>
     <y>910</y>
     <width>350</width>

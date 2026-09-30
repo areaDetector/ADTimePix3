@@ -1772,30 +1772,6 @@ $(pv_value)</tooltip>
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="action_button" version="3.0.0">
-    <name>Action Button_7</name>
-    <actions>
-      <action type="open_display">
-        <description>Diagnostics</description>
-        <file>../tpx3diagnostics.bob</file>
-        <macros>
-          <R>Emulator:</R>
-        </macros>
-        <target>tab</target>
-      </action>
-    </actions>
-    <text>Diagnostics</text>
-    <x>755</x>
-    <y>440</y>
-    <width>80</width>
-    <height>20</height>
-    <background_color>
-      <color red="115" green="223" blue="255">
-      </color>
-    </background_color>
-    <tooltip>$(actions)</tooltip>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-  </widget>
-  <widget type="action_button" version="3.0.0">
     <name>Action Button_8</name>
     <actions>
       <action type="open_display">
