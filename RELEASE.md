@@ -25,6 +25,21 @@ Driver depends on Serval versions, at this time. Latest **tagged** release is **
 R1-8-0 (in progress)
 --------------------
 
+### Phoebus screen refresh
+
+* Synchronize the detector-owned R3-14 screens with tested SNS BOB commit
+  `73f4d0c`.
+* Add native BOB detector information, detector configuration, detector layout,
+  measurement dashboard, measurement information, TPX3 API/alarm, and MPX3
+  alarm panels while retaining the legacy OPI files for compatibility.
+* Update TPX3 and MPX3 embeds to use the native BOB panels and remove the
+  obsolete TPX3 diagnostics action, whose target display is not shipped.
+* Keep the SNS-wide `ADet/R3-14/common` display changes in the site BOB
+  repository; they are not copied into this module.
+* The imported detector-owned files are byte-identical to the SNS set runtime
+  qualified with the TPX3 and MPX3 emulators, including image display,
+  profiles, histogram, and interactive ROI selection.
+
 ### CI and release assurance
 
 * Add a pinned `epics-base/ci-scripts` submodule and GitHub Actions workflow
