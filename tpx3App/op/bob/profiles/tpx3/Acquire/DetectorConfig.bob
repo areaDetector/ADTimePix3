@@ -1704,7 +1704,7 @@ $(pv_value)</tooltip>
         <description>Serval</description>
         <file>../../../Serval/tpx3serval.bob</file>
         <macros>
-          <P>SERVAL-TEST:</P>
+          <P>$(P=TPX3-TEST:)</P>
           <R>Serval:</R>
         </macros>
         <target>tab</target>
@@ -1729,7 +1729,7 @@ $(pv_value)</tooltip>
         <description>Emulator</description>
         <file>../../../Emulator/emulator.bob</file>
         <macros>
-          <P>EMU-TEST:</P>
+          <P>$(P=TPX3-TEST:)</P>
           <R>Emulator:</R>
         </macros>
         <target>tab</target>

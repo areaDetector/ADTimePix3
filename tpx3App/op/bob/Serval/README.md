@@ -1,6 +1,6 @@
 # Serval IOC Phoebus display
 
-Shared **Serval** process control for Timepix3 / Medipix3 (not camera `cam1:` PVs).
+Shared **Serval** process control for Timepix3 / Medipix3 (service identity is `R=Serval:`, not camera `R=cam1:`).
 
 | File | Role |
 |------|------|
@@ -8,10 +8,11 @@ Shared **Serval** process control for Timepix3 / Medipix3 (not camera `cam1:` PV
 
 ## PV macros
 
-- **Default**: `P=SERVAL-TEST:`, `R=Serval:` → e.g. `SERVAL-TEST:Serval:START`
-- Matches `/epics/iocs/serval/iocBoot/ioctpx3serval/st.cmd` (`Sys=SERVAL-TEST:`)
-- Beamline override: open with `P=SERVAL-$(BL):` (e.g. `SERVAL-BL7:`) and set IOC `Sys` to match
-- **Do not inherit camera `P`** — every Serval `open_display` should pass `P`/`R` explicitly
+- **Prefix**: `$(P=TPX3-TEST:)` inherits `P` from the calling display and uses `TPX3-TEST:` only when `P` is undefined
+- **Record**: `R=Serval:` → the direct-open lab default START PV is `TPX3-TEST:Serval:START`
+- The fallback matches the IOC's `TPX3_PREFIX=TPX3-TEST:` default
+- For beamline use, configure the Serval IOC with the ADTimePix3 system prefix and pass that same prefix as `P`; TPX3 launchers use `$(P=TPX3-TEST:)` and MPX3 launchers use `$(P=MPX3-TEST:)`
+- The child screen deliberately has no display-level `P`, so an incoming caller macro is not overridden
 
 ## Sync
 
@@ -20,4 +21,6 @@ Source of truth: `/epics/iocs/serval/tpx3servalApp/op/bob/tpx3serval.bob` → th
 ## Opened from
 
 - `profiles/tpx3/Acquire/DetectorConfig.bob` (Vendor SW)
+- `profiles/tpx3/TimePix3Status.bob`
 - `profiles/mpx3/Mpx3Status.bob`
+- `profiles/mpx3/Detector/Mpx3DetectorConfig.bob`
