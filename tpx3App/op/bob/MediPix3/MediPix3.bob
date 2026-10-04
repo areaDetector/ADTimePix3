@@ -10,8 +10,8 @@
   <widget type="embedded" version="2.0.0">
     <name>MediPix3Profile</name>
     <macros>
-      <P>$(P)</P>
-      <R>$(R)</R>
+      <P>$(P=MPX3-TEST:)</P>
+      <R>$(R=cam1:)</R>
       <pathADCore>$(pathADCore)</pathADCore>
       <pathADet>$(pathADet)</pathADet>
     </macros>

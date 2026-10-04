@@ -8,6 +8,11 @@ dbd/
 include/
 .vscode/
 TemplateReadme.md
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]
+
 # IOC autosave runtime data (README.md is tracked)
 iocs/tpx3IOC/iocBoot/iocTimePix/autosave/*
 !iocs/tpx3IOC/iocBoot/iocTimePix/autosave/README.md

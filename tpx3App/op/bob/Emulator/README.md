@@ -16,13 +16,13 @@ This directory contains Phoebus **Display Builder** (`.bob`) screens for the **m
 See the `.bob` files for exact widget placement. Logical sections:
 
 ### 1. Main Control Section (Top)
-- **Start/Stop Slide Button**: Controls the TPX3 emulator process (connected to `$(P)$(R)START` PV)
-- **Status LED**: Visual indicator showing if the process is running (green) or stopped (red) (connected to `$(P)$(R)STATUS` PV)
-- **Process ID Display**: Shows the current process ID when running (connected to `$(P)$(R)PROCESS_ID` PV)
-- **Error Message Display**: Shows any error messages or status updates (connected to `$(P)$(R)ERROR_MSG` PV)
+- **Start/Stop Slide Button**: Controls the TPX3 emulator process (connected to `$(P=TPX3-TEST:)$(R)START` PV)
+- **Status LED**: Visual indicator showing if the process is running (green) or stopped (red) (connected to `$(P=TPX3-TEST:)$(R)STATUS` PV)
+- **Process ID Display**: Shows the current process ID when running (connected to `$(P=TPX3-TEST:)$(R)PROCESS_ID` PV)
+- **Error Message Display**: Shows any error messages or status updates (connected to `$(P=TPX3-TEST:)$(R)ERROR_MSG` PV)
 
 ### 2. Shell configuration ( **`emulator.bob`** )
-- **`EMULATOR_TYPE`**: Choosing 0 vs 1 toggles visibility of the two embedded `.bob` files (rules use `$(P)$(R)EMULATOR_TYPE`; keep `$(P)` defined when launching the screen).
+- **`EMULATOR_TYPE`**: Choosing 0 vs 1 toggles visibility of the two embedded `.bob` files. The shell uses `$(P=TPX3-TEST:)$(R)EMULATOR_TYPE`, so caller-provided `P` wins and a direct open uses the TPX3 test fallback.
 - **Firmware / network**: Shared widgets on the shell (same PVs as the IOC DB).
 - **Embedded Timepix3 panel**: Hit rate, TDC, chipboard, JVM `-DchipMask`, and all raw replay widgets — see **`emulator_tpx3_embed.bob`**.
 - **Embedded Medipix3 panel**: MPX CLI options — see **`emulator_mpx3_embed.bob`**.
@@ -31,7 +31,7 @@ See the `.bob` files for exact widget placement. Logical sections:
 - **JAR**, **`-Xmx`**, **`-DcmdPort`**: Applicable to both emulator JAR types; replay controls are **not** here anymore (they are on the TPX embed).
 
 ### 4. Command line (bottom)
-- **Generated Command Line**: Shows the complete Java command that will be executed (connected to `$(P)$(R)COMMAND_LINE` PV)
+- **Generated Command Line**: Shows the complete Java command that will be executed (connected to `$(P=TPX3-TEST:)$(R)COMMAND_LINE` PV)
 - **Real-time Updates**: Updates automatically as parameters are changed
 
 ## Supported Widget Types
@@ -79,15 +79,14 @@ The display uses the following Phoebus Display Builder compatible widgets:
 
 ## PV Naming Convention
 
-The display uses the standard EPICS PV naming convention with predefined macros:
-- **Prefix**: `$(P)` = `EMU-TEST:` (dedicated emulator service; not the camera `TPX3-TEST:` / `MPX3-TEST:` prefix)
+The displays use the standard EPICS PV naming convention with caller-overridable macros:
+- **Prefix**: `emulator.bob` and `emulator_tpx3_embed.bob` use `$(P=TPX3-TEST:)`; `emulator_mpx3_embed.bob` uses `$(P=MPX3-TEST:)`
 - **Record**: `$(R)` = `Emulator:`
-- **Example**: The START PV becomes `EMU-TEST:Emulator:START`
+- **Example**: The TPX3 lab-default START PV is `TPX3-TEST:Emulator:START`
 
-Lab default matches `/epics/iocs/emulator/iocBoot/ioctpx3emulator/st.cmd` (`Sys=EMU-TEST:`).
-Beamline override: open with `P=EMU-$(BL):` (e.g. `EMU-BL7:`) and set the IOC `Sys` to the same value.
-**Do not inherit camera `P`** — Phoebus caller macros override display defaults, so every Emulator
-`open_display` action should pass `P`/`R` explicitly.
+No source screen defines a display-level `P`, because that would override `P` inherited from an upper beamline screen. Opening a source screen directly uses its detector-specific fallback; opening it from an upper screen uses the caller-provided `P`. `R=Emulator:` remains defined at display level.
+
+The IOC is configured independently with `DETECTOR_PREFIX`, which defaults to `TPX3-TEST:` in `iocBoot/ioctpx3emulator/st.cmd`. For beamline use, set `DETECTOR_PREFIX` to the corresponding ADTimePix3 IOC's system prefix and pass that same value as `P` from the upper screen.
 
 Sync source of truth: `/epics/iocs/emulator/tpx3emulatorApp/op/bob/` → this directory.
 
@@ -129,7 +128,7 @@ Sync source of truth: `/epics/iocs/emulator/tpx3emulatorApp/op/bob/` → this di
 
 ### **PVs Not Connecting**
 - Verify EPICS Channel Access is working
-- Check that macros `$(P)` and `$(R)` are properly defined
+- Check that caller macro `P`, or the appropriate TPX3/MPX3 fallback, matches the IOC's `DETECTOR_PREFIX`; `R` should remain `Emulator:`
 - Ensure the IOC is running and accessible
 
 ### **Text Not Updating**

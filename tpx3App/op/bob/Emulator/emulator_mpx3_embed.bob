@@ -2,7 +2,6 @@
 <display version="2.0.0">
   <name>emulator_mpx3_embed</name>
   <macros>
-    <P>EMU-TEST:</P>
     <R>Emulator:</R>
   </macros>
   <width>1060</width>
@@ -29,7 +28,7 @@
     </widget>
     <widget type="slide_button" version="2.0.0">
       <name>MegapixelEn</name>
-      <pv_name>$(P)$(R)MEGAPIXEL_ENABLE</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MEGAPIXEL_ENABLE</pv_name>
       <label>megapixel</label>
       <x>20</x>
       <y>40</y>
@@ -37,7 +36,7 @@
     </widget>
     <widget type="slide_button" version="2.0.0">
       <name>CornerTextEn</name>
-      <pv_name>$(P)$(R)CORNER_TEXT_ENABLE</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)CORNER_TEXT_ENABLE</pv_name>
       <label>cornerText</label>
       <x>160</x>
       <y>40</y>
@@ -52,14 +51,14 @@
     </widget>
     <widget type="spinner" version="2.0.0">
       <name>MpxChipMaskSp</name>
-      <pv_name>$(P)$(R)MPX_CHIP_MASK</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_CHIP_MASK</pv_name>
       <x>380</x>
       <y>45</y>
       <maximum>15.0</maximum>
     </widget>
     <widget type="slide_button" version="2.0.0">
       <name>MpxMaskEnable</name>
-      <pv_name>$(P)$(R)MPX_CHIP_MASK_ENABLE</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_CHIP_MASK_ENABLE</pv_name>
       <label>Enable</label>
       <x>485</x>
       <y>40</y>
@@ -73,7 +72,7 @@
     </widget>
     <widget type="slide_button" version="2.0.0">
       <name>LossEn</name>
-      <pv_name>$(P)$(R)MPX_LOSS_ENABLE</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_LOSS_ENABLE</pv_name>
       <label>Enable</label>
       <x>785</x>
       <y>40</y>
@@ -87,7 +86,7 @@
     </widget>
     <widget type="slide_button" version="2.0.0">
       <name>FracEn</name>
-      <pv_name>$(P)$(R)MPX_FRAC_ENABLE</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_FRAC_ENABLE</pv_name>
       <label>Enable</label>
       <x>165</x>
       <y>90</y>
@@ -101,26 +100,26 @@
     </widget>
     <widget type="slide_button" version="2.0.0">
       <name>Omr0En</name>
-      <pv_name>$(P)$(R)MPX_OMR0_ENABLE</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_OMR0_ENABLE</pv_name>
       <label>En</label>
       <x>435</x>
       <y>90</y>
     </widget>
     <widget type="spinner" version="2.0.0">
       <name>Spinner</name>
-      <pv_name>$(P)$(R)MPX_OMR0</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_OMR0</pv_name>
       <x>330</x>
       <y>95</y>
     </widget>
     <widget type="spinner" version="2.0.0">
       <name>Spinner_1</name>
-      <pv_name>$(P)$(R)MPX_FRAC</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_FRAC</pv_name>
       <x>60</x>
       <y>95</y>
     </widget>
     <widget type="spinner" version="2.0.0">
       <name>Spinner_2</name>
-      <pv_name>$(P)$(R)MPX_LOSS</pv_name>
+      <pv_name>$(P=MPX3-TEST:)$(R)MPX_LOSS</pv_name>
       <x>680</x>
       <y>45</y>
     </widget>

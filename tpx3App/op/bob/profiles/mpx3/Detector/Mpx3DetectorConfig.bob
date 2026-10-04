@@ -1014,7 +1014,7 @@
         <description>Emulator</description>
         <file>../../../Emulator/emulator.bob</file>
         <macros>
-          <P>EMU-TEST:</P>
+          <P>$(P=MPX3-TEST:)</P>
           <R>Emulator:</R>
         </macros>
         <target>tab</target>
@@ -1029,7 +1029,7 @@
       <color red="115" green="223" blue="255">
       </color>
     </background_color>
-    <tooltip>EMU-TEST:Emulator: — not camera P</tooltip>
+    <tooltip>Inherited detector P (MPX3-TEST: fallback), R=Emulator:</tooltip>
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
   <widget type="action_button" version="3.0.0">
@@ -1039,7 +1039,7 @@
         <description>Serval</description>
         <file>../../../Serval/tpx3serval.bob</file>
         <macros>
-          <P>SERVAL-TEST:</P>
+          <P>$(P=MPX3-TEST:)</P>
           <R>Serval:</R>
         </macros>
         <target>tab</target>
@@ -1054,7 +1054,7 @@
       <color red="115" green="223" blue="255">
       </color>
     </background_color>
-    <tooltip>SERVAL-TEST:Serval: — not camera P</tooltip>
+    <tooltip>Inherited detector P (MPX3-TEST: fallback), R=Serval:</tooltip>
     <border_alarm_sensitive>false</border_alarm_sensitive>
   </widget>
 </display>
