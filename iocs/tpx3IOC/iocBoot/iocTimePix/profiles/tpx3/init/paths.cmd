@@ -71,6 +71,12 @@ dbpf("$(PREFIX)cam1:WritePrvHst","0")   # Select histogram stream
 #dbpf("$(PREFIX)cam1:BPCFileName","eq.bpc")       # load BPC calibration
 #dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/tpx3/1x1/")
 #dbpf("$(PREFIX)cam1:DACSFileName","eq.dacs")     # load DACS calibration
+# Eight-chip two-quad demo (1024x512). Synthetic software/emulator fixture only;
+# uncomment this block and comment out the four-chip defaults below.
+#dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/tpx3/4x2/")
+#dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo-4x2-synthetic.bpc")
+#dbpf("$(PREFIX)cam1:DACSFilePath","$(ADTIMEPIX)/vendor/tpx3/4x2/")
+#dbpf("$(PREFIX)cam1:DACSFileName","tpx3-demo-4x2-synthetic.dacs")
 # Four chip (512×512) — default demo calibration
 dbpf("$(PREFIX)cam1:BPCFilePath","$(ADTIMEPIX)/vendor/tpx3/2x2/")
 dbpf("$(PREFIX)cam1:BPCFileName","tpx3-demo.bpc")     # load BPC calibration

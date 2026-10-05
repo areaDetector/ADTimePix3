@@ -18,6 +18,7 @@ servalProtocolFixtureTest_SRCS += bpc_file_io.cpp
 servalProtocolFixtureTest_SRCS += calibration_path_policy.cpp
 servalProtocolFixtureTest_SRCS += destination_policy.cpp
 servalProtocolFixtureTest_SRCS += bpc_mask_semantics.cpp
+servalProtocolFixtureTest_SRCS += detector_geometry.cpp
 servalProtocolFixtureTest_SRCS += detector_family.cpp
 servalProtocolFixtureTest_SRCS += mask_geometry.cpp
 servalProtocolFixtureTest_SRCS += network_client.cpp
@@ -36,6 +37,7 @@ servalProtocolFixtureTest_SRCS += serval_reconnect.cpp
 servalProtocolFixtureTest_SRCS += serval_stream_framing.cpp
 servalProtocolFixtureTest_SRCS += serval_stream_validation.cpp
 servalProtocolFixtureTest_SRCS += stream_worker_state.cpp
+servalProtocolFixtureTest_SRCS += tpx3_dual_quad_mapping.cpp
 servalProtocolFixtureTest_LIBS += Com
 servalProtocolFixtureTest_SYS_LIBS += cpr curl z
 

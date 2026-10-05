@@ -106,6 +106,7 @@ jobs:
         if: ${{ matrix.run_validation }}
         run: |
           python3 test/test_generate_dependency_report.py
+          python3 test/generate_tpx3_4x2_demo_calibration.py --check
           python3 test/verify_coordinate_map.py
           python3 test/validate_bob_xml.py
           python3 test/validate_bob_prefix_macros.py

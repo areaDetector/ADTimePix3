@@ -20,6 +20,7 @@ INC += bpc_file_io.h
 INC += calibration_path_policy.h
 INC += destination_policy.h
 INC += bpc_mask_semantics.h
+INC += detector_geometry.h
 INC += detector_family.h
 INC += mask_geometry.h
 INC += network_client.h
@@ -39,6 +40,7 @@ INC += serval_reconnect.h
 INC += serval_stream_framing.h
 INC += stream_worker_state.h
 INC += serval_stream_validation.h
+INC += tpx3_dual_quad_mapping.h
 
 # GraphicsMagick removed - TCP streaming is used instead
 # GraphicsMagick implementation preserved in preserve/graphicsmagick-preview branch
@@ -51,6 +53,7 @@ LIB_SRCS += bpc_file_io.cpp
 LIB_SRCS += calibration_path_policy.cpp
 LIB_SRCS += destination_policy.cpp
 LIB_SRCS += bpc_mask_semantics.cpp
+LIB_SRCS += detector_geometry.cpp
 LIB_SRCS += detector_family.cpp
 LIB_SRCS += mask_geometry.cpp
 LIB_SRCS += mask_io.cpp
@@ -74,6 +77,7 @@ LIB_SRCS += stream_worker_state.cpp
 LIB_SRCS += serval_stream_validation.cpp
 LIB_SRCS += serval_stream.cpp
 LIB_SRCS += serval_http.cpp
+LIB_SRCS += tpx3_dual_quad_mapping.cpp
 LIB_SRCS += acquire.cpp
 
 LIB_SYS_LIBS += cpr curl z

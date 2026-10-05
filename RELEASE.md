@@ -79,13 +79,13 @@ R1-8-0 (in progress)
 * Keep accumulated preview-histogram Y autoscaling enabled as frame updates
   arrive. No histogram data, axis PV, or acquisition behavior changes.
 * SNS Phoebus qualification passes for 256x256 and 512x512 mask displays and
-  preview-histogram accumulation. The 1024x512 mask-display check remains
-  pending.
+  preview-histogram accumulation. The 1024x512 mask display also passes with
+  the two-quad TPX3 emulator; physical-detector qualification remains pending.
 
 ### Eight-chip IOC waveform capacity
 
 * Raise the TPX3 NDStats profile capacity to 1024x512 so the horizontal cursor
-  profile is not truncated at 512 pixels for an eight-chip 2x4 mosaic. Smaller
+  profile is not truncated at 512 pixels for an eight-chip 4x2 mosaic. Smaller
   detector geometries continue to publish their actual profile lengths.
 * Select `MASK_BPC_NELEMENTS=524288` to reserve 1024x512 record capacity for
   mask/BPC, PixelConfig-difference, and image-accumulation waveforms. This is a
@@ -95,12 +95,30 @@ R1-8-0 (in progress)
   `MASK_BPC_NELEMENTS`.
 * SNS Phoebus qualification passes for the full-width 1024-pixel horizontal
   profile, 1024x512 image accumulation, and preview-histogram accumulation.
-* The 1024x512 mask display remains unqualified. The available quad BPC
-  provides 262144 samples rather than 524288, and the current rectangular
-  geometry helper derives a 128-pixel chip (`16384` PixelConfig bytes) from
-  the 4x2 layout instead of the required 256-pixel chip (`65536` bytes).
-  Eight-chip calibration composition and rectangular mask geometry are
-  deferred to a separate change.
+* Add an opt-in synthetic 4x2 demo calibration pair: a deterministic
+  524288-byte BPC and a DACS file with unique `[Chip0]` through `[Chip7]`
+  sections, both reproducibly composed from the existing quad demo files.
+* Correct the rectangular eight-chip geometry using captured Serval metadata:
+  `RowLen=4` chips across, `NumberOfRows=512`, `NumberOfChips=8`, and
+  `PixCount=524288`. The isolated eight-chip path derives a 1024x512 raster,
+  two chip rows, and a 256-pixel chip edge (`65536` PixelConfig bytes per
+  chip), while preserving the established one- and four-chip geometry path.
+  Eight-chip mask mapping requires two distinct TPX3 quad board IDs and fails
+  closed for the separate single-board SpidrTurbo layout.
+* Replace stale global PixelConfig errors with a completion message after each
+  refresh; per-chip status fields continue to report matches and failures.
+* Map two adjacent quads as `2,1,4,7 / 3,0,5,6`, with the right module rotated
+  180 degrees, and add compiled full-grid round-trip and portable coordinate
+  tests. The distinct single-board SpidrTurbo mapping remains deferred.
+* Qualify the opt-in 4x2 files and mask workflow with the two-quad TPX3
+  emulator on 2026-10-04: BPC and DACS uploads returned HTTP 200; all eight
+  65536-byte PixelConfig responses matched their BPC slices with zero
+  mismatches; and a rectangular mask propagated through the 1024x512 mask
+  preview and masked-pixel JSON export. The 1024x512 image-accumulation and
+  histogram views continued to operate during the same qualification.
+* Physical 1024x512 mask qualification and detector-specific eight-chip
+  equalization remain pending; the checked-in calibration is explicitly
+  synthetic and must not be used as qualified hardware calibration.
 
 ### Bounded rolling accumulation
 
@@ -183,12 +201,12 @@ R1-8-0 (in progress)
 ### Validation
 
 * Full IOC build passed.
-* 346/346 deterministic protocol, lifecycle, rolling-window, numeric-range,
+* 358/358 deterministic protocol, lifecycle, rolling-window, numeric-range,
   path-containment, atomic-write, and destination-policy checks passed.
-* Coordinate-map validation passed for 11 implemented cases; five planned
-  physical SpIDR 2x4 cases remain deferred.
+* Coordinate-map validation passed for 13 implemented cases; five planned
+  physical SpIDR 4x2 cases remain deferred.
 * All Phoebus BOB files passed XML validation.
-* REUSE validation passed for 372/372 files.
+* REUSE validation passed for 398/398 files.
 * TPX3 emulator runtime qualification passed at 10 Hz for Img and PrvHst
   windows of 10 and 100 frames: requested capacity equaled current fill, memory
   plateaued at the expected bounded values, per-frame publication operated, and
@@ -315,7 +333,7 @@ Driver / user-visible version **1.7.3** (see `ADTIMEPIX_*` in `ADTimePix.h`).
   * MPX3 emulator qualification with Serval 4.1.6 completed six finite acquisitions with frame preview, integrated preview, and full image enabled. All three TCP streams closed normally after every measurement, every subsequent acquisition began from Idle, and Serval processed 139 frames with zero drops and no TCP sender errors.
 
 * **Release qualification and deferred scope**:
-  * R1-7-3 is software- and emulator-qualified. Physical post-equalization MPX3 mask/PixelConfig confirmation, broader physical reconnect testing, and 2x4 SpIDR placement/rotation/BPC ordering remain controlled-hardware follow-up work; a Serval PixelConfig match is not proof of detector-register state.
+  * R1-7-3 is software- and emulator-qualified. Physical post-equalization MPX3 mask/PixelConfig confirmation, broader physical reconnect testing, and 4x2 SpIDR placement/rotation/BPC ordering remain controlled-hardware follow-up work; a Serval PixelConfig match is not proof of detector-register state.
   * Standard acquisition start/stop and reconnect paths are covered, but exhaustive transactional partial-start and injected-fault coordination remain future work.
   * Large retained image/histogram accumulation workloads do not yet have a geometry-aware memory-capacity or unsigned-to-signed overflow contract. Validate site workloads and monitor resource use.
   * File and destination configuration assume a trusted deployment boundary; canonical writable-root confinement, destination allowlists, access control, and credential policy remain deployment-hardening work.

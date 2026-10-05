@@ -1277,6 +1277,16 @@ asynStatus ADTimePix::refreshPixelConfigFromServal() {
     setParamStatus(0, ADTimePixPixelConfigDiff, asynSuccess);
     doCallbacksInt32Array(pixelConfigDiff_.data(), ncb, ADTimePixPixelConfigDiff, 0);
 
+    if (status == asynSuccess) {
+        setStringParam(ADTimePixWriteMsg,
+                       haveBpc ? "PixelConfig refresh complete."
+                               : "PixelConfig refresh complete; BPC comparison skipped.");
+    } else {
+        setStringParam(ADTimePixWriteMsg,
+                       "PixelConfig refresh completed with one or more chip errors.");
+    }
+    callParamCallbacks();
+
     return status;
 }
 

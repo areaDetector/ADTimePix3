@@ -38,6 +38,32 @@ def image_cols(num_chips: int, pel_width: int, x_chips: int) -> int:
     return y_chips * w
 
 
+def quad_up_bpc_to_image(chip: int, lx: int, ly: int, w: int) -> tuple[int, int]:
+    """Map one BPC-local pixel through the established TPX3 quad UP layout."""
+    if chip == 0:
+        return w + lx, 2 * w - 1 - ly
+    if chip == 1:
+        return 2 * w - 1 - lx, ly
+    if chip == 2:
+        return w - 1 - lx, ly
+    if chip == 3:
+        return lx, 2 * w - 1 - ly
+    return -1, -1
+
+
+def quad_up_image_to_bpc(i: int, j: int, w: int) -> int:
+    """Inverse of quad_up_bpc_to_image for one 2x2 quad."""
+    if not (0 <= i < 2 * w and 0 <= j < 2 * w):
+        return -1
+    if i >= w and j >= w:
+        return (i - w) + (2 * w - 1 - j) * w
+    if i >= w:
+        return w * w + (2 * w - 1 - i) + j * w
+    if j < w:
+        return 2 * w * w + (w - 1 - i) + j * w
+    return 3 * w * w + i + (2 * w - 1 - j) * w
+
+
 def bpc2img_index(
     bpc_index: int, pel_width: int, num_chips: int, x_chips: int, orientation: int
 ) -> int:
@@ -115,15 +141,17 @@ def bpc2img_index(
         if orientation != 0:
             return -1
         y_chips = num_chips // x_chips
-        if x_chips * y_chips != 8:
+        if x_chips != 4 or y_chips != 2:
             return -1
         local = bpc_index - chip * chip_pel_count
         lx = local % w
         ly = local // w
-        x_chip = chip % x_chips
-        y_chip = chip // x_chips
-        i = x_chip * w + lx
-        j = y_chip * w + (w - 1 - ly)
+        quad_i, quad_j = quad_up_bpc_to_image(chip % 4, lx, ly, w)
+        if chip < 4:
+            i, j = quad_i, quad_j
+        else:
+            i = 4 * w - 1 - quad_i
+            j = 2 * w - 1 - quad_j
         return i + (x_chips * w) * j
 
     return -1
@@ -187,12 +215,14 @@ def pel_index(
         if orientation != 0:
             return -1
         y_chips = num_chips // x_chips
-        if x_chips * y_chips != 8 or x_chip >= x_chips or y_chip >= y_chips:
+        if x_chips != 4 or y_chips != 2 or x_chip >= x_chips or y_chip >= y_chips:
             return -1
-        lx = i - x_chip * w
-        ly = j - y_chip * w
-        chip_idx = y_chip * x_chips + x_chip
-        return chip_idx * w * w + lx + ((w - 1) - ly) * w
+        if i < 2 * w:
+            return quad_up_image_to_bpc(i, j, w)
+        quad_i = 4 * w - 1 - i
+        quad_j = 2 * w - 1 - j
+        local = quad_up_image_to_bpc(quad_i, quad_j, w)
+        return -1 if local < 0 else 4 * w * w + local
 
     return -1
 
@@ -285,7 +315,7 @@ def main() -> int:
     n_planned = len(planned)
     print(f"OK: {n_cases} coordinate_map_vectors cases passed", end="")
     if n_planned:
-        print(f"; {n_planned} planned case(s) skipped (SpIDR 2×4 — see COORDINATE_MAP.md)")
+        print(f"; {n_planned} planned case(s) skipped (SpIDR 4×2 — see COORDINATE_MAP.md)")
     else:
         print()
     return 0

@@ -31,18 +31,27 @@ Offline TPX3 tools under `maskTpx3/xyChip` (e.g. **`check_bit.c`**) use the same
 
 | Symbol | PV / source | Meaning |
 |--------|-------------|---------|
-| `rows` | `TPX3_NUM_ROWS` | Total image rows |
-| `cols` | `yChips * chipPelWidth` | Total image columns |
-| `xChips` | `TPX3_ROWLEN` | Chips per row in the mosaic |
-| `yChips` | `numChips / xChips` | Chip rows |
-| `w` | `chipPelWidth` = `rows / xChips` | Pixels per chip edge (often 256) |
+| `rows` | `TPX3_NUM_ROWS` | Total image height in pixels |
+| `xChips` | `TPX3_ROWLEN` | TPX3 chips across the mosaic |
+| `cols` | `xChips * w` | Total image width in pixels |
+| `w` | `sqrt(PixCount / NumberOfChips)` | Pixels per square chip edge (normally 256) |
+| `yChips` | `NumberOfChips / xChips` | Chips down the mosaic |
 
-**Known 4x2 limitation:** the current `rowsCols()` formulas only produce the
-correct chip width and image columns for square chip grids. With 512 rows and
-`RowLen=4`, they derive `w=128` and `cols=256` instead of `w=256` and
-`cols=1024`. The mapping formulas below describe the intended linear layout,
-but the live eight-chip mask path must not be considered qualified until the
-geometry helper is corrected and tested.
+For the captured two-quad 4x2 detector, Serval reports `RowLen=4`,
+`NumberOfRows=512`, `NumberOfChips=8`, and `PixCount=524288`. The validated
+eight-chip geometry helper derives `w=256`, `xChips=4`, `yChips=2`, and
+`cols=1024`, and rejects inconsistent or non-square inputs. This rectangular
+correction is isolated from the established one- and four-chip geometry path.
+The eight-chip mask path additionally requires two distinct TPX3 quad board
+IDs beginning with `41`; the single-board SpidrTurbo layout fails closed.
+
+Fresh TPX3 emulator captures on 2026-10-04 confirm that `Info.RowLen` is the
+number of chips across the mosaic, not its width in pixels:
+
+| TPX3 capture | `PixCount` | `RowLen` | `NumberOfChips` | `NumberOfRows` | `Layout.Original` |
+|--------------|------------|----------|-----------------|----------------|-------------------|
+| One quad | 262144 | 2 | 4 | 512 | 512×512 |
+| Two adjacent quads | 524288 | 4 | 8 | 512 | 1024×512 |
 
 **BPC file layout (Timepix3):** chip `c` occupies bytes `[c * w*w, (c+1) * w*w)`. Chip id in file order:
 
@@ -186,6 +195,16 @@ Unknown orientation strings continue to fail closed.
 
 ### Adding TPX4 or another family
 
+Future geometry unification must not assume a square ASIC matrix. The Timepix4
+readout ASIC has square 55×55 µm pixels arranged as a non-square 448×512 pixel
+matrix. A generic model therefore needs independent chip width and height,
+assembled-image width and height, and orientation transforms that swap the
+occupied chip dimensions for 90-degree rotations. `RowLen` should be validated
+against captured metadata rather than used as the sole source of raster width.
+Perform that unification only after representative Timepix4 Serval `Info` and
+`Layout` captures are available; do not extend the current square-chip
+`sqrt(PixCount / NumberOfChips)` assumption to Timepix4.
+
 Add the new family here only after recording all of the following from Serval
 and validating them against an acquisition:
 
@@ -227,7 +246,7 @@ These are inverses.
 
 Chip `c` is derived from `k` as above. Each orientation maps **intra-chip** `(lx, ly)` from `local = k - c*w*w` to global `(i,j)` with tile offsets; see `mask_io.cpp` branches.
 
-**UP (0):** chip 0 BPC origin `k=0` maps to image column `i=w`, row `j=2*w-1` (upper-right tile in the 2×2 mosaic for the driver's tile numbering).
+**UP (0):** chip 0 BPC origin `k=0` maps to image column `i=w`, row `j=2*w-1` (bottom-right tile in the 2×2 mosaic for the driver's tile numbering).
 
 **LEFT (3):** chip 0 `k=0` maps to `(i,j) = (2*w-1, 0)` via `bpc2ImgIndex`, but **`pelIndex(2*w-1, 0)` is not 0** — use **`pelIndex`** for mask operations, not `bpc2ImgIndex`, on this path.
 
@@ -235,37 +254,50 @@ These formulas describe the legacy TPX3 mapping. MPX3 `PixelConfigDiff` does not
 
 ## Eight-chip mosaic (`numChips == 8`)
 
-### Linear 2×4 grid — mapping implemented; live geometry unqualified (UP only)
+### Two adjacent quads in a 4×2 grid — implemented for UP
 
-**Current driver behavior** (`mask_io.cpp`): assumes chip IDs are laid out in a simple raster over the mosaic tiles:
-
-```text
-X_CHIP = chip % xChips
-Y_CHIP = chip / xChips
-lx = local % w
-ly = local / w
-i = X_CHIP * w + lx
-j = Y_CHIP * w + (w - 1 - ly)
-img_linear = i + (xChips * w) * j
-```
-
-`pelIndex` uses the same mosaic with `k = chip * w*w + lx + (w - 1 - ly) * w`.
-
-With `xChips = 4`, `yChips = 2`, image tile `(0,0)` is **chip 0**, `(1,0)` is chip 1, … `(3,1)` is chip 7:
+The supported eight-chip layout consists of two 2x2 TPX3 quads placed side by
+side. The right-hand quad is rotated 180 degrees relative to the left-hand
+quad. BPC storage remains eight consecutive 65536-byte chip blocks in chip-ID
+order, while image placement is:
 
 ```text
 +---+---+---+---+
-| 0 | 1 | 2 | 3 |
+| 2 | 1 | 4 | 7 |
 +---+---+---+---+
-| 4 | 5 | 6 | 7 |
+| 3 | 0 | 5 | 6 |
 +---+---+---+---+
 ```
 
-Other global orientations for 8-chip: not implemented (`WARN`, returns `-1`).
+The 2026-10-04 TPX3 two-quad capture records the following raw
+`Layout.Original.Chips` entries. `Image tile` converts Serval's bottom-origin
+tile Y to the top-left image convention used by areaDetector; for this
+512-pixel-high image, `yChip = (512 - 256 - Y) / 256`.
 
-### Full-rate SpIDR 2×4 — **planned** (not in `mask_io.cpp` yet)
+| Chip | Serval `X` | Serval `Y` | Serval orientation | Image tile `(xChip,yChip)` |
+|------|------------|------------|--------------------|----------------------------|
+| 0 | 256 | 0 | `LtRBtT` | (1,1) |
+| 1 | 256 | 256 | `RtLTtB` | (1,0) |
+| 2 | 0 | 256 | `RtLTtB` | (0,0) |
+| 3 | 0 | 0 | `LtRBtT` | (0,1) |
+| 4 | 512 | 256 | `RtLTtB` | (2,0) |
+| 5 | 512 | 0 | `LtRBtT` | (2,1) |
+| 6 | 768 | 0 | `LtRBtT` | (3,1) |
+| 7 | 768 | 256 | `RtLTtB` | (3,0) |
 
-ASI **single-board** 8-chip SpidrTurbo (`chipboardId` prefix **`84`**) uses a **different** stitched mosaic than the linear grid above. It also differs from the older **“2 × quad”** eight-chip diagram (two 4-chip modules). Reference: TPX3 emulator IOC README, section *Full-rate SpIDR 2×4 layout* (on many sites: `iocs/emulator/docs/TPX3_EMULATOR_IOC_README.md` under the EPICS `iocs` tree, outside this module).
+The one-quad TPX3 capture contains the identical entries for chips 0–3. This
+evidence is family-specific: it must not be replaced by the different MPX3
+chip assignment shown above.
+
+`tpx3_dual_quad_mapping.cpp` composes the established TPX3 quad-UP transform
+for each module and applies the module-level 180-degree rotation on the right.
+`pelIndex` and `bpc2ImgIndex` use the same checked helper, and compact compiled
+tests round-trip every pixel. Other global orientations remain unimplemented
+(`WARN`, returns `-1`).
+
+### Full-rate SpidrTurbo 4×2 — **planned** (not in `mask_io.cpp` yet)
+
+ASI **single-board** 8-chip SpidrTurbo (`chipboardId` prefix **`84`**) uses a **different** stitched mosaic than the implemented two-quad grid above. Reference: TPX3 emulator IOC README, section *Full-rate SpIDR 2x4 layout* (the emulator document's historical label; geometrically four across by two down).
 
 **Physical mosaic** (chip ID in each tile; `xChip` left→right, `yChip` top→bottom in image coordinates):
 
@@ -312,7 +344,9 @@ Planned lookup (conceptual — not implemented):
 2. Find tile `(xChip, yChip)` where `chip_at[yChip][xChip] == chip`.
 3. Apply that chip’s rotation to map local `(lx, ly)` → offset within the `w×w` tile, then `i = xChip*w + …`, `j = yChip*w + …`.
 
-**Do not use** the linear 8-chip formulas on SpIDR 2×4 data until this layout is implemented; masks, `PixelConfigDiff`, and masked-pels JSON will be misaligned.
+**Do not use** the two-quad 8-chip formulas on full-rate SpidrTurbo data until
+this separate layout is implemented; masks, `PixelConfigDiff`, and masked-pels
+JSON will be misaligned.
 
 **Inputs still needed before implementation** (fill golden vectors in `test/coordinate_map_vectors.json` → `planned_cases`):
 
@@ -329,7 +363,9 @@ Planned lookup (conceptual — not implemented):
 | Chip 2 origin | 32 | (0,0) | (0, 3) |
 | Chip 7 origin | 112 | (3,0) | (12, 3) |
 
-Compare to **current** linear 8-chip driver: `k=0` → `(0,3)`, `k=112` → `(12,7)` (see existing `8chip_up_*` cases in JSON).
+These draft points describe the single-board SpidrTurbo layout, not the
+implemented two-quad mapping. Keep them skipped until emulator or hardware
+evidence confirms the placement and rotations.
 
 ## Test vectors
 
@@ -347,7 +383,7 @@ python3 test/verify_coordinate_map.py
 
 The script reimplements the mapping rules above; it does **not** link the EPICS driver. When changing `mask_io.cpp`, update the JSON and script together.
 
-**SpIDR 2×4:** placeholder cases live under `planned_cases` in the same JSON file. They are **skipped** by `verify_coordinate_map.py` until `status` is removed and expectations are verified on emulator/hardware. When implementing SpIDR mapping, move cases into `cases`, extend the Python reference, then update `mask_io.cpp`.
+**SpidrTurbo 4×2:** placeholder cases live under `planned_cases` in the same JSON file. They are **skipped** by `verify_coordinate_map.py` until `status` is removed and expectations are verified on emulator/hardware. When implementing SpidrTurbo mapping, move cases into `cases`, extend the Python reference, then update `mask_io.cpp`.
 
 ## API summary (`ADTimePix` in `mask_io.cpp`)
 

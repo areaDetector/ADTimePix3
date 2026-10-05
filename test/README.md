@@ -49,6 +49,16 @@ that a partial refresh is reported only after every required readback is tried.
 The test product also exercises the production rectangular mask-geometry
 helper. It verifies width-based row-major indexing, clipped rectangle/circle
 drawing, non-mask-bit preservation, and rejection of undersized waveforms.
+It also validates Serval raster geometry for 1x1, 2x2, and 4x2 detectors and
+round-trips every pixel in a compact representation of the TPX3 two-quad
+`2,1,4,7 / 3,0,5,6` mapping.
+
+Verify that the checked-in synthetic 4x2 BPC and DACS files remain exact,
+deterministic compositions of the existing 2x2 demo calibration:
+
+```sh
+python3 test/generate_tpx3_4x2_demo_calibration.py --check
+```
 
 ## Live IOC PixelConfig validation
 
@@ -70,7 +80,8 @@ intentionally left to the caller's environment.
 
 ## Live Serval layout capture
 
-Capture the complete `Layout` object for all eight detector orientations with:
+Capture the complete detector `Info` and `Layout` objects for all eight
+detector orientations with:
 
 ```sh
 test/capture_mpx3_layouts.sh
@@ -82,6 +93,11 @@ file per orientation under `.codex/layout-captures/`, and restore the original
 orientation on exit. Optional positional arguments select the PV prefix,
 Serval URL, and output directory. The captures are local evidence and are not
 part of the normal test fixtures.
+
+The script writes the orientation PV. Run it only against an emulator or an
+idle detector. If multiple Channel Access servers publish the same prefix, set
+`EPICS_CA_ADDR_LIST` and `EPICS_CA_AUTO_ADDR_LIST=NO` before starting so the PV
+writes and the Serval HTTP endpoint refer to the intended system.
 
 ## ASI MPX3 reference fixture
 
