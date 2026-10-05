@@ -54,7 +54,7 @@ epicsEnvSet("PREFIX", "TPX3-TEST:")
 #   -----   --------------   ----------   -----------------------
 #     1     1 × 1            256 × 256            65536
 #     4     2 × 2            512 × 512           262144
-#     8     2 × 4            1024 × 512          524288
+#     8     4 × 2            1024 × 512          524288
 #
 # Pick exactly one active line for your detector (comment the others):
 #epicsEnvSet("MASK_BPC_NELEMENTS", "65536") # 1 chip 256×256

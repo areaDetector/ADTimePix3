@@ -99,6 +99,7 @@ The command should finish with **REUSE Specification 3.0** compliance. If you ad
 ```bash
 make -j
 make -C test runtests
+python3 test/generate_tpx3_4x2_demo_calibration.py --check
 python3 test/verify_coordinate_map.py
 python3 test/validate_bob_xml.py
 reuse lint

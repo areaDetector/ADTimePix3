@@ -11,6 +11,7 @@
 #include "calibration_path_policy.h"
 #include "destination_policy.h"
 #include "bpc_mask_semantics.h"
+#include "detector_geometry.h"
 #include "mask_geometry.h"
 #include "network_client.h"
 #include "numeric_range.h"
@@ -29,6 +30,7 @@
 #include "serval_stream_framing.h"
 #include "serval_stream_validation.h"
 #include "stream_worker_state.h"
+#include "tpx3_dual_quad_mapping.h"
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -1084,12 +1086,12 @@ void testDetectorResponseValidation()
     using ADTimePix3ServalDetector::Snapshot;
 
     const std::string valid =
-        "{\"Info\":{\"PixCount\":262144,\"RowLen\":512,\"NumberOfChips\":4,"
+        "{\"Info\":{\"PixCount\":262144,\"RowLen\":2,\"NumberOfChips\":4,"
         "\"NumberOfRows\":512,\"MpxType\":3},\"Config\":{\"BiasEnabled\":false},"
         "\"Health\":[]}";
     Snapshot snapshot;
     testOk(ADTimePix3ServalDetector::parseResponse(valid, snapshot) == ParseError::None &&
-               snapshot.pixelCount == 262144 && snapshot.rowLength == 512 &&
+               snapshot.pixelCount == 262144 && snapshot.rowLength == 2 &&
                snapshot.numberOfChips == 4 && snapshot.numberOfRows == 512 &&
                snapshot.mpxType == 3 && snapshot.response["Config"]["BiasEnabled"] == false,
            "detector parser accepts a complete response and extracts bounded geometry");
@@ -1946,6 +1948,123 @@ void testMaskGeometry()
            "mask operations reject a null waveform buffer");
 }
 
+void testDetectorGeometry()
+{
+    using ADTimePix3DetectorGeometry::Geometry;
+    using ADTimePix3DetectorGeometry::Status;
+
+    Geometry geometry{};
+    testOk(ADTimePix3DetectorGeometry::derive(
+               65536, 1, 1, 256, geometry) == Status::Ok &&
+               geometry.rows == 256 && geometry.cols == 256 &&
+               geometry.xChips == 1 && geometry.yChips == 1 &&
+               geometry.chipWidth == 256,
+           "detector geometry derives a 256 by 256 single-chip raster");
+
+    testOk(ADTimePix3DetectorGeometry::derive(
+               262144, 2, 4, 512, geometry) == Status::Ok &&
+               geometry.rows == 512 && geometry.cols == 512 &&
+               geometry.xChips == 2 && geometry.yChips == 2 &&
+               geometry.chipWidth == 256,
+           "detector geometry derives a two-chip-wide TPX3 quad");
+
+    testOk(ADTimePix3DetectorGeometry::derive(
+               524288, 4, 8, 512, geometry) == Status::Ok &&
+               geometry.rows == 512 && geometry.cols == 1024 &&
+               geometry.xChips == 4 && geometry.yChips == 2 &&
+               geometry.chipWidth == 256,
+           "detector geometry matches the captured four-across TPX3 metadata");
+
+    testOk(ADTimePix3DetectorGeometry::derive(
+               524288, 1024, 8, 512, geometry) == Status::PixelCountMismatch,
+           "detector geometry rejects treating TPX3 RowLen as a pixel width");
+
+    testOk(ADTimePix3DetectorGeometry::derive(
+               524287, 1024, 8, 512, geometry) == Status::PixelCountMismatch,
+           "detector geometry rejects a raster whose pixel count disagrees");
+
+    testOk(ADTimePix3DetectorGeometry::derive(
+               80, 4, 8, 8, geometry) == Status::NonSquareChip,
+           "detector geometry rejects a non-square per-chip pixel count");
+
+    testOk(ADTimePix3DetectorGeometry::isTwoQuadLayout(
+               "41000024", "4100003a") &&
+               !ADTimePix3DetectorGeometry::isTwoQuadLayout(
+                   "84000018", "") &&
+               !ADTimePix3DetectorGeometry::isTwoQuadLayout(
+                   "41000024", "41000024"),
+           "eight-chip mask qualification accepts two distinct quad boards only");
+}
+
+void testTpx3DualQuadMapping()
+{
+    constexpr int width = 4;
+    constexpr int chipPixels = width * width;
+    const int expectedTileX[] = {1, 1, 0, 0, 2, 2, 3, 3};
+    const int expectedTileY[] = {1, 0, 0, 1, 0, 1, 1, 0};
+    bool originsMatch = true;
+    bool originsRoundTrip = true;
+    for (int chip = 0; chip < 8; ++chip) {
+        const int bpc = chip * chipPixels;
+        int imageX = -1;
+        int imageY = -1;
+        int roundTrip = -1;
+        originsMatch = originsMatch &&
+            ADTimePix3Tpx3DualQuad::bpcToImage(
+                bpc, width, imageX, imageY) &&
+            imageX / width == expectedTileX[chip] &&
+            imageY / width == expectedTileY[chip];
+        originsRoundTrip = originsRoundTrip &&
+            ADTimePix3Tpx3DualQuad::imageToBpc(
+                imageX, imageY, width, roundTrip) &&
+            roundTrip == bpc;
+    }
+    testOk(originsMatch,
+           "TPX3 two-quad chip origins map to rows 2,1,4,7 and 3,0,5,6");
+    testOk(originsRoundTrip,
+           "TPX3 two-quad chip origins round-trip between BPC and image coordinates");
+
+    bool everyPixelRoundTrips = true;
+    for (int bpc = 0; bpc < 8 * chipPixels; ++bpc) {
+        int imageX = -1;
+        int imageY = -1;
+        int roundTrip = -1;
+        everyPixelRoundTrips = everyPixelRoundTrips &&
+            ADTimePix3Tpx3DualQuad::bpcToImage(
+                bpc, width, imageX, imageY) &&
+            ADTimePix3Tpx3DualQuad::imageToBpc(
+                imageX, imageY, width, roundTrip) &&
+            roundTrip == bpc;
+    }
+    testOk(everyPixelRoundTrips,
+           "TPX3 two-quad mapping round-trips every pixel in a compact test geometry");
+
+    constexpr int capturedWidth = 256;
+    bool capturedGeometryRoundTrips = true;
+    for (int bpc = 0; bpc < 8 * capturedWidth * capturedWidth; ++bpc) {
+        int imageX = -1;
+        int imageY = -1;
+        int roundTrip = -1;
+        capturedGeometryRoundTrips = capturedGeometryRoundTrips &&
+            ADTimePix3Tpx3DualQuad::bpcToImage(
+                bpc, capturedWidth, imageX, imageY) &&
+            imageX >= 0 && imageX < 1024 && imageY >= 0 && imageY < 512 &&
+            ADTimePix3Tpx3DualQuad::imageToBpc(
+                imageX, imageY, capturedWidth, roundTrip) &&
+            roundTrip == bpc;
+    }
+    testOk(capturedGeometryRoundTrips,
+           "TPX3 two-quad mapping round-trips all 524288 captured-layout pixels");
+
+    int unused = 0;
+    testOk(!ADTimePix3Tpx3DualQuad::bpcToImage(-1, width, unused, unused) &&
+               !ADTimePix3Tpx3DualQuad::bpcToImage(
+                   8 * chipPixels, width, unused, unused) &&
+               !ADTimePix3Tpx3DualQuad::imageToBpc(
+                   4 * width, 0, width, unused),
+           "TPX3 two-quad mapping rejects out-of-range indices and coordinates");
+}
+
 void testOneShotActions()
 {
     const ADTimePix3Action::OneShotDecision zero =
@@ -2138,7 +2257,7 @@ void testRollingWindowSum()
 
 MAIN(servalProtocolFixtureTest)
 {
-    testPlan(346);
+    testPlan(358);
     testTcpScript();
     testTcpSilenceIsBounded();
     testProductionNetworkClient();
@@ -2162,6 +2281,8 @@ MAIN(servalProtocolFixtureTest)
     testBpcFileBounds();
     testBpcMaskSemantics();
     testMaskGeometry();
+    testDetectorGeometry();
+    testTpx3DualQuadMapping();
     testOneShotActions();
     testRollingWindowSum();
     testNumericRangeContract();

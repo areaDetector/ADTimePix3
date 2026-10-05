@@ -21,7 +21,7 @@ Usage:
   capture_serval_layouts.sh FAMILY PV_PREFIX [SERVAL_URL] [OUTPUT_DIR]
 
 FAMILY must be MPX3 or TPX3. The script writes one JSON file per detector
-orientation, containing only the Layout object returned by GET /detector.
+orientation, containing the Info and Layout objects returned by GET /detector.
 
 Examples:
   capture_serval_layouts.sh MPX3 MPX3-TEST:cam1:
@@ -127,12 +127,17 @@ capture_layout() {
     local expected_name=$1
     local destination=$2
     local raw_file="${temp_dir}/detector.json"
-    local layout_file="${temp_dir}/layout.json"
+    local capture_file="${temp_dir}/capture.json"
     local attempt
 
     for ((attempt = 1; attempt <= 20; ++attempt)); do
         if wget --quiet --timeout=10 --tries=1 -O "${raw_file}" "${endpoint}" &&
            jq -e --arg orientation "${expected_name}" --arg family "${family}" '
+               (.Info | type) == "object" and
+               (.Info.PixCount | type) == "number" and .Info.PixCount > 0 and
+               (.Info.RowLen | type) == "number" and .Info.RowLen > 0 and
+               (.Info.NumberOfChips | type) == "number" and .Info.NumberOfChips > 0 and
+               (.Info.NumberOfRows | type) == "number" and .Info.NumberOfRows > 0 and
                (.Layout | type) == "object" and
                .Layout.DetectorOrientation == $orientation and
                .Layout.Original.ChipType == $family and
@@ -140,10 +145,13 @@ capture_layout() {
                ((.Layout.Original.Chips | type) == "array") and
                ((.Layout.Rotated.Chips | type) == "array") and
                (.Layout.Original.Chips | length) > 0 and
-               (.Layout.Rotated.Chips | length) > 0
+               (.Layout.Rotated.Chips | length) == .Info.NumberOfChips and
+               (.Layout.Original.Chips | length) == .Info.NumberOfChips and
+               (.Layout.Original.Width * .Layout.Original.Height) == .Info.PixCount and
+               (.Layout.Rotated.Width * .Layout.Rotated.Height) == .Info.PixCount
            ' "${raw_file}" >/dev/null; then
-            jq '{Layout: .Layout}' "${raw_file}" >"${layout_file}"
-            mv -f -- "${layout_file}" "${destination}"
+            jq '{Info: .Info, Layout: .Layout}' "${raw_file}" >"${capture_file}"
+            mv -f -- "${capture_file}" "${destination}"
             return 0
         fi
         sleep 0.25

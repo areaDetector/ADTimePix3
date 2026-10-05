@@ -23,8 +23,10 @@
 #include "ADTimePixLog.h"
 #include "bpc_file_io.h"
 #include "bpc_mask_semantics.h"
+#include "detector_geometry.h"
 #include "mask_geometry.h"
 #include "serval_pixel_config.h"
+#include "tpx3_dual_quad_mapping.h"
 
 extern const char* driverName;  // defined in ADTimePix.cpp (same as histogram_io.cpp)
 
@@ -254,14 +256,63 @@ asynStatus ADTimePix::rowsCols(int *rows, int *cols, int *xChips, int *yChips, i
     getIntegerParam(ADTimePixNumberOfChips, &numChips);
     getIntegerParam(ADTimePixNumberOfRows, &numRows);
 
+    if (numChips == 8) {
+        std::string firstChipboardId;
+        std::string secondChipboardId;
+        getStringParam(ADTimePixBoardsID, firstChipboardId);
+        getStringParam(ADTimePixBoards2ID, secondChipboardId);
+        if (detectorFamily_ != DetectorFamily::TPX3 ||
+            !ADTimePix3DetectorGeometry::isTwoQuadLayout(
+                firstChipboardId, secondChipboardId)) {
+            *rows = 0;
+            *cols = 0;
+            *xChips = 0;
+            *yChips = 0;
+            *chipPelWidth = 0;
+            setStringParam(ADTimePixWriteMsg,
+                           "Unsupported eight-chip mask layout: require two TPX3 quad boards");
+            WARN_ARGS("rowsCols: unsupported eight-chip mask layout "
+                      "(family=%s board0=%s board1=%s)",
+                      detectorFamilyName(detectorFamily_), firstChipboardId.c_str(),
+                      secondChipboardId.c_str());
+            return asynError;
+        }
+
+        ADTimePix3DetectorGeometry::Geometry geometry;
+        const ADTimePix3DetectorGeometry::Status status =
+            ADTimePix3DetectorGeometry::derive(
+                pixCount, rowLength, numChips, numRows, geometry);
+        if (status != ADTimePix3DetectorGeometry::Status::Ok) {
+            *rows = 0;
+            *cols = 0;
+            *xChips = 0;
+            *yChips = 0;
+            *chipPelWidth = 0;
+            setStringParam(ADTimePixWriteMsg,
+                           ADTimePix3DetectorGeometry::statusMessage(status));
+            WARN_ARGS("rowsCols: %s (pixels=%d rowLength=%d chips=%d rows=%d)",
+                      ADTimePix3DetectorGeometry::statusMessage(status), pixCount,
+                      rowLength, numChips, numRows);
+            return asynError;
+        }
+
+        *rows = geometry.rows;
+        *cols = geometry.cols;
+        *xChips = geometry.xChips;
+        *yChips = geometry.yChips;
+        *chipPelWidth = geometry.chipWidth;
+        return asynSuccess;
+    }
+
+    /* Preserve the established one-chip and four-chip geometry path. The
+     * eight-chip rectangular correction above is deliberately isolated from
+     * the production quad detector. */
+    if (rowLength <= 0) return asynError;
     *xChips = rowLength;
     *yChips = numChips / rowLength;
     *chipPelWidth = numRows / rowLength;
     *rows = numRows;
     *cols = (*yChips) * (*chipPelWidth);
-
-//    printf("rows=%d, cols=%d, xChips=%d, yChips=%d, chipPelWidth=%d\n\n", *rows, *cols, *xChips, *yChips, *chipPelWidth);
-
     return asynSuccess;
 }
 
@@ -682,7 +733,13 @@ asynStatus ADTimePix::writeBPCfile(const std::vector<std::uint8_t>& data) {
 */
 asynStatus ADTimePix::findChip(int x, int y, int *xChip, int *yChip, int *width) {
     int ROWS = 0, COLS = 0, xCHIPS = 0, yCHIPS = 0, PelWidth = 0;
-    rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth);
+    if (rowsCols(&ROWS, &COLS, &xCHIPS, &yCHIPS, &PelWidth) != asynSuccess ||
+        PelWidth <= 0 || x < 0 || x >= COLS || y < 0 || y >= ROWS) {
+        *xChip = 0;
+        *yChip = 0;
+        *width = 0;
+        return asynError;
+    }
 
     *xChip = x / PelWidth;
     *yChip = y / PelWidth;
@@ -899,27 +956,24 @@ int ADTimePix::bpc2ImgIndex(int bpcIndexIn, int chipPelWidthIn) {
         }
         imgIndex = i + 2*chipPelWidth*j;
     } else if (numChips == 8) {
-        /* 2×4 (or 4×2) mosaic: uniform grid, BPC chip order chip = Y_CHIP * xChips + X_CHIP,
-         * intra-chip mapping matches single-chip UP (same convention as one tile of the 2×2 case).
-         * Only DetectorOrientation UP (0); other orientations need per-layout tables like 2×2. */
+        /* Two adjacent 2x2 quads form a four-across, two-down image. Only
+         * DetectorOrientation UP (0); other orientations require qualified
+         * layout transforms. */
         if (detOrientation != 0) {
             WARN("bpc2ImgIndex: 8-chip mapping only for DetectorOrientation UP (0)");
             return -1;
         }
         int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, w = 0;
         rowsCols(&ROWS, &COLS, &xChips, &yChips, &w);
-        if (xChips * yChips != 8 || chipPelCount <= 0 || chip < 0 || chip > 7) {
-            WARN("bpc2ImgIndex: 8-chip requires xChips*yChips==8 and chip index 0..7");
+        if (xChips != 4 || yChips != 2 || chipPelCount <= 0 || chip < 0 || chip > 7) {
+            WARN("bpc2ImgIndex: two-quad mapping requires 4x2 chips and chip index 0..7");
             return -1;
         }
-        int local = bpcIndex - chip * chipPelCount;
-        int lx = local % w;
-        int ly = local / w;
-        int X_CHIP = chip % xChips;
-        int Y_CHIP = chip / xChips;
-        i = X_CHIP * w + lx;
-        j = Y_CHIP * w + (w - 1 - ly);
-        imgIndex = i + (xChips * w) * j;
+        if (!ADTimePix3Tpx3DualQuad::bpcToImage(bpcIndex, w, i, j)) {
+            WARN("bpc2ImgIndex: invalid two-quad BPC index");
+            return -1;
+        }
+        imgIndex = i + COLS * j;
     } else {
         WARN_ARGS("bpc2ImgIndex: chip count %d not supported (use 1, 4, or 8)", numChips);
         imgIndex = -1;
@@ -939,9 +993,11 @@ int ADTimePix::pelIndex(int i, int j) {
 
     getIntegerParam(ADTimePixDetectorOrientation, &detOrientation);
     getIntegerParam(ADTimePixNumberOfChips, &numChips);
-    findChip(i, j, &X_CHIP, &Y_CHIP, &PelWidth);
+    if (findChip(i, j, &X_CHIP, &Y_CHIP, &PelWidth) != asynSuccess) {
+        WARN("pelIndex: image coordinate outside detector geometry");
+        return -1;
+    }
 
-    // TODO: 2x4 chip detector
     // One-chip TimePix3 detector
     if (numChips == 1) {
         if (detOrientation == 0) {  // UP detector orientation
@@ -1100,14 +1156,14 @@ int ADTimePix::pelIndex(int i, int j) {
         } else {
             int ROWS = 0, COLS = 0, xChips = 0, yChips = 0, Pel = 0;
             rowsCols(&ROWS, &COLS, &xChips, &yChips, &Pel);
-            if (xChips * yChips != 8 || Pel <= 0 || X_CHIP >= xChips || Y_CHIP >= yChips) {
-                WARN("pelIndex: 8-chip geometry mismatch (expect xChips*yChips==8)");
+            if (xChips != 4 || yChips != 2 || Pel <= 0 ||
+                X_CHIP >= xChips || Y_CHIP >= yChips) {
+                WARN("pelIndex: two-quad mapping requires a 4x2 chip grid");
                 index = -1;
-            } else {
-                int lx = i - X_CHIP * Pel;
-                int ly = j - Y_CHIP * Pel;
-                int chipIdx = Y_CHIP * xChips + X_CHIP;
-                index = chipIdx * Pel * Pel + lx + ((Pel - 1) - ly) * Pel;
+            } else if (!ADTimePix3Tpx3DualQuad::imageToBpc(
+                           i, j, Pel, index)) {
+                WARN("pelIndex: invalid two-quad image coordinate");
+                index = -1;
             }
         }
     } else {

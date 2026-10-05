@@ -79,7 +79,7 @@
 #define ADTimePixSW_versionString           "TPX3_SW_VER"           // (asynOctet,         r)      SW_version
 #define ADTimePixFW_versionString           "TPX3_FW_VER"           // (asynOctet,         r)      FW_version
 #define ADTimePixPixCountString             "TPX3_PEL_CNT"          // (asynInt32,         r)      PixCount
-#define ADTimePixRowLenString               "TPX3_ROWLEN"           // (asynInt32,         r)      RowLen
+#define ADTimePixRowLenString               "TPX3_ROWLEN"           // (asynInt32,         r)      Serval RowLen (TPX3 chips per detector row)
 #define ADTimePixNumberOfChipsString        "TPX3_NUM_CHIPS"        // (asynInt32,         r)      NumberOfChip
 #define ADTimePixNumberOfRowsString         "TPX3_NUM_ROWS"         // (asynInt32,         r)      NumberOfRows
 #define ADTimePixMpxTypeString              "TPX3_MPX_TYPE"         // (asynInt32,         r)      MpxType
