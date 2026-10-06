@@ -20,10 +20,55 @@ The master branch supports Serval 4.x.x and 3.x.x. **Serval 4.1.5** remains the 
 
 From **R1-7-0**, one driver module (**ADServal**; shipped as **ADTimePix3**) supports both **TimePix3 (TPX3)** and **Medipix3 (MPX3)** via Serval: family is detected at runtime (`DetectorFamily_RBV`, capability PVs) and IOC startup selects the TPX3 or MPX3 profile.
 
-Driver depends on Serval versions, at this time. Latest **tagged** release is **R1-7-4** (September 27, 2026, driver **1.7.4**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
+Driver depends on Serval versions, at this time. Latest release is **R1-8-0** (October 6, 2026, driver **1.8.0**). Tested with stable Serval **4.1.5**, Serval **4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators, other 4.1.x versions, and 3.0.0-3.3.2.
 
-R1-8-0 (in progress)
---------------------
+R1-8-0 (October 6, 2026)
+------------------------
+
+Driver / user-visible version **1.8.0** (see `ADTIMEPIX_*` in
+`ADTimePix.h`).
+
+### Qualification and support matrix
+
+R1-8-0 is a software- and emulator-qualified release. It makes no new
+physical-detector qualification claim, and physical testing is not a release
+gate. Site-specific physical results remain useful follow-up evidence and will
+be addressed if they expose behavior not represented by the emulators.
+
+| Configuration | R1-8-0 support and qualification |
+|---|---|
+| TPX3 single chip and 2×2 quad | Established support retained, including existing rotation and mirror mappings. |
+| TPX3 two-quad 4×2 | Emulator-qualified at 1024×512. Coordinate-dependent mask/BPC comparison, PixelConfig-difference, and masked-pixel export support **UP** only and require two distinct `41...` quad-board IDs. This restriction does not imply that established one-chip or quad acquisition orientations are absent. |
+| TPX3 single-board SpidrTurbo 4×2 | Not supported. Its distinct `84...` mapping is not inferred from the two-quad layout and fails closed. |
+| MPX3 | Existing software/emulator support retained; no new physical post-equalization qualification is claimed. |
+| Generic geometry and Timepix4 | Deferred. Geometry generalization must first represent independent ASIC width and height, including the 448×512-pixel Timepix4 matrix. |
+
+Interactive per-pixel editing and any expansion of per-pixel observability are
+deferred to a future release. Existing BPC upload, PixelConfig refresh,
+comparison, and diagnostic paths remain in scope.
+
+### Release scope and traceability
+
+The feature-content range `R1-7-4..7c0fbd8` contains 29 commits delivered by
+14 consecutively merged pull requests. The release-preparation pull request
+adds version, release-status, and final-assurance updates to this baseline.
+
+| PR | Scope |
+|---|---|
+| #51 | Bounded rolling accumulation |
+| #52 | Preview-rate semantics |
+| #53 | Accumulator numeric-range contract |
+| #54 | Calibration-path containment |
+| #55 | Removal of stray BOB text |
+| #56 | Release-assurance CI |
+| #57 | Image-accumulation screen stability |
+| #58 | AddressSanitizer and UndefinedBehaviorSanitizer CI |
+| #59 | Dependency/version evidence |
+| #60 | Size-aware mask and histogram displays |
+| #61 | Eight-chip profile and waveform capacity |
+| #62 | Phoebus screen refresh |
+| #63 | Phoebus prefix-macro synchronization |
+| #64 | TPX3 two-quad 4×2 mask and calibration support |
 
 ### Phoebus screen refresh
 
@@ -59,6 +104,12 @@ R1-8-0 (in progress)
   embedding timestamps or local filesystem paths. Generation fails if a
   declared dependency ref does not match the branch or tag actually checked
   out for the build.
+* The R1-8-0 hosted CI matrix uses Ubuntu 24.04, GCC, C++17, and EPICS Base
+  7.0. It runs default, AddressSanitizer, and UndefinedBehaviorSanitizer
+  configurations. The default job prepares asyn and ADCore from their selected
+  `master` refs; its retained dependency artifact records the exact resolved
+  commits, the pinned ci-scripts commit, bundled CPR 1.14.2 and nlohmann/json
+  3.12.0, and the ADCore configuration-hook digest.
 
 ### Image accumulation display stability
 
@@ -80,7 +131,8 @@ R1-8-0 (in progress)
   arrive. No histogram data, axis PV, or acquisition behavior changes.
 * SNS Phoebus qualification passes for 256x256 and 512x512 mask displays and
   preview-histogram accumulation. The 1024x512 mask display also passes with
-  the two-quad TPX3 emulator; physical-detector qualification remains pending.
+  the two-quad TPX3 emulator. No new physical-detector qualification is claimed
+  for R1-8-0.
 
 ### Eight-chip IOC waveform capacity
 
@@ -116,9 +168,10 @@ R1-8-0 (in progress)
   mismatches; and a rectangular mask propagated through the 1024x512 mask
   preview and masked-pixel JSON export. The 1024x512 image-accumulation and
   histogram views continued to operate during the same qualification.
-* Physical 1024x512 mask qualification and detector-specific eight-chip
-  equalization remain pending; the checked-in calibration is explicitly
-  synthetic and must not be used as qualified hardware calibration.
+* The checked-in calibration is explicitly synthetic and must not be used as
+  detector equalization or as evidence of hardware qualification. Physical
+  1024x512 mask testing and detector-specific eight-chip equalization are
+  optional post-release site work, not R1-8-0 release gates.
 
 ### Bounded rolling accumulation
 
@@ -206,7 +259,7 @@ R1-8-0 (in progress)
 * Coordinate-map validation passed for 13 implemented cases; five planned
   physical SpIDR 4x2 cases remain deferred.
 * All Phoebus BOB files passed XML validation.
-* REUSE validation passed for 398/398 files.
+* REUSE validation passed for 396/396 files with REUSE 3.0.
 * TPX3 emulator runtime qualification passed at 10 Hz for Img and PrvHst
   windows of 10 and 100 frames: requested capacity equaled current fill, memory
   plateaued at the expected bounded values, per-frame publication operated, and
@@ -234,7 +287,15 @@ R1-8-0 (in progress)
   readbacks agreed on calibration root `/`, calibration policy `Permissive: /`,
   destination allowlist `file:/*,tcp://*,http://*`, and destination policy
   `Permissive`.
-* Physical-hardware qualification remains pending.
+* The established TPX3 2×2 quad path passed regression checks for BPC and DACS
+  uploads, four 65536-byte PixelConfig matches, asymmetric mask placement,
+  mask reset, whole-detector counts, and image accumulation.
+* Final release-candidate smoke testing confirmed that a cleanly rebuilt
+  single-chip TPX3 emulator IOC reported driver version 1.8.0 and completed a
+  short acquisition with image accumulation and histogram display operating.
+  TPX3 and MPX3 quad emulator acquisitions also completed successfully in the
+  immediately preceding qualification run.
+* No new physical-hardware qualification is claimed or required for R1-8-0.
 
 
 R1-7-4 (September 27, 2026)
