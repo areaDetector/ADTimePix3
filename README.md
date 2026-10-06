@@ -2,7 +2,7 @@
 
 **ADServal** is the unified EPICS areaDetector driver for ASI pixel detectors on **Serval** — **TimePix3**, **Medipix3** ([R1-7-0](RELEASE.md)); **TimePix4** planned. It is shipped from this repository under the legacy module name **ADTimePix3** (`$(ADTIMEPIX)`, `libADTimePix`). See [documentation/NAMING.md](documentation/NAMING.md) for naming and migration.
 
-The driver provides detector configuration and control via Serval and on-IOC data processing over HTTP/JSON REST and high-rate TCP streams (raw events, images, histograms). It supports real-time preview and **image accumulation** (running sum, sum of last N frames), **Time-of-Flight (ToF) histogram** processing and accumulation, pixel masking (Binary Pixel Configuration files, rectangular/circular masks, hot-pixel tools), health and status monitoring, and integration with standard areaDetector plugins for file saving and analysis. Support is included for real detectors (single-chip, 2×2 quad, and **eight-chip / dual-SPIDR** layouts with IOC and driver hooks described in [documentation/8chip-migration.md](documentation/8chip-migration.md)) and the TimePix3 emulator. The driver is developed for Linux 64-bit (tested on Ubuntu and RHEL). Published in [DOE CODE](https://www.osti.gov/doecode/biblio/176778).
+The driver provides detector configuration and control via Serval and on-IOC data processing over HTTP/JSON REST and high-rate TCP streams (raw events, images, histograms). It supports real-time preview and **image accumulation** (running sum, sum of last N frames), **Time-of-Flight (ToF) histogram** processing and accumulation, pixel masking (Binary Pixel Configuration files, rectangular/circular masks, hot-pixel tools), health and status monitoring, and integration with standard areaDetector plugins for file saving and analysis. Established support includes single-chip and 2×2 quad detectors. The **eight-chip / dual-SPIDR** 4×2 path described in [documentation/8chip-migration.md](documentation/8chip-migration.md) is software- and emulator-qualified with the release-specific limits below. The driver is developed for Linux 64-bit (tested on Ubuntu and RHEL). Published in [DOE CODE](https://www.osti.gov/doecode/biblio/176778).
 
 Additional information:
 * [Documentation](https://areadetector.github.io/areaDetector/ADTimePix3/ADTimePix3.html)
@@ -25,9 +25,29 @@ Notes:
 * ADCore, ADSupport, and other EPICS module versions are supplied by the surrounding EPICS release configuration (`configure/RELEASE_LIBS_INCLUDE` and local overrides); this repository does not lock them independently.
 * **Preview Images**: Uses TCP streaming (jsonimage format) for preview images. GraphicsMagick HTTP method has been removed. For backward compatibility, the GraphicsMagick implementation is preserved in the `preserve/graphicsmagick-preview` branch.
 * This has only been developed/tested on ubuntu 22.04, 20.04, 18.04, RHEL 7.9, RHEL 9.6 Linux 64-bit machines.
-* Layout support in driver and OPI is most complete for **1 chip** and **2×2 quad**; **8-chip** (a 4×2 mosaic assembled from two quads) has IOC/DB/driver support documented in [documentation/8chip-migration.md](documentation/8chip-migration.md)—validate BPC/mask mapping and screens on your hardware. The single-board full-rate SpidrTurbo layout remains a distinct, unqualified mapping.
+* Layout support in driver and OPI is most complete for **1 chip** and **2×2 quad**, including their established rotation and mirror mappings. For the **8-chip** 4×2 mosaic assembled from two quads, coordinate-dependent mask/BPC comparison, PixelConfig-difference, and masked-pixel export are supported for detector orientation **UP** only and require two distinct TPX3 quad-board IDs (`41...`). This restriction does not remove general acquisition-orientation support from the established one-chip and quad paths. The single-board full-rate SpidrTurbo (`84...`) layout has a different mapping and fails closed.
 * **Serval versions**: The master branch supports both Serval 4.x.x and 3.x.x and is recommended (no need to use the 3.3.2 branch). The "dual image" issue was resolved in Serval 4.1.5; **Serval 4.1.5 remains the recommended stable version** for 4.x. R1-7-4 acquisition-lifecycle qualification also passed with **Serval 4.1.6-EXPERIMENTAL build 1760** on the TPX3 and MPX3 emulators. Serval and emulator versions must match. Data replay has been tested and is currently supported only with older Serval (3.3.2). Serval 2.x.y is in a separate branch and is not under active development.
 * The driver has been developed using the TimePix3 Emulator and real detectors (quad-chip and single-chip).
+
+R1-8-0 qualification boundary
+-----------------------------
+
+R1-8-0 is a software- and emulator-qualified release. It does not make a new
+physical-detector qualification claim, and physical testing is not a release
+gate. Site-specific hardware results remain valuable follow-up evidence and
+will be addressed if they expose behavior not represented by the emulators.
+
+| Configuration | R1-8-0 status |
+|---|---|
+| TPX3 single chip and 2×2 quad | Established support retained, including existing detector rotations and mirrored orientations. |
+| TPX3 two-quad 4×2 | Emulator-qualified at 1024×512. Coordinate-dependent mask/BPC/difference/export mapping is supported for **UP** with two distinct `41...` quad boards. |
+| TPX3 single-board SpidrTurbo 4×2 | Not supported; its distinct `84...` mapping fails closed. |
+| MPX3 | Existing software/emulator support retained; R1-8-0 makes no new physical post-equalization claim. |
+| Generic geometry and Timepix4 | Deferred. Timepix4 must support independent chip width and height (448×512 pixels per ASIC) before geometry is generalized. |
+
+Interactive per-pixel editing and any expansion of per-pixel observability are
+future-release work. Existing BPC upload, PixelConfig refresh, comparison, and
+diagnostic paths remain available as documented.
 
 Driver logging (asyn)
 ---------------------
@@ -36,7 +56,7 @@ Internal `ERR` / `WARN` / `LOG` / `FLOW` helpers (**`ADTimePixLog.h`**, used acr
 
 * **Shorter prefixes**: define **`ADTPX3_LOG_SHORT`** when building the driver library so prefixes use **`__func__` only** (see commented `USR_CPPFLAGS` line in `tpx3App/src/Makefile`).
 * **`WARN` visibility**: by default **`WARN` / `WARN_ARGS`** use **`ASYN_TRACE_WARNING`**. The port’s asyn **trace mask** must include the **warning** bit for those lines to appear. If your site only enables **ERROR**-level trace and you need the old behavior, build with **`ADTPX3_WARN_AS_ERROR`** so `WARN*` is emitted at **`ASYN_TRACE_ERROR`** (commented example in the same `Makefile`).
-* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-7-4**, September 27, 2026; **R1-7-3**; **R1-7-2**; **R1-7-1**; **R1-7-0**).
+* **Release detail**: see [RELEASE.md](RELEASE.md) (**R1-8-0**, October 6, 2026; **R1-7-4**; **R1-7-3**; **R1-7-2**; **R1-7-1**; **R1-7-0**).
 
 TCP Image Streaming
 --------------------
@@ -409,7 +429,7 @@ ADDriver(portName, NDARRAY_MAX_ADDR, NUM_TIMEPIX_PARAMS, maxBuffers, maxMemory,
 
 #### 10. Release history
 
-Current release: **R1-7-4** (driver **1.7.4**). See [RELEASE.md](RELEASE.md) for the complete current notes and upgrade guidance.
+Current release: **R1-8-0** (driver **1.8.0**, October 6, 2026). See [RELEASE.md](RELEASE.md) for the complete current notes, qualification boundary, and upgrade guidance.
 
 Historical milestone — version R1-3:
 

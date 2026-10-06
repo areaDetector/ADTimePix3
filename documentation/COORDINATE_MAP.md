@@ -293,7 +293,9 @@ chip assignment shown above.
 for each module and applies the module-level 180-degree rotation on the right.
 `pelIndex` and `bpc2ImgIndex` use the same checked helper, and compact compiled
 tests round-trip every pixel. Other global orientations remain unimplemented
-(`WARN`, returns `-1`).
+for this new eight-chip coordinate-dependent mask/BPC/difference/export path
+(`WARN`, returns `-1`). This does not limit the established detector-orientation
+support for one-chip and 2×2 quad acquisition and mask workflows.
 
 ### Full-rate SpidrTurbo 4×2 — **planned** (not in `mask_io.cpp` yet)
 

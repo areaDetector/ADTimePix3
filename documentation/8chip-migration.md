@@ -68,7 +68,9 @@ HTTP 200. All eight PixelConfig responses decoded to 65536 bytes and matched
 their BPC slices with zero mismatches. A rectangular mask propagated through
 the 1024x512 mask preview and the masked-pixel JSON export. The geometry and
 deterministic two-quad composition prerequisites are also covered by compiled
-and portable tests, but physical-detector mask qualification remains pending.
+and portable tests. R1-8-0 is software- and emulator-qualified and makes no
+new physical-detector qualification claim; physical testing is optional
+post-release evidence rather than a release gate.
 
 The checked-in 4x2 BPC repeats the four source chip blocks for chips 4-7. The
 DACS file repeats each source chip's values under a unique destination section
@@ -76,11 +78,12 @@ name. These files verify file sizing, upload selection, per-chip offsets, and
 software/emulator behavior only. Real calibration files are hardware-specific
 and should remain site-local unless redistribution is explicitly appropriate.
 
-Do not claim the eight-chip mask, BPC comparison, or PixelConfig-difference
-path as hardware-qualified until a detector-specific BPC/DACS pair and an
-asymmetric mask have confirmed all eight chip placements.
+Do not describe the eight-chip mask, BPC comparison, or PixelConfig-difference
+path as hardware-qualified without a detector-specific BPC/DACS pair and an
+asymmetric mask confirming all eight chip placements. This hardware-specific
+claim is outside the R1-8-0 release scope.
 
-## Verify on hardware
+## Optional hardware follow-up
 
 - **BPC ↔ image mapping:** The implemented 8-chip path is specifically the
   **two-quad** placement `2,1,4,7 / 3,0,5,6`. **Full-rate SpidrTurbo 4×2**
