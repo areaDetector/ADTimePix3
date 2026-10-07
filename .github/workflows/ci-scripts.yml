@@ -48,8 +48,9 @@ jobs:
             run_validation: false
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           submodules: true
 
       - name: Install build and validation dependencies
@@ -93,7 +94,7 @@ jobs:
 
       - name: Upload dependency/version evidence
         if: ${{ matrix.run_validation }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-versions-base-${{ matrix.base }}
           path: ${{ runner.temp }}/dependency-evidence
@@ -115,7 +116,7 @@ jobs:
 
       - name: Upload TAP results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tapfiles-base-${{ matrix.base }}-${{ matrix.name }}
           path: '**/O.*/*.tap'
